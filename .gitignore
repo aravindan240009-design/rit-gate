@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Backend - Gradle build outputs
+backend/build/
+backend/.gradle/
+backend/*.log
+
+# Backend - Maven (not used but just in case)
+backend/target/
+
+# Frontend - Node modules & Expo
+frontend/node_modules/
+frontend/.expo/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# IDE
+.vscode/
+*.iml
+.idea/
+
+# Logs
+*.log
