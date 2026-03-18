@@ -1,6 +1,6 @@
 import { Department, Staff, VisitorRegistration, VisitorResponse } from '../types';
 
-const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = (import.meta as any).env.VITE_API_URL || 'https://rit-transport-backend.onrender.com/api';
 
 export const api = {
   // Get all departments (using hardcoded list since departments are predefined)
