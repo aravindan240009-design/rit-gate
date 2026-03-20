@@ -10,6 +10,7 @@ import {
   StatusBar,
   Platform,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,6 +28,7 @@ interface SinglePassDetailsModalProps {
   // 'hod'   = HOD approving (show staff remark)
   // 'hr'    = HR / view-only (show staff + HOD remarks)
   viewerRole?: 'staff' | 'hod' | 'hr';
+  processing?: boolean;
 }
 
 const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
@@ -37,6 +39,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
   onReject,
   showActions = false,
   viewerRole = 'hr',
+  processing = false,
 }) => {
   const [remark, setRemark] = useState('');
   const [showFullscreen, setShowFullscreen] = useState(false);
@@ -203,12 +206,14 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
               onChangeText={setRemark}
               multiline
               numberOfLines={2}
+              editable={!processing}
             />
             <View style={styles.actionRow}>
               {onReject && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, styles.rejectBtn]}
+                  style={[styles.actionBtn, styles.rejectBtn, processing && { opacity: 0.5 }]}
                   onPress={() => onReject(request.id, remark)}
+                  disabled={processing}
                 >
                   <Ionicons name="close-circle" size={20} color="#FFF" />
                   <Text style={styles.actionBtnText}>Reject</Text>
@@ -216,11 +221,16 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
               )}
               {onApprove && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, styles.approveBtn]}
+                  style={[styles.actionBtn, styles.approveBtn, processing && { opacity: 0.5 }]}
                   onPress={() => onApprove(request.id, remark)}
+                  disabled={processing}
                 >
-                  <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-                  <Text style={styles.actionBtnText}>Approve</Text>
+                  {processing ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Ionicons name="checkmark-circle" size={20} color="#FFF" />
+                  )}
+                  <Text style={styles.actionBtnText}>{processing ? 'Processing...' : 'Approve'}</Text>
                 </TouchableOpacity>
               )}
             </View>

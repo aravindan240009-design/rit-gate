@@ -29,6 +29,7 @@ interface BulkDetailsModalProps {
   onReject?: (id: number, remark: string) => void;
   showActions?: boolean;
   currentUserId?: string;
+  processing?: boolean;
 }
 
 const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
@@ -40,6 +41,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
   onReject,
   showActions = false,
   currentUserId,
+  processing = false,
 }) => {
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState<any>(null);
@@ -258,12 +260,14 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
               onChangeText={setRemark}
               multiline
               numberOfLines={2}
+              editable={!processing}
             />
             <View style={styles.actionRow}>
               {onReject && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, styles.rejectBtn]}
+                  style={[styles.actionBtn, styles.rejectBtn, processing && { opacity: 0.5 }]}
                   onPress={() => { onClose(); onReject(requestId, remark); }}
+                  disabled={processing}
                 >
                   <Ionicons name="close-circle" size={18} color="#FFF" />
                   <Text style={styles.actionBtnText}>Reject</Text>
@@ -271,11 +275,16 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
               )}
               {onApprove && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, styles.approveBtn]}
+                  style={[styles.actionBtn, styles.approveBtn, processing && { opacity: 0.5 }]}
                   onPress={() => { onClose(); onApprove(requestId, remark); }}
+                  disabled={processing}
                 >
-                  <Ionicons name="checkmark-circle" size={18} color="#FFF" />
-                  <Text style={styles.actionBtnText}>Approve</Text>
+                  {processing ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                  ) : (
+                    <Ionicons name="checkmark-circle" size={18} color="#FFF" />
+                  )}
+                  <Text style={styles.actionBtnText}>{processing ? 'Processing...' : 'Approve'}</Text>
                 </TouchableOpacity>
               )}
             </View>

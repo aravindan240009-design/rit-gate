@@ -151,6 +151,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
     const targetRemark = remark !== undefined ? remark : hodRemark;
     if (!targetId) return;
 
+    setProcessing(true);
     // Close modals immediately
     setShowDetailModal(false);
     setShowBulkModal(false);
@@ -159,11 +160,16 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
 
     try {
       await apiService.approveGatePassByHOD(hod.hodCode, targetId, targetRemark);
+      setModalTitle('Approved');
+      setModalMessage('Request approved successfully.');
+      setShowSuccessModal(true);
       loadRequests();
     } catch (error: any) {
       setModalTitle('Error');
       setModalMessage(error.message || 'An error occurred.');
       setShowErrorModal(true);
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -178,6 +184,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       return;
     }
 
+    setProcessing(true);
     // Close modals immediately
     setShowDetailModal(false);
     setShowBulkModal(false);
@@ -186,11 +193,16 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
 
     try {
       await apiService.rejectGatePassByHOD(hod.hodCode, targetId, targetRemark.trim());
+      setModalTitle('Rejected');
+      setModalMessage('Request has been rejected.');
+      setShowSuccessModal(true);
       loadRequests();
     } catch (error: any) {
       setModalTitle('Error');
       setModalMessage(error.message || 'An error occurred.');
       setShowErrorModal(true);
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -543,6 +555,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         onReject={(id, remark) => handleReject(id, remark)}
         showActions={selectedRequest && selectedRequest.status === 'PENDING_HOD'}
         currentUserId={hod.hodCode}
+        processing={processing}
       />
 
       {/* Single Pass Detail Modal */}
@@ -554,6 +567,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         onReject={(id, remark) => handleReject(id, remark)}
         showActions={selectedRequest && selectedRequest.status === 'PENDING_HOD'}
         viewerRole="hod"
+        processing={processing}
       />
 
       {/* Success Modal */}

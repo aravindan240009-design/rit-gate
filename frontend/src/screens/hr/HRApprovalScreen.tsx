@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
   TextInput,
   Modal,
   Image,
@@ -17,6 +16,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { apiService } from '../../services/api';
 import { Staff } from '../../types';
 import { THEME } from '../../config/api.config';
+import SuccessModal from '../../components/SuccessModal';
+import ErrorModal from '../../components/ErrorModal';
 
 interface HRApprovalScreenProps {
   user: Staff; // HR uses Staff type
@@ -32,95 +33,67 @@ const HRApprovalScreen: React.FC<HRApprovalScreenProps> = ({ user }) => {
   const [rejectReason, setRejectReason] = useState('');
   const [showAttachmentPreview, setShowAttachmentPreview] = useState(false);
   const [previewAttachmentUri, setPreviewAttachmentUri] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackTitle, setFeedbackTitle] = useState('');
 
-  const handleApprove = () => {
-    Alert.alert(
-      'Confirm Approval',
-      'Are you sure you want to approve this gate pass request?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Approve',
-          style: 'default',
-          onPress: async () => {
-            setLoading(true);
-            try {
-              const result = await apiService.approveRequestAsHR(request.id, user.staffCode);
-              
-              if (result.success) {
-                Alert.alert(
-                  'Success',
-                  'Gate pass request approved successfully',
-                  [
-                    {
-                      text: 'OK',
-                      onPress: () => navigation.goBack(),
-                    },
-                  ]
-                );
-              } else {
-                Alert.alert('Error', result.message || 'Failed to approve request');
-              }
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to approve request');
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
+  const handleApprove = async () => {
+    setLoading(true);
+    try {
+      const result = await apiService.approveRequestAsHR(request.id, user.staffCode);
+      if (result.success) {
+        setFeedbackTitle('Approved');
+        setFeedbackMessage('Gate pass request approved successfully.');
+        setShowSuccessModal(true);
+      } else {
+        setFeedbackTitle('Error');
+        setFeedbackMessage(result.message || 'Failed to approve request.');
+        setShowErrorModal(true);
+      }
+    } catch (error: any) {
+      setFeedbackTitle('Error');
+      setFeedbackMessage(error.message || 'Failed to approve request.');
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectReason.trim()) {
-      Alert.alert('Error', 'Please provide a reason for rejection');
+      setFeedbackTitle('Reason Required');
+      setFeedbackMessage('Please provide a reason for rejection.');
+      setShowErrorModal(true);
       return;
     }
 
-    Alert.alert(
-      'Confirm Rejection',
-      'Are you sure you want to reject this gate pass request?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reject',
-          style: 'destructive',
-          onPress: async () => {
-            setLoading(true);
-            setRejectModalVisible(false);
-            
-            try {
-              const result = await apiService.rejectRequestAsHR(
-                request.id,
-                user.staffCode,
-                rejectReason.trim()
-              );
-              
-              if (result.success) {
-                Alert.alert(
-                  'Success',
-                  'Gate pass request rejected',
-                  [
-                    {
-                      text: 'OK',
-                      onPress: () => navigation.goBack(),
-                    },
-                  ]
-                );
-              } else {
-                Alert.alert('Error', result.message || 'Failed to reject request');
-              }
-            } catch (error: any) {
-              Alert.alert('Error', error.message || 'Failed to reject request');
-            } finally {
-              setLoading(false);
-              setRejectReason('');
-            }
-          },
-        },
-      ]
-    );
+    setLoading(true);
+    setRejectModalVisible(false);
+
+    try {
+      const result = await apiService.rejectRequestAsHR(
+        request.id,
+        user.staffCode,
+        rejectReason.trim()
+      );
+      if (result.success) {
+        setFeedbackTitle('Rejected');
+        setFeedbackMessage('Gate pass request has been rejected.');
+        setShowSuccessModal(true);
+      } else {
+        setFeedbackTitle('Error');
+        setFeedbackMessage(result.message || 'Failed to reject request.');
+        setShowErrorModal(true);
+      }
+    } catch (error: any) {
+      setFeedbackTitle('Error');
+      setFeedbackMessage(error.message || 'Failed to reject request.');
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
+      setRejectReason('');
+    }
   };
 
   if (!request) {
@@ -336,14 +309,37 @@ const HRApprovalScreen: React.FC<HRApprovalScreenProps> = ({ user }) => {
               <TouchableOpacity
                 style={styles.modalButton}
                 onPress={handleReject}
-                disabled={!rejectReason.trim()}
+                disabled={!rejectReason.trim() || loading}
               >
-                <Text style={styles.modalButtonText}>Confirm Rejection</Text>
+                {loading ? (
+                  <ActivityIndicator color="#FFF" />
+                ) : (
+                  <Text style={styles.modalButtonText}>Confirm Rejection</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
+
+      <SuccessModal
+        visible={showSuccessModal}
+        title={feedbackTitle}
+        message={feedbackMessage}
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigation.goBack();
+        }}
+        autoClose={false}
+      />
+
+      <ErrorModal
+        visible={showErrorModal}
+        type="api"
+        title={feedbackTitle}
+        message={feedbackMessage}
+        onClose={() => setShowErrorModal(false)}
+      />
     </SafeAreaView>
   );
 };

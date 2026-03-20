@@ -19,6 +19,8 @@ import { apiService } from '../../services/api';
 import { THEME } from '../../config/api.config';
 import BulkDetailsModal from '../../components/BulkDetailsModal';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
+import SuccessModal from '../../components/SuccessModal';
+import ErrorModal from '../../components/ErrorModal';
 
 interface PendingApprovalsScreenProps {
   user: Staff;
@@ -39,6 +41,10 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
   const [verificationModalVisible, setVerificationModalVisible] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [staffRemark, setStaffRemark] = useState('');
+  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
 
   const getInitials = (name: string) => {
     return name
@@ -81,27 +87,58 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
     setRefreshing(false);
   };
 
-  const handleApprove = (requestId: number, remark?: string) => {
+  const handleApprove = async (requestId: number, remark?: string) => {
     const targetRemark = remark !== undefined ? remark : staffRemark;
-    // Close immediately — fire API in background
+    setProcessingId(requestId);
     setVerificationModalVisible(false);
     setShowBulkModal(false);
-    setPendingRequests(prev => prev.filter(r => r.id !== requestId));
-    apiService.approveGatePassByStaff(user.staffCode, requestId, targetRemark)
-      .catch(() => loadPendingRequests());
+    try {
+      const res = await apiService.approveGatePassByStaff(user.staffCode, requestId, targetRemark);
+      if (res.success !== false) {
+        setPendingRequests(prev => prev.filter(r => r.id !== requestId));
+        setFeedbackMessage('Request approved successfully.');
+        setShowSuccessModal(true);
+      } else {
+        setFeedbackMessage(res.message || 'Failed to approve request.');
+        setShowErrorModal(true);
+      }
+    } catch (err: any) {
+      setFeedbackMessage(err.message || 'Failed to approve request.');
+      setShowErrorModal(true);
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   const handleReject = (requestId: number, remark?: string) => {
     if (remark !== undefined) {
-      // Direct rejection from BulkDetailsModal
+      // Direct rejection from BulkDetailsModal with remark already provided
       setShowBulkModal(false);
-      setPendingRequests(prev => prev.filter(r => r.id !== requestId));
-      apiService.rejectGatePassByStaff(user.staffCode, requestId, remark.trim())
-        .catch(() => loadPendingRequests());
+      doReject(requestId, remark);
     } else {
       setRejectingRequestId(requestId);
       setRejectReason('');
       setRejectModalVisible(true);
+    }
+  };
+
+  const doReject = async (requestId: number, reason: string) => {
+    setProcessingId(requestId);
+    try {
+      const res = await apiService.rejectGatePassByStaff(user.staffCode, requestId, reason.trim());
+      if (res.success !== false) {
+        setPendingRequests(prev => prev.filter(r => r.id !== requestId));
+        setFeedbackMessage('Request rejected.');
+        setShowSuccessModal(true);
+      } else {
+        setFeedbackMessage(res.message || 'Failed to reject request.');
+        setShowErrorModal(true);
+      }
+    } catch (err: any) {
+      setFeedbackMessage(err.message || 'Failed to reject request.');
+      setShowErrorModal(true);
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -115,15 +152,12 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
     }
     if (requestId === null) return;
 
-    // Close immediately — fire API in background
     setRejectModalVisible(false);
     setVerificationModalVisible(false);
     setRejectReason('');
     setStaffRemark('');
     setRejectingRequestId(null);
-    setPendingRequests(prev => prev.filter(r => r.id !== requestId));
-    apiService.rejectGatePassByStaff(user.staffCode, requestId as number, reason.trim())
-      .catch(() => loadPendingRequests());
+    doReject(requestId as number, reason);
   };
 
   const cancelReject = () => {
@@ -253,14 +287,20 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
                     </View>
                   )}
                   <TouchableOpacity
-                    style={[styles.actionIcon, styles.approveIcon]}
+                    style={[styles.actionIcon, styles.approveIcon, processingId === request.id && { opacity: 0.5 }]}
                     onPress={() => handleApprove(request.id)}
+                    disabled={processingId !== null}
                   >
-                    <Ionicons name="checkmark" size={20} color="#FFF" />
+                    {processingId === request.id ? (
+                      <ActivityIndicator size="small" color="#FFF" />
+                    ) : (
+                      <Ionicons name="checkmark" size={20} color="#FFF" />
+                    )}
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.actionIcon, styles.rejectIcon]}
+                    style={[styles.actionIcon, styles.rejectIcon, processingId === request.id && { opacity: 0.5 }]}
                     onPress={() => handleReject(request.id)}
+                    disabled={processingId !== null}
                   >
                     <Ionicons name="close" size={20} color="#FFF" />
                   </TouchableOpacity>
@@ -291,6 +331,24 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
         onReject={(id, remark) => handleReject(id, remark)}
         showActions={selectedRequest && (selectedRequest.status === 'PENDING' || !selectedRequest.status)}
         viewerRole="staff"
+        processing={processingId !== null}
+      />
+
+      <SuccessModal
+        visible={showSuccessModal}
+        title="Done"
+        message={feedbackMessage}
+        onClose={() => setShowSuccessModal(false)}
+        autoClose={true}
+        autoCloseDelay={2000}
+      />
+
+      <ErrorModal
+        visible={showErrorModal}
+        type="api"
+        title="Action Failed"
+        message={feedbackMessage}
+        onClose={() => setShowErrorModal(false)}
       />
     </SafeAreaView>
   );

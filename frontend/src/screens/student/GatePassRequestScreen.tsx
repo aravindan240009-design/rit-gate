@@ -10,6 +10,7 @@ import {
   Animated,
   Image,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -136,8 +137,7 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
       return;
     }
 
-    // Navigate back immediately — fire API in background
-    handleGoBack();
+    setLoading(true);
 
     const payload = isStaff
       ? { staffCode: identifier, purpose: purpose.trim(), reason: reason.trim(), requestDate: requestDate.toISOString(), attachmentUri: attachment?.base64Uri }
@@ -147,9 +147,17 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
       const response = isStaff
         ? await apiService.submitStaffGatePassRequest(payload as any)
         : await apiService.submitGatePassRequest(payload as any);
-      if (!response.success) console.warn('Gate pass submit failed:', response.message);
+      if (response.success) {
+        setShowSuccessModal(true);
+      } else {
+        setErrorMessage(response.message || 'Failed to submit request. Please try again.');
+        setShowErrorModal(true);
+      }
     } catch (error: any) {
-      console.error('Submit error:', error);
+      setErrorMessage(error.message || 'Failed to submit request. Please try again.');
+      setShowErrorModal(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -244,7 +252,7 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
           </View>
 
           {/* Submit Button */}
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={loading}>
+          <TouchableOpacity style={[styles.submitBtn, loading && { opacity: 0.7 }]} onPress={handleSubmit} disabled={loading}>
             <LinearGradient
               colors={theme.gradients.primary as [string, string, ...string[]]}
               style={styles.btnGradient}
@@ -252,8 +260,17 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
               end={{ x: 1, y: 0 }}
             >
               <View style={styles.btnContent}>
-                <Ionicons name="send" size={20} color="#FFF" style={styles.btnIcon} />
-                <Text style={styles.submitText}>SUBMIT REQUEST</Text>
+                {loading ? (
+                  <>
+                    <ActivityIndicator size="small" color="#FFF" />
+                    <Text style={styles.submitText}>SUBMITTING...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="send" size={20} color="#FFF" style={styles.btnIcon} />
+                    <Text style={styles.submitText}>SUBMIT REQUEST</Text>
+                  </>
+                )}
               </View>
             </LinearGradient>
           </TouchableOpacity>
