@@ -6,7 +6,7 @@ import {
     ActivityIndicator,
     ViewStyle,
     TextStyle,
-    Animated,
+    View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
@@ -35,23 +35,6 @@ const CustomButton = ({
     gradient,
 }: CustomButtonProps) => {
     const { theme } = useTheme();
-    const scaleAnim = React.useRef(new Animated.Value(1)).current;
-
-    const handlePressIn = () => {
-        Animated.spring(scaleAnim, {
-            toValue: 0.96,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const handlePressOut = () => {
-        Animated.spring(scaleAnim, {
-            toValue: 1,
-            friction: 4,
-            tension: 40,
-            useNativeDriver: true,
-        }).start();
-    };
 
     const getGradientColors = () => {
         if (gradient) return gradient;
@@ -66,7 +49,7 @@ const CustomButton = ({
     };
 
     const renderContent = () => (
-        <Animated.View style={[styles.content, { transform: [{ scale: scaleAnim }] }]}>
+        <View style={styles.content}>
             {loading ? (
                 <ActivityIndicator color={type === 'ghost' ? theme.primary : '#FFF'} size="small" />
             ) : (
@@ -81,14 +64,12 @@ const CustomButton = ({
                     </Text>
                 </>
             )}
-        </Animated.View>
+        </View>
     );
 
     return (
         <TouchableOpacity
             onPress={onPress}
-            onPressIn={handlePressIn}
-            onPressOut={handlePressOut}
             disabled={disabled || loading}
             activeOpacity={0.8}
             style={[

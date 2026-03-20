@@ -1,11 +1,10 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Animated,
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,16 +13,8 @@ import { useTheme, THEME_PRESETS, ThemePresetId } from '../context/ThemeContext'
 const ThemePresetSelector: React.FC = () => {
   const { theme, isDark, activePreset, transitioning, applyPreset, toggleTheme } = useTheme();
 
-  const pressAnims = useRef<Record<string, Animated.Value>>(
-    Object.fromEntries(THEME_PRESETS.map(p => [p.id, new Animated.Value(1)]))
-  ).current;
-
   const handlePress = (id: ThemePresetId) => {
     if (transitioning) return;
-    Animated.sequence([
-      Animated.timing(pressAnims[id], { toValue: 0.93, duration: 80, useNativeDriver: true }),
-      Animated.spring(pressAnims[id], { toValue: 1, tension: 200, friction: 8, useNativeDriver: true }),
-    ]).start();
     applyPreset(id);
   };
 
@@ -63,22 +54,19 @@ const ThemePresetSelector: React.FC = () => {
           const [c1, c2, c3, c4] = preset.preview;
 
           return (
-            <Animated.View
+            <TouchableOpacity
               key={preset.id}
-              style={{ transform: [{ scale: pressAnims[preset.id] }] }}
+              style={[
+                styles.presetCard,
+                {
+                  backgroundColor: theme.surface,
+                  borderColor: isActive ? theme.primary : theme.border,
+                  borderWidth: isActive ? 2 : 1,
+                },
+              ]}
+              onPress={() => handlePress(preset.id)}
+              activeOpacity={0.85}
             >
-              <TouchableOpacity
-                style={[
-                  styles.presetCard,
-                  {
-                    backgroundColor: theme.surface,
-                    borderColor: isActive ? theme.primary : theme.border,
-                    borderWidth: isActive ? 2 : 1,
-                  },
-                ]}
-                onPress={() => handlePress(preset.id)}
-                activeOpacity={0.85}
-              >
                 {/* Color swatches */}
                 <View style={styles.swatchRow}>
                   {[c1, c2, c3].map((color, i) => (
@@ -115,8 +103,7 @@ const ThemePresetSelector: React.FC = () => {
                     <Ionicons name="checkmark" size={10} color="#FFF" />
                   </View>
                 )}
-              </TouchableOpacity>
-            </Animated.View>
+            </TouchableOpacity>
           );
         })}
       </ScrollView>
