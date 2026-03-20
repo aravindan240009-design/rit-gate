@@ -19,10 +19,10 @@ public class EmailService {
     @Value("${backend.base.url:http://localhost:8080}")
     private String backendBaseUrl;
 
-    @Value("${brevo.api.key:${BREVO_API_KEY:}}")
+    @Value("${brevo.api.key:}")
     private String brevoApiKey;
 
-    @Value("${brevo.sender.email:${BREVO_SENDER_EMAIL:noreply@ritgate.in}}")
+    @Value("${brevo.sender.email:uixydhvbxdjk850@gmail.com}")
     private String senderEmail;
 
     @Value("${brevo.sender.name:RIT Gate}")
