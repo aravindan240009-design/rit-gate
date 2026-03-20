@@ -124,7 +124,7 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
         setDetectedRole(role);
         setMaskedEmail(response.maskedEmail || response.email || 'm***@institution.edu');
         setOtpTimer(120);
-        showSuccess('OTP has been sent to your registered email', 'OTP Sent');
+        showSuccess(`OTP sent to ${response.maskedEmail || response.email || 'your registered email'}. Check your inbox and enter the 6-digit code.`, 'OTP Sent');
       } else {
         showError(
           new AppError('api', response.message || 'Failed to send OTP', 'OTP Send Failed'),
@@ -206,7 +206,7 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
         setOtpSent(true);
         setMaskedEmail(response.maskedEmail || 'm***@institution.edu');
         setOtpTimer(120); // 2 minutes
-        showSuccess('OTP has been sent to your registered email. Please enter it to complete login.', 'QR Scan Successful');
+        showSuccess(`OTP sent to ${response.maskedEmail || 'your registered email'}. Check your inbox and enter the 6-digit code.`, 'QR Scan Successful');
       } else {
         showError(new AppError('api', response.message || 'Failed to send OTP. Please try manual entry.', 'QR Scan Failed'));
       }
