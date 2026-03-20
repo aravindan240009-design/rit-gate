@@ -37,12 +37,12 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [showOTPSuccessModal, setShowOTPSuccessModal] = useState(false);
   const [detectedRole, setDetectedRole] = useState<UserRole | null>(null);
   const [maskedEmail, setMaskedEmail] = useState('');
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
   const [loadingMessage, setLoadingMessage] = useState('Sending OTP...');
-  const [serverWakeSeconds, setServerWakeSeconds] = useState(0);
 
   const { errorInfo, showError, hideError, handleRetry, isVisible } = useErrorModal();
   const { successInfo, showSuccess, hideSuccess, isVisible: isSuccessVisible } = useSuccessModal();
@@ -50,6 +50,7 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const modalScale = useRef(new Animated.Value(0.9)).current;
+  const otpPageFade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     apiService.wakeUpBackend();
@@ -82,7 +83,7 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
   }, [otpTimer]);
 
   useEffect(() => {
-    if (otpSent) {
+    if (showOTPSuccessModal) {
       Animated.spring(modalScale, {
         toValue: 1,
         tension: 50,
@@ -91,6 +92,18 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
       }).start();
     } else {
       modalScale.setValue(0.9);
+    }
+  }, [showOTPSuccessModal]);
+
+  useEffect(() => {
+    if (otpSent) {
+      Animated.timing(otpPageFade, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      otpPageFade.setValue(0);
     }
   }, [otpSent]);
 
@@ -101,35 +114,27 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
     }
     const role = detectUserRole(userId);
     setLoading(true);
-    setLoadingMessage('Connecting to server...');
-    setServerWakeSeconds(0);
-    let elapsed = 0;
-    const msgInterval = setInterval(() => {
-      elapsed += 1;
-      setServerWakeSeconds(elapsed);
-      if (elapsed < 5) setLoadingMessage('Sending OTP...');
-      else if (elapsed < 15) setLoadingMessage('Server is waking up...');
-      else if (elapsed < 30) setLoadingMessage(`Server starting up... (${elapsed}s)`);
-      else setLoadingMessage(`Almost ready... (${elapsed}s)`);
-    }, 1000);
+    setLoadingMessage('Connecting...');
     try {
       const response = await apiService.sendOTP(userId, role);
       if (response.success) {
-        setOtpSent(true);
-        setDetectedRole(role);
         setMaskedEmail(response.maskedEmail || response.email || 'm***@institution.edu');
+        setDetectedRole(role);
         setOtpTimer(120);
+        setShowOTPSuccessModal(true);
       } else {
         showError(new AppError('api', response.message || 'Failed to send OTP', 'OTP Send Failed'), handleSendOTP);
       }
     } catch (error: any) {
       showError(error, handleSendOTP);
     } finally {
-      clearInterval(msgInterval);
       setLoading(false);
-      setLoadingMessage('Sending OTP...');
-      setServerWakeSeconds(0);
     }
+  };
+
+  const goToOTPPage = () => {
+    setShowOTPSuccessModal(false);
+    setOtpSent(true);
   };
 
   const handleVerifyOTP = async () => {
@@ -169,6 +174,64 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
 
   if (showQRScanner) return <QRLoginScanner onScanSuccess={handleQRScanSuccess} onClose={() => setShowQRScanner(false)} />;
 
+  if (otpSent) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <Animated.View style={[styles.otpPage, { opacity: otpPageFade }]}>
+          <TouchableOpacity style={styles.otpBackBtn} onPress={() => setOtpSent(false)}>
+            <Ionicons name="arrow-back" size={24} color="#1E293B" />
+          </TouchableOpacity>
+          <ScrollView contentContainerStyle={styles.otpScroll} keyboardShouldPersistTaps="handled">
+            <View style={styles.otpIconContainer}>
+              <View style={styles.otpIconBg}>
+                <Ionicons name="mail-open" size={40} color="#FFFFFF" />
+              </View>
+            </View>
+            <Text style={styles.otpTitle}>Verification</Text>
+            <Text style={styles.otpSub}>A 6-digit code has been sent to</Text>
+            <Text style={styles.otpEmail}>{maskedEmail}</Text>
+            
+            <View style={styles.otpInputContainer}>
+              <TextInput
+                style={styles.otpInputPage}
+                value={otp}
+                onChangeText={setOtp}
+                keyboardType="number-pad"
+                maxLength={6}
+                placeholder="000000"
+                placeholderTextColor="#CBD5E1"
+                autoFocus
+              />
+            </View>
+
+            <View style={styles.otpActionContainer}>
+              {otpTimer > 0 ? (
+                <View style={styles.timerBadge}>
+                  <Ionicons name="time-outline" size={16} color="#64748B" />
+                  <Text style={styles.timerTextPage}>{Math.floor(otpTimer / 60)}:{(otpTimer % 60).toString().padStart(2, '0')}</Text>
+                </View>
+              ) : (
+                <TouchableOpacity onPress={handleResendOTP} style={styles.resendLink}>
+                  <Text style={styles.resendLinkText}>Resend Code</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.btn, styles.verifyBtnPage, loading && styles.btnDisabled]} 
+              onPress={handleVerifyOTP}
+              disabled={loading}
+            >
+              {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnTxt}>Verify Now</Text>}
+            </TouchableOpacity>
+          </ScrollView>
+        </Animated.View>
+        <ErrorModal visible={isVisible} type={errorInfo?.type || 'general'} title={errorInfo?.title} message={errorInfo?.message || ''} onClose={hideError} onRetry={errorInfo?.canRetry ? handleRetry : undefined} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
@@ -204,30 +267,24 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <Modal visible={otpSent} transparent animationType="fade" onRequestClose={() => setOtpSent(false)}>
+      <Modal visible={showOTPSuccessModal} transparent animationType="fade" onRequestClose={() => setShowOTPSuccessModal(false)}>
         <View style={styles.modalOverlay}>
           <Animated.View style={[styles.modalBox, { transform: [{ scale: modalScale }] }]}>
             <View style={styles.modalHeader}>
               <View style={styles.modalIcon}><Ionicons name="shield-checkmark" size={32} color="#FFFFFF" /></View>
-              <TouchableOpacity style={styles.modalClose} onPress={() => setOtpSent(false)}><Ionicons name="close" size={24} color="#64748B" /></TouchableOpacity>
+              <TouchableOpacity style={styles.modalClose} onPress={() => setShowOTPSuccessModal(false)}><Ionicons name="close" size={24} color="#64748B" /></TouchableOpacity>
             </View>
-            <Text style={styles.modalTitle}>Verification Code</Text>
-            <Text style={styles.modalSub}>Sent to <Text style={styles.emailHighlight}>{maskedEmail}</Text></Text>
-            <TextInput style={styles.otpInput} value={otp} onChangeText={setOtp} keyboardType="number-pad" maxLength={6} placeholder="------" placeholderTextColor="#CBD5E1" autoFocus />
-            {otpTimer > 0 ? (
-              <View style={styles.timerWrap}><Ionicons name="time-outline" size={16} color="#64748B" /><Text style={styles.timerTxt}>{Math.floor(otpTimer / 60)}:{(otpTimer % 60).toString().padStart(2, '0')}</Text></View>
-            ) : (
-                <TouchableOpacity onPress={handleResendOTP} style={styles.resendBtn}><Text style={styles.resendTxt}>Resend Code</Text></TouchableOpacity>
-            )}
-            <TouchableOpacity style={[styles.verifyBtn, loading && styles.btnDisabled]} onPress={handleVerifyOTP} disabled={loading}>
-              {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.verifyTxt}>Verify OTP</Text>}
+            <Text style={styles.modalTitle}>Verification Sent</Text>
+            <Text style={styles.modalSub}>A 6-digit code has been sent to <Text style={styles.emailHighlight}>{maskedEmail}</Text></Text>
+            <TouchableOpacity style={styles.verifyBtn} onPress={goToOTPPage}>
+              <Text style={styles.verifyTxt}>Enter Code</Text>
             </TouchableOpacity>
           </Animated.View>
         </View>
       </Modal>
 
       <ErrorModal visible={isVisible} type={errorInfo?.type || 'general'} title={errorInfo?.title} message={errorInfo?.message || ''} onClose={hideError} onRetry={errorInfo?.canRetry ? handleRetry : undefined} />
-      <SuccessModal visible={isSuccessVisible} title={successInfo?.title} message={successInfo?.message || ''} onClose={hideSuccess} autoClose={successInfo?.autoClose} autoCloseDelay={successInfo?.autoCloseDelay} />
+      <SuccessModal visible={isSuccessVisible} title={successInfo?.title} message={successInfo?.message || ''} onClose={hideSuccess} />
     </SafeAreaView>
   );
 };
@@ -263,13 +320,24 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 24, fontWeight: '800', color: '#1E293B', marginBottom: 8 },
   modalSub: { fontSize: 14, color: '#64748B', lineHeight: 20, marginBottom: 24 },
   emailHighlight: { color: '#1E293B', fontWeight: '800' },
-  otpInput: { width: '100%', height: 72, backgroundColor: '#F8FAFC', borderRadius: 20, textAlign: 'center', fontSize: 36, fontWeight: '900', color: '#1E293B', letterSpacing: 10, borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 20 },
-  timerWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', marginBottom: 24, backgroundColor: '#F1F5F9', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  timerTxt: { fontSize: 14, fontWeight: '700', color: '#1E293B' },
-  resendBtn: { alignSelf: 'center', marginBottom: 24, paddingVertical: 8, paddingHorizontal: 16, backgroundColor: '#F1F5F9', borderRadius: 20 },
-  resendTxt: { color: '#1E293B', fontWeight: '700', fontSize: 14 },
   verifyBtn: { width: '100%', height: 58, backgroundColor: '#1E293B', borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   verifyTxt: { color: '#FFF', fontSize: 16, fontWeight: '800' },
+  otpPage: { flex: 1, backgroundColor: '#FFFFFF' },
+  otpBackBtn: { width: 44, height: 44, justifyContent: 'center', marginLeft: 16, marginTop: 10 },
+  otpScroll: { flexGrow: 1, paddingHorizontal: 32, alignItems: 'center', paddingTop: 40 },
+  otpIconContainer: { marginBottom: 32 },
+  otpIconBg: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center', shadowColor: '#1E293B', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 20, elevation: 10 },
+  otpTitle: { fontSize: 32, fontWeight: '900', color: '#1E293B', marginBottom: 12 },
+  otpSub: { fontSize: 15, color: '#64748B', marginBottom: 4 },
+  otpEmail: { fontSize: 16, fontWeight: '700', color: '#1E293B', marginBottom: 40 },
+  otpInputContainer: { width: '100%', marginBottom: 32 },
+  otpInputPage: { width: '100%', height: 80, backgroundColor: '#F8FAFC', borderRadius: 20, borderWidth: 1.5, borderColor: '#E2E8F0', textAlign: 'center', fontSize: 42, fontWeight: '900', color: '#1E293B', letterSpacing: 12 },
+  otpActionContainer: { marginBottom: 48 },
+  timerBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F1F5F9', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, gap: 8 },
+  timerTextPage: { fontSize: 14, fontWeight: '700', color: '#1E293B' },
+  resendLink: { paddingVertical: 8, paddingHorizontal: 16 },
+  resendLinkText: { fontSize: 15, fontWeight: '700', color: '#1E293B', textDecorationLine: 'underline' },
+  verifyBtnPage: { height: 64, borderRadius: 20 },
 });
 
 export default ModernUnifiedLoginScreen;

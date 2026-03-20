@@ -29,6 +29,7 @@ import { useSuccessModal } from '../../hooks/useSuccessModal';
 import { AppError } from '../../utils/errorHandler';
 import ErrorModal from '../../components/ErrorModal';
 import SuccessModal from '../../components/SuccessModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 interface StudentHomeScreenProps {
   student: Student;
