@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-import { Alert } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 
 interface ProfileContextType {
   profileImage: string | null;
@@ -29,14 +29,29 @@ export const ProfileProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  const openAppSettings = () => {
+    Alert.alert(
+      'Permission Required',
+      'Please enable photo access in your device Settings to use this feature.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Open Settings', onPress: () => Linking.openSettings() },
+      ]
+    );
+  };
+
   const captureImage = async (source: 'camera' | 'gallery') => {
     try {
       let result;
 
       if (source === 'camera') {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        const { status, canAskAgain } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Permission Denied', 'Camera permission is required to take photos.');
+          if (!canAskAgain) {
+            openAppSettings();
+          } else {
+            Alert.alert('Permission Denied', 'Camera permission is required to take photos.');
+          }
           return;
         }
 
@@ -47,9 +62,36 @@ export const ProfileProvider: React.FC<{ children: ReactNode }> = ({ children })
           quality: 0.8,
         });
       } else {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        // On Android 13+ (API 33+), READ_MEDIA_IMAGES is used.
+        // On Android 14+ (API 34+), limited photo access may be granted.
+        // expo-image-picker handles the picker UI natively — we just need to
+        // check if we can ask, and if permanently denied, send user to Settings.
+        const { status, canAskAgain } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
         if (status !== 'granted') {
-          Alert.alert('Permission Denied', 'Gallery permission is required to select photos.');
+          if (!canAskAgain) {
+            // Permanently denied — must go to Settings
+            openAppSettings();
+          } else {
+            Alert.alert(
+              'Permission Required',
+              'Photo library access is needed to set your profile picture.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Allow',
+                  onPress: async () => {
+                    const retry = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                    if (retry.status !== 'granted') {
+                      if (!retry.canAskAgain) openAppSettings();
+                    } else {
+                      await launchGallery();
+                    }
+                  },
+                },
+              ]
+            );
+          }
           return;
         }
 
@@ -61,7 +103,7 @@ export const ProfileProvider: React.FC<{ children: ReactNode }> = ({ children })
         });
       }
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (result && !result.canceled && result.assets && result.assets.length > 0) {
         const imageUri = result.assets[0].uri;
         setProfileImage(imageUri);
         await AsyncStorage.setItem('profile_image', imageUri);
@@ -69,6 +111,24 @@ export const ProfileProvider: React.FC<{ children: ReactNode }> = ({ children })
     } catch (error) {
       console.error('Error capturing image:', error);
       Alert.alert('Error', 'Failed to capture image. Please try again.');
+    }
+  };
+
+  const launchGallery = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const imageUri = result.assets[0].uri;
+        setProfileImage(imageUri);
+        await AsyncStorage.setItem('profile_image', imageUri);
+      }
+    } catch (error) {
+      console.error('Error launching gallery:', error);
     }
   };
 

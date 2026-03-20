@@ -19,6 +19,7 @@ import { apiService } from '../../services/api';
 import SecurityBottomNav from '../../components/SecurityBottomNav';
 import { useProfile } from '../../context/ProfileContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useTheme } from '../../context/ThemeContext';
 import NotificationDropdown from '../../components/NotificationDropdown';
 
 interface NewSecurityDashboardProps {
@@ -48,6 +49,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
   onLogout,
   onNavigate,
 }) => {
+  const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [activePersons, setActivePersons] = useState<ActivePerson[]>([]);
   const { profileImage } = useProfile();
@@ -229,16 +231,13 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity 
-            style={styles.avatar}
-            onPress={() => onNavigate('PROFILE')}
-          >
+          <TouchableOpacity style={[styles.avatar, { backgroundColor: theme.primary }]} onPress={() => onNavigate('PROFILE')}>
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.avatarImage} />
             ) : (
@@ -246,50 +245,43 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
             )}
           </TouchableOpacity>
           <View style={styles.headerInfo}>
-            <Text style={styles.greeting}>Good Morning,</Text>
-            <Text style={styles.userName}>{(user.name || user.securityName || 'SECURITY').toUpperCase()}</Text>
+            <Text style={[styles.greeting, { color: theme.textSecondary }]}>Good Morning,</Text>
+            <Text style={[styles.userName, { color: theme.text }]}>{(user.name || user.securityName || 'SECURITY').toUpperCase()}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity 
-            style={styles.iconButton}
-            onPress={() => setShowNotificationDropdown(true)}
-          >
-            <Ionicons name="notifications-outline" size={24} color="#1F2937" />
-            {unreadCount > 0 && (
-              <View style={styles.notificationIndicator} />
-            )}
+          <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => setShowNotificationDropdown(true)}>
+            <Ionicons name="notifications-outline" size={24} color={theme.text} />
+            {unreadCount > 0 && <View style={[styles.notificationIndicator, { backgroundColor: theme.error }]} />}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={onLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#EF4444" />
+          <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onLogout}>
+            <Ionicons name="log-out-outline" size={24} color={theme.error} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <View style={[styles.statIcon, { backgroundColor: '#D1FAE5' }]}>
-            <Ionicons name="enter-outline" size={20} color="#10B981" />
+        <View style={[styles.statCard, { backgroundColor: theme.surface }]}>
+          <View style={[styles.statIcon, { backgroundColor: theme.success + '22' }]}>
+            <Ionicons name="enter-outline" size={20} color={theme.success} />
           </View>
-          <Text style={styles.statValue}>{stats.active}</Text>
-          <Text style={styles.statLabel}>Active</Text>
+          <Text style={[styles.statValue, { color: theme.text }]}>{stats.active}</Text>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Active</Text>
         </View>
-
-        <View style={styles.statCard}>
-          <View style={[styles.statIcon, { backgroundColor: '#FEE2E2' }]}>
-            <Ionicons name="exit-outline" size={20} color="#EF4444" />
+        <View style={[styles.statCard, { backgroundColor: theme.surface }]}>
+          <View style={[styles.statIcon, { backgroundColor: theme.error + '22' }]}>
+            <Ionicons name="exit-outline" size={20} color={theme.error} />
           </View>
-          <Text style={styles.statValue}>{stats.exited}</Text>
-          <Text style={styles.statLabel}>Exited</Text>
+          <Text style={[styles.statValue, { color: theme.text }]}>{stats.exited}</Text>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Exited</Text>
         </View>
-
-        <View style={styles.statCard}>
-          <View style={[styles.statIcon, { backgroundColor: '#DBEAFE' }]}>
-            <Ionicons name="people-outline" size={20} color="#3B82F6" />
+        <View style={[styles.statCard, { backgroundColor: theme.surface }]}>
+          <View style={[styles.statIcon, { backgroundColor: theme.info + '22' }]}>
+            <Ionicons name="people-outline" size={20} color={theme.info} />
           </View>
-          <Text style={styles.statValue}>{stats.total}</Text>
-          <Text style={styles.statLabel}>Total</Text>
+          <Text style={[styles.statValue, { color: theme.text }]}>{stats.total}</Text>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Total</Text>
         </View>
       </View>
 
@@ -297,60 +289,32 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       {escalatedVisitors.length > 0 && (
         <>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Visitor Requests</Text>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{escalatedVisitors.length}</Text>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>Visitor Requests</Text>
+            <View style={[styles.badge, { backgroundColor: theme.error + '22' }]}>
+              <Text style={[styles.badgeText, { color: theme.error }]}>{escalatedVisitors.length}</Text>
             </View>
           </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.visitorRequestsContainer}
-            contentContainerStyle={styles.visitorRequestsContent}
-          >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.visitorRequestsContainer} contentContainerStyle={styles.visitorRequestsContent}>
             {escalatedVisitors.map((visitor) => (
-              <TouchableOpacity
-                key={visitor.id}
-                style={styles.visitorRequestCard}
-                onPress={() => {
-                  setSelectedVisitor(visitor);
-                  setShowVisitorModal(true);
-                }}
-              >
+              <TouchableOpacity key={visitor.id} style={[styles.visitorRequestCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]} onPress={() => { setSelectedVisitor(visitor); setShowVisitorModal(true); }}>
                 <View style={styles.visitorCardHeader}>
-                  <View style={styles.visitorAvatar}>
-                    <Ionicons name="person" size={20} color="#F59E0B" />
+                  <View style={[styles.visitorAvatar, { backgroundColor: theme.surfaceHighlight }]}>
+                    <Ionicons name="person" size={20} color={theme.warning} />
                   </View>
-                  <View style={styles.urgentBadge}>
-                    <Ionicons name="time" size={12} color="#EF4444" />
-                    <Text style={styles.urgentText}>URGENT</Text>
+                  <View style={[styles.urgentBadge, { backgroundColor: theme.error + '22' }]}>
+                    <Ionicons name="time" size={12} color={theme.error} />
+                    <Text style={[styles.urgentText, { color: theme.error }]}>URGENT</Text>
                   </View>
                 </View>
-                <Text style={styles.visitorName} numberOfLines={1}>{visitor.name}</Text>
-                <Text style={styles.visitorMeet} numberOfLines={1}>
-                  To meet: {visitor.personToMeet}
-                </Text>
-                <Text style={styles.visitorDept} numberOfLines={1}>
-                  {visitor.department}
-                </Text>
+                <Text style={[styles.visitorName, { color: theme.text }]} numberOfLines={1}>{visitor.name}</Text>
+                <Text style={[styles.visitorMeet, { color: theme.textSecondary }]} numberOfLines={1}>To meet: {visitor.personToMeet}</Text>
+                <Text style={[styles.visitorDept, { color: theme.textTertiary }]} numberOfLines={1}>{visitor.department}</Text>
                 <View style={styles.visitorActions}>
-                  <TouchableOpacity
-                    style={styles.approveBtn}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleApproveVisitor(visitor);
-                    }}
-                  >
+                  <TouchableOpacity style={[styles.approveBtn, { backgroundColor: theme.success }]} onPress={(e) => { e.stopPropagation(); handleApproveVisitor(visitor); }}>
                     <Ionicons name="checkmark" size={16} color="#FFF" />
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.rejectBtn}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleRejectVisitor(visitor);
-                    }}
-                  >
+                  <TouchableOpacity style={[styles.rejectBtn, { backgroundColor: theme.error }]} onPress={(e) => { e.stopPropagation(); handleRejectVisitor(visitor); }}>
                     <Ionicons name="close" size={16} color="#FFF" />
                   </TouchableOpacity>
                 </View>
@@ -362,63 +326,40 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
 
       {/* Active Persons List */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Active Persons</Text>
-        <Text style={styles.sectionCount}>{stats.active} active</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Active Persons</Text>
+        <Text style={[styles.sectionCount, { color: theme.textSecondary }]}>{stats.active} active</Text>
       </View>
 
-      <ScrollView
-        style={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={styles.scrollContent}
-      >
+      <ScrollView style={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} contentContainerStyle={styles.scrollContent}>
         {activePersons.filter(p => p.status === 'PENDING').length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={64} color="#D1D5DB" />
-            <Text style={styles.emptyText}>No active persons</Text>
+            <Ionicons name="people-outline" size={64} color={theme.border} />
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No active persons</Text>
           </View>
         ) : (
-          activePersons
-            .filter(p => p.status === 'PENDING')
-            .map((person, index) => (
-              <TouchableOpacity
-                key={`${person.id}-${index}`}
-                style={styles.personCard}
-                onPress={() => {
-                  setSelectedPerson(person);
-                  setShowDetailModal(true);
-                }}
-              >
-                <View style={styles.personAvatar}>
-                  <Text style={styles.personAvatarText}>{getInitials(person.name)}</Text>
+          activePersons.filter(p => p.status === 'PENDING').map((person, index) => (
+            <TouchableOpacity key={`${person.id}-${index}`} style={[styles.personCard, { backgroundColor: theme.cardBackground }]} onPress={() => { setSelectedPerson(person); setShowDetailModal(true); }}>
+              <View style={[styles.personAvatar, { backgroundColor: theme.primary }]}>
+                <Text style={styles.personAvatarText}>{getInitials(person.name)}</Text>
+              </View>
+              <View style={styles.personInfo}>
+                <Text style={[styles.personName, { color: theme.text }]}>{person.name}</Text>
+                <Text style={[styles.personType, { color: theme.primary }]}>{person.type}</Text>
+                <Text style={[styles.personPurpose, { color: theme.textSecondary }]} numberOfLines={1}>{person.purpose}</Text>
+              </View>
+              <View style={styles.personRight}>
+                <View style={[styles.statusBadge, { backgroundColor: theme.success + '22' }]}>
+                  <View style={[styles.statusDot, { backgroundColor: theme.success }]} />
+                  <Text style={[styles.statusText, { color: theme.success }]}>ACTIVE</Text>
                 </View>
-                <View style={styles.personInfo}>
-                  <Text style={styles.personName}>{person.name}</Text>
-                  <Text style={styles.personType}>{person.type}</Text>
-                  <Text style={styles.personPurpose} numberOfLines={1}>
-                    {person.purpose}
-                  </Text>
-                </View>
-                <View style={styles.personRight}>
-                  <View style={styles.statusBadge}>
-                    <View style={styles.statusDot} />
-                    <Text style={styles.statusText}>ACTIVE</Text>
-                  </View>
-                  <Text style={styles.personTime}>{formatTime(person.inTime)}</Text>
-                  <TouchableOpacity
-                    style={styles.exitButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleManualExit(person);
-                    }}
-                  >
-                    <Ionicons name="log-out-outline" size={16} color="#FFF" />
-                    <Text style={styles.exitButtonText}>Exit</Text>
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))
+                <Text style={[styles.personTime, { color: theme.textTertiary }]}>{formatTime(person.inTime)}</Text>
+                <TouchableOpacity style={[styles.exitButton, { backgroundColor: theme.error }]} onPress={(e) => { e.stopPropagation(); handleManualExit(person); }}>
+                  <Ionicons name="log-out-outline" size={16} color="#FFF" />
+                  <Text style={styles.exitButtonText}>Exit</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ))
         )}
       </ScrollView>
 
@@ -426,68 +367,32 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       <SecurityBottomNav activeTab="home" onNavigate={onNavigate} />
 
       {/* Person Detail Modal */}
-      <Modal
-        visible={showDetailModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowDetailModal(false)}
-      >
+      <Modal visible={showDetailModal} animationType="slide" transparent={true} onRequestClose={() => setShowDetailModal(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            {/* Modal Header */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Person Details</Text>
-              <TouchableOpacity
-                onPress={() => setShowDetailModal(false)}
-                style={styles.closeButton}
-              >
-                <Ionicons name="close" size={24} color="#6B7280" />
+          <View style={[styles.modalContainer, { backgroundColor: theme.surface }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>Person Details</Text>
+              <TouchableOpacity onPress={() => setShowDetailModal(false)} style={[styles.closeButton, { backgroundColor: theme.surfaceHighlight }]}>
+                <Ionicons name="close" size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
-
             {selectedPerson && (
-              <ScrollView 
-                style={styles.modalContent}
-                contentContainerStyle={styles.modalScrollContent}
-                showsVerticalScrollIndicator={true}
-              >
-                {/* Person Info */}
+              <ScrollView style={styles.modalContent} contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={true}>
                 <View style={styles.modalSection}>
-                  <Text style={styles.sectionTitle}>Person Information</Text>
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Name</Text>
-                    <Text style={styles.modalValue}>{selectedPerson.name}</Text>
-                  </View>
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Type</Text>
-                    <Text style={styles.modalValue}>{selectedPerson.type}</Text>
-                  </View>
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Purpose</Text>
-                    <Text style={[styles.modalValue, { flex: 1, textAlign: 'right' }]}>
-                      {selectedPerson.purpose}
-                    </Text>
-                  </View>
+                  <Text style={[styles.sectionTitle, { color: theme.text }]}>Person Information</Text>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Name</Text><Text style={[styles.modalValue, { color: theme.text }]}>{selectedPerson.name}</Text></View>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Type</Text><Text style={[styles.modalValue, { color: theme.text }]}>{selectedPerson.type}</Text></View>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Purpose</Text><Text style={[styles.modalValue, { color: theme.text, flex: 1, textAlign: 'right' }]}>{selectedPerson.purpose}</Text></View>
                 </View>
-
-                {/* Time Info */}
                 <View style={styles.modalSection}>
-                  <Text style={styles.sectionTitle}>Time Information</Text>
+                  <Text style={[styles.sectionTitle, { color: theme.text }]}>Time Information</Text>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Entry Time</Text><Text style={[styles.modalValue, { color: theme.text }]}>{formatTime(selectedPerson.inTime)}</Text></View>
+                  {selectedPerson.outTime && <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Exit Time</Text><Text style={[styles.modalValue, { color: theme.text }]}>{formatTime(selectedPerson.outTime)}</Text></View>}
                   <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Entry Time</Text>
-                    <Text style={styles.modalValue}>{formatTime(selectedPerson.inTime)}</Text>
-                  </View>
-                  {selectedPerson.outTime && (
-                    <View style={styles.modalRow}>
-                      <Text style={styles.modalLabel}>Exit Time</Text>
-                      <Text style={styles.modalValue}>{formatTime(selectedPerson.outTime)}</Text>
-                    </View>
-                  )}
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Status</Text>
-                    <View style={styles.statusBadge}>
-                      <View style={styles.statusDot} />
-                      <Text style={styles.statusText}>{selectedPerson.status}</Text>
+                    <Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Status</Text>
+                    <View style={[styles.statusBadge, { backgroundColor: theme.success + '22' }]}>
+                      <View style={[styles.statusDot, { backgroundColor: theme.success }]} />
+                      <Text style={[styles.statusText, { color: theme.success }]}>{selectedPerson.status}</Text>
                     </View>
                   </View>
                 </View>
@@ -498,86 +403,40 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       </Modal>
 
       {/* Visitor Detail Modal */}
-      <Modal
-        visible={showVisitorModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowVisitorModal(false)}
-      >
+      <Modal visible={showVisitorModal} animationType="slide" transparent={true} onRequestClose={() => setShowVisitorModal(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Visitor Request</Text>
-              <TouchableOpacity
-                onPress={() => setShowVisitorModal(false)}
-                style={styles.closeButton}
-              >
-                <Ionicons name="close" size={24} color="#6B7280" />
+          <View style={[styles.modalContainer, { backgroundColor: theme.surface }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>Visitor Request</Text>
+              <TouchableOpacity onPress={() => setShowVisitorModal(false)} style={[styles.closeButton, { backgroundColor: theme.surfaceHighlight }]}>
+                <Ionicons name="close" size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
-
             {selectedVisitor && (
-              <ScrollView 
-                style={styles.modalContent}
-                contentContainerStyle={styles.modalScrollContent}
-              >
-                <View style={styles.urgentBanner}>
-                  <Ionicons name="alert-circle" size={20} color="#EF4444" />
-                  <Text style={styles.urgentBannerText}>
-                    Request escalated - No response from {selectedVisitor.personToMeet}
-                  </Text>
+              <ScrollView style={styles.modalContent} contentContainerStyle={styles.modalScrollContent}>
+                <View style={[styles.urgentBanner, { backgroundColor: theme.error + '22' }]}>
+                  <Ionicons name="alert-circle" size={20} color={theme.error} />
+                  <Text style={[styles.urgentBannerText, { color: theme.error }]}>Request escalated - No response from {selectedVisitor.personToMeet}</Text>
                 </View>
-
                 <View style={styles.modalSection}>
-                  <Text style={styles.sectionTitle}>Visitor Information</Text>
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Name</Text>
-                    <Text style={styles.modalValue}>{selectedVisitor.name}</Text>
-                  </View>
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Email</Text>
-                    <Text style={styles.modalValue}>{selectedVisitor.email}</Text>
-                  </View>
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Phone</Text>
-                    <Text style={styles.modalValue}>{selectedVisitor.phone}</Text>
-                  </View>
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>People</Text>
-                    <Text style={styles.modalValue}>{selectedVisitor.numberOfPeople}</Text>
-                  </View>
+                  <Text style={[styles.sectionTitle, { color: theme.text }]}>Visitor Information</Text>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Name</Text><Text style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.name}</Text></View>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Email</Text><Text style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.email}</Text></View>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Phone</Text><Text style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.phone}</Text></View>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>People</Text><Text style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.numberOfPeople}</Text></View>
                 </View>
-
                 <View style={styles.modalSection}>
-                  <Text style={styles.sectionTitle}>Visit Details</Text>
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Person to Meet</Text>
-                    <Text style={styles.modalValue}>{selectedVisitor.personToMeet}</Text>
-                  </View>
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Department</Text>
-                    <Text style={styles.modalValue}>{selectedVisitor.department}</Text>
-                  </View>
-                  <View style={styles.modalRow}>
-                    <Text style={styles.modalLabel}>Purpose</Text>
-                    <Text style={[styles.modalValue, { flex: 1, textAlign: 'right' }]}>
-                      {selectedVisitor.purpose}
-                    </Text>
-                  </View>
+                  <Text style={[styles.sectionTitle, { color: theme.text }]}>Visit Details</Text>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Person to Meet</Text><Text style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.personToMeet}</Text></View>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Department</Text><Text style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.department}</Text></View>
+                  <View style={styles.modalRow}><Text style={[styles.modalLabel, { color: theme.textSecondary }]}>Purpose</Text><Text style={[styles.modalValue, { color: theme.text, flex: 1, textAlign: 'right' }]}>{selectedVisitor.purpose}</Text></View>
                 </View>
-
                 <View style={styles.modalActions}>
-                  <TouchableOpacity
-                    style={styles.modalApproveBtn}
-                    onPress={() => handleApproveVisitor(selectedVisitor)}
-                  >
+                  <TouchableOpacity style={[styles.modalApproveBtn, { backgroundColor: theme.success }]} onPress={() => handleApproveVisitor(selectedVisitor)}>
                     <Ionicons name="checkmark-circle" size={20} color="#FFF" />
                     <Text style={styles.modalBtnText}>Approve</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.modalRejectBtn}
-                    onPress={() => handleRejectVisitor(selectedVisitor)}
-                  >
+                  <TouchableOpacity style={[styles.modalRejectBtn, { backgroundColor: theme.error }]} onPress={() => handleRejectVisitor(selectedVisitor)}>
                     <Ionicons name="close-circle" size={20} color="#FFF" />
                     <Text style={styles.modalBtnText}>Reject</Text>
                   </TouchableOpacity>
@@ -589,49 +448,31 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       </Modal>
 
       {/* Rejection Reason Modal */}
-      <Modal
-        visible={showRejectModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowRejectModal(false)}
-      >
+      <Modal visible={showRejectModal} transparent animationType="slide" onRequestClose={() => setShowRejectModal(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.rejectModalContent}>
-            <View style={styles.rejectModalHeader}>
-              <Text style={styles.rejectModalTitle}>Reject Visitor</Text>
+          <View style={[styles.rejectModalContent, { backgroundColor: theme.surface }]}>
+            <View style={[styles.rejectModalHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.rejectModalTitle, { color: theme.text }]}>Reject Visitor</Text>
               <TouchableOpacity onPress={() => setShowRejectModal(false)}>
-                <Ionicons name="close" size={24} color="#64748B" />
+                <Ionicons name="close" size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
-
-            {selectedVisitor && (
-              <Text style={styles.rejectModalSubtitle}>
-                Provide reason for rejecting {selectedVisitor.name}
-              </Text>
-            )}
-
+            {selectedVisitor && <Text style={[styles.rejectModalSubtitle, { color: theme.textSecondary }]}>Provide reason for rejecting {selectedVisitor.name}</Text>}
             <TextInput
-              style={styles.rejectReasonInput}
+              style={[styles.rejectReasonInput, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
               placeholder="Enter rejection reason..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={theme.textTertiary}
               value={rejectionReason}
               onChangeText={setRejectionReason}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
             />
-
             <View style={styles.rejectModalButtons}>
-              <TouchableOpacity
-                style={styles.rejectModalCancelBtn}
-                onPress={() => setShowRejectModal(false)}
-              >
-                <Text style={styles.rejectModalCancelText}>Cancel</Text>
+              <TouchableOpacity style={[styles.rejectModalCancelBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]} onPress={() => setShowRejectModal(false)}>
+                <Text style={[styles.rejectModalCancelText, { color: theme.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.rejectModalConfirmBtn}
-                onPress={confirmRejectVisitor}
-              >
+              <TouchableOpacity style={[styles.rejectModalConfirmBtn, { backgroundColor: theme.error }]} onPress={confirmRejectVisitor}>
                 <Ionicons name="close-circle" size={20} color="#FFF" />
                 <Text style={styles.rejectModalConfirmText}>Reject</Text>
               </TouchableOpacity>
@@ -652,509 +493,86 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#00BCD4',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  headerInfo: {
-    gap: 2,
-  },
-  greeting: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  notificationIndicator: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EF4444',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-    minHeight: 80,
-  },
-  statIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '600',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  sectionCount: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  emptyState: {
-    paddingVertical: 80,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginTop: 16,
-  },
-  personCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  personAvatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#00BCD4',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  personAvatarText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  personInfo: {
-    flex: 1,
-  },
-  personName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  personType: {
-    fontSize: 13,
-    color: '#00BCD4',
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  personPurpose: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  personRight: {
-    alignItems: 'flex-end',
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 6,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#10B981',
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#10B981',
-  },
-  personTime: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginBottom: 6,
-  },
-  exitButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EF4444',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 4,
-  },
-  exitButtonText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '90%',
-    minHeight: '50%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    flex: 1,
-    maxHeight: '100%',
-  },
-  modalScrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-  modalSection: {
-    marginBottom: 20,
-  },
-  modalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  modalLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  modalValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  badge: {
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#EF4444',
-  },
-  visitorRequestsContainer: {
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  visitorRequestsContent: {
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  visitorRequestCard: {
-    width: 200,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#FEF3C7',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  visitorCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  visitorAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FEF3C7',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  urgentBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEE2E2',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 4,
-  },
-  urgentText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#EF4444',
-  },
-  visitorName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  visitorMeet: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginBottom: 2,
-  },
-  visitorDept: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    marginBottom: 12,
-  },
-  visitorActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  approveBtn: {
-    flex: 1,
-    backgroundColor: '#10B981',
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rejectBtn: {
-    flex: 1,
-    backgroundColor: '#EF4444',
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  urgentBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEE2E2',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    gap: 8,
-  },
-  urgentBannerText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#991B1B',
-    fontWeight: '600',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  modalApproveBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#10B981',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  modalRejectBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EF4444',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  modalBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  // Rejection Modal Styles
-  rejectModalContent: {
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    padding: 24,
-    width: '90%',
-    maxWidth: 400,
-  },
-  rejectModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  rejectModalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E293B',
-  },
-  rejectModalSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    marginBottom: 16,
-  },
-  rejectReasonInput: {
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    padding: 12,
-    fontSize: 14,
-    color: '#1E293B',
-    minHeight: 100,
-    marginBottom: 20,
-  },
-  rejectModalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  rejectModalCancelBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rejectModalCancelText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#64748B',
-  },
-  rejectModalConfirmBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EF4444',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  rejectModalConfirmText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFF',
-  },
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  avatarImage: { width: 48, height: 48, borderRadius: 24 },
+  avatarText: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
+  headerInfo: { gap: 2 },
+  greeting: { fontSize: 13 },
+  userName: { fontSize: 18, fontWeight: '700' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  notificationIndicator: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4 },
+  statsContainer: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 20, gap: 12 },
+  statCard: { flex: 1, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2, minHeight: 80 },
+  statIcon: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
+  statValue: { fontSize: 24, fontWeight: '700', marginBottom: 2 },
+  statLabel: { fontSize: 14, fontWeight: '600' },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 12 },
+  sectionTitle: { fontSize: 16, fontWeight: '700' },
+  sectionCount: { fontSize: 14 },
+  content: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
+  emptyState: { paddingVertical: 80, alignItems: 'center' },
+  emptyText: { fontSize: 16, fontWeight: '600', marginTop: 16 },
+  personCard: { borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
+  personAvatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  personAvatarText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+  personInfo: { flex: 1 },
+  personName: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
+  personType: { fontSize: 13, fontWeight: '600', marginBottom: 2 },
+  personPurpose: { fontSize: 13 },
+  personRight: { alignItems: 'flex-end' },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: 6 },
+  statusDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
+  statusText: { fontSize: 11, fontWeight: '700' },
+  personTime: { fontSize: 12, marginBottom: 6 },
+  exitButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, gap: 4 },
+  exitButtonText: { fontSize: 11, fontWeight: '700', color: '#FFF' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'flex-end' },
+  modalContainer: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '90%', minHeight: '50%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 20, borderBottomWidth: 1 },
+  modalTitle: { fontSize: 20, fontWeight: '700' },
+  closeButton: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  modalContent: { flex: 1, maxHeight: '100%' },
+  modalScrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
+  modalSection: { marginBottom: 20 },
+  modalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  modalLabel: { fontSize: 14 },
+  modalValue: { fontSize: 14, fontWeight: '600' },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  badgeText: { fontSize: 12, fontWeight: '700' },
+  visitorRequestsContainer: { marginTop: 8, marginBottom: 16 },
+  visitorRequestsContent: { paddingHorizontal: 20, gap: 12 },
+  visitorRequestCard: { width: 200, borderRadius: 12, padding: 16, borderWidth: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  visitorCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  visitorAvatar: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  urgentBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, gap: 4 },
+  urgentText: { fontSize: 10, fontWeight: '700' },
+  visitorName: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
+  visitorMeet: { fontSize: 13, marginBottom: 2 },
+  visitorDept: { fontSize: 12, marginBottom: 12 },
+  visitorActions: { flexDirection: 'row', gap: 8 },
+  approveBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  rejectBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  urgentBanner: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 8, marginBottom: 16, gap: 8 },
+  urgentBannerText: { flex: 1, fontSize: 13, fontWeight: '600' },
+  modalActions: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  modalApproveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, gap: 8 },
+  modalRejectBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, gap: 8 },
+  modalBtnText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  rejectModalContent: { borderRadius: 20, padding: 24, width: '90%', maxWidth: 400 },
+  rejectModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, borderBottomWidth: 0 },
+  rejectModalTitle: { fontSize: 20, fontWeight: '700' },
+  rejectModalSubtitle: { fontSize: 14, marginBottom: 16 },
+  rejectReasonInput: { borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 14, minHeight: 100, marginBottom: 20 },
+  rejectModalButtons: { flexDirection: 'row', gap: 12 },
+  rejectModalCancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  rejectModalCancelText: { fontSize: 16, fontWeight: '600' },
+  rejectModalConfirmBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, gap: 8 },
+  rejectModalConfirmText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
 });
 
 export default NewSecurityDashboard;

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-native-qrcode-svg';
+import { useTheme } from '../context/ThemeContext';
 
 interface GatePassQRModalProps {
   visible: boolean;
@@ -39,6 +40,7 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
   reason,
   validUntil = 'One time',
 }) => {
+  const { theme } = useTheme();
   return (
     <Modal
       visible={visible}
@@ -47,22 +49,22 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: theme.surface }]}>
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Gate Pass QR Code</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color="#374151" />
+          <View style={[styles.header, { borderBottomColor: theme.border }]}>
+            <Text style={[styles.title, { color: theme.text }]}>Gate Pass QR Code</Text>
+            <TouchableOpacity onPress={onClose} style={[styles.closeBtn, { backgroundColor: theme.surfaceHighlight }]}>
+              <Ionicons name="close" size={22} color={theme.text} />
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.body}>
             {/* Person Info */}
-            <Text style={styles.personName}>{personName.toUpperCase()}</Text>
-            <Text style={styles.personId}>{personId}</Text>
+            <Text style={[styles.personName, { color: theme.text }]}>{personName.toUpperCase()}</Text>
+            <Text style={[styles.personId, { color: theme.textSecondary }]}>{personId}</Text>
 
             {/* QR Code */}
-            <View style={styles.qrCard}>
+            <View style={[styles.qrCard, { backgroundColor: theme.surface }]}>
               {qrCodeData ? (
                 isQRString(qrCodeData) ? (
                   <QRCode
@@ -80,34 +82,34 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
                 )
               ) : (
                 <View style={styles.qrLoading}>
-                  <ActivityIndicator size="large" color="#6B7280" />
-                  <Text style={styles.qrLoadingText}>Loading...</Text>
+                  <ActivityIndicator size="large" color={theme.primary} />
+                  <Text style={[styles.qrLoadingText, { color: theme.textTertiary }]}>Loading...</Text>
                 </View>
               )}
             </View>
 
-            {/* Manual Entry Code — dashed box */}
+            {/* Manual Entry Code */}
             {manualCode ? (
-              <View style={styles.manualBox}>
-                <Text style={styles.manualLabel}>MANUAL ENTRY CODE</Text>
-                <Text style={styles.manualValue}>{manualCode}</Text>
+              <View style={[styles.manualBox, { borderColor: theme.border }]}>
+                <Text style={[styles.manualLabel, { color: theme.textSecondary }]}>MANUAL ENTRY CODE</Text>
+                <Text style={[styles.manualValue, { color: theme.text }]}>{manualCode}</Text>
               </View>
             ) : null}
 
             {/* Scan instruction */}
-            <Text style={styles.scanText}>SCAN AT MAIN GATE EXIT</Text>
+            <Text style={[styles.scanText, { color: theme.textTertiary }]}>SCAN AT MAIN GATE EXIT</Text>
 
             {/* Details card */}
-            <View style={styles.detailsCard}>
+            <View style={[styles.detailsCard, { backgroundColor: theme.inputBackground }]}>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Reason:</Text>
-                <Text style={styles.detailValue} numberOfLines={2}>
+                <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Reason:</Text>
+                <Text style={[styles.detailValue, { color: theme.text }]} numberOfLines={2}>
                   {reason || 'Gate Pass'}
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Valid Until:</Text>
-                <Text style={styles.detailValue}>{validUntil}</Text>
+                <Text style={[styles.detailLabel, { color: theme.textSecondary }]}>Valid Until:</Text>
+                <Text style={[styles.detailValue, { color: theme.text }]}>{validUntil}</Text>
               </View>
             </View>
           </ScrollView>
@@ -126,7 +128,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   card: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     width: '100%',
     maxWidth: 360,
@@ -141,18 +142,15 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#111827',
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -165,20 +163,17 @@ const styles = StyleSheet.create({
   personName: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#111827',
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   personId: {
     fontSize: 13,
-    color: '#6B7280',
     fontWeight: '600',
     marginTop: 4,
     marginBottom: 16,
     textAlign: 'center',
   },
   qrCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -203,13 +198,11 @@ const styles = StyleSheet.create({
   },
   qrLoadingText: {
     fontSize: 14,
-    color: '#9CA3AF',
     fontWeight: '500',
   },
   manualBox: {
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: '#9CA3AF',
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 20,
@@ -220,25 +213,21 @@ const styles = StyleSheet.create({
   manualLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#6B7280',
     letterSpacing: 1,
     marginBottom: 5,
   },
   manualValue: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#111827',
     letterSpacing: 6,
   },
   scanText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#6B7280',
     letterSpacing: 1.5,
     marginBottom: 14,
   },
   detailsCard: {
-    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -252,14 +241,12 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: '#6B7280',
     fontWeight: '500',
     flex: 1,
   },
   detailValue: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#111827',
     flex: 2,
     textAlign: 'right',
   },

@@ -17,6 +17,7 @@ import { Staff, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import { useNotifications } from '../../context/NotificationContext';
 import { useProfile } from '../../context/ProfileContext';
+import { useTheme } from '../../context/ThemeContext';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import StaffRequestTimeline from '../../components/StaffRequestTimeline';
 import NotificationDropdown from '../../components/NotificationDropdown';
@@ -35,6 +36,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   onLogout,
   onNavigate,
 }) => {
+  const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -282,11 +284,11 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => {
             setBottomTab('PROFILE');
@@ -295,78 +297,78 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.avatarImage} />
             ) : (
-              <View style={styles.avatar}>
+              <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
                 <Text style={styles.avatarText}>{getInitials(staff.staffName || 'DR')}</Text>
               </View>
             )}
           </TouchableOpacity>
           <View style={styles.headerInfo}>
-            <Text style={styles.greeting}>GOOD MORNING,</Text>
-            <Text style={styles.userName}>{(staff.staffName || 'Divya Rao').toUpperCase()}</Text>
+            <Text style={[styles.greeting, { color: theme.textSecondary }]}>GOOD MORNING,</Text>
+            <Text style={[styles.userName, { color: theme.text }]}>{(staff.staffName || 'Divya Rao').toUpperCase()}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity 
-            style={styles.iconButton}
+            style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
             onPress={() => setShowNotificationDropdown(true)}
           >
-            <Ionicons name="notifications-outline" size={24} color="#1F2937" />
+            <Ionicons name="notifications-outline" size={24} color={theme.text} />
             {unreadCount > 0 && (
-              <View style={styles.notificationIndicator} />
+              <View style={[styles.notificationIndicator, { backgroundColor: theme.success, borderColor: theme.surface }]} />
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={onLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#EF4444" />
+          <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onLogout}>
+            <Ionicons name="log-out-outline" size={24} color={theme.error} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#9CA3AF" />
+      <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
+        <Ionicons name="search" size={20} color={theme.textTertiary} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: theme.text }]}
           placeholder="Search requests..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={theme.textTertiary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
       </View>
 
       {/* Stats Tabs */}
-      <View style={styles.statsContainer}>
+      <View style={[styles.statsContainer, { backgroundColor: theme.surface }]}>
         <TouchableOpacity
-          style={[styles.statTab, activeTab === 'PENDING' && styles.statTabActive]}
+          style={[styles.statTab, activeTab === 'PENDING' && { borderBottomColor: theme.warning }]}
           onPress={() => setActiveTab('PENDING')}
         >
-          <Text style={[styles.statLabel, activeTab === 'PENDING' && styles.statLabelActive]}>
+          <Text style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'PENDING' && { color: theme.warning }]}>
             PENDING
           </Text>
-          <Text style={[styles.statValue, activeTab === 'PENDING' && styles.statValueActive]}>
+          <Text style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: theme.text }]}>
             {stats.pending}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.statTab, activeTab === 'APPROVED' && styles.statTabActive]}
+          style={[styles.statTab, activeTab === 'APPROVED' && { borderBottomColor: theme.success }]}
           onPress={() => setActiveTab('APPROVED')}
         >
-          <Text style={[styles.statLabel, activeTab === 'APPROVED' && styles.statLabelActive]}>
+          <Text style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'APPROVED' && { color: theme.success }]}>
             APPROVED
           </Text>
-          <Text style={[styles.statValue, activeTab === 'APPROVED' && styles.statValueActive]}>
+          <Text style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: theme.text }]}>
             {stats.approved}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.statTab, activeTab === 'REJECTED' && styles.statTabActive]}
+          style={[styles.statTab, activeTab === 'REJECTED' && { borderBottomColor: theme.error }]}
           onPress={() => setActiveTab('REJECTED')}
         >
-          <Text style={[styles.statLabel, activeTab === 'REJECTED' && styles.statLabelActive]}>
+          <Text style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'REJECTED' && { color: theme.error }]}>
             REJECTED
           </Text>
-          <Text style={[styles.statValue, activeTab === 'REJECTED' && styles.statValueActive]}>
+          <Text style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: theme.text }]}>
             {stats.rejected}
           </Text>
         </TouchableOpacity>
@@ -382,44 +384,44 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
       >
         {filteredRequests.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="checkmark-done-circle-outline" size={64} color="#D1D5DB" />
-            <Text style={styles.emptyText}>No {activeTab.toLowerCase()} requests</Text>
+            <Ionicons name="checkmark-done-circle-outline" size={64} color={theme.border} />
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No {activeTab.toLowerCase()} requests</Text>
           </View>
         ) : (
           filteredRequests.map((request) => (
             <TouchableOpacity
               key={request.id}
-              style={styles.requestCard}
+              style={[styles.requestCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
               onPress={() => {
                 setSelectedRequest(request);
                 setShowDetailModal(true);
               }}
             >
               <View style={styles.cardTopRow}>
-                <View style={[styles.avatarContainer, { backgroundColor: request.requestType === 'VISITOR' ? '#E0F2FE' : '#F3F4F6' }]}>
-                  <Text style={styles.requestAvatarText}>
+                <View style={[styles.avatarContainer, { backgroundColor: request.requestType === 'VISITOR' ? theme.surfaceHighlight : theme.surfaceHighlight }]}>
+                  <Text style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
                     {getInitials(request.studentName || 'ST')}
                   </Text>
                 </View>
                 
                 <View style={styles.headerMainInfo}>
                   <View style={styles.nameRow}>
-                    <Text style={styles.requestStudentName} numberOfLines={1}>
+                    <Text style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
                       {request.studentName || 'Unknown'}
                     </Text>
                     {request.requestType === 'VISITOR' ? (
-                      <View style={styles.passTypePill}>
-                        <Text style={styles.passTypePillText}>Visitor</Text>
+                      <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+                        <Text style={[styles.passTypePillText, { color: theme.text }]}>Visitor</Text>
                       </View>
                     ) : (
-                      <View style={styles.passTypePill}>
-                        <Text style={styles.passTypePillText}>
+                      <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+                        <Text style={[styles.passTypePillText, { color: theme.text }]}>
                           {request.passType === 'BULK' ? 'Bulk Pass' : 'Gatepass'}
                         </Text>
                       </View>
                     )}
                   </View>
-                  <Text style={styles.studentIdSub}>
+                  <Text style={[styles.studentIdSub, { color: theme.textSecondary }]}>
                     {request.requestType === 'VISITOR'
                       ? `Visitor • ${request.visitorPhone || ''}`
                       : `${request.regNo || 'N/A'} • ${request.department || 'Department'}`}
@@ -427,7 +429,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                 </View>
 
                 <View style={styles.timeAgoContainer}>
-                  <Text style={styles.timeAgoText}>
+                  <Text style={[styles.timeAgoText, { color: theme.textTertiary }]}>
                     {(() => {
                       const d = new Date(request.requestDate || request.createdAt);
                       const diffMs = Date.now() - d.getTime();
@@ -441,14 +443,14 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                 </View>
               </View>
 
-              <View style={styles.detailsBlock}>
+              <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
                 <View style={styles.detailItem}>
-                  <Ionicons name="document-text-outline" size={16} color="#4B5563" />
-                  <Text style={styles.detailText}>{request.purpose || 'General'}</Text>
+                  <Ionicons name="document-text-outline" size={16} color={theme.textSecondary} />
+                  <Text style={[styles.detailText, { color: theme.text }]}>{request.purpose || 'General'}</Text>
                 </View>
                 <View style={styles.detailItem}>
-                  <Ionicons name="calendar-outline" size={16} color="#4B5563" />
-                  <Text style={styles.detailText}>
+                  <Ionicons name="calendar-outline" size={16} color={theme.textSecondary} />
+                  <Text style={[styles.detailText, { color: theme.text }]}>
                     {request.requestType === 'VISITOR' && request.visitDate
                       ? `${request.visitDate}${request.visitTime ? ` at ${request.visitTime}` : ''}`
                       : new Date(request.requestDate || request.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -456,8 +458,8 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                 </View>
                 {request.passType === 'BULK' && (
                   <View style={styles.detailItem}>
-                    <Ionicons name="people-outline" size={16} color="#4B5563" />
-                    <Text style={styles.detailText}>
+                    <Ionicons name="people-outline" size={16} color={theme.textSecondary} />
+                    <Text style={[styles.detailText, { color: theme.text }]}>
                       {(() => {
                         const parts: string[] = [];
                         const sc = request.staffCount ?? 0;
@@ -474,15 +476,15 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
               <View style={styles.cardFooter}>
                 <View style={[
                   styles.statusBadge,
-                  request.staffApproval === 'PENDING' && styles.statusPending,
-                  request.staffApproval === 'APPROVED' && styles.statusApproved,
-                  request.staffApproval === 'REJECTED' && styles.statusRejected,
+                  request.staffApproval === 'PENDING' && { backgroundColor: theme.warning + '22' },
+                  request.staffApproval === 'APPROVED' && { backgroundColor: theme.success + '22' },
+                  request.staffApproval === 'REJECTED' && { backgroundColor: theme.error + '22' },
                 ]}>
                   <Text style={[
                     styles.statusText,
-                    request.staffApproval === 'PENDING' && styles.statusTextPending,
-                    request.staffApproval === 'APPROVED' && styles.statusTextApproved,
-                    request.staffApproval === 'REJECTED' && styles.statusTextRejected,
+                    request.staffApproval === 'PENDING' && { color: theme.warning },
+                    request.staffApproval === 'APPROVED' && { color: theme.success },
+                    request.staffApproval === 'REJECTED' && { color: theme.error },
                   ]}>
                     {request.staffApproval}
                   </Text>
@@ -494,7 +496,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => setBottomTab('HOME')}
@@ -502,15 +504,12 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           <Ionicons
             name={bottomTab === 'HOME' ? 'home' : 'home-outline'}
             size={22}
-            color={bottomTab === 'HOME' ? '#1F2937' : '#9CA3AF'}
+            color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary}
           />
-          <Text style={[
-            styles.navLabel,
-            bottomTab === 'HOME' && styles.navLabelActive
-          ]}>
+          <Text style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>
             Home
           </Text>
-          {bottomTab === 'HOME' && <View style={styles.activeIndicator} />}
+          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -520,8 +519,8 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
             setShowPassTypeModal(true);
           }}
         >
-          <Ionicons name="add-circle-outline" size={32} color="#6B7280" />
-          <Text style={styles.navLabel}>New Pass</Text>
+          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
+          <Text style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -534,15 +533,12 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           <Ionicons
             name={bottomTab === 'MY_REQUESTS' ? 'list' : 'list-outline'}
             size={22}
-            color={bottomTab === 'MY_REQUESTS' ? '#1F2937' : '#9CA3AF'}
+            color={bottomTab === 'MY_REQUESTS' ? theme.primary : theme.textTertiary}
           />
-          <Text style={[
-            styles.navLabel,
-            bottomTab === 'MY_REQUESTS' && styles.navLabelActive
-          ]}>
+          <Text style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_REQUESTS' && { color: theme.primary }]}>
             My Requests
           </Text>
-          {bottomTab === 'MY_REQUESTS' && <View style={styles.activeIndicator} />}
+          {bottomTab === 'MY_REQUESTS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -555,15 +551,12 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           <Ionicons
             name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'}
             size={22}
-            color={bottomTab === 'PROFILE' ? '#1F2937' : '#9CA3AF'}
+            color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary}
           />
-          <Text style={[
-            styles.navLabel,
-            bottomTab === 'PROFILE' && styles.navLabelActive
-          ]}>
+          <Text style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>
             Profile
           </Text>
-          {bottomTab === 'PROFILE' && <View style={styles.activeIndicator} />}
+          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
       </View>
 
@@ -600,15 +593,15 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         onRequestClose={() => setShowQRModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.qrModalContainer}>
+          <View style={[styles.qrModalContainer, { backgroundColor: theme.surface }]}>
             {/* Modal Header */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Gate Pass QR Code</Text>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>Gate Pass QR Code</Text>
               <TouchableOpacity
                 onPress={() => setShowQRModal(false)}
-                style={styles.closeButton}
+                style={[styles.closeButton, { backgroundColor: theme.surfaceHighlight }]}
               >
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -619,55 +612,55 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
             >
               {/* Staff Info */}
               <View style={styles.qrStaffInfo}>
-                <Text style={styles.qrStaffName}>{staff.staffName}</Text>
-                <Text style={styles.qrStaffCode}>{staff.staffCode}</Text>
+                <Text style={[styles.qrStaffName, { color: theme.text }]}>{staff.staffName}</Text>
+                <Text style={[styles.qrStaffCode, { color: theme.textSecondary }]}>{staff.staffCode}</Text>
               </View>
 
               {/* QR Code Display */}
               <View style={styles.qrCodeContainer}>
                 {qrCodeData ? (
-                  <View style={styles.qrCodeWrapper}>
+                  <View style={[styles.qrCodeWrapper, { backgroundColor: theme.surface }]}>
                     <Image source={{ uri: qrCodeData }} style={styles.qrCodeImage} />
                   </View>
                 ) : (
                   <View style={styles.qrLoadingContainer}>
-                    <Text style={styles.qrLoadingText}>Loading QR...</Text>
+                    <Text style={[styles.qrLoadingText, { color: theme.textSecondary }]}>Loading QR...</Text>
                   </View>
                 )}
               </View>
 
               {/* Manual Entry Code */}
               {manualEntryCode && (
-                <View style={styles.manualCodeContainer}>
-                  <Text style={styles.manualCodeLabel}>Manual Entry Code</Text>
-                  <Text style={styles.manualCodeText}>{manualEntryCode}</Text>
+                <View style={[styles.manualCodeContainer, { backgroundColor: theme.surfaceHighlight, borderColor: theme.primary }]}>
+                  <Text style={[styles.manualCodeLabel, { color: theme.textSecondary }]}>Manual Entry Code</Text>
+                  <Text style={[styles.manualCodeText, { color: theme.primary }]}>{manualEntryCode}</Text>
                 </View>
               )}
 
               {/* Instructions */}
-              <Text style={styles.qrInstructions}>
+              <Text style={[styles.qrInstructions, { color: theme.textSecondary }]}>
                 Scan at Main Gate Exit
               </Text>
 
               {/* Request Details */}
               {selectedRequest && (
-                <View style={styles.qrRequestDetails}>
+                <View style={[styles.qrRequestDetails, { backgroundColor: theme.inputBackground }]}>
                   <View style={styles.qrDetailRow}>
-                    <Text style={styles.qrDetailLabel}>Reason:</Text>
-                    <Text style={styles.qrDetailValue}>
+                    <Text style={[styles.qrDetailLabel, { color: theme.textSecondary }]}>Reason:</Text>
+                    <Text style={[styles.qrDetailValue, { color: theme.text }]}>
                       {selectedRequest.reason || 'Staff Exit'}
                     </Text>
                   </View>
                   <View style={styles.qrDetailRow}>
-                    <Text style={styles.qrDetailLabel}>Valid Until:</Text>
-                    <Text style={styles.qrDetailValue}>One time</Text>
+                    <Text style={[styles.qrDetailLabel, { color: theme.textSecondary }]}>Valid Until:</Text>
+                    <Text style={[styles.qrDetailValue, { color: theme.text }]}>One time</Text>
                   </View>
                 </View>
               )}
 
               {/* Close Button */}
               <TouchableOpacity
-                style={styles.qrCloseButton}
+                style={[styles.qrCloseButton, { backgroundColor: theme.primary }]}
                 onPress={() => setShowQRModal(false)}
               >
                 <Text style={styles.qrCloseButtonText}>Close</Text>
@@ -714,7 +707,6 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
   },
   header: {
     flexDirection: 'row',
@@ -722,7 +714,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -733,7 +724,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#8B5CF6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -752,12 +742,10 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 12,
-    color: '#6B7280',
   },
   userName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
   },
   headerRight: {
     flexDirection: 'row',
@@ -767,7 +755,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -779,14 +766,11 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#10b981',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     marginTop: 16,
     marginBottom: 16,
@@ -798,11 +782,9 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     marginBottom: 16,
     borderRadius: 12,
@@ -820,26 +802,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 3,
     borderBottomColor: 'transparent',
   },
-  statTabActive: {
-    borderBottomColor: '#F59E0B',
-  },
   statLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#9CA3AF',
     marginBottom: 4,
     letterSpacing: 0.5,
-  },
-  statLabelActive: {
-    color: '#F59E0B',
   },
   statValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#6B7280',
-  },
-  statValueActive: {
-    color: '#1F2937',
   },
   content: {
     flex: 1,
@@ -855,16 +826,13 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6B7280',
     marginTop: 16,
   },
   requestCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -880,7 +848,6 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -888,7 +855,6 @@ const styles = StyleSheet.create({
   requestAvatarText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#6B7280',
   },
   headerMainInfo: {
     flex: 1,
@@ -901,11 +867,9 @@ const styles = StyleSheet.create({
   requestStudentName: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#111827',
   },
   studentIdSub: {
     fontSize: 13,
-    color: '#6B7280',
     marginTop: 2,
   },
   timeAgoContainer: {
@@ -914,10 +878,8 @@ const styles = StyleSheet.create({
   },
   timeAgoText: {
     fontSize: 12,
-    color: '#9CA3AF',
   },
   detailsBlock: {
-    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 12,
     gap: 8,
@@ -930,7 +892,6 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: '#374151',
     fontWeight: '600',
   },
   cardFooter: {
@@ -941,7 +902,6 @@ const styles = StyleSheet.create({
   viewBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3F4F6',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -950,53 +910,29 @@ const styles = StyleSheet.create({
   viewBadgeText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#4B5563',
   },
   passTypePill: {
-    backgroundColor: '#F3F4F6',
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   passTypePillText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#000000',
   },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
-  statusPending: {
-    backgroundColor: '#FEF3C7',
-  },
-  statusApproved: {
-    backgroundColor: '#D1FAE5',
-  },
-  statusRejected: {
-    backgroundColor: '#FEE2E2',
-  },
   statusText: {
     fontSize: 12,
     fontWeight: '700',
   },
-  statusTextPending: {
-    color: '#F59E0B',
-  },
-  statusTextApproved: {
-    color: '#10B981',
-  },
-  statusTextRejected: {
-    color: '#EF4444',
-  },
   bottomNav: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
     paddingBottom: 4,
     paddingTop: 4,
     height: 60,
@@ -1012,21 +948,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 2,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
   },
   navLabel: {
     fontSize: 10,
-    color: '#9CA3AF',
     marginTop: 2,
-  },
-  navLabelActive: {
-    color: '#1F2937',
-    fontWeight: '600',
   },
   activeIndicator: {
     position: 'absolute',
@@ -1034,13 +963,11 @@ const styles = StyleSheet.create({
     left: '25%',
     right: '25%',
     height: 3,
-    backgroundColor: '#6B7280',
     borderRadius: 2,
   },
   requestStudent: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#6B7280',
     marginBottom: 4,
   },
   modalOverlay: {
@@ -1050,7 +977,6 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
     marginTop: 60,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -1062,18 +988,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   closeButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1089,7 +1012,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingBottom: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   modalRow: {
     flexDirection: 'row',
@@ -1100,17 +1022,14 @@ const styles = StyleSheet.create({
   modalLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
   },
   modalValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 12,
   },
   actionButtons: {
@@ -1145,7 +1064,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ownRequestBadge: {
-    backgroundColor: '#8B5CF6',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -1157,7 +1075,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   visitorBadge: {
-    backgroundColor: '#00BCD4',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -1170,18 +1087,15 @@ const styles = StyleSheet.create({
   },
   visitorContact: {
     fontSize: 13,
-    color: '#6B7280',
     marginBottom: 4,
   },
   visitorVisitInfo: {
     fontSize: 13,
-    color: '#00BCD4',
     fontWeight: '600',
     marginBottom: 4,
   },
   qrModalContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
     marginTop: 60,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -1202,13 +1116,11 @@ const styles = StyleSheet.create({
   qrStaffName: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#1F2937',
     marginBottom: 4,
   },
   qrStaffCode: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
   },
   qrCodeContainer: {
     alignItems: 'center',
@@ -1216,7 +1128,6 @@ const styles = StyleSheet.create({
   },
   qrCodeWrapper: {
     padding: 20,
-    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     elevation: 8,
     shadowColor: '#000',
@@ -1235,16 +1146,13 @@ const styles = StyleSheet.create({
   },
   qrLoadingText: {
     fontSize: 14,
-    color: '#6B7280',
   },
   manualCodeContainer: {
-    backgroundColor: '#F3F4F6',
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 24,
     marginBottom: 15,
     borderWidth: 2,
-    borderColor: '#8B5CF6',
     borderStyle: 'dashed',
     alignItems: 'center',
   },
@@ -1254,13 +1162,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 4,
-    color: '#6B7280',
   },
   manualCodeText: {
     fontSize: 24,
     fontWeight: '900',
     letterSpacing: 4,
-    color: '#8B5CF6',
     fontFamily: 'monospace',
   },
   qrInstructions: {
@@ -1270,10 +1176,8 @@ const styles = StyleSheet.create({
     marginBottom: 25,
     textTransform: 'uppercase',
     textAlign: 'center',
-    color: '#6B7280',
   },
   qrRequestDetails: {
-    backgroundColor: '#F9FAFB',
     borderRadius: 20,
     padding: 20,
     marginBottom: 30,
@@ -1286,23 +1190,20 @@ const styles = StyleSheet.create({
   qrDetailLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#6B7280',
   },
   qrDetailValue: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#1F2937',
     flex: 1,
     textAlign: 'right',
     marginLeft: 20,
   },
   qrCloseButton: {
     paddingVertical: 18,
-    backgroundColor: '#8B5CF6',
     borderRadius: 16,
     alignItems: 'center',
     elevation: 4,
-    shadowColor: '#8B5CF6',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

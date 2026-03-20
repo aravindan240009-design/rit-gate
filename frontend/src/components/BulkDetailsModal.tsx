@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../services/api';
-import { THEME } from '../config/api.config';
+import { useTheme } from '../context/ThemeContext';
 import ParticipantsScreen from '../screens/shared/ParticipantsScreen';
 import GatePassQRModal from './GatePassQRModal';
 
@@ -43,6 +43,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
   currentUserId,
   processing = false,
 }) => {
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState<any>(null);
   const [requester, setRequester] = useState<any>(null);
@@ -118,16 +119,16 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
       transparent={false}
       onRequestClose={onClose}
     >
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]}>
         {/* ── Header ── */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#1F2937" />
+        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+          <TouchableOpacity onPress={onClose} style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]}>
+            <Ionicons name="arrow-back" size={22} color={theme.text} />
           </TouchableOpacity>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitle}>Bulk Pass Details</Text>
+            <Text style={[styles.headerTitle, { color: theme.text }]}>Bulk Pass Details</Text>
             {participants.length > 0 && (
-              <Text style={styles.headerSub}>{participants.length} participants</Text>
+              <Text style={[styles.headerSub, { color: theme.textTertiary }]}>{participants.length} participants</Text>
             )}
           </View>
           {/* status pill */}
@@ -141,14 +142,14 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
         {/* ── Body ── */}
         {loading ? (
           <View style={styles.center}>
-            <ActivityIndicator size="large" color={THEME.colors.primary} />
-            <Text style={styles.loadingText}>Loading...</Text>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Loading...</Text>
           </View>
         ) : error ? (
           <View style={styles.center}>
-            <Ionicons name="alert-circle" size={48} color="#EF4444" />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.retryBtn} onPress={loadDetails}>
+            <Ionicons name="alert-circle" size={48} color={theme.error} />
+            <Text style={[styles.errorText, { color: theme.error }]}>{error}</Text>
+            <TouchableOpacity style={[styles.retryBtn, { backgroundColor: theme.primary }]} onPress={loadDetails}>
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
           </View>
@@ -156,20 +157,20 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
           <View style={styles.body}>
             {/* Row 1 — Requester card */}
             {requester && (
-              <View style={styles.requesterCard}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>
+              <View style={[styles.requesterCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <View style={[styles.avatar, { backgroundColor: theme.primary + '20' }]}>
+                  <Text style={[styles.avatarText, { color: theme.primary }]}>
                     {(requester.name || 'U').charAt(0).toUpperCase()}
                   </Text>
                 </View>
                 <View style={styles.requesterInfo}>
-                  <Text style={styles.requesterName}>{requester.name || requester.requestedByStaffName}</Text>
-                  <Text style={styles.requesterSub}>{requester.role || 'Staff'} · {requester.department}</Text>
+                  <Text style={[styles.requesterName, { color: theme.text }]}>{requester.name || requester.requestedByStaffName}</Text>
+                  <Text style={[styles.requesterSub, { color: theme.textSecondary }]}>{requester.role || 'Staff'} · {requester.department}</Text>
                 </View>
                 {details?.qrOwnerId && (
-                  <View style={styles.receiverPill}>
-                    <Ionicons name="qr-code-outline" size={12} color="#6B21A8" />
-                    <Text style={styles.receiverPillText}>QR: {details.qrOwnerId}</Text>
+                  <View style={[styles.receiverPill, { backgroundColor: theme.surfaceHighlight }]}>
+                    <Ionicons name="qr-code-outline" size={12} color={theme.primary} />
+                    <Text style={[styles.receiverPillText, { color: theme.primary }]}>QR: {details.qrOwnerId}</Text>
                   </View>
                 )}
               </View>
@@ -177,31 +178,31 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
 
             {/* Row 2 — Info chips */}
             <View style={styles.chipRow}>
-              <View style={styles.chip}>
-                <Text style={styles.chipLabel}>PURPOSE</Text>
-                <Text style={styles.chipValue} numberOfLines={1}>{details?.purpose || 'N/A'}</Text>
+              <View style={[styles.chip, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <Text style={[styles.chipLabel, { color: theme.textTertiary }]}>PURPOSE</Text>
+                <Text style={[styles.chipValue, { color: theme.text }]} numberOfLines={1}>{details?.purpose || 'N/A'}</Text>
               </View>
-              <View style={styles.chip}>
-                <Text style={styles.chipLabel}>DATE</Text>
-                <Text style={styles.chipValue} numberOfLines={1}>
+              <View style={[styles.chip, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <Text style={[styles.chipLabel, { color: theme.textTertiary }]}>DATE</Text>
+                <Text style={[styles.chipValue, { color: theme.text }]} numberOfLines={1}>
                   {new Date(details?.exitDateTime || details?.requestDate || '').toLocaleDateString('en-GB', {
                     day: '2-digit', month: 'short', year: 'numeric'
                   })}
                 </Text>
               </View>
-              <View style={styles.chip}>
-                <Text style={styles.chipLabel}>PARTICIPANTS</Text>
-                <Text style={styles.chipValue}>{participants.length}</Text>
+              <View style={[styles.chip, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <Text style={[styles.chipLabel, { color: theme.textTertiary }]}>PARTICIPANTS</Text>
+                <Text style={[styles.chipValue, { color: theme.text }]}>{participants.length}</Text>
               </View>
             </View>
 
             {/* Row 3 — Reason */}
-            <View style={styles.reasonBox}>
-              <Text style={styles.reasonLabel}>REASON</Text>
-              <Text style={styles.reasonText} numberOfLines={2}>{details?.reason || 'N/A'}</Text>
+            <View style={[styles.reasonBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Text style={[styles.reasonLabel, { color: theme.textTertiary }]}>REASON</Text>
+              <Text style={[styles.reasonText, { color: theme.textSecondary }]} numberOfLines={2}>{details?.reason || 'N/A'}</Text>
             </View>
 
-            {/* Row 4 — Attachment + Remarks side by side (if both exist) or full width */}
+            {/* Row 4 — Attachment + Remarks side by side */}
             <View style={styles.midRow}>
               {details?.attachmentUri ? (
                 <TouchableOpacity
@@ -218,18 +219,18 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
               ) : null}
 
               {(details?.staffRemark || details?.hodRemark) && (
-                <View style={[styles.remarksBox, !details?.attachmentUri && { flex: 1 }]}>
-                  <Text style={styles.remarksSectionLabel}>REMARKS</Text>
+                <View style={[styles.remarksBox, { backgroundColor: theme.surface, borderColor: theme.border }, !details?.attachmentUri && { flex: 1 }]}>
+                  <Text style={[styles.remarksSectionLabel, { color: theme.textTertiary }]}>REMARKS</Text>
                   {details?.staffRemark && (
-                    <View style={styles.remarkItem}>
-                      <Text style={styles.remarkRole}>Staff</Text>
-                      <Text style={styles.remarkText} numberOfLines={2}>{details.staffRemark}</Text>
+                    <View style={[styles.remarkItem, { backgroundColor: theme.inputBackground, borderLeftColor: theme.warning }]}>
+                      <Text style={[styles.remarkRole, { color: theme.textSecondary }]}>Staff</Text>
+                      <Text style={[styles.remarkText, { color: theme.text }]} numberOfLines={2}>{details.staffRemark}</Text>
                     </View>
                   )}
                   {details?.hodRemark && (
-                    <View style={[styles.remarkItem, { marginTop: 6 }]}>
-                      <Text style={styles.remarkRole}>HOD</Text>
-                      <Text style={styles.remarkText} numberOfLines={2}>{details.hodRemark}</Text>
+                    <View style={[styles.remarkItem, { backgroundColor: theme.inputBackground, borderLeftColor: theme.warning, marginTop: 6 }]}>
+                      <Text style={[styles.remarkRole, { color: theme.textSecondary }]}>HOD</Text>
+                      <Text style={[styles.remarkText, { color: theme.text }]} numberOfLines={2}>{details.hodRemark}</Text>
                     </View>
                   )}
                 </View>
@@ -238,7 +239,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
 
             {/* Row 5 — View Participants button */}
             {participants.length > 0 && (
-              <TouchableOpacity style={styles.participantsBtn} onPress={() => setShowParticipants(true)}>
+              <TouchableOpacity style={[styles.participantsBtn, { backgroundColor: theme.primary }]} onPress={() => setShowParticipants(true)}>
                 <Ionicons name="people" size={18} color="#FFF" />
                 <Text style={styles.participantsBtnText}>View Participants</Text>
                 <View style={styles.countBadge}>
@@ -251,11 +252,11 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
 
         {/* ── Footer — remark input + action buttons ── */}
         {!loading && !error && showActions && (
-          <View style={styles.footer}>
+          <View style={[styles.footer, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
             <TextInput
-              style={styles.remarkInput}
+              style={[styles.remarkInput, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]}
               placeholder="Add a remark (optional)..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={theme.textTertiary}
               value={remark}
               onChangeText={setRemark}
               multiline
@@ -265,7 +266,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
             <View style={styles.actionRow}>
               {onReject && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, styles.rejectBtn, processing && { opacity: 0.5 }]}
+                  style={[styles.actionBtn, { backgroundColor: theme.error }, processing && { opacity: 0.5 }]}
                   onPress={() => { onClose(); onReject(requestId, remark); }}
                   disabled={processing}
                 >
@@ -275,7 +276,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
               )}
               {onApprove && (
                 <TouchableOpacity
-                  style={[styles.actionBtn, styles.approveBtn, processing && { opacity: 0.5 }]}
+                  style={[styles.actionBtn, { backgroundColor: theme.success }, processing && { opacity: 0.5 }]}
                   onPress={() => { onClose(); onApprove(requestId, remark); }}
                   disabled={processing}
                 >
@@ -353,7 +354,6 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
   },
 
   /* Header */
@@ -362,16 +362,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
     gap: 10,
   },
   backBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -381,11 +378,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1F2937',
   },
   headerSub: {
     fontSize: 12,
-    color: '#9CA3AF',
     marginTop: 1,
   },
   statusPill: {
@@ -410,19 +405,16 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 15,
-    color: '#6B7280',
   },
   errorText: {
     marginTop: 12,
     fontSize: 15,
-    color: '#EF4444',
     textAlign: 'center',
   },
   retryBtn: {
     marginTop: 16,
     paddingHorizontal: 24,
     paddingVertical: 10,
-    backgroundColor: THEME.colors.primary,
     borderRadius: 8,
   },
   retryText: {
@@ -430,7 +422,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  /* Body — flex column, no scroll */
+  /* Body */
   body: {
     flex: 1,
     padding: 14,
@@ -441,25 +433,21 @@ const styles = StyleSheet.create({
   requesterCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     gap: 10,
   },
   avatar: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: THEME.colors.primary + '20',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     fontSize: 17,
     fontWeight: '700',
-    color: THEME.colors.primary,
   },
   requesterInfo: {
     flex: 1,
@@ -467,17 +455,14 @@ const styles = StyleSheet.create({
   requesterName: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#111827',
   },
   requesterSub: {
     fontSize: 12,
-    color: '#6B7280',
     marginTop: 2,
   },
   receiverPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F3E8FF',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -485,7 +470,6 @@ const styles = StyleSheet.create({
   },
   receiverPillText: {
     fontSize: 11,
-    color: '#6B21A8',
     fontWeight: '700',
   },
 
@@ -496,15 +480,12 @@ const styles = StyleSheet.create({
   },
   chip: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   chipLabel: {
     fontSize: 10,
-    color: '#9CA3AF',
     fontWeight: '700',
     letterSpacing: 0.5,
     marginBottom: 3,
@@ -512,32 +493,27 @@ const styles = StyleSheet.create({
   chipValue: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#1F2937',
   },
 
   /* Reason */
   reasonBox: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   reasonLabel: {
     fontSize: 10,
-    color: '#9CA3AF',
     fontWeight: '700',
     letterSpacing: 0.5,
     marginBottom: 4,
   },
   reasonText: {
     fontSize: 13,
-    color: '#374151',
     fontWeight: '500',
     lineHeight: 18,
   },
 
-  /* Mid row — attachment + remarks */
+  /* Mid row */
   midRow: {
     flexDirection: 'row',
     gap: 10,
@@ -572,37 +548,30 @@ const styles = StyleSheet.create({
   },
   remarksBox: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   remarksSectionLabel: {
     fontSize: 10,
-    color: '#9CA3AF',
     fontWeight: '700',
     letterSpacing: 0.5,
     marginBottom: 6,
   },
   remarkItem: {
-    backgroundColor: '#F9FAFB',
     borderRadius: 8,
     padding: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
   },
   remarkRole: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#6B7280',
     marginBottom: 2,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   remarkText: {
     fontSize: 12,
-    color: '#374151',
     lineHeight: 16,
   },
 
@@ -611,7 +580,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4F46E5',
     paddingVertical: 13,
     borderRadius: 14,
     gap: 8,
@@ -635,20 +603,15 @@ const styles = StyleSheet.create({
 
   /* Footer */
   footer: {
-    backgroundColor: '#FFFFFF',
     padding: 14,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
     gap: 10,
   },
   remarkInput: {
-    backgroundColor: '#F9FAFB',
     borderRadius: 10,
     padding: 10,
     fontSize: 14,
-    color: '#1F2937',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     textAlignVertical: 'top',
     maxHeight: 70,
   },
@@ -665,12 +628,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 6,
   },
-  rejectBtn: {
-    backgroundColor: '#EF4444',
-  },
-  approveBtn: {
-    backgroundColor: '#10B981',
-  },
+  rejectBtn: {},
+  approveBtn: {},
   actionBtnText: {
     color: '#FFF',
     fontSize: 15,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 interface RequestTimelineProps {
   status: string;
@@ -18,6 +19,8 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({
   staffRemark,
   hodRemark,
 }) => {
+  const { theme } = useTheme();
+
   const getStepStatus = (step: number) => {
     if (status === 'REJECTED') {
       if (step === 1) return 'completed';
@@ -46,10 +49,10 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({
   };
 
   const getStepColor = (stepStatus: string) => {
-    if (stepStatus === 'completed') return '#10B981';
-    if (stepStatus === 'rejected') return '#EF4444';
-    if (stepStatus === 'active') return '#F59E0B';
-    return '#9CA3AF';
+    if (stepStatus === 'completed') return theme.success;
+    if (stepStatus === 'rejected') return theme.error;
+    if (stepStatus === 'active') return theme.warning;
+    return theme.textTertiary;
   };
 
   const getStepIcon = (stepStatus: string) => {
@@ -77,15 +80,14 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({
   return (
     <View style={styles.container}>
       {/* Progress Bar */}
-      <View style={styles.progressBarContainer}>
-        <View style={styles.progressBarBackground} />
+      <View style={[styles.progressBarContainer, { backgroundColor: theme.border }]}>
         <View
           style={[
             styles.progressBarFill,
             {
               width: `${progressPercentage}%`,
-              backgroundColor: status === 'APPROVED' ? '#10B981' : 
-                              status === 'REJECTED' ? '#EF4444' : '#F59E0B',
+              backgroundColor: status === 'APPROVED' ? theme.success :
+                              status === 'REJECTED' ? theme.error : theme.warning,
             },
           ]}
         />
@@ -100,40 +102,30 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({
         return (
           <View key={item.step} style={styles.stepContainer}>
             <View style={styles.stepIndicator}>
-              <View
-                style={[
-                  styles.iconContainer,
-                  { backgroundColor: color + '20' },
-                ]}
-              >
+              <View style={[styles.iconContainer, { backgroundColor: color + '20' }]}>
                 <Ionicons name={icon as any} size={28} color={color} />
               </View>
               {index < steps.length - 1 && (
-                <View
-                  style={[
-                    styles.connector,
-                    { backgroundColor: getStepColor(getStepStatus(item.step + 1)) + '40' }
-                  ]}
-                />
+                <View style={[styles.connector, { backgroundColor: getStepColor(getStepStatus(item.step + 1)) + '40' }]} />
               )}
             </View>
             <View style={styles.stepContent}>
-              <Text style={styles.stepLabel}>{item.label}</Text>
+              <Text style={[styles.stepLabel, { color: theme.text }]}>{item.label}</Text>
               <Text style={[styles.stepStatus, { color }]}>
                 {stepStatus === 'completed' ? '✓ Completed' :
                  stepStatus === 'rejected' ? '✗ Rejected' :
                  stepStatus === 'active' ? '⏳ In Progress' : '○ Pending'}
               </Text>
               {item.step === 2 && staffRemark && (
-                <View style={styles.remarkContainer}>
-                  <Text style={styles.remarkLabel}>Staff Remark:</Text>
-                  <Text style={styles.remarkText}>{staffRemark}</Text>
+                <View style={[styles.remarkContainer, { backgroundColor: theme.inputBackground, borderLeftColor: theme.warning }]}>
+                  <Text style={[styles.remarkLabel, { color: theme.textSecondary }]}>Staff Remark:</Text>
+                  <Text style={[styles.remarkText, { color: theme.text }]}>{staffRemark}</Text>
                 </View>
               )}
               {item.step === 3 && hodRemark && (
-                <View style={styles.remarkContainer}>
-                  <Text style={styles.remarkLabel}>HOD Remark:</Text>
-                  <Text style={styles.remarkText}>{hodRemark}</Text>
+                <View style={[styles.remarkContainer, { backgroundColor: theme.inputBackground, borderLeftColor: theme.warning }]}>
+                  <Text style={[styles.remarkLabel, { color: theme.textSecondary }]}>HOD Remark:</Text>
+                  <Text style={[styles.remarkText, { color: theme.text }]}>{hodRemark}</Text>
                 </View>
               )}
             </View>
@@ -152,25 +144,11 @@ const styles = StyleSheet.create({
     height: 6,
     marginBottom: 24,
     marginHorizontal: 8,
-    position: 'relative',
     borderRadius: 3,
     overflow: 'hidden',
-    backgroundColor: '#E5E7EB',
-  },
-  progressBarBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 3,
-    backgroundColor: '#E5E7EB',
   },
   progressBarFill: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
+    height: '100%',
     borderRadius: 3,
   },
   stepContainer: {
@@ -204,7 +182,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 6,
     letterSpacing: 0.3,
-    color: '#1F2937',
   },
   stepStatus: {
     fontSize: 14,
@@ -213,21 +190,17 @@ const styles = StyleSheet.create({
   },
   remarkContainer: {
     marginTop: 8,
-    backgroundColor: '#F3F4F6',
     padding: 10,
     borderRadius: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
   },
   remarkLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#6B7280',
     marginBottom: 2,
   },
   remarkText: {
     fontSize: 14,
-    color: '#374151',
     fontWeight: '500',
   },
 });

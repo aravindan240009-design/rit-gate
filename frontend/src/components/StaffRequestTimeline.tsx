@@ -181,9 +181,9 @@ const StaffRequestTimeline: React.FC<StaffRequestTimelineProps> = ({
                  stepStatus === 'active' ? '⏳ In Progress' : '○ Pending'}
               </Text>
               {item.step === 2 && request.hodRemark && (
-                <View style={styles.remarkContainer}>
-                  <Text style={styles.remarkLabel}>HOD Remark:</Text>
-                  <Text style={styles.remarkText}>{request.hodRemark}</Text>
+                <View style={[styles.remarkContainer, { backgroundColor: theme.inputBackground, borderLeftColor: theme.warning }]}>
+                  <Text style={[styles.remarkLabel, { color: theme.textSecondary }]}>HOD Remark:</Text>
+                  <Text style={[styles.remarkText, { color: theme.text }]}>{request.hodRemark}</Text>
                 </View>
               )}
             </View>
@@ -261,21 +261,17 @@ const styles = StyleSheet.create({
   remarkContainer: {
     marginTop: 8,
     padding: 10,
-    backgroundColor: '#F3F4F6',
     borderRadius: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
   },
   remarkLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#6B7280',
     marginBottom: 2,
     textTransform: 'uppercase',
   },
   remarkText: {
     fontSize: 13,
-    color: '#1F2937',
     fontWeight: '500',
   },
 });

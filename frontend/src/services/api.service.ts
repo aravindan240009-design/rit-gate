@@ -238,8 +238,8 @@ class ApiService {
     catch (e: any) { return { success: false, message: e.message || 'Failed', data: [] }; }
   }
 
-  async approveGatePassByStaff(staffCode: string, requestId: number): Promise<ApiResponse> {
-    try { return await this.makeRequest(`${this.baseURL}/gate-pass/staff/${staffCode}/approve/${requestId}`, { method: 'POST' }); }
+  async approveGatePassByStaff(staffCode: string, requestId: number, remark?: string): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/gate-pass/staff/${staffCode}/approve/${requestId}`, { method: 'POST', body: JSON.stringify({ remark }) }); }
     catch (e: any) { return { success: false, message: e.message || 'Failed to approve' }; }
   }
 
@@ -358,6 +358,32 @@ class ApiService {
       const data = await this.makeRequest(`${this.baseURL}/bulk-gate-pass/hod/${hodCode}`, { method: 'GET' });
       return data.requests || data || [];
     } catch { return []; }
+  }
+
+  async getStudentsByStaffDepartment(staffCode: string): Promise<{ success: boolean; students?: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/bulk-pass/students/${staffCode}`, { method: 'GET' });
+      return { success: data.success !== false, students: data.students || data.data || data || [] };
+    } catch (e: any) { return { success: false, students: [], message: e.message || 'Failed to fetch students' }; }
+  }
+
+  async createBulkGatePass(data: any): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/bulk-pass/create`, { method: 'POST', body: JSON.stringify(data) }); }
+    catch (e: any) { return { success: false, message: e.message || 'Failed to create bulk gate pass' }; }
+  }
+
+  async getStaffBulkPassRequests(staffCode: string): Promise<{ success: boolean; requests?: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/bulk-pass/staff/${staffCode}`, { method: 'GET' });
+      return { success: data.success !== false, requests: data.requests || data.data || [] };
+    } catch (e: any) { return { success: false, requests: [], message: e.message || 'Failed' }; }
+  }
+
+  async getStaffVisitorRequests(staffCode: string): Promise<{ success: boolean; data?: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/gate-pass/staff/${staffCode}/pending-all`, { method: 'GET' });
+      return { success: data.success !== false, data: data.requests || data.data || [] };
+    } catch (e: any) { return { success: false, data: [], message: e.message || 'Failed' }; }
   }
 
   // ── Staff directory ───────────────────────────────────────────────────────

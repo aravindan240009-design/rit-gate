@@ -1,19 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-  Modal,
-  Alert,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  RefreshControl, ActivityIndicator, Modal, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { apiService } from '../../services/api';
 import { Staff } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
 import MyRequestsBulkModal from '../../components/MyRequestsBulkModal';
 import GatePassQRModal from '../../components/GatePassQRModal';
 
@@ -23,6 +17,7 @@ interface MyRequestsScreenProps {
 }
 
 const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => {
+  const { theme } = useTheme();
   const [allRequests, setAllRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,17 +35,9 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
         apiService.getStaffOwnGatePassRequests(user.staffCode),
         apiService.getStaffBulkPassRequests(user.staffCode),
       ]);
-
       let combined: any[] = [];
-
-      if (singleResult.success && singleResult.requests) {
-        combined = [...singleResult.requests];
-      }
-      if (bulkResult.success && bulkResult.requests) {
-        combined = [...combined, ...bulkResult.requests];
-      }
-
-      // Sort: APPROVED first, then newest
+      if (singleResult.success && singleResult.requests) combined = [...singleResult.requests];
+      if (bulkResult.success && bulkResult.requests) combined = [...combined, ...bulkResult.requests];
       combined.sort((a, b) => {
         if (a.status === 'APPROVED' && b.status !== 'APPROVED') return -1;
         if (a.status !== 'APPROVED' && b.status === 'APPROVED') return 1;
@@ -58,7 +45,6 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
         const dateB = new Date(b.passType === 'BULK' ? (b.exitDateTime || b.createdAt) : (b.requestDate || b.createdAt)).getTime();
         return dateB - dateA;
       });
-
       setAllRequests(combined);
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -66,86 +52,53 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
       setLoading(false);
       setRefreshing(false);
     }
-  }
+  };
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchRequests();
-  }, []);
+  useEffect(() => { fetchRequests(); }, []);
+  const onRefresh = useCallback(() => { setRefreshing(true); fetchRequests(); }, []);
 
   const getStatusBadge = (status: string) => {
-    if (status === 'APPROVED') {
-      return { text: 'ACTIVE', color: '#10B981', bgColor: '#D1FAE5' };
-    } else if (status === 'REJECTED') {
-      return { text: 'REJECTED', color: '#EF4444', bgColor: '#FEE2E2' };
-    } else {
-      return { text: 'PENDING', color: '#F59E0B', bgColor: '#FEF3C7' };
-    }
+    if (status === 'APPROVED') return { text: 'ACTIVE', color: theme.success, bgColor: theme.success + '22' };
+    if (status === 'REJECTED') return { text: 'REJECTED', color: theme.error, bgColor: theme.error + '22' };
+    return { text: 'PENDING', color: theme.warning, bgColor: theme.warning + '22' };
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
+    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
   const handleViewQR = async (request: any, isBulk: boolean = false) => {
-      if (request.status !== 'APPROVED') {
-        Alert.alert('Not Available', 'QR code is only available for approved requests');
-        return;
+    if (request.status !== 'APPROVED') { Alert.alert('Not Available', 'QR code is only available for approved requests'); return; }
+    setSelectedRequest(request);
+    setQrCodeData(null);
+    setManualCode(null);
+    setShowQRModal(true);
+    try {
+      if (isBulk && request.qrCode) {
+        setQrCodeData(request.qrCode);
+        setManualCode(request.manualCode || null);
+      } else {
+        const result = await apiService.getGatePassQRCode(request.id, user.staffCode, true);
+        if (result.success && result.qrCode) { setQrCodeData(result.qrCode); setManualCode(result.manualCode || null); }
       }
-
-      setSelectedRequest(request);
-      setQrCodeData(null);
-      setManualCode(null);
-      setShowQRModal(true);
-
-      try {
-        if (isBulk && request.qrCode) {
-          setQrCodeData(request.qrCode);
-          setManualCode(request.manualCode || null);
-        } else {
-          const result = await apiService.getGatePassQRCode(request.id, user.staffCode, true);
-          if (result.success && result.qrCode) {
-            setQrCodeData(result.qrCode);
-            setManualCode(result.manualCode || null);
-          }
-        }
-      } catch (error: any) {
-        Alert.alert('Error', error.message || 'Failed to fetch QR code');
-        setShowQRModal(false);
-      }
-    }
-
-  const handleReviewRequest = (request: any) => {
-    if (request.passType === 'BULK') {
-      setSelectedBulkId(request.id);
-      setShowBulkModal(true);
-    } else {
-      setSelectedRequest(request);
-      setShowDetailModal(true);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to fetch QR code');
+      setShowQRModal(false);
     }
   };
 
+  const handleReviewRequest = (request: any) => {
+    if (request.passType === 'BULK') { setSelectedBulkId(request.id); setShowBulkModal(true); }
+    else { setSelectedRequest(request); setShowDetailModal(true); }
+  };
+
   const getTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffMs = now.getTime() - date.getTime();
+    const diffMs = new Date().getTime() - new Date(dateString).getTime();
     const diffMins = Math.floor(diffMs / 60000);
     if (diffMins < 60) return `${diffMins}m ago`;
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}h ago`;
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays}d ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
   };
 
   const renderRequestCard = (request: any) => {
@@ -156,52 +109,43 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
     const dateStr = isBulk ? (request.exitDateTime || request.createdAt || request.requestDate) : (request.requestDate || request.createdAt);
 
     return (
-      <TouchableOpacity
-        style={styles.requestCard}
-        onPress={() => handleReviewRequest(request)}
-        activeOpacity={0.85}
-      >
-        {/* Top row: avatar + name + badge + time */}
+      <TouchableOpacity style={[styles.requestCard, { backgroundColor: theme.surface }]} onPress={() => handleReviewRequest(request)} activeOpacity={0.85}>
         <View style={styles.cardTopRow}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>{initials}</Text>
+          <View style={[styles.avatarCircle, { backgroundColor: theme.warning + '22' }]}>
+            <Text style={[styles.avatarText, { color: theme.warning }]}>{initials}</Text>
           </View>
           <View style={styles.cardNameBlock}>
             <View style={styles.cardNameRow}>
-              <Text style={styles.cardName} numberOfLines={1}>{name}</Text>
-              <View style={styles.typePillInline}>
-                <Text style={styles.typePillInlineText}>{isBulk ? 'Bulk Pass' : 'Single Pass'}</Text>
+              <Text style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</Text>
+              <View style={[styles.typePillInline, { backgroundColor: theme.inputBackground }]}>
+                <Text style={[styles.typePillInlineText, { color: theme.text }]}>{isBulk ? 'Bulk Pass' : 'Single Pass'}</Text>
               </View>
             </View>
-            <Text style={styles.cardSubtitle}>Staff • {user.department || 'Department'}</Text>
+            <Text style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Staff • {user.department || 'Department'}</Text>
           </View>
-          <Text style={styles.cardTimeAgo}>{getTimeAgo(dateStr)}</Text>
+          <Text style={[styles.cardTimeAgo, { color: theme.textTertiary }]}>{getTimeAgo(dateStr)}</Text>
         </View>
 
-        {/* Info box */}
-        <View style={styles.infoBox}>
+        <View style={[styles.infoBox, { backgroundColor: theme.inputBackground }]}>
           <View style={styles.infoBoxRow}>
-            <Ionicons name="document-text-outline" size={14} color="#6B7280" />
-            <Text style={styles.infoBoxText} numberOfLines={1}>{request.purpose || 'General'}</Text>
+            <Ionicons name="document-text-outline" size={14} color={theme.textSecondary} />
+            <Text style={[styles.infoBoxText, { color: theme.text }]} numberOfLines={1}>{request.purpose || 'General'}</Text>
           </View>
           <View style={styles.infoBoxRow}>
-            <Ionicons name="calendar-outline" size={14} color="#6B7280" />
-            <Text style={styles.infoBoxText}>{formatDate(dateStr)}</Text>
+            <Ionicons name="calendar-outline" size={14} color={theme.textSecondary} />
+            <Text style={[styles.infoBoxText, { color: theme.text }]}>{formatDate(dateStr)}</Text>
           </View>
           {isBulk && (
             <View style={styles.infoBoxRow}>
-              <Ionicons name="people-outline" size={14} color="#6B7280" />
-              <Text style={styles.infoBoxText}>
+              <Ionicons name="people-outline" size={14} color={theme.textSecondary} />
+              <Text style={[styles.infoBoxText, { color: theme.text }]}>
                 {(() => {
                   const parts: string[] = [];
                   const sc = request.staffCount ?? 0;
                   const stc = request.studentCount ?? 0;
                   if (sc > 0) parts.push(`Staff - ${sc}`);
                   if (stc > 0) parts.push(`Students - ${stc}`);
-                  if (parts.length === 0) {
-                    const total = request.participantCount || 0;
-                    return `${total} Participant${total !== 1 ? 's' : ''}`;
-                  }
+                  if (parts.length === 0) { const total = request.participantCount || 0; return `${total} Participant${total !== 1 ? 's' : ''}`; }
                   return parts.join(', ');
                 })()}
               </Text>
@@ -209,7 +153,6 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
           )}
         </View>
 
-        {/* Bottom row: status pill */}
         <View style={styles.cardBottomRow}>
           <View style={[styles.statusPill, { backgroundColor: badge.bgColor }]}>
             <View style={[styles.statusDot, { backgroundColor: badge.color }]} />
@@ -222,47 +165,42 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => onBack && onBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+          <TouchableOpacity onPress={() => onBack && onBack()} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Requests</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>My Requests</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#F59E0B" />
-          <Text style={styles.loadingText}>Loading requests...</Text>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Loading requests...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => onBack && onBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity onPress={() => onBack && onBack()} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Requests</Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>My Requests</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
-        style={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#F59E0B']} />
-        }
+        style={[styles.content, { backgroundColor: theme.background }]}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
         showsVerticalScrollIndicator={false}
       >
         {allRequests.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="document-text-outline" size={64} color="#9CA3AF" />
-            <Text style={styles.emptyStateText}>No requests found</Text>
-            <Text style={styles.emptyStateSubtext}>
-              Your requests will appear here
-            </Text>
+            <Ionicons name="document-text-outline" size={64} color={theme.textTertiary} />
+            <Text style={[styles.emptyStateText, { color: theme.text }]}>No requests found</Text>
+            <Text style={[styles.emptyStateSubtext, { color: theme.textSecondary }]}>Your requests will appear here</Text>
           </View>
         ) : (
           allRequests.map((request, index) => (
@@ -271,147 +209,108 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
             </View>
           ))
         )}
-
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Detail Modal */}
-      <Modal
-        visible={showDetailModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowDetailModal(false)}
-      >
+      <Modal visible={showDetailModal} animationType="slide" transparent={true} onRequestClose={() => setShowDetailModal(false)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {/* Modal Header */}
+          <View style={[styles.modalContent, { backgroundColor: theme.surface }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Request Status</Text>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>Request Status</Text>
               <TouchableOpacity onPress={() => setShowDetailModal(false)}>
-                <Ionicons name="close" size={24} color="#9CA3AF" />
+                <Ionicons name="close" size={24} color={theme.textTertiary} />
               </TouchableOpacity>
             </View>
-
             <ScrollView showsVerticalScrollIndicator={false}>
               {selectedRequest && (
                 <>
-                  {/* Request Info Card */}
-                  <View style={styles.requestInfoCard}>
+                  <View style={[styles.requestInfoCard, { backgroundColor: theme.inputBackground }]}>
                     <View style={styles.requestInfoRow}>
-                      <Text style={styles.requestInfoLabel}>REQUEST ID</Text>
-                      <Text style={styles.requestInfoValue}>#{selectedRequest.id}</Text>
+                      <Text style={[styles.requestInfoLabel, { color: theme.textSecondary }]}>REQUEST ID</Text>
+                      <Text style={[styles.requestInfoValue, { color: theme.text }]}>#{selectedRequest.id}</Text>
                     </View>
                     <View style={styles.requestInfoRow}>
-                      <Text style={styles.requestInfoLabel}>TYPE</Text>
-                      <Text style={styles.requestInfoValue}>
-                        {selectedRequest.passType === 'BULK' ? 'Bulk Pass' : 'Single Pass'}
-                      </Text>
+                      <Text style={[styles.requestInfoLabel, { color: theme.textSecondary }]}>TYPE</Text>
+                      <Text style={[styles.requestInfoValue, { color: theme.text }]}>{selectedRequest.passType === 'BULK' ? 'Bulk Pass' : 'Single Pass'}</Text>
                     </View>
                     <View style={styles.requestInfoRow}>
-                      <Text style={styles.requestInfoLabel}>DATE</Text>
-                      <Text style={styles.requestInfoValue}>
-                        {new Date(selectedRequest.passType === 'BULK' ? selectedRequest.exitDateTime : selectedRequest.requestDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
+                      <Text style={[styles.requestInfoLabel, { color: theme.textSecondary }]}>DATE</Text>
+                      <Text style={[styles.requestInfoValue, { color: theme.text }]}>
+                        {new Date(selectedRequest.passType === 'BULK' ? selectedRequest.exitDateTime : selectedRequest.requestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </Text>
                     </View>
                   </View>
 
-                  {/* Reason Section */}
                   <View style={styles.reasonSection}>
-                    <Text style={styles.reasonLabel}>REASON</Text>
-                    <Text style={styles.reasonText}>{selectedRequest.reason || selectedRequest.purpose}</Text>
+                    <Text style={[styles.reasonLabel, { color: theme.textSecondary }]}>REASON</Text>
+                    <Text style={[styles.reasonText, { color: theme.text }]}>{selectedRequest.reason || selectedRequest.purpose}</Text>
                   </View>
 
-                  {/* Timeline */}
                   <View style={styles.timeline}>
-                    <Text style={styles.timelineHeading}>Timeline</Text>
-                    <View style={styles.timelineBar} />
+                    <Text style={[styles.timelineHeading, { color: theme.text }]}>Timeline</Text>
+                    <View style={[styles.timelineBar, { backgroundColor: theme.success }]} />
 
-                    {/* Step 1: Request Submitted */}
                     <View style={styles.timelineItem}>
-                      <View style={[styles.timelineIcon, styles.timelineIconComplete]}>
+                      <View style={[styles.timelineIcon, { backgroundColor: theme.success }]}>
                         <Ionicons name="checkmark" size={20} color="#FFF" />
                       </View>
                       <View style={styles.timelineContent}>
-                        <Text style={styles.timelineTitle}>Request Submitted</Text>
-                        <Text style={[styles.timelineStatus, styles.timelineStatusComplete]}>✓ Completed</Text>
+                        <Text style={[styles.timelineTitle, { color: theme.text }]}>Request Submitted</Text>
+                        <Text style={[styles.timelineStatus, { color: theme.success }]}>✓ Completed</Text>
                       </View>
                     </View>
 
-                    <View style={[styles.timelineLine, styles.timelineLineComplete]} />
+                    <View style={[styles.timelineLine, { backgroundColor: theme.success }]} />
 
-                    {/* Step 2: Staff Approval (self — always complete for staff's own pass) */}
                     <View style={styles.timelineItem}>
-                      <View style={[styles.timelineIcon, styles.timelineIconComplete]}>
+                      <View style={[styles.timelineIcon, { backgroundColor: theme.success }]}>
                         <Ionicons name="checkmark" size={20} color="#FFF" />
                       </View>
                       <View style={styles.timelineContent}>
-                        <Text style={styles.timelineTitle}>Staff Approval</Text>
-                        <Text style={[styles.timelineStatus, styles.timelineStatusComplete]}>✓ Completed</Text>
+                        <Text style={[styles.timelineTitle, { color: theme.text }]}>Staff Approval</Text>
+                        <Text style={[styles.timelineStatus, { color: theme.success }]}>✓ Completed</Text>
                         {selectedRequest.staffRemark ? (
-                          <View style={styles.remarkBox}>
-                            <Text style={styles.remarkLabel}>Staff Remark:</Text>
-                            <Text style={styles.remarkText}>{selectedRequest.staffRemark}</Text>
+                          <View style={[styles.remarkBox, { backgroundColor: theme.inputBackground, borderLeftColor: theme.warning }]}>
+                            <Text style={[styles.remarkLabel, { color: theme.textSecondary }]}>Staff Remark:</Text>
+                            <Text style={[styles.remarkText, { color: theme.text }]}>{selectedRequest.staffRemark}</Text>
                           </View>
                         ) : null}
                       </View>
                     </View>
 
-                    <View style={[
-                      styles.timelineLine,
-                      (selectedRequest.status === 'APPROVED' || selectedRequest.status === 'REJECTED') && styles.timelineLineComplete
-                    ]} />
+                    <View style={[styles.timelineLine, { backgroundColor: (selectedRequest.status === 'APPROVED' || selectedRequest.status === 'REJECTED') ? theme.success : theme.border }]} />
 
-                    {/* Step 3: HOD Approval */}
                     <View style={styles.timelineItem}>
-                      <View style={[
-                        styles.timelineIcon,
-                        selectedRequest.status === 'APPROVED' && styles.timelineIconComplete,
-                        selectedRequest.status === 'REJECTED' && styles.timelineIconRejected,
-                        (selectedRequest.status === 'PENDING_HOD' || selectedRequest.status === 'PENDING_STAFF') && styles.timelineIconPending,
-                      ]}>
-                        {selectedRequest.status === 'APPROVED' ? (
-                          <Ionicons name="checkmark" size={20} color="#FFF" />
-                        ) : selectedRequest.status === 'REJECTED' ? (
-                          <Ionicons name="close" size={20} color="#FFF" />
-                        ) : (
-                          <View style={styles.timelineDot} />
-                        )}
+                      <View style={[styles.timelineIcon, {
+                        backgroundColor: selectedRequest.status === 'APPROVED' ? theme.success : selectedRequest.status === 'REJECTED' ? theme.error : theme.inputBackground,
+                        borderWidth: (selectedRequest.status === 'PENDING_HOD' || selectedRequest.status === 'PENDING_STAFF') ? 2 : 0,
+                        borderColor: theme.border,
+                      }]}>
+                        {selectedRequest.status === 'APPROVED' ? <Ionicons name="checkmark" size={20} color="#FFF" /> :
+                          selectedRequest.status === 'REJECTED' ? <Ionicons name="close" size={20} color="#FFF" /> :
+                          <View style={[styles.timelineDot, { backgroundColor: theme.textTertiary }]} />}
                       </View>
                       <View style={styles.timelineContent}>
-                        <Text style={styles.timelineTitle}>HOD Approval</Text>
-                        <Text style={[
-                          styles.timelineStatus,
-                          selectedRequest.status === 'APPROVED' && styles.timelineStatusComplete,
-                          selectedRequest.status === 'REJECTED' && styles.timelineStatusRejected,
-                        ]}>
-                          {selectedRequest.status === 'APPROVED'
-                            ? '✓ Completed'
-                            : selectedRequest.status === 'REJECTED'
-                            ? '✗ Rejected'
-                            : 'Pending'}
+                        <Text style={[styles.timelineTitle, { color: theme.text }]}>HOD Approval</Text>
+                        <Text style={[styles.timelineStatus, {
+                          color: selectedRequest.status === 'APPROVED' ? theme.success : selectedRequest.status === 'REJECTED' ? theme.error : theme.textSecondary
+                        }]}>
+                          {selectedRequest.status === 'APPROVED' ? '✓ Completed' : selectedRequest.status === 'REJECTED' ? '✗ Rejected' : 'Pending'}
                         </Text>
                         {selectedRequest.hodRemark ? (
-                          <View style={styles.remarkBox}>
-                            <Text style={styles.remarkLabel}>HOD Remark:</Text>
-                            <Text style={styles.remarkText}>{selectedRequest.hodRemark}</Text>
+                          <View style={[styles.remarkBox, { backgroundColor: theme.inputBackground, borderLeftColor: theme.warning }]}>
+                            <Text style={[styles.remarkLabel, { color: theme.textSecondary }]}>HOD Remark:</Text>
+                            <Text style={[styles.remarkText, { color: theme.text }]}>{selectedRequest.hodRemark}</Text>
                           </View>
                         ) : null}
                       </View>
                     </View>
                   </View>
 
-                  {/* View QR Button */}
                   {selectedRequest.status === 'APPROVED' && (
                     <TouchableOpacity
-                      style={styles.viewQRButton}
-                      onPress={() => {
-                        setShowDetailModal(false);
-                        handleViewQR(selectedRequest, selectedRequest.passType === 'BULK');
-                      }}
+                      style={[styles.viewQRButton, { backgroundColor: theme.success }]}
+                      onPress={() => { setShowDetailModal(false); handleViewQR(selectedRequest, selectedRequest.passType === 'BULK'); }}
                     >
                       <Ionicons name="qr-code" size={20} color="#FFF" />
                       <Text style={styles.viewQRButtonText}>View QR Code</Text>
@@ -424,7 +323,6 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
         </View>
       </Modal>
 
-      {/* QR Code Modal */}
       <GatePassQRModal
         visible={showQRModal}
         onClose={() => setShowQRModal(false)}
@@ -435,511 +333,73 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
         reason={selectedRequest?.reason || selectedRequest?.purpose}
       />
 
-      {/* Bulk Detail Modal */}
       <MyRequestsBulkModal
         visible={showBulkModal}
         onClose={() => setShowBulkModal(false)}
         requestId={selectedBulkId || 0}
         userRole="STAFF"
         currentUserId={user.staffCode}
-        requesterInfo={{
-          name: user.name || user.staffName || 'Staff',
-          role: 'Staff',
-          department: user.department || ''
-        }}
+        requesterInfo={{ name: user.name || user.staffName || 'Staff', role: 'Staff', department: user.department || '' }}
       />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
-    backgroundColor: '#F9FAFB',
-  },
-  emptyState: {
-    paddingVertical: 80,
-    alignItems: 'center',
-  },
-  emptyStateText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginTop: 16,
-  },
-  emptyStateSubtext: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 8,
-  },
-  requestCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  cardTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    gap: 10,
-  },
-  avatarCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#FEF3C7',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-  avatarText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#F59E0B',
-  },
-  cardNameBlock: {
-    flex: 1,
-  },
-  cardNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  cardName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
-    flexShrink: 1,
-  },
-  bulkBadge: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  bulkBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  typePillInline: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  typePillInlineText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  cardTimeAgo: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    flexShrink: 0,
-  },
-  infoBox: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 10,
-    gap: 5,
-  },
-  infoBoxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-  },
-  infoBoxText: {
-    fontSize: 13,
-    color: '#374151',
-    flex: 1,
-  },
-  cardBottomRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 20,
-    gap: 5,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusPillText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  qrButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#10B981',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    gap: 4,
-    marginLeft: 'auto',
-  },
-  qrButtonText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    maxHeight: '85%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  requestInfoCard: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-  },
-  requestInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  requestInfoLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#6B7280',
-    letterSpacing: 0.5,
-  },
-  requestInfoValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  reasonSection: {
-    marginBottom: 24,
-  },
-  reasonLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#6B7280',
-    marginBottom: 8,
-    letterSpacing: 0.5,
-  },
-  reasonText: {
-    fontSize: 15,
-    color: '#1F2937',
-    lineHeight: 22,
-  },
-  timeline: {
-    marginBottom: 24,
-  },
-  timelineHeading: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 10,
-  },
-  timelineBar: {
-    height: 3,
-    backgroundColor: '#10B981',
-    borderRadius: 2,
-    marginBottom: 16,
-  },
-  timelineItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  timelineIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E5E7EB',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  timelineIconComplete: {
-    backgroundColor: '#10B981',
-  },
-  timelineIconPending: {
-    backgroundColor: '#F3F4F6',
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-  },
-  timelineIconRejected: {
-    backgroundColor: '#EF4444',
-  },
-  timelineDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#9CA3AF',
-  },
-  timelineContent: {
-    flex: 1,
-    paddingTop: 8,
-  },
-  timelineTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  timelineStatus: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  timelineStatusComplete: {
-    color: '#10B981',
-  },
-  timelineStatusRejected: {
-    color: '#EF4444',
-  },
-  remarkBox: {
-    marginTop: 8,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
-  },
-  remarkLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#6B7280',
-    marginBottom: 2,
-  },
-  remarkText: {
-    fontSize: 14,
-    color: '#1F2937',
-    lineHeight: 20,
-    fontWeight: '500',
-  },
-  timelineLine: {
-    width: 2,
-    height: 32,
-    backgroundColor: '#E5E7EB',
-    marginLeft: 19,
-    marginVertical: 4,
-  },
-  timelineLineComplete: {
-    backgroundColor: '#10B981',
-  },
-  viewQRButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#10B981',
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  viewQRButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  qrModalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  qrModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  qrModalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  qrCloseButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  qrStaffInfo: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  qrStaffName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  qrStaffCode: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  qrCodeContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 24,
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  qrScanText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 24,
-    letterSpacing: 1,
-  },
-  manualCodeSection: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-    alignItems: 'center',
-  },
-  manualCodeLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#92400E',
-    marginBottom: 8,
-    letterSpacing: 0.5,
-  },
-  manualCodeValue: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#78350F',
-    letterSpacing: 4,
-    marginBottom: 8,
-  },
-  manualCodeHint: {
-    fontSize: 11,
-    color: '#92400E',
-    textAlign: 'center',
-  },
-  qrDetails: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-  },
-  qrDetailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  qrDetailLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  qrDetailValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-    flex: 1,
-    textAlign: 'right',
-  },
-  qrCloseButtonBottom: {
-    backgroundColor: '#1F2937',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  qrCloseButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
+  backButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '700' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 12, fontSize: 14 },
+  content: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
+  emptyState: { paddingVertical: 80, alignItems: 'center' },
+  emptyStateText: { fontSize: 18, fontWeight: '600', marginTop: 16 },
+  emptyStateSubtext: { fontSize: 14, marginTop: 8 },
+  requestCard: { borderRadius: 16, padding: 14, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
+  cardTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 10 },
+  avatarCircle: { width: 42, height: 42, borderRadius: 21, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  avatarText: { fontSize: 16, fontWeight: '700' },
+  cardNameBlock: { flex: 1 },
+  cardNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  cardName: { fontSize: 15, fontWeight: '600', flexShrink: 1 },
+  typePillInline: { borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  typePillInlineText: { fontSize: 11, fontWeight: '600' },
+  cardSubtitle: { fontSize: 12, marginTop: 2 },
+  cardTimeAgo: { fontSize: 12, flexShrink: 0 },
+  infoBox: { borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10, gap: 5 },
+  infoBoxRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
+  infoBoxText: { fontSize: 13, flex: 1 },
+  cardBottomRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  statusPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, gap: 5 },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusPillText: { fontSize: 12, fontWeight: '700' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 40, maxHeight: '85%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
+  modalTitle: { fontSize: 20, fontWeight: '700' },
+  requestInfoCard: { borderRadius: 12, padding: 16, marginBottom: 20 },
+  requestInfoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  requestInfoLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.5 },
+  requestInfoValue: { fontSize: 14, fontWeight: '600' },
+  reasonSection: { marginBottom: 24 },
+  reasonLabel: { fontSize: 12, fontWeight: '700', marginBottom: 8, letterSpacing: 0.5 },
+  reasonText: { fontSize: 15, lineHeight: 22 },
+  timeline: { marginBottom: 24 },
+  timelineHeading: { fontSize: 16, fontWeight: '700', marginBottom: 10 },
+  timelineBar: { height: 3, borderRadius: 2, marginBottom: 16 },
+  timelineItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  timelineIcon: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  timelineDot: { width: 12, height: 12, borderRadius: 6 },
+  timelineContent: { flex: 1, paddingTop: 8 },
+  timelineTitle: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
+  timelineStatus: { fontSize: 14 },
+  remarkBox: { marginTop: 8, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, borderLeftWidth: 3 },
+  remarkLabel: { fontSize: 12, fontWeight: '700', marginBottom: 2 },
+  remarkText: { fontSize: 14, lineHeight: 20, fontWeight: '500' },
+  timelineLine: { width: 2, height: 32, marginLeft: 19, marginVertical: 4 },
+  viewQRButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 12, gap: 8 },
+  viewQRButtonText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
 });
 
 export default MyRequestsScreen;

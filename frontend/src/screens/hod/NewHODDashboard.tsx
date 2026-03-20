@@ -18,7 +18,7 @@ import { HOD, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import { useNotifications } from '../../context/NotificationContext';
 import { useProfile } from '../../context/ProfileContext';
-import { THEME } from '../../config/api.config';
+import { useTheme } from '../../context/ThemeContext';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import NotificationDropdown from '../../components/NotificationDropdown';
 import BulkDetailsModal from '../../components/BulkDetailsModal';
@@ -37,6 +37,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
   onLogout,
   onNavigate,
 }) => {
+  const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -207,93 +208,62 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => {
-            setBottomTab('PROFILE');
-            onNavigate('PROFILE');
-          }}>
+          <TouchableOpacity onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.avatarImage} />
             ) : (
-              <View style={styles.avatar}>
+              <View style={[styles.avatar, { backgroundColor: theme.warning }]}>
                 <Text style={styles.avatarText}>{getInitials(hod.hodName || 'HOD')}</Text>
               </View>
             )}
           </TouchableOpacity>
           <View style={styles.headerInfo}>
-            <Text style={styles.greeting}>GOOD MORNING,</Text>
-            <Text style={styles.userName}>{(hod.hodName || 'HOD').toUpperCase()}</Text>
+            <Text style={[styles.greeting, { color: theme.textSecondary }]}>GOOD MORNING,</Text>
+            <Text style={[styles.userName, { color: theme.text }]}>{(hod.hodName || 'HOD').toUpperCase()}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity 
-            style={styles.iconButton}
-            onPress={() => setShowNotificationDropdown(true)}
-          >
-            <Ionicons name="notifications-outline" size={24} color="#1F2937" />
-            {unreadCount > 0 && (
-              <View style={styles.notificationIndicator} />
-            )}
+          <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => setShowNotificationDropdown(true)}>
+            <Ionicons name="notifications-outline" size={24} color={theme.text} />
+            {unreadCount > 0 && <View style={[styles.notificationIndicator, { backgroundColor: theme.success, borderColor: theme.surface }]} />}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={onLogout}>
-            <Ionicons name="log-out-outline" size={24} color="#EF4444" />
+          <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onLogout}>
+            <Ionicons name="log-out-outline" size={24} color={theme.error} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#9CA3AF" />
+      <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
+        <Ionicons name="search" size={20} color={theme.textTertiary} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: theme.text }]}
           placeholder="Search requests..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={theme.textTertiary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
       </View>
 
       {/* Stats Tabs */}
-      <View style={styles.statsContainer}>
-        <TouchableOpacity
-          style={[styles.statTab, activeTab === 'PENDING' && styles.statTabActive]}
-          onPress={() => setActiveTab('PENDING')}
-        >
-          <Text style={[styles.statLabel, activeTab === 'PENDING' && styles.statLabelActive]}>
-            PENDING
-          </Text>
-          <Text style={[styles.statValue, activeTab === 'PENDING' && styles.statValueActive]}>
-            {stats.pending}
-          </Text>
+      <View style={[styles.statsContainer, { backgroundColor: theme.surface }]}>
+        <TouchableOpacity style={[styles.statTab, activeTab === 'PENDING' && { borderBottomColor: theme.warning }]} onPress={() => setActiveTab('PENDING')}>
+          <Text style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'PENDING' && { color: theme.warning }]}>PENDING</Text>
+          <Text style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: theme.text }]}>{stats.pending}</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.statTab, activeTab === 'APPROVED' && styles.statTabActive]}
-          onPress={() => setActiveTab('APPROVED')}
-        >
-          <Text style={[styles.statLabel, activeTab === 'APPROVED' && styles.statLabelActive]}>
-            APPROVED
-          </Text>
-          <Text style={[styles.statValue, activeTab === 'APPROVED' && styles.statValueActive]}>
-            {stats.approved}
-          </Text>
+        <TouchableOpacity style={[styles.statTab, activeTab === 'APPROVED' && { borderBottomColor: theme.success }]} onPress={() => setActiveTab('APPROVED')}>
+          <Text style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'APPROVED' && { color: theme.success }]}>APPROVED</Text>
+          <Text style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: theme.text }]}>{stats.approved}</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.statTab, activeTab === 'REJECTED' && styles.statTabActive]}
-          onPress={() => setActiveTab('REJECTED')}
-        >
-          <Text style={[styles.statLabel, activeTab === 'REJECTED' && styles.statLabelActive]}>
-            REJECTED
-          </Text>
-          <Text style={[styles.statValue, activeTab === 'REJECTED' && styles.statValueActive]}>
-            {stats.rejected}
-          </Text>
+        <TouchableOpacity style={[styles.statTab, activeTab === 'REJECTED' && { borderBottomColor: theme.error }]} onPress={() => setActiveTab('REJECTED')}>
+          <Text style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'REJECTED' && { color: theme.error }]}>REJECTED</Text>
+          <Text style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: theme.text }]}>{stats.rejected}</Text>
         </TouchableOpacity>
       </View>
 
@@ -307,24 +277,20 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       >
         {filteredRequests.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="checkmark-done-circle-outline" size={64} color="#D1D5DB" />
-            <Text style={styles.emptyText}>No {activeTab.toLowerCase()} requests</Text>
+            <Ionicons name="checkmark-done-circle-outline" size={64} color={theme.border} />
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>No {activeTab.toLowerCase()} requests</Text>
           </View>
         ) : (
           filteredRequests.map((request) => (
             <TouchableOpacity
               key={request.id}
-              style={styles.requestCard}
+              style={[styles.requestCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
               onPress={() => {
                 setSelectedRequest(request);
                 setHodRemark('');
                 if (request.passType === 'BULK') {
                   setSelectedBulkId(request.id);
-                  setSelectedBulkRequester({
-                    name: request.requestedByStaffName || 'Staff',
-                    role: request.userType || 'Staff',
-                    department: request.department || 'Department'
-                  });
+                  setSelectedBulkRequester({ name: request.requestedByStaffName || 'Staff', role: request.userType || 'Staff', department: request.department || 'Department' });
                   setShowBulkModal(true);
                 } else {
                   setShowDetailModal(true);
@@ -332,67 +298,51 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
               }}
             >
               <View style={styles.cardTopRow}>
-                <View style={styles.avatarContainer}>
-                  <Text style={styles.requestAvatarText}>
-                    {getInitials(request.passType === 'BULK' 
-                      ? (request.requestedByStaffName || 'BR')
-                      : (request.studentName || 'ST'))}
+                <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
+                  <Text style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
+                    {getInitials(request.passType === 'BULK' ? (request.requestedByStaffName || 'BR') : (request.studentName || 'ST'))}
                   </Text>
                 </View>
-                
                 <View style={styles.headerMainInfo}>
                   <View style={styles.nameRow}>
-                    <Text style={styles.requestStudentName} numberOfLines={1}>
-                      {request.passType === 'BULK' 
-                        ? (request.requestedByStaffName || `Staff: ${request.requestedByStaffCode}`)
-                        : request.studentName || 'Unknown'}
+                    <Text style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
+                      {request.passType === 'BULK' ? (request.requestedByStaffName || `Staff: ${request.requestedByStaffCode}`) : request.studentName || 'Unknown'}
                     </Text>
-                    <View style={styles.passTypePill}>
-                      <Text style={styles.passTypePillText}>
-                        {request.passType === 'BULK' ? 'Bulk Pass' : 'Gatepass'}
-                      </Text>
+                    <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+                      <Text style={[styles.passTypePillText, { color: theme.text }]}>{request.passType === 'BULK' ? 'Bulk Pass' : 'Gatepass'}</Text>
                     </View>
                   </View>
-                  <Text style={styles.studentIdSub}>
-                    {request.passType === 'BULK' 
-                      ? `${request.userType || 'Staff'} • ${request.department || 'Department'}`
-                      : `${request.regNo || 'N/A'} • ${request.department || 'Department'}`}
+                  <Text style={[styles.studentIdSub, { color: theme.textSecondary }]}>
+                    {request.passType === 'BULK' ? `${request.userType || 'Staff'} • ${request.department || 'Department'}` : `${request.regNo || 'N/A'} • ${request.department || 'Department'}`}
                   </Text>
                 </View>
-
                 <View style={styles.timeAgoContainer}>
-                  <Text style={styles.timeAgoText}>
-                    {request.requestDate ? '2h ago' : ''} 
-                  </Text>
+                  <Text style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</Text>
                 </View>
               </View>
 
-              <View style={styles.detailsBlock}>
+              <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
                 <View style={styles.detailItem}>
-                  <Ionicons name="medical" size={16} color="#4B5563" />
-                  <Text style={styles.detailText}>{request.purpose || 'General'}</Text>
+                  <Ionicons name="medical" size={16} color={theme.textSecondary} />
+                  <Text style={[styles.detailText, { color: theme.text }]}>{request.purpose || 'General'}</Text>
                 </View>
                 <View style={styles.detailItem}>
-                  <Ionicons name="calendar" size={16} color="#4B5563" />
-                  <Text style={styles.detailText}>
+                  <Ionicons name="calendar" size={16} color={theme.textSecondary} />
+                  <Text style={[styles.detailText, { color: theme.text }]}>
                     Exit: {new Date(request.exitDateTime || request.requestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </Text>
                 </View>
                 {request.passType === 'BULK' && (
                   <View style={styles.detailItem}>
-                    <Ionicons name="people" size={16} color="#4B5563" />
-                    <Text style={styles.detailText}>
+                    <Ionicons name="people" size={16} color={theme.textSecondary} />
+                    <Text style={[styles.detailText, { color: theme.text }]}>
                       {(() => {
                         const parts: string[] = [];
-                        
-                        // Use participantCount if available for total
                         const total = request.participantCount || 0;
                         const students = request.studentCount || 0;
                         const staffCount = Math.max(0, total - students);
-                        
                         if (staffCount > 0) parts.push(`Staff - ${staffCount}`);
                         if (students > 0) parts.push(`Students - ${students}`);
-                        
                         return parts.join(', ') || `${total} Participants`;
                       })()}
                     </Text>
@@ -403,15 +353,15 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
               <View style={styles.cardFooter}>
                 <View style={[
                   styles.statusBadge,
-                  request.hodApproval === 'PENDING' && styles.statusPending,
-                  request.hodApproval === 'APPROVED' && styles.statusApproved,
-                  request.hodApproval === 'REJECTED' && styles.statusRejected,
+                  request.hodApproval === 'PENDING' && { backgroundColor: theme.warning + '22' },
+                  request.hodApproval === 'APPROVED' && { backgroundColor: theme.success + '22' },
+                  request.hodApproval === 'REJECTED' && { backgroundColor: theme.error + '22' },
                 ]}>
                   <Text style={[
                     styles.statusText,
-                    request.hodApproval === 'PENDING' && styles.statusTextPending,
-                    request.hodApproval === 'APPROVED' && styles.statusTextApproved,
-                    request.hodApproval === 'REJECTED' && styles.statusTextRejected,
+                    request.hodApproval === 'PENDING' && { color: theme.warning },
+                    request.hodApproval === 'APPROVED' && { color: theme.success },
+                    request.hodApproval === 'REJECTED' && { color: theme.error },
                   ]}>
                     {request.hodApproval || 'PENDING'}
                   </Text>
@@ -423,76 +373,25 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => setBottomTab('HOME')}
-        >
-          <Ionicons
-            name={bottomTab === 'HOME' ? 'home' : 'home-outline'}
-            size={22}
-            color={bottomTab === 'HOME' ? '#1F2937' : '#9CA3AF'}
-          />
-          <Text style={[
-            styles.navLabel,
-            bottomTab === 'HOME' && styles.navLabelActive
-          ]}>
-            Home
-          </Text>
-          {bottomTab === 'HOME' && <View style={styles.activeIndicator} />}
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('HOME')}>
+          <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
+          <Text style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</Text>
+          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('NEW_PASS');
-            setShowPassTypeModal(true);
-          }}
-        >
-          <Ionicons name="add-circle-outline" size={32} color="#6B7280" />
-          <Text style={styles.navLabel}>New Pass</Text>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('NEW_PASS'); setShowPassTypeModal(true); }}>
+          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
+          <Text style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('MY_REQUESTS');
-            onNavigate('HOD_MY_REQUESTS');
-          }}
-        >
-          <Ionicons
-            name={bottomTab === 'MY_REQUESTS' ? 'list' : 'list-outline'}
-            size={22}
-            color={bottomTab === 'MY_REQUESTS' ? '#1F2937' : '#9CA3AF'}
-          />
-          <Text style={[
-            styles.navLabel,
-            bottomTab === 'MY_REQUESTS' && styles.navLabelActive
-          ]}>
-            My Requests
-          </Text>
-          {bottomTab === 'MY_REQUESTS' && <View style={styles.activeIndicator} />}
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('MY_REQUESTS'); onNavigate('HOD_MY_REQUESTS'); }}>
+          <Ionicons name={bottomTab === 'MY_REQUESTS' ? 'list' : 'list-outline'} size={22} color={bottomTab === 'MY_REQUESTS' ? theme.primary : theme.textTertiary} />
+          <Text style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_REQUESTS' && { color: theme.primary }]}>My Requests</Text>
+          {bottomTab === 'MY_REQUESTS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('PROFILE');
-            onNavigate('PROFILE');
-          }}
-        >
-          <Ionicons
-            name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'}
-            size={22}
-            color={bottomTab === 'PROFILE' ? '#1F2937' : '#9CA3AF'}
-          />
-          <Text style={[
-            styles.navLabel,
-            bottomTab === 'PROFILE' && styles.navLabelActive
-          ]}>
-            Profile
-          </Text>
-          {bottomTab === 'PROFILE' && <View style={styles.activeIndicator} />}
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
+          <Ionicons name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'} size={22} color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary} />
+          <Text style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</Text>
+          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
       </View>
 
@@ -593,664 +492,75 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F59E0B',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  avatarText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  headerInfo: {
-    gap: 2,
-  },
-  greeting: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  notificationIndicator: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#10b981',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 20,
-    marginBottom: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  statTab: {
-    flex: 1,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
-  },
-  statTabActive: {
-    borderBottomColor: '#F59E0B',
-  },
-  statLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#9CA3AF',
-    marginBottom: 4,
-    letterSpacing: 0.5,
-  },
-  statLabelActive: {
-    color: '#F59E0B',
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#6B7280',
-  },
-  statValueActive: {
-    color: '#1F2937',
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  emptyState: {
-    paddingVertical: 80,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginTop: 16,
-  },
-  requestCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-  },
-  cardTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  avatarContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  requestAvatarText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#6B7280',
-  },
-  headerMainInfo: {
-    flex: 1,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  requestStudentName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  passTypePill: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  passTypePillText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  studentIdSub: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  timeAgoContainer: {
-    alignSelf: 'flex-start',
-    paddingTop: 4,
-  },
-  timeAgoText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  detailsBlock: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 12,
-    gap: 8,
-    marginBottom: 16,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  detailText: {
-    fontSize: 14,
-    color: '#374151',
-    fontWeight: '600',
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  viewBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    gap: 6,
-  },
-  viewBadgeText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#4B5563',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  statusPending: {
-    backgroundColor: '#FEF3C7',
-  },
-  statusApproved: {
-    backgroundColor: '#D1FAE5',
-  },
-  statusRejected: {
-    backgroundColor: '#FEE2E2',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  statusTextPending: {
-    color: '#F59E0B',
-  },
-  statusTextApproved: {
-    color: '#10B981',
-  },
-  statusTextRejected: {
-    color: '#EF4444',
-  },
-  viewButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
-    gap: 6,
-  },
-  viewButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#374151',
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 8,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    position: 'relative',
-  },
-  navLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#9CA3AF',
-    marginTop: 4,
-  },
-  navLabelActive: {
-    color: '#1F2937',
-  },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    width: 32,
-    height: 3,
-    backgroundColor: '#F59E0B',
-    borderRadius: 2,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    marginTop: 60,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    flex: 1,
-    maxHeight: '100%',
-  },
-  modalScrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 40,
-  },
-  modalSection: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#6B7280',
-    marginBottom: 12,
-    letterSpacing: 0.5,
-  },
-  modalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  modalLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  modalValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  rejectButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EF4444',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  rejectButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  approveButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#10B981',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  approveButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  // Verification Modal Styles
-  vContainer: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  vHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#FFF',
-  },
-  vBackButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  vHeaderTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#1F2937',
-    letterSpacing: 0.5,
-  },
-  vContent: {
-    flex: 1,
-    padding: 20,
-  },
-  vProfileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  vAvatarCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#3B82F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  vAvatarText: {
-    color: '#FFF',
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  vProfileInfo: {
-    flex: 1,
-  },
-  vProfileName: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  vProfileId: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '600',
-  },
-  vTimeInfo: {
-    alignItems: 'flex-end',
-  },
-  vTimeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#4B5563',
-  },
-  vTimeSub: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  vCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 28,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  vCardItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 4,
-  },
-  vCardText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  vSectionTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#9CA3AF',
-    marginBottom: 12,
-    letterSpacing: 1,
-  },
-  vStaffRemarkCard: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderLeftWidth: 4,
-    borderLeftColor: '#F59E0B',
-  },
-  vStaffRemarkText: {
-    fontSize: 16,
-    color: '#4B5563',
-    fontWeight: '600',
-    lineHeight: 24,
-  },
-  vAttachmentCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 28,
-    backgroundColor: '#E5E7EB',
-    height: 300,
-    position: 'relative',
-  },
-  vAttachmentImage: {
-    width: '100%',
-    height: '100%',
-  },
-  vPreviewButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -100 }, { translateY: -25 }],
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 8,
-    width: 200,
-    justifyContent: 'center',
-  },
-  vPreviewText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  vRemarkContainer: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 20,
-    padding: 20,
-    minHeight: 120,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  vRemarkInput: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#4B5563',
-    paddingTop: 0,
-    textAlignVertical: 'top',
-  },
-  vFooter: {
-    flexDirection: 'row',
-    padding: 20,
-    backgroundColor: '#FFF',
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  vFooterButton: {
-    flex: 1,
-    height: 56,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  vRejectBtn: {
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-  },
-  vApproveBtn: {
-    backgroundColor: '#10B981',
-  },
-  vFooterButtonText: {
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 1,
-    color: '#FFF',
-  },
-  attachmentPreviewOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.96)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  attachmentPreviewClose: {
-    position: 'absolute',
-    top: 52,
-    right: 20,
-    zIndex: 10,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 20,
-    padding: 10,
-  },
-  attachmentPreviewImage: {
-    width: '95%',
-    height: '78%',
-    borderRadius: 12,
-  },
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
+  avatarImage: { width: 48, height: 48, borderRadius: 24 },
+  avatarText: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
+  headerInfo: { gap: 2 },
+  greeting: { fontSize: 12 },
+  userName: { fontSize: 16, fontWeight: '700' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  notificationIndicator: { position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: 5, borderWidth: 2 },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginTop: 16, marginBottom: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
+  searchInput: { flex: 1, fontSize: 16 },
+  statsContainer: { flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, borderRadius: 12, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
+  statTab: { flex: 1, paddingVertical: 16, alignItems: 'center', borderBottomWidth: 3, borderBottomColor: 'transparent' },
+  statLabel: { fontSize: 11, fontWeight: '700', marginBottom: 4, letterSpacing: 0.5 },
+  statValue: { fontSize: 24, fontWeight: '700' },
+  content: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
+  emptyState: { paddingVertical: 80, alignItems: 'center' },
+  emptyText: { fontSize: 16, fontWeight: '600', marginTop: 16 },
+  requestCard: { borderRadius: 16, padding: 16, marginBottom: 16, borderWidth: 1, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
+  cardTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
+  avatarContainer: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  requestAvatarText: { fontSize: 16, fontWeight: '700' },
+  headerMainInfo: { flex: 1 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  requestStudentName: { fontSize: 15, fontWeight: '700' },
+  passTypePill: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1 },
+  passTypePillText: { fontSize: 12, fontWeight: '600' },
+  studentIdSub: { fontSize: 13, marginTop: 2 },
+  timeAgoContainer: { alignSelf: 'flex-start', paddingTop: 4 },
+  timeAgoText: { fontSize: 12 },
+  detailsBlock: { borderRadius: 12, padding: 12, gap: 8, marginBottom: 16 },
+  detailItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  detailText: { fontSize: 14, fontWeight: '600' },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  viewBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, gap: 6 },
+  viewBadgeText: { fontSize: 13, fontWeight: '600' },
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+  statusText: { fontSize: 12, fontWeight: '700' },
+  viewButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10, gap: 6 },
+  viewButtonText: { fontSize: 14, fontWeight: '700' },
+  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 8 },
+  navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, position: 'relative' },
+  navLabel: { fontSize: 11, fontWeight: '600', marginTop: 4 },
+  activeIndicator: { position: 'absolute', bottom: 0, width: 32, height: 3, borderRadius: 2 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'flex-end' },
+  modalContainer: { flex: 1, marginTop: 60, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 20, borderBottomWidth: 1 },
+  modalTitle: { fontSize: 20, fontWeight: '700' },
+  closeButton: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  modalContent: { flex: 1, maxHeight: '100%' },
+  modalScrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
+  modalSection: { marginBottom: 20 },
+  sectionTitle: { fontSize: 14, fontWeight: '700', marginBottom: 12, letterSpacing: 0.5 },
+  modalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  modalLabel: { fontSize: 14 },
+  modalValue: { fontSize: 14, fontWeight: '600' },
+  actionButtons: { flexDirection: 'row', gap: 12, marginTop: 16, marginBottom: 8 },
+  rejectButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#EF4444', paddingVertical: 14, borderRadius: 12, gap: 8 },
+  rejectButtonText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+  approveButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#10B981', paddingVertical: 14, borderRadius: 12, gap: 8 },
+  approveButtonText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
+  attachmentPreviewOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.96)', justifyContent: 'center', alignItems: 'center' },
+  attachmentPreviewClose: { position: 'absolute', top: 52, right: 20, zIndex: 10, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: 10 },
+  attachmentPreviewImage: { width: '95%', height: '78%', borderRadius: 12 },
+  vContainer: { flex: 1 },
 });
 
 export default NewHODDashboard;
