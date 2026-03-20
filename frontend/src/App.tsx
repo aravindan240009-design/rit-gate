@@ -52,6 +52,7 @@ import ModernBulkGatePassScreen from './screens/staff/ModernBulkGatePassScreen';
 import MyRequestsScreen from './screens/staff/MyRequestsScreen';
 import NotificationsScreen from './screens/shared/NotificationsScreen';
 import SwipeBackWrapper from './components/SwipeBackWrapper';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Inner component that can access ThemeContext for transition animation
 const ThemedApp: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -861,7 +862,9 @@ const App: React.FC = () => {
                     isLoading={isLoading}
                     onBack={currentScreen === 'UNIFIED_LOGIN' ? goBackToHome : navigateBack}
                   >
-                    {renderCurrentScreen()}
+                    <ErrorBoundary fallbackScreen={goBackToHome}>
+                      {renderCurrentScreen()}
+                    </ErrorBoundary>
                   </AppNavigator>
                 </View>
               </ThemedApp>

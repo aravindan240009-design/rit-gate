@@ -35,7 +35,7 @@ const CustomButton = ({
     gradient,
 }: CustomButtonProps) => {
     const { theme } = useTheme();
-    const scaleAnim = new Animated.Value(1);
+    const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
     const handlePressIn = () => {
         Animated.spring(scaleAnim, {
