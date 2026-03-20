@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
@@ -104,13 +105,11 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
 
   const pickDocument = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert(
-          'Permission Required',
-          'Please allow access to your photo library in Settings to attach files.',
-          [{ text: 'OK' }]
-        );
+      // Try image picker first
+      const permResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (permResult.status !== 'granted') {
+        // Fall back to document picker which doesn't need gallery permission
+        await pickViaDocumentPicker();
         return;
       }
 
@@ -118,14 +117,57 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
         mediaTypes: ['images'],
         base64: true,
         quality: 0.7,
+        allowsEditing: false,
       });
-      if (!result.canceled && result.assets?.[0]) {
-        const asset = result.assets[0];
-        const mimeType = asset.mimeType || 'image/jpeg';
-        const base64Uri = `data:${mimeType};base64,${asset.base64}`;
-        setAttachment({ name: asset.fileName || 'attachment.jpg', base64Uri });
+
+      if (result.canceled) return;
+
+      const asset = result.assets?.[0];
+      if (!asset) {
+        setErrorMessage('Could not read the selected file. Please try again.');
+        setShowErrorModal(true);
+        return;
       }
-    } catch (error) { console.error('Image pick error:', error); }
+
+      const mimeType = asset.mimeType || 'image/jpeg';
+      const fileName = asset.fileName || `attachment_${Date.now()}.jpg`;
+
+      if (asset.base64) {
+        // Preferred path — base64 available
+        setAttachment({ name: fileName, base64Uri: `data:${mimeType};base64,${asset.base64}`, uri: asset.uri });
+      } else if (asset.uri) {
+        // Fallback — use URI directly (backend must accept URIs or we convert)
+        setAttachment({ name: fileName, base64Uri: asset.uri, uri: asset.uri });
+      } else {
+        setErrorMessage('Could not read the selected image. Please try a different file.');
+        setShowErrorModal(true);
+      }
+    } catch (error: any) {
+      console.error('Image pick error:', error);
+      // If image picker crashes (e.g. on some Android versions), fall back to document picker
+      await pickViaDocumentPicker();
+    }
+  };
+
+  const pickViaDocumentPicker = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf'],
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+
+      if (result.canceled) return;
+
+      const file = result.assets?.[0];
+      if (!file) return;
+
+      setAttachment({ name: file.name || 'attachment', base64Uri: file.uri, uri: file.uri });
+    } catch (err: any) {
+      console.error('Document pick error:', err);
+      setErrorMessage('Could not open file picker. Please check app permissions in Settings.');
+      setShowErrorModal(true);
+    }
   };
 
   const handleSubmit = async () => {
@@ -253,19 +295,26 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
 
           <View style={styles.formSection}>
             <Text style={[styles.label, { color: theme.textSecondary }]}>ATTACHMENT (OPTIONAL)</Text>
-            <TouchableOpacity style={styles.uploadBtn} onPress={pickDocument}>
-              <Ionicons name="attach-outline" size={22} color="#9CA3AF" />
-              <Text style={styles.uploadText}>
-                {attachment ? attachment.name : 'Tap to upload image'}
+            <TouchableOpacity
+              style={[styles.uploadBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}
+              onPress={pickDocument}
+            >
+              <Ionicons name="attach-outline" size={22} color={theme.primary} />
+              <Text style={[styles.uploadText, { color: theme.textSecondary }]}>
+                {attachment ? attachment.name : 'Tap to attach image or PDF'}
               </Text>
               {attachment && (
-                <TouchableOpacity onPress={() => setAttachment(null)}>
-                  <Ionicons name="close-circle" size={20} color="#EF4444" />
+                <TouchableOpacity onPress={() => setAttachment(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Ionicons name="close-circle" size={20} color={theme.error} />
                 </TouchableOpacity>
               )}
             </TouchableOpacity>
-            {attachment && (
-              <Image source={{ uri: attachment.base64Uri }} style={styles.attachmentPreview} resizeMode="cover" />
+            {attachment && attachment.uri && (attachment.uri.startsWith('file://') || attachment.uri.startsWith('content://') || attachment.base64Uri?.startsWith('data:image')) && (
+              <Image
+                source={{ uri: attachment.base64Uri?.startsWith('data:image') ? attachment.base64Uri : attachment.uri }}
+                style={styles.attachmentPreview}
+                resizeMode="cover"
+              />
             )}
           </View>
 
@@ -466,7 +515,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     fontWeight: '500',
-    color: '#64748b',
   },
   attachmentPreview: {
     width: '100%',
