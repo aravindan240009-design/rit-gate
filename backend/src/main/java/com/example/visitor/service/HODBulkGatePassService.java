@@ -19,10 +19,9 @@ public class HODBulkGatePassService {
     private final GatePassRequestRepository gatePassRequestRepository;
     private final StudentRepository studentRepository;
     private final StaffRepository staffRepository;
-    private final HODRepository hodRepository;
-    private final HRRepository hrRepository;
     private final QRTableRepository qrTableRepository;
     private final NotificationService notificationService;
+    private final DepartmentLookupService departmentLookupService;
 
     
     // Create HOD bulk gate pass request using unified Gatepass table
@@ -34,16 +33,16 @@ public class HODBulkGatePassService {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            // Validate HOD
-            Optional<HOD> hodOpt = hodRepository.findByHodCode(hodCode);
-            if (!hodOpt.isPresent()) {
+            // Validate HOD — look up from staff table
+            Optional<Staff> hodStaffOpt = staffRepository.findByStaffCode(hodCode);
+            if (!hodStaffOpt.isPresent()) {
                 response.put("success", false);
                 response.put("message", "HOD not found");
                 return response;
             }
             
-            HOD hod = hodOpt.get();
-            String department = hod.getDepartment();
+            Staff hodStaff = hodStaffOpt.get();
+            String department = hodStaff.getDepartment();
             
             // Validate at least one participant type is selected
             boolean hasStudents = studentRegNos != null && !studentRegNos.isEmpty();
@@ -128,7 +127,7 @@ public class HODBulkGatePassService {
             GatePassRequest gatePassRequest = new GatePassRequest();
             gatePassRequest.setRegNo(hodCode);
             gatePassRequest.setRequestedByStaffCode(hodCode);
-            gatePassRequest.setRequestedByStaffName(hod.getHodName());
+            gatePassRequest.setRequestedByStaffName(hodStaff.getStaffName());
             gatePassRequest.setStudentName("HOD Bulk Pass - " + eligibleMembers.size() + " participants");
             gatePassRequest.setDepartment(department);
             gatePassRequest.setPassType("BULK");
@@ -224,26 +223,15 @@ public class HODBulkGatePassService {
                                        request.getRequestedByStaffCode() : request.getRegNo();
                 log.info("Including HOD as participant: {}", requesterCode);
                 
-                Optional<HOD> hodOpt = hodRepository.findByHodCode(requesterCode);
-                if (hodOpt.isPresent()) {
-                    HOD hod = hodOpt.get();
+                Optional<Staff> hodAsStaff = staffRepository.findByStaffCode(requesterCode);
+                if (hodAsStaff.isPresent()) {
+                    Staff staff = hodAsStaff.get();
                     Map<String, String> info = new HashMap<>();
-                    info.put("id", hod.getHodCode());
-                    info.put("name", hod.getHodName());
+                    info.put("id", staff.getStaffCode());
+                    info.put("name", staff.getStaffName());
                     info.put("type", "hod");
-                    info.put("department", hod.getDepartment());
+                    info.put("department", staff.getDepartment());
                     participants.add(info);
-                } else {
-                    Optional<Staff> staffOpt = staffRepository.findByStaffCode(requesterCode);
-                    if (staffOpt.isPresent()) {
-                        Staff staff = staffOpt.get();
-                        Map<String, String> info = new HashMap<>();
-                        info.put("id", staff.getStaffCode());
-                        info.put("name", staff.getStaffName());
-                        info.put("type", "staff");
-                        info.put("department", staff.getDepartment());
-                        participants.add(info);
-                    }
                 }
             }
             
@@ -281,7 +269,7 @@ public class HODBulkGatePassService {
                         continue;
                     }
 
-                    // Check staff repo first, then HOD repo
+                    // All participants (including HODs) are in the staff table
                     Optional<Staff> staffOpt = staffRepository.findByStaffCode(trimmedCode);
                     if (staffOpt.isPresent()) {
                         Staff staff = staffOpt.get();
@@ -293,20 +281,7 @@ public class HODBulkGatePassService {
                         participants.add(info);
                         log.info("Added staff participant: {} - {}", staff.getStaffCode(), staff.getStaffName());
                     } else {
-                        // Check if it's HOD
-                        Optional<HOD> hodOpt = hodRepository.findByHodCode(trimmedCode);
-                        if (hodOpt.isPresent()) {
-                            HOD hod = hodOpt.get();
-                            Map<String, String> info = new HashMap<>();
-                            info.put("id", hod.getHodCode());
-                            info.put("name", hod.getHodName());
-                            info.put("type", "hod");
-                            info.put("department", hod.getDepartment());
-                            participants.add(info);
-                            log.info("Added HOD participant: {} - {}", hod.getHodCode(), hod.getHodName());
-                        } else {
-                            log.warn("Staff/HOD not found for code: {}", trimmedCode);
-                        }
+                        log.warn("Staff not found for code: {}", trimmedCode);
                     }
                 }
             }
@@ -414,14 +389,8 @@ public class HODBulkGatePassService {
         return String.format("%06d", new SecureRandom().nextInt(1000000));
     }
 
-    // Helper: Find active HR
+    // Helper: Find active HR — delegated to DepartmentLookupService
     private String findActiveHR() {
-        List<HR> hrList = hrRepository.findAll().stream()
-            .filter(HR::getIsActive)
-            .collect(java.util.stream.Collectors.toList());
-        if (!hrList.isEmpty()) {
-            return hrList.get(0).getHrCode();
-        }
-        return null;
+        return departmentLookupService.findActiveHR();
     }
 }

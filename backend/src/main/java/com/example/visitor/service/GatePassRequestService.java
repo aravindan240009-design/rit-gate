@@ -18,30 +18,27 @@ public class GatePassRequestService {
     private final GatePassRequestRepository gatePassRequestRepository;
     private final StudentRepository studentRepository;
     private final StaffRepository staffRepository;
-    private final HODRepository hodRepository;
-    private final HRRepository hrRepository;
     private final QRTableRepository qrTableRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
+    private final DepartmentLookupService departmentLookupService;
     
     // Constructor
     public GatePassRequestService(
             GatePassRequestRepository gatePassRequestRepository,
             StudentRepository studentRepository,
             StaffRepository staffRepository,
-            HODRepository hodRepository,
-            HRRepository hrRepository,
             QRTableRepository qrTableRepository,
             NotificationService notificationService,
-            EmailService emailService) {
+            EmailService emailService,
+            DepartmentLookupService departmentLookupService) {
         this.gatePassRequestRepository = gatePassRequestRepository;
         this.studentRepository = studentRepository;
         this.staffRepository = staffRepository;
-        this.hodRepository = hodRepository;
-        this.hrRepository = hrRepository;
         this.qrTableRepository = qrTableRepository;
         this.notificationService = notificationService;
         this.emailService = emailService;
+        this.departmentLookupService = departmentLookupService;
     }
     
     // Submit student gate pass request
@@ -60,13 +57,13 @@ public class GatePassRequestService {
         String department = student.getDepartment();
         
         // Find assigned staff (first active staff in department)
-        String assignedStaffCode = findStaffForDepartment(department);
+        String assignedStaffCode = departmentLookupService.findStaffForDepartment(department);
         if (assignedStaffCode == null) {
             throw new RuntimeException("No staff found for department: " + department);
         }
         
         // Find assigned HOD (optional — if not found, request goes directly to PENDING_HOD with null hodCode)
-        String assignedHodCode = findHODForDepartment(department);
+        String assignedHodCode = departmentLookupService.findHODForDepartment(department);
         if (assignedHodCode == null) {
             log.warn("No HOD found for department: {}. Request will be submitted without HOD assignment.", department);
         }
@@ -91,8 +88,12 @@ public class GatePassRequestService {
         GatePassRequest saved = gatePassRequestRepository.save(request);
         log.info("Gate pass request created with ID: {}", saved.getId());
         
-        // Send notification to assigned staff
-        notificationService.notifyStaffOfNewStudentRequest(saved);
+        // Send notification to assigned staff (wrapped in try-catch to prevent transaction rollback)
+        try {
+            notificationService.notifyStaffOfNewStudentRequest(saved);
+        } catch (Exception e) {
+            log.error("Failed to notify staff of new student request for request {}", saved.getId(), e);
+        }
         
         return saved;
     }
@@ -113,7 +114,7 @@ public class GatePassRequestService {
         String department = staff.getDepartment();
         
         // Find assigned HOD (optional — if not found, request is submitted without HOD assignment)
-        String assignedHodCode = findHODForDepartment(department);
+        String assignedHodCode = departmentLookupService.findHODForDepartment(department);
         if (assignedHodCode == null) {
             log.warn("No HOD found for department: {}. Staff request will be submitted without HOD assignment.", department);
         }
@@ -140,8 +141,12 @@ public class GatePassRequestService {
         GatePassRequest saved = gatePassRequestRepository.save(request);
         log.info("Staff gate pass request created with ID: {}", saved.getId());
         
-        // Send notification to assigned HOD
-        notificationService.notifyHODOfNewStaffRequest(saved);
+        // Send notification to assigned HOD (wrapped in try-catch to prevent transaction rollback)
+        try {
+            notificationService.notifyHODOfNewStaffRequest(saved);
+        } catch (Exception e) {
+            log.error("Failed to notify HOD of new staff request for request {}", saved.getId(), e);
+        }
         
         return saved;
     }
@@ -775,46 +780,6 @@ public class GatePassRequestService {
         return gatePassRequestRepository.save(request);
     }
     
-    // Helper: Find staff for department
-    private String findStaffForDepartment(String department) {
-        List<Staff> staffList = staffRepository.findByDepartment(department);
-        if (!staffList.isEmpty()) {
-            return staffList.get(0).getStaffCode();
-        }
-        return null;
-    }
-    
-    // Helper: Find HOD for department
-    // Falls back to staff table (role containing "HOD") if the hod table doesn't exist or is empty
-    private String findHODForDepartment(String department) {
-        try {
-            List<HOD> hodList = hodRepository.findByDepartment(department);
-            if (!hodList.isEmpty()) {
-                return hodList.get(0).getHodCode();
-            }
-        } catch (Exception e) {
-            log.warn("HOD table query failed (table may not exist), falling back to staff table: {}", e.getMessage());
-        }
-        // Fallback: find staff in the same department whose role contains "HOD"
-        try {
-            List<Staff> staffList = staffRepository.findByDepartment(department);
-            for (Staff s : staffList) {
-                if (s.getRole() != null && s.getRole().toUpperCase().contains("HOD")) {
-                    log.info("Found HOD via staff table fallback: {} for department {}", s.getStaffCode(), department);
-                    return s.getStaffCode();
-                }
-            }
-            // If no HOD-role staff found, return first staff as fallback
-            if (!staffList.isEmpty()) {
-                log.warn("No HOD-role staff found for department {}, using first staff as fallback: {}", department, staffList.get(0).getStaffCode());
-                return staffList.get(0).getStaffCode();
-            }
-        } catch (Exception ex) {
-            log.error("Staff table fallback also failed for department {}: {}", department, ex.getMessage());
-        }
-        return null;
-    }
-    
     // Get QR code for approved request
     public String getQRCodeForRequest(Long requestId, String identifier) {
         log.info("Fetching QR code for request {} by user {}", requestId, identifier);
@@ -917,34 +882,17 @@ public class GatePassRequestService {
                                            LocalDateTime requestDate, String attachmentUri) {
         log.info("Submitting gate pass request for HOD: {}", hodCode);
         
-        // Find HOD — fall back to staff table if hod table doesn't exist
-        HOD hod = null;
-        String hodName = null;
-        String hodDepartment = null;
-        try {
-            Optional<HOD> hodOpt = hodRepository.findByHodCode(hodCode);
-            if (hodOpt.isPresent()) {
-                hod = hodOpt.get();
-                hodName = hod.getHodName();
-                hodDepartment = hod.getDepartment();
-            }
-        } catch (Exception e) {
-            log.warn("HOD table query failed, falling back to staff table: {}", e.getMessage());
+        // Look up HOD details from staff table
+        Optional<Staff> staffOpt = staffRepository.findByStaffCode(hodCode);
+        if (staffOpt.isEmpty()) {
+            throw new RuntimeException("HOD/Staff not found with code: " + hodCode);
         }
-        if (hod == null) {
-            // Fallback: look up in staff table
-            Optional<Staff> staffOpt2 = staffRepository.findByStaffCode(hodCode);
-            if (staffOpt2.isEmpty()) {
-                throw new RuntimeException("HOD/Staff not found with code: " + hodCode);
-            }
-            Staff s = staffOpt2.get();
-            hodName = s.getStaffName();
-            hodDepartment = s.getDepartment();
-        }
-        String department = hodDepartment;
+        Staff hodStaff = staffOpt.get();
+        String hodName = hodStaff.getStaffName();
+        String department = hodStaff.getDepartment();
         
-        // Find assigned HR (first active HR)
-        String assignedHrCode = findActiveHR();
+        // Find assigned HR (first active HR — role contains "HR" in staff table)
+        String assignedHrCode = departmentLookupService.findActiveHR();
         if (assignedHrCode == null) {
             throw new RuntimeException("No active HR found in the system");
         }
@@ -975,8 +923,12 @@ public class GatePassRequestService {
         GatePassRequest saved = gatePassRequestRepository.save(request);
         log.info("HOD gate pass request created with ID: {}", saved.getId());
         
-        // Send notification to assigned HR
-        notificationService.notifyHROfNewHODRequest(saved);
+        // Send notification to assigned HR (wrapped in try-catch to prevent transaction rollback)
+        try {
+            notificationService.notifyHROfNewHODRequest(saved);
+        } catch (Exception e) {
+            log.error("Failed to notify HR of new HOD request for request {}", saved.getId(), e);
+        }
         
         return saved;
     }
@@ -1137,14 +1089,4 @@ public class GatePassRequestService {
         return allRequests;
     }
     
-    // Helper: Find active HR
-    private String findActiveHR() {
-        List<HR> hrList = hrRepository.findAll().stream()
-            .filter(HR::getIsActive)
-            .collect(java.util.stream.Collectors.toList());
-        if (!hrList.isEmpty()) {
-            return hrList.get(0).getHrCode();
-        }
-        return null;
-    }
 }

@@ -19,4 +19,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     List<Student> findByRegNoIn(@Param("regNos") List<String> regNos);
 
     List<Student> findByDepartment(String department);
+
+    // Get the HOD name for a department (hod column stores the HOD's name)
+    @Query("SELECT DISTINCT s.hod FROM Student s WHERE s.department = :department AND s.hod IS NOT NULL")
+    List<String> findHodNamesByDepartment(@Param("department") String department);
 }
