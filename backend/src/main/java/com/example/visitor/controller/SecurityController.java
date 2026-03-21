@@ -1665,235 +1665,107 @@ public class SecurityController {
     // Scan History Endpoint - Grouped by person with status
     @GetMapping("/scan-history")
     public ResponseEntity<List<java.util.Map<String, Object>>> getScanHistory(
-            @RequestParam(required = false, defaultValue = "100") Integer limit) {
+            @RequestParam(required = false, defaultValue = "200") Integer limit) {
         try {
-            List<ScanLog> allScans = scanLogRepository.findAll();
-            
-            // Filter out invalid/rejected scans
-            List<ScanLog> validScans = allScans.stream()
-                .filter(scan -> scan.getAccessGranted())
-                .collect(java.util.stream.Collectors.toList());
-            
-            // Build a unified list of history records from both Entry (ScanLog) and Exit_logs tables
             List<java.util.Map<String, Object>> scanHistory = new java.util.ArrayList<>();
-            
-            // --- Part 1: Process Entry table records (late entries, visitor entries) ---
-            // Group entry scans by person
-            java.util.Map<String, java.util.List<ScanLog>> scansByPerson = new java.util.HashMap<>();
-            
-            for (ScanLog scan : validScans) {
-                String uId = scan.getStudentId() != null ? scan.getStudentId() : 
-                               (scan.getFacultyId() != null ? scan.getFacultyId() : scan.getUserId());
-                String uType = scan.getPersonType() != null ? scan.getPersonType().toString() : scan.getUserType();
-                
-                // Fallback for visitors with null/missing IDs in scan logs
-                if ("VISITOR".equals(uType) && ("null".equals(uId) || uId == null || uId.isEmpty()) && scan.getQrId() != null) {
-                    Optional<QRTable> qt = qrTableRepository.findById(scan.getQrId());
-                    if (qt.isPresent() && qt.get().getPassRequestId() != null) {
-                        uId = qt.get().getPassRequestId().toString();
-                    }
-                }
-                
-                String resolvedName = resolvePersonName(uId, uType, scan.getPersonName());
-                scan.setPersonName(resolvedName);
-                
-                String key = resolvedName + "_" + uId;
-                scansByPerson.computeIfAbsent(key, k -> new java.util.ArrayList<>()).add(scan);
+
+            // ── Part 1: Entry table (RailwayEntry) ───────────────────────────────────
+            List<RailwayEntry> allEntries = railwayEntryRepository.findAll();
+            for (RailwayEntry entry : allEntries) {
+                if (entry.getTimestamp() == null) continue;
+                String uid   = entry.getUserId();
+                String utype = entry.getUserType() != null ? entry.getUserType().toUpperCase() : "UNKNOWN";
+                String name  = entry.getPersonName();
+                if (name == null || name.isBlank()) name = lookupPersonName(uid, utype);
+
+                java.util.Map<String, Object> rec = new java.util.HashMap<>();
+                rec.put("id",          uid);
+                rec.put("name",        name != null ? name : uid);
+                rec.put("type",        resolveDisplayType(uid, utype));
+                rec.put("entryTime",   entry.getTimestamp().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME));
+                rec.put("exitTime",    null);
+                rec.put("status",      "ENTERED");
+                rec.put("isBulkPass",  false);
+                rec.put("purpose",     "Gate Pass Entry");
+                rec.put("reason",      "");
+                if (entry.getDepartment() != null) rec.put("department", entry.getDepartment());
+                scanHistory.add(rec);
             }
-            
-            // --- Part 2: Also read from Exit_logs table and add as separate EXIT records ---
+
+            // ── Part 2: Exit_logs table (RailwayExitLog) ─────────────────────────────
             List<RailwayExitLog> allExitLogs = railwayExitLogRepository.findAll();
             for (RailwayExitLog exitLog : allExitLogs) {
-                if (exitLog.getAccessGranted() == null || !exitLog.getAccessGranted()) continue;
                 if (exitLog.getExitTime() == null) continue;
-                
-                String exitUserId = exitLog.getUserId();
-                String exitUserType = exitLog.getUserType();
-                String exitName = resolvePersonName(exitUserId, exitUserType, exitLog.getPersonName());
-                
-                // Use detectUserType to correct misclassified records (e.g., HOD stored as STUDENT)
-                String displayType = detectUserType(exitUserId, exitUserType);
-                
-                java.util.Map<String, Object> exitData = new java.util.HashMap<>();
-                exitData.put("id", exitUserId != null ? exitUserId : exitLog.getId());
-                exitData.put("name", exitName);
-                exitData.put("type", displayType);
-                exitData.put("role", resolvePersonRole(exitUserId, exitUserType));
-                exitData.put("entryTime", exitLog.getExitTime().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME));
-                exitData.put("exitTime", exitLog.getExitTime().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME));
-                exitData.put("status", "EXITED");
-                exitData.put("accessGranted", true);
-                exitData.put("entryLocation", exitLog.getScanLocation() != null ? exitLog.getScanLocation() : "Exit Gate");
-                exitData.put("exitLocation", exitLog.getScanLocation() != null ? exitLog.getScanLocation() : "Exit Gate");
-                exitData.put("isBulkPass", false);
-                exitData.put("purpose", exitLog.getPurpose() != null ? exitLog.getPurpose() : "Gate Pass Exit");
-                exitData.put("reason", "");
-                
-                // Purpose is primarily expected to come from Exit_logs (RailwayExitLog).
-                // Avoid reading from GatePassRequest for visitor purposes to keep visitor data on Visitor table.
-                
-                if (exitLog.getDepartment() != null) exitData.put("department", exitLog.getDepartment());
-                if (exitLog.getEmail() != null) exitData.put("email", exitLog.getEmail());
-                if (exitLog.getPhone() != null) exitData.put("phone", exitLog.getPhone());
-                
-                scanHistory.add(exitData);
+                if (Boolean.FALSE.equals(exitLog.getAccessGranted())) continue;
+
+                String uid   = exitLog.getUserId();
+                String utype = exitLog.getUserType() != null ? exitLog.getUserType().toUpperCase() : "UNKNOWN";
+                String name  = exitLog.getPersonName();
+                if (name == null || name.isBlank()) name = lookupPersonName(uid, utype);
+
+                String exitTimeStr = exitLog.getExitTime().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME);
+
+                java.util.Map<String, Object> rec = new java.util.HashMap<>();
+                rec.put("id",          uid);
+                rec.put("name",        name != null ? name : uid);
+                rec.put("type",        resolveDisplayType(uid, utype));
+                rec.put("entryTime",   exitTimeStr);
+                rec.put("exitTime",    exitTimeStr);
+                rec.put("status",      "EXITED");
+                rec.put("isBulkPass",  false);
+                rec.put("purpose",     exitLog.getPurpose() != null ? exitLog.getPurpose() : "Gate Pass Exit");
+                rec.put("reason",      "");
+                if (exitLog.getDepartment() != null) rec.put("department", exitLog.getDepartment());
+                if (exitLog.getEmail()      != null) rec.put("email",      exitLog.getEmail());
+                if (exitLog.getPhone()      != null) rec.put("phone",      exitLog.getPhone());
+                scanHistory.add(rec);
             }
-            
-            for (java.util.List<ScanLog> personScans : scansByPerson.values()) {
-                if (personScans.isEmpty()) continue;
-                
-                // Filter out scans with no time at all
-                personScans.removeIf(scan -> scan.getScanTime() == null && scan.getTimestamp() == null);
-                if (personScans.isEmpty()) continue;
-                
-                // Sort by scan time (fallback to timestamp)
-                personScans.sort((a, b) -> {
-                    LocalDateTime timeA = a.getScanTime() != null ? a.getScanTime() : a.getTimestamp();
-                    LocalDateTime timeB = b.getScanTime() != null ? b.getScanTime() : b.getTimestamp();
-                    return timeA.compareTo(timeB);
-                });
-                
-                ScanLog firstScan = personScans.get(0);
-                ScanLog lastScan = personScans.get(personScans.size() - 1);
-                
-                // Determine status based on last scan location
-                String status = "ENTRY PENDING";
-                String outTime = null;
-                boolean accessGranted = firstScan.getAccessGranted();
-                
-                if (lastScan.getScanLocation() != null && 
-                    lastScan.getScanLocation().toLowerCase().contains("exit")) {
-                    status = "EXITED";
-                    LocalDateTime exitT = lastScan.getScanTime() != null ? lastScan.getScanTime() : lastScan.getTimestamp();
-                    outTime = exitT.format(java.time.format.DateTimeFormatter.ISO_DATE_TIME);
-                    accessGranted = lastScan.getAccessGranted();
-                }
-                
-                java.util.Map<String, Object> scanData = new java.util.HashMap<>();
-                scanData.put("id", firstScan.getStudentId() != null ? firstScan.getStudentId() : 
-                                   (firstScan.getFacultyId() != null ? firstScan.getFacultyId() : 
-                                   (firstScan.getUserId() != null ? firstScan.getUserId() : firstScan.getId())));
-                
-                // Resolve name properly
-                String name = firstScan.getPersonName();
-                scanData.put("name", name != null ? name : "User " + scanData.get("id"));
-                
-                // Use detectUserType to correct misclassified entry records too
-                String entryUserId = (String) scanData.get("id");
-                String rawEntryType = firstScan.getPersonType() != null ? firstScan.getPersonType().toString() : 
-                                     (firstScan.getUserType() != null ? firstScan.getUserType() : "UNKNOWN");
-                scanData.put("type", detectUserType(entryUserId != null ? entryUserId.toString() : null, rawEntryType));
-                
-                LocalDateTime entryT = firstScan.getScanTime() != null ? firstScan.getScanTime() : firstScan.getTimestamp();
-                scanData.put("entryTime", entryT.format(java.time.format.DateTimeFormatter.ISO_DATE_TIME));
-                scanData.put("exitTime", outTime);
-                scanData.put("status", status);
-                scanData.put("accessGranted", accessGranted);
-                scanData.put("entryLocation", firstScan.getScanLocation());
-                scanData.put("exitLocation", lastScan.getScanLocation());
-                
-                // Check if this is a bulk pass
-                boolean isBulkPass = firstScan.getUserType() != null && firstScan.getUserType().equals("BULK_PASS");
-                scanData.put("isBulkPass", isBulkPass);
-                
-                if (isBulkPass && firstScan.getPurpose() != null && firstScan.getPurpose().startsWith("BULK_PASS|")) {
-                    // Parse bulk pass details
-                    // Format: BULK_PASS|INCHARGE:code|SUBTYPE:SEG/SIG|COUNT:X|PURPOSE:text|REASON:text|PARTICIPANTS:id:name:type:dept;...
-                    String purposeData = firstScan.getPurpose();
-                    String[] parts = purposeData.split("\\|");
-                    
-                    String incharge = "";
-                    String subtype = "";
-                    String count = "";
-                    String purpose = "";
-                    String reason = "";
-                    java.util.List<java.util.Map<String, String>> participants = new java.util.ArrayList<>();
-                    
-                    for (String part : parts) {
-                        if (part.startsWith("INCHARGE:")) {
-                            incharge = part.substring(9);
-                        } else if (part.startsWith("SUBTYPE:")) {
-                            subtype = part.substring(8);
-                        } else if (part.startsWith("COUNT:")) {
-                            count = part.substring(6);
-                        } else if (part.startsWith("PURPOSE:")) {
-                            purpose = part.substring(8);
-                        } else if (part.startsWith("REASON:")) {
-                            reason = part.substring(7);
-                        } else if (part.startsWith("PARTICIPANTS:")) {
-                            String participantsStr = part.substring(13);
-                            if (!participantsStr.isEmpty()) {
-                                String[] participantList = participantsStr.split(";");
-                                for (String p : participantList) {
-                                    String[] pParts = p.split(":", 4);
-                                    if (pParts.length >= 3) {
-                                        java.util.Map<String, String> participant = new java.util.HashMap<>();
-                                        participant.put("id", pParts[0]);
-                                        participant.put("name", pParts[1]);
-                                        participant.put("type", pParts[2]);
-                                        participant.put("department", pParts.length > 3 ? pParts[3] : "");
-                                        participants.add(participant);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    scanData.put("incharge", incharge);
-                    scanData.put("subtype", subtype);
-                    scanData.put("participantCount", count);
-                    scanData.put("purpose", purpose);
-                    scanData.put("reason", reason);
-                    scanData.put("participants", participants);
-                } else {
-                    // Single pass - add purpose and reason
-                    scanData.put("purpose", firstScan.getPurpose() != null ? firstScan.getPurpose() : "General");
-                    scanData.put("reason", ""); // Single passes don't have reason in scan log
-                    
-                    // Add detailed information for single pass
-                    if (firstScan.getDepartment() != null) {
-                        scanData.put("department", firstScan.getDepartment());
-                    }
-                    if (firstScan.getEmail() != null) {
-                        scanData.put("email", firstScan.getEmail());
-                    }
-                    if (firstScan.getPhone() != null) {
-                        scanData.put("phone", firstScan.getPhone());
-                    }
-                    if (firstScan.getStudentId() != null) {
-                        scanData.put("studentId", firstScan.getStudentId());
-                        scanData.put("regNo", firstScan.getStudentId());
-                    }
-                    if (firstScan.getFacultyId() != null) {
-                        scanData.put("facultyId", firstScan.getFacultyId());
-                        scanData.put("staffCode", firstScan.getFacultyId());
-                    }
-                    if (firstScan.getDesignation() != null) {
-                        scanData.put("role", firstScan.getDesignation());
-                    }
-                }
-                
-                scanHistory.add(scanData);
-            }
-            
-            // Sort by entry time (newest first)
+
+            // ── Sort newest first ─────────────────────────────────────────────────────
             scanHistory.sort((a, b) -> {
-                String timeA = (String) a.get("entryTime");
-                String timeB = (String) b.get("entryTime");
-                return timeB.compareTo(timeA);
+                String ta = (String) a.get("entryTime");
+                String tb = (String) b.get("entryTime");
+                if (ta == null && tb == null) return 0;
+                if (ta == null) return 1;
+                if (tb == null) return -1;
+                return tb.compareTo(ta);
             });
-            
-            // Apply limit
+
             if (limit != null && limit > 0 && scanHistory.size() > limit) {
                 scanHistory = scanHistory.subList(0, limit);
             }
-            
-            System.out.println("Fetched " + scanHistory.size() + " scan history records (grouped by person, limit: " + limit + ")");
+
+            System.out.println("✅ scan-history: " + scanHistory.size() + " records (entries + exits)");
             return ResponseEntity.ok(scanHistory);
         } catch (Exception e) {
             System.err.println("Error fetching scan history: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /** Look up a person's display name from student/staff tables by userId + userType */
+    private String lookupPersonName(String userId, String userType) {
+        if (userId == null || userId.isBlank()) return null;
+        try {
+            if ("STUDENT".equals(userType) || "ST".equals(userType)) {
+                return studentRepository.findByRegNo(userId).map(s -> s.getFullName()).orElse(null);
+            } else if ("STAFF".equals(userType) || "SF".equals(userType) || "HOD".equals(userType) || "HD".equals(userType)) {
+                return staffRepository.findByStaffCode(userId).map(s -> s.getStaffName()).orElse(null);
+            }
+        } catch (Exception e) { /* ignore */ }
+        return null;
+    }
+
+    /** Resolve a clean display type label from userId + raw userType */
+    private String resolveDisplayType(String userId, String userType) {
+        if (userType == null) return "VISITOR";
+        switch (userType.toUpperCase()) {
+            case "ST": case "STUDENT": return "STUDENT";
+            case "SF": case "STAFF":   return "STAFF";
+            case "HD": case "HOD":     return "HOD";
+            case "VG": case "VISITOR": return "VISITOR";
+            default: return userType;
         }
     }
     

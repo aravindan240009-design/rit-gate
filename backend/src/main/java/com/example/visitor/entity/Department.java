@@ -37,7 +37,7 @@ public class Department {
     private Integer totalStudents;
     
     @Column(name = "is_active")
-    private boolean isActive;
+    private Boolean isActive;
     
     public Department() {}
     
@@ -82,6 +82,6 @@ public class Department {
     public Integer getTotalStudents() { return totalStudents; }
     public void setTotalStudents(Integer totalStudents) { this.totalStudents = totalStudents; }
     
-    public boolean getIsActive() { return isActive; }
-    public void setIsActive(boolean isActive) { this.isActive = isActive; }
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 }

@@ -6,8 +6,11 @@ import jakarta.persistence.*;
 @Table(name = "security")
 public class SecurityPersonnel {
     @Id
-    @Column(name = "staff_code", nullable = false, unique = true, length = 100)
+    @Column(name = "security_id", nullable = false, unique = true, length = 100)
     private String securityId;
+
+    @Column(name = "staff_code", length = 100)
+    private String staffCode;
 
     @Column(name = "name", length = 255)
     private String name;
@@ -35,6 +38,8 @@ public class SecurityPersonnel {
     public void setId(String id) { this.securityId = id; }
     public String getSecurityId() { return securityId; }
     public void setSecurityId(String securityId) { this.securityId = securityId; }
+    public String getStaffCode() { return staffCode; }
+    public void setStaffCode(String staffCode) { this.staffCode = staffCode; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getEmail() { return email; }

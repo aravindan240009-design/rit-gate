@@ -450,11 +450,40 @@ class ApiService {
   }
 
   // ── Departments ───────────────────────────────────────────────────────────
-  async getDepartments(): Promise<any[]> {
+  async getDepartments(): Promise<any> {
     try {
       const data = await this.makeRequest(`${this.baseURL}/departments`, { method: 'GET' });
-      return data.departments || data || [];
-    } catch { return []; }
+      const list = data.departments || data.data || (Array.isArray(data) ? data : []);
+      return { success: true, data: list };
+    } catch (e: any) { return { success: false, data: [], message: e.message }; }
+  }
+
+  async getStaffByDepartment(departmentId: string): Promise<{ success: boolean; data?: any[]; message?: string }> {
+    try {
+      // Backend endpoint: GET /api/departments/{departmentCode}/staff-list
+      const data = await this.makeRequest(`${this.baseURL}/departments/${encodeURIComponent(departmentId)}/staff-list`, { method: 'GET' });
+      const list = data.staff || data.data || (Array.isArray(data) ? data : []);
+      return { success: true, data: list };
+    } catch (e: any) { return { success: false, data: [], message: e.message }; }
+  }
+
+  // ── Security scan history & vehicles ─────────────────────────────────────
+  async getScanHistory(securityId: string): Promise<{ success: boolean; data?: any[]; message?: string }> {
+    try {
+      // Backend endpoint: GET /api/security/scan-history (no securityId path param)
+      const data = await this.makeRequest(`${this.baseURL}/security/scan-history`, { method: 'GET' });
+      const list = data.scans || data.data || data.history || (Array.isArray(data) ? data : []);
+      return { success: true, data: list };
+    } catch (e: any) { return { success: false, data: [], message: e.message }; }
+  }
+
+  async getVehicles(): Promise<{ success: boolean; data?: any[]; message?: string }> {
+    try {
+      // Backend endpoint: GET /api/security/vehicles
+      const data = await this.makeRequest(`${this.baseURL}/security/vehicles`, { method: 'GET' });
+      const list = data.vehicles || data.data || (Array.isArray(data) ? data : []);
+      return { success: true, data: list };
+    } catch (e: any) { return { success: false, data: [], message: e.message }; }
   }
 
   // ── Push tokens ───────────────────────────────────────────────────────────
@@ -468,6 +497,78 @@ class ApiService {
       const data = await this.makeRequest(`${this.baseURL}/security/active-persons`, { method: 'GET' });
       return { success: true, data: data.persons || data.data || data || [] };
     } catch (e: any) { return { success: false, data: [], message: e.message }; }
+  }
+
+  // ── Security scan entry/exit ──────────────────────────────────────────────
+  // Both entry and exit use the same /security/scan endpoint
+  async scanQREntry(qrData: string, securityId: string): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/security/scan`, { method: 'POST', body: JSON.stringify({ qrCode: qrData, securityId }) }); }
+    catch (e: any) { return { success: false, message: e.message || 'Failed to scan QR' }; }
+  }
+
+  async scanQRExit(qrData: string, securityId: string): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/security/scan`, { method: 'POST', body: JSON.stringify({ qrCode: qrData, securityId }) }); }
+    catch (e: any) { return { success: false, message: e.message || 'Failed to scan QR' }; }
+  }
+
+  async scanLateEntry(idCode: string, securityId: string): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/security/scan-late-entry`, { method: 'POST', body: JSON.stringify({ idCode, securityId }) }); }
+    catch (e: any) { return { success: false, message: e.message || 'Failed to scan late entry' }; }
+  }
+
+  async manualExit(visitorId: string | number): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/security/manual-exit`, { method: 'POST', body: JSON.stringify({ visitorId }) }); }
+    catch (e: any) { return { success: false, message: e.message || 'Failed to record manual exit' }; }
+  }
+
+  // ── HOD contacts ──────────────────────────────────────────────────────────
+  async getHODContacts(): Promise<{ success: boolean; data?: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/security/hods`, { method: 'GET' });
+      const list = Array.isArray(data) ? data : (data.data || data.hods || []);
+      return { success: true, data: list };
+    } catch (e: any) { return { success: false, data: [], message: e.message }; }
+  }
+
+  // ── Vehicle search & register ─────────────────────────────────────────────
+  async searchVehicle(licensePlate: string): Promise<{ success: boolean; data?: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/security/vehicles/search?licensePlate=${encodeURIComponent(licensePlate)}`, { method: 'GET' });
+      const list = data.vehicles || data.data || (Array.isArray(data) ? data : []);
+      return { success: true, data: list };
+    } catch (e: any) { return { success: false, data: [], message: e.message }; }
+  }
+
+  async registerVehicle(payload: any): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/security/vehicles`, { method: 'POST', body: JSON.stringify(payload) }); }
+    catch (e: any) { return { success: false, message: e.message || 'Failed to register vehicle' }; }
+  }
+
+  // ── Escalated visitor approve/reject ──────────────────────────────────────
+  async approveEscalatedVisitor(visitorId: string | number, securityId: string): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/security/escalated-visitors/${visitorId}/approve`, { method: 'POST', body: JSON.stringify({ securityId }) }); }
+    catch (e: any) { return { success: false, message: e.message || 'Failed to approve visitor' }; }
+  }
+
+  async rejectEscalatedVisitor(visitorId: string | number, securityId: string, reason: string): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/security/escalated-visitors/${visitorId}/reject`, { method: 'POST', body: JSON.stringify({ securityId, reason }) }); }
+    catch (e: any) { return { success: false, message: e.message || 'Failed to reject visitor' }; }
+  }
+
+  async getEscalatedVisitors(): Promise<{ success: boolean; data?: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/security/escalated-visitors`, { method: 'GET' });
+      return { success: true, data: data.visitors || data.data || (Array.isArray(data) ? data : []) };
+    } catch (e: any) { return { success: false, data: [], message: e.message }; }
+  }
+
+  async registerVisitorForSecurity(d: {
+    name: string; phone: string; email: string; numberOfPeople: number;
+    departmentId: string; staffCode: string; purpose: string;
+    vehicleNumber?: string; securityId: string;
+  }): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/security/register-visitor`, { method: 'POST', body: JSON.stringify(d) }); }
+    catch (e: any) { return { success: false, message: e.message || 'Failed to register visitor' }; }
   }
 
   // ── Legacy compat stubs (used by older screens) ───────────────────────────

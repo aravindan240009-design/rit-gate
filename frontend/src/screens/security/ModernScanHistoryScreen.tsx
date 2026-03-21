@@ -78,12 +78,18 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       setLoading(true);
       const response = await apiService.getScanHistory(security.securityId);
       if (response.success && response.data) {
-        // Map backend fields to frontend fields
-        const mappedData = response.data.map((scan: any) => ({
-          ...scan,
-          inTime: scan.entryTime || scan.inTime,
-          outTime: scan.exitTime || scan.outTime,
-        }));
+        const mappedData = response.data.map((scan: any) => {
+          const inTime = scan.entryTime || scan.inTime;
+          const outTime = scan.exitTime || scan.outTime;
+          // For exit-only records (RailwayExitLog), backend sets both entryTime and exitTime
+          // to the same value with status="EXITED". Distinguish using status field.
+          const isExitOnly = scan.status === 'EXITED' && inTime === outTime;
+          return {
+            ...scan,
+            inTime: isExitOnly ? undefined : inTime,
+            outTime,
+          };
+        });
         setScans(mappedData);
       }
     } catch (error) {
@@ -133,12 +139,14 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
     let matchesFilter = true;
     if (activeFilter === 'ENTRY') {
-      matchesFilter = !scan.outTime;
+      // Show records that are entries (person is inside / has entered)
+      matchesFilter = scan.status === 'ENTERED' || (!scan.outTime && !!scan.inTime);
     } else if (activeFilter === 'EXIT') {
-      matchesFilter = !!scan.outTime;
+      matchesFilter = scan.status === 'EXITED' || !!scan.outTime;
     } else if (activeFilter === 'TODAY') {
       const today = new Date().toDateString();
-      const scanDate = scan.inTime ? new Date(scan.inTime).toDateString() : '';
+      const timeToCheck = scan.inTime || scan.outTime;
+      const scanDate = timeToCheck ? new Date(timeToCheck).toDateString() : '';
       matchesFilter = today === scanDate;
     }
 
@@ -330,21 +338,21 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   <View style={styles.scanRight}>
                     <View style={[
                       styles.scanStatusBadge,
-                      scan.outTime ? styles.scanStatusExit : styles.scanStatusEntry
+                      scan.status === 'EXITED' || scan.outTime ? styles.scanStatusExit : styles.scanStatusEntry
                     ]}>
                       <Ionicons
-                        name={scan.outTime ? 'log-out' : 'log-in'}
+                        name={scan.status === 'EXITED' || scan.outTime ? 'log-out' : 'log-in'}
                         size={12}
-                        color={scan.outTime ? '#EF4444' : '#10B981'}
+                        color={scan.status === 'EXITED' || scan.outTime ? '#EF4444' : '#10B981'}
                       />
                       <Text style={[
                         styles.scanStatusText,
-                        scan.outTime ? styles.scanStatusTextExit : styles.scanStatusTextEntry
+                        scan.status === 'EXITED' || scan.outTime ? styles.scanStatusTextExit : styles.scanStatusTextEntry
                       ]}>
-                        {scan.outTime ? 'EXIT' : 'ENTRY'}
+                        {scan.status === 'EXITED' || scan.outTime ? 'EXIT' : 'ENTRY'}
                       </Text>
                     </View>
-                    <Text style={styles.scanTime}>{formatTime(scan.inTime)}</Text>
+                    <Text style={styles.scanTime}>{formatTime(scan.outTime || scan.inTime)}</Text>
                   </View>
                 </TouchableOpacity>
               ))
@@ -547,10 +555,12 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
                     <View style={styles.modalSection}>
                       <Text style={styles.sectionTitle}>Time Information</Text>
-                      <View style={styles.modalRow}>
-                        <Text style={styles.modalLabel}>Entry Time</Text>
-                        <Text style={styles.modalValue}>{formatTime(selectedScan.inTime)}</Text>
-                      </View>
+                      {selectedScan.inTime && (
+                        <View style={styles.modalRow}>
+                          <Text style={styles.modalLabel}>Entry Time</Text>
+                          <Text style={styles.modalValue}>{formatTime(selectedScan.inTime)}</Text>
+                        </View>
+                      )}
                       {selectedScan.outTime && (
                         <View style={styles.modalRow}>
                           <Text style={styles.modalLabel}>Exit Time</Text>
@@ -561,18 +571,18 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                         <Text style={styles.modalLabel}>Status</Text>
                         <View style={[
                           styles.scanStatusBadge,
-                          selectedScan.outTime ? styles.scanStatusExit : styles.scanStatusEntry
+                          selectedScan.status === 'EXITED' || selectedScan.outTime ? styles.scanStatusExit : styles.scanStatusEntry
                         ]}>
                           <Ionicons
-                            name={selectedScan.outTime ? 'log-out' : 'log-in'}
+                            name={selectedScan.status === 'EXITED' || selectedScan.outTime ? 'log-out' : 'log-in'}
                             size={12}
-                            color={selectedScan.outTime ? '#EF4444' : '#10B981'}
+                            color={selectedScan.status === 'EXITED' || selectedScan.outTime ? '#EF4444' : '#10B981'}
                           />
                           <Text style={[
                             styles.scanStatusText,
-                            selectedScan.outTime ? styles.scanStatusTextExit : styles.scanStatusTextEntry
+                            selectedScan.status === 'EXITED' || selectedScan.outTime ? styles.scanStatusTextExit : styles.scanStatusTextEntry
                           ]}>
-                            {selectedScan.outTime ? 'EXITED' : 'ACTIVE'}
+                            {selectedScan.status === 'EXITED' || selectedScan.outTime ? 'EXITED' : 'ACTIVE'}
                           </Text>
                         </View>
                       </View>

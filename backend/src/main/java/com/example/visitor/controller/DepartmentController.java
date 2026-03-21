@@ -30,7 +30,7 @@ public class DepartmentController {
         try {
             List<Department> departments = departmentRepository.findAll();
             List<Map<String, Object>> departmentList = departments.stream()
-                .filter(dept -> dept.getIsActive()) // Only active departments
+                .filter(dept -> dept.getIsActive() == null || Boolean.TRUE.equals(dept.getIsActive())) // NULL treated as active
                 .map(dept -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", dept.getName()); // Use name as id for frontend compatibility
@@ -70,8 +70,8 @@ public class DepartmentController {
     }
 
 
-    // Get staff by department code
-    @GetMapping("/{departmentCode}/staff")
+    // Get staff by department code — uses /staff-list suffix to avoid path conflict with /{id}
+    @GetMapping("/{departmentCode}/staff-list")
     public ResponseEntity<List<Map<String, Object>>> getStaffByDepartment(@PathVariable String departmentCode) {
         try {
             System.out.println("Fetching staff for department: " + departmentCode);
