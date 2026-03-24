@@ -10,7 +10,7 @@ import {
   Easing,
   Alert,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import ImagePicker from '../utils/safeImagePicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../config/api.config';

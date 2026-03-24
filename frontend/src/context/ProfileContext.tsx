@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ImagePicker from 'expo-image-picker';
+import ImagePicker from '../utils/safeImagePicker';
 import { Alert, Linking, Platform } from 'react-native';
 
 interface ProfileContextType {
