@@ -11,6 +11,7 @@ import {
   Image,
   Dimensions,
   BackHandler,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ImagePicker from '../../utils/safeImagePicker';
@@ -43,6 +44,8 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
   const [errorMessage, setErrorMessage] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+
+  const isImageAttachment = !!attachment?.name?.toLowerCase?.().match(/\.(jpg|jpeg|png|gif|webp)$/);
 
   const getUserDisplayName = () => {
     if (!user) return { fullName: 'User', firstLetter: 'U' };
@@ -196,8 +199,18 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
           </View>
           <View style={styles.formSection}>
             <Text style={[styles.label, { color: theme.textSecondary }]}>ATTACHMENT</Text>
-            <TouchableOpacity style={[styles.uploadBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]} onPress={pickDocument}><Ionicons name="attach-outline" size={22} color={theme.primary} /><Text style={[styles.uploadText, { color: theme.textSecondary }]}>{attachment ? attachment.name : 'Attach image'}</Text></TouchableOpacity>
-            {attachment && attachment.uri && <Image source={{ uri: attachment.base64Uri || attachment.uri }} style={styles.attachmentPreview} resizeMode="cover" />}
+            <TouchableOpacity style={[styles.uploadBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]} onPress={pickDocument}><Ionicons name="attach-outline" size={22} color={theme.primary} /><Text style={[styles.uploadText, { color: theme.textSecondary }]}>{attachment ? attachment.name : 'Attach image or PDF'}</Text></TouchableOpacity>
+            {attachment && (
+              isImageAttachment ? (
+                <Image source={{ uri: attachment.base64Uri || attachment.uri }} style={styles.attachmentPreview} resizeMode="cover" />
+              ) : (
+                <TouchableOpacity style={[styles.filePreview, { borderColor: theme.border, backgroundColor: theme.surface }]} onPress={() => Linking.openURL(attachment.uri || attachment.base64Uri)}>
+                  <Ionicons name="document-text-outline" size={20} color={theme.primary} />
+                  <Text style={[styles.filePreviewText, { color: theme.text }]} numberOfLines={1}>Tap to preview {attachment.name}</Text>
+                  <Ionicons name="open-outline" size={18} color={theme.textSecondary} />
+                </TouchableOpacity>
+              )
+            )}
           </View>
           <TouchableOpacity style={[styles.submitBtn, isLocked && { opacity: 0.7 }]} onPress={handleSubmit} disabled={isLocked}>
             <LinearGradient colors={theme.gradients.primary as [string, string, ...string[]]} style={styles.btnGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
@@ -239,6 +252,8 @@ const styles = StyleSheet.create({
   uploadBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, padding: 12, gap: 10, borderWidth: 1.5, borderStyle: 'dashed' },
   uploadText: { flex: 1, fontSize: 13 },
   attachmentPreview: { width: '100%', height: 140, borderRadius: 12, marginTop: 8 },
+  filePreview: { marginTop: 8, borderWidth: 1, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  filePreviewText: { flex: 1, fontSize: 13, fontWeight: '600' },
   submitBtn: { borderRadius: 14, overflow: 'hidden', marginTop: 8, elevation: 4 },
   btnGradient: { paddingVertical: 15, alignItems: 'center' },
   submitText: { color: '#FFF', fontSize: 15, fontWeight: '800' },

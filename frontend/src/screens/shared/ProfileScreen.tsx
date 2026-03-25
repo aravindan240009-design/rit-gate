@@ -241,24 +241,24 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               <Ionicons name="camera" size={14} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-          <Text style={[styles.userName, { color: theme.primary }]}>{getName().toUpperCase()}</Text>
-          <Text style={[styles.userRole, { color: theme.secondary }]}>{getRole()} | Dept: {getDept()}</Text>
+          <Text style={[styles.userName, { color: theme.text }]}>{getName().toUpperCase()}</Text>
+          <Text style={[styles.userRole, { color: theme.textSecondary }]}>{getRole()} | Dept: {getDept()}</Text>
         </View>
 
         <View style={[styles.statsCard, { backgroundColor: theme.surface }]}>
           <View style={styles.statItem}>
             {loadingStats ? <ActivityIndicator size="small" color={theme.accent} /> : <Text style={[styles.statNumber, { color: theme.primary }]}>{stats.stat1}</Text>}
-            <Text style={[styles.statLabel, { color: theme.accent }]}>{userType.toUpperCase() === 'SECURITY' ? 'ACTIVE' : 'APPROVED'}</Text>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{userType.toUpperCase() === 'SECURITY' ? 'ACTIVE' : 'APPROVED'}</Text>
           </View>
           <View style={[styles.verticalDivider, { backgroundColor: theme.border }]} />
           <View style={styles.statItem}>
             {loadingStats ? <ActivityIndicator size="small" color={theme.error} /> : <Text style={[styles.statNumber, { color: theme.primary }]}>{stats.stat2}</Text>}
-            <Text style={[styles.statLabel, { color: theme.error }]}>{userType.toUpperCase() === 'SECURITY' ? 'EXITED' : 'REJECTED'}</Text>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{userType.toUpperCase() === 'SECURITY' ? 'EXITED' : 'REJECTED'}</Text>
           </View>
           <View style={[styles.verticalDivider, { backgroundColor: theme.border }]} />
           <View style={styles.statItem}>
             {loadingStats ? <ActivityIndicator size="small" color={theme.warning} /> : <Text style={[styles.statNumber, { color: theme.primary }]}>{stats.stat3}</Text>}
-            <Text style={[styles.statLabel, { color: theme.warning }]}>{userType.toUpperCase() === 'SECURITY' ? 'TOTAL' : 'PENDING'}</Text>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{userType.toUpperCase() === 'SECURITY' ? 'TOTAL' : 'PENDING'}</Text>
           </View>
         </View>
 
@@ -278,14 +278,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <View style={[styles.infoCard, { backgroundColor: theme.surface }]}>
           <View style={styles.infoRow}>
             <View style={[styles.iconBox, { backgroundColor: theme.surfaceHighlight }]}><Ionicons name="card-outline" size={20} color={theme.accent} /></View>
-            <View style={styles.infoContent}><Text style={[styles.infoLabel, { color: theme.textSecondary }]}>ID</Text><Text style={[styles.infoValue, { color: theme.primary }]}>{getID()}</Text></View>
+            <View style={styles.infoContent}><Text style={[styles.infoLabel, { color: theme.textSecondary }]}>ID</Text><Text style={[styles.infoValue, { color: theme.text }]}>{getID()}</Text></View>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <View style={styles.infoRow}>
             <View style={[styles.iconBox, { backgroundColor: theme.surfaceHighlight }]}><Ionicons name="mail-outline" size={20} color={theme.accent} /></View>
             <View style={styles.infoContent}>
               <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>EMAIL</Text>
-              {isEditing ? <TextInput style={[styles.editInput, { color: theme.primary, borderColor: theme.accent, backgroundColor: theme.inputBackground }]} value={editEmail} onChangeText={setEditEmail} keyboardType="email-address" autoCapitalize="none" /> : <Text style={[styles.infoValue, { color: theme.primary }]}>{profileData.email || 'N/A'}</Text>}
+              {isEditing ? <TextInput style={[styles.editInput, { color: theme.text, borderColor: theme.border, backgroundColor: theme.inputBackground }]} value={editEmail} onChangeText={setEditEmail} keyboardType="email-address" autoCapitalize="none" placeholderTextColor={theme.textTertiary} /> : <Text style={[styles.infoValue, { color: theme.text }]}>{profileData.email || 'N/A'}</Text>}
             </View>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
@@ -293,11 +293,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <View style={[styles.iconBox, { backgroundColor: theme.surfaceHighlight }]}><Ionicons name="phone-portrait-outline" size={20} color={theme.accent} /></View>
             <View style={styles.infoContent}>
               <Text style={[styles.infoLabel, { color: theme.textSecondary }]}>PHONE</Text>
-              {isEditing ? <TextInput style={[styles.editInput, { color: theme.primary, borderColor: theme.accent, backgroundColor: theme.inputBackground }]} value={editPhone} onChangeText={setEditPhone} keyboardType="phone-pad" /> : <Text style={[styles.infoValue, { color: theme.primary }]}>{profileData.phone || 'N/A'}</Text>}
+              {isEditing ? <TextInput style={[styles.editInput, { color: theme.text, borderColor: theme.border, backgroundColor: theme.inputBackground }]} value={editPhone} onChangeText={setEditPhone} keyboardType="phone-pad" placeholderTextColor={theme.textTertiary} /> : <Text style={[styles.infoValue, { color: theme.text }]}>{profileData.phone || 'N/A'}</Text>}
             </View>
           </View>
           {isEditing && (
-            <TouchableOpacity style={[styles.saveButton, { backgroundColor: theme.accent }]} onPress={handleSaveProfile} disabled={savingProfile}>
+            <TouchableOpacity style={[styles.saveButton, { backgroundColor: theme.primary }]} onPress={handleSaveProfile} disabled={savingProfile}>
               {savingProfile ? <ActivityIndicator color="#FFF" size="small" /> : <Text style={styles.saveButtonText}>Save Changes</Text>}
             </TouchableOpacity>
           )}
@@ -307,7 +307,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <View style={[styles.preferencesCard, { backgroundColor: theme.surface }]}>
           <View style={styles.prefRow}>
             <View style={[styles.prefIconBox, { backgroundColor: theme.surfaceHighlight }]}><Ionicons name="notifications-outline" size={20} color={theme.accent} /></View>
-            <Text style={[styles.prefLabel, { color: theme.primary, flex: 1 }]}>Allow Notifications</Text>
+            <Text style={[styles.prefLabel, { color: theme.text, flex: 1 }]}>Allow Notifications</Text>
             <Switch value={notificationsEnabled} onValueChange={toggleNotifications} trackColor={{ false: theme.border, true: theme.accent }} thumbColor={'#FFFFFF'} />
           </View>
         </View>

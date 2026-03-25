@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { API_CONFIG } from '../config/api.config';
+import * as Notifications from 'expo-notifications';
 
 interface Notification {
   id: number;
@@ -31,6 +32,7 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const currentUserRef = useRef<{ userId: string; userType: UserType } | null>(null);
+  const shownNotificationIdsRef = useRef<Set<number>>(new Set());
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -40,7 +42,21 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       const response = await fetch(url);
       const data = await response.json();
       if (data.success && Array.isArray(data.notifications)) {
-        setNotifications(data.notifications);
+        const latest = data.notifications as Notification[];
+        const unreadNew = latest.filter(n => !n.isRead && !shownNotificationIdsRef.current.has(n.id));
+        for (const n of unreadNew) {
+          shownNotificationIdsRef.current.add(n.id);
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: n.title || 'New Notification',
+              body: n.message || '',
+              data: { actionRoute: n.actionRoute || '' },
+              sound: 'default',
+            },
+            trigger: null,
+          });
+        }
+        setNotifications(latest);
       }
     } catch (error) {
       // silent — polling will retry

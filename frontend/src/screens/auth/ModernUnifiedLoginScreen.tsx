@@ -244,16 +244,38 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
             </TouchableOpacity>
           )}
           <Animated.View style={[styles.mainContent, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-            <View style={styles.logoCont}><Image source={require('../../../assets/rit-logo.png')} style={styles.logo} /></View>
-            <Text style={styles.mainTitle}>RIT Gate</Text>
+            <View style={styles.hero}>
+              <View style={styles.logoCont}><Image source={require('../../../assets/rit-logo.png')} style={styles.logo} /></View>
+              <Text style={styles.mainTitle}>RIT GATE</Text>
+              <Text style={styles.heroSubtitle}>Secure Access Control System</Text>
+              <View style={styles.featureRow}>
+                <View style={styles.featurePill}>
+                  <Ionicons name="finger-print-outline" size={14} color="#0F172A" />
+                  <Text style={styles.featureText}>Biometric</Text>
+                </View>
+                <View style={styles.featurePill}>
+                  <Ionicons name="qr-code-outline" size={14} color="#0F172A" />
+                  <Text style={styles.featureText}>Badge Scan</Text>
+                </View>
+                <View style={styles.featurePill}>
+                  <Ionicons name="flash-outline" size={14} color="#0F172A" />
+                  <Text style={styles.featureText}>Instant</Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.loginCard}>
+              <Text style={styles.cardTitle}>{otpSent ? 'Verify Identity' : 'Welcome Back'}</Text>
+              <Text style={styles.cardSubtitle}>
+                {otpSent ? 'Enter the one-time password sent to your email.' : 'Sign in with your institute credential.'}
+              </Text>
             
-            {!otpSent ? (
+              {!otpSent ? (
                <View style={{ width: '100%', alignItems: 'center' }}>
                 <View style={styles.inputWrap}>
                   <Text style={styles.label}>IDENTIFICATION</Text>
                   <TextInput style={styles.input} placeholder="Security ID / Staff ID / Roll No" placeholderTextColor="#94A3B8" value={userId} onChangeText={setUserId} autoCapitalize="none" editable={!loading} />
                 </View>
-                <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={handleSendOTP} disabled={loading}>
+                <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={() => handleSendOTP()} disabled={loading}>
                   {loading ? (
                     <View style={styles.loaderWrap}>
                        <ActivityIndicator color="#FFF" size="small" />
@@ -268,7 +290,7 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
                   <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
                 </TouchableOpacity>
               </View>
-            ) : (
+              ) : (
                 <View style={{ width: '100%', alignItems: 'center' }}>
                     <View style={styles.inputWrap}>
                       <Text style={styles.label}>VERIFICATION CODE</Text>
@@ -309,7 +331,8 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
                       {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnTxt}>Verify & Login</Text>}
                     </TouchableOpacity>
                 </View>
-            )}
+              )}
+            </View>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -339,12 +362,20 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   keyboardView: { flex: 1 },
-  scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 10 },
+  scrollContent: { flexGrow: 1, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 16 },
   backBtn: { width: 44, height: 44, justifyContent: 'center' },
-  mainContent: { flex: 1, alignItems: 'center' },
-  logoCont: { marginBottom: 12 },
+  mainContent: { flex: 1, alignItems: 'center', paddingTop: 8 },
+  hero: { width: '100%', alignItems: 'center', marginBottom: 16 },
+  logoCont: { marginBottom: 10 },
   logo: { width: 120, height: 120, borderRadius: 60 },
-  mainTitle: { fontSize: 32, fontWeight: '900', color: '#1E293B', marginBottom: 32, letterSpacing: -0.5 },
+  mainTitle: { fontSize: 36, fontWeight: '900', color: '#0F172A', letterSpacing: 2 },
+  heroSubtitle: { fontSize: 12, color: '#64748B', marginTop: 6, marginBottom: 12, letterSpacing: 1.3, textTransform: 'uppercase' },
+  featureRow: { flexDirection: 'row', gap: 8, width: '100%', justifyContent: 'center' },
+  featurePill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
+  featureText: { fontSize: 11, color: '#334155', fontWeight: '700' },
+  loginCard: { width: '100%', backgroundColor: '#FFFFFF', borderRadius: 24, borderWidth: 1, borderColor: '#E2E8F0', padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 18, elevation: 6 },
+  cardTitle: { fontSize: 24, fontWeight: '800', color: '#0F172A', marginBottom: 4 },
+  cardSubtitle: { fontSize: 13, color: '#64748B', marginBottom: 16 },
   inputWrap: { width: '100%', marginBottom: 20 },
   label: { fontSize: 11, fontWeight: '800', color: '#64748B', letterSpacing: 1, marginBottom: 8 },
   input: { width: '100%', height: 56, backgroundColor: '#F8FAFC', borderRadius: 16, paddingHorizontal: 16, fontSize: 16, color: '#1E293B', borderWidth: 1, borderColor: '#E2E8F0' },

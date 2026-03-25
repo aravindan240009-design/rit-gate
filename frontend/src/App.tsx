@@ -251,6 +251,7 @@ const App: React.FC = () => {
         setRequiresBiometricGate(hasFlag);
         setBiometricVerified(!hasFlag);
         setIsLoading(false);
+        initPushNotifications(savedSecurity.securityId, 'security');
         return;
       }
 
@@ -367,6 +368,7 @@ const App: React.FC = () => {
     setBiometricVerified(true);
     setBiometricPrompted(false);
     await biometricAuthService.markSessionActive();
+    initPushNotifications(securityData.securityId, 'security');
   };
 
   const handleLogout = async () => {

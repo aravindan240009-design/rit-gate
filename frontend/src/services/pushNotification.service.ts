@@ -42,13 +42,21 @@ export async function registerForPushNotifications(): Promise<string | null> {
       return null;
     }
 
-    // Android: create a high-priority notification channel
+    // Android: create high-priority channels for heads-up notifications
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('gate-pass', {
         name: 'Gate Pass Notifications',
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#06B6D4',
+        sound: 'default',
+        enableVibrate: true,
+        showBadge: true,
+      });
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'General Notifications',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
         sound: 'default',
         enableVibrate: true,
         showBadge: true,
