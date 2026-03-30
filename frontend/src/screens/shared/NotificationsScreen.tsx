@@ -37,6 +37,14 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const isToday = (value?: string) => {
+    if (!value) return false;
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return false;
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   const fetchNotifications = async () => {
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}/notifications/${userType}/${userId}`);
@@ -44,8 +52,9 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
       
       if (data.success && data.notifications) {
         // Get latest 5 notifications
-        const latest = data.notifications.slice(0, 5);
-        setNotifications(latest);
+        const latest = data.notifications as Notification[];
+        const todaysOnly = latest.filter((n) => isToday(n.timestamp || n.createdAt));
+        setNotifications(todaysOnly.slice(0, 5));
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);

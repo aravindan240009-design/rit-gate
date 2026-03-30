@@ -27,6 +27,7 @@ import { AppError } from '../../utils/errorHandler';
 import ErrorModal from '../../components/ErrorModal';
 import SuccessModal from '../../components/SuccessModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 
 interface StudentHomeScreenProps {
   student: Student;
@@ -211,6 +212,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
         </View>
       </View>
 
+      <ScreenContentContainer>
       <ScrollView
         style={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -274,6 +276,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
         )}
         <View style={{ height: 100 }} />
       </ScrollView>
+      </ScreenContentContainer>
 
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>

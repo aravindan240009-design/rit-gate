@@ -38,6 +38,7 @@ import EntryExitHistoryScreen from './screens/student/EntryExitHistoryScreen';
 import GatePassRequestScreen from './screens/student/GatePassRequestScreen';
 import MyQRCodesScreen from './screens/student/MyQRCodesScreen';
 import RequestsScreen from './screens/student/RequestsScreen';
+import GuestPreRequestScreen from './screens/shared/GuestPreRequestScreen';
 import PendingApprovalsScreen from './screens/staff/PendingApprovalsScreen';
 import HODGatePassRequestScreen from './screens/hod/HODGatePassRequestScreen';
 import HODMyRequestsScreen from './screens/hod/HODMyRequestsScreen';
@@ -656,6 +657,16 @@ const App: React.FC = () => {
                 onBack={navigateBack}
               />
             );
+          case 'GUEST_PRE_REQUEST':
+            return (
+              <GuestPreRequestScreen
+                creatorRole="STAFF"
+                creatorStaffCode={staff.staffCode}
+                creatorName={staff.staffName}
+                creatorDepartment={staff.department}
+                onBack={() => setCurrentScreen('STAFF_DASHBOARD')}
+              />
+            );
           default:
             return (
               <StaffDashboardContainer
@@ -740,6 +751,16 @@ const App: React.FC = () => {
                 onBack={navigateBack}
               />
             );
+          case 'GUEST_PRE_REQUEST':
+            return (
+              <GuestPreRequestScreen
+                creatorRole="HOD"
+                creatorStaffCode={hod.hodCode}
+                creatorName={hod.hodName}
+                creatorDepartment={hod.department}
+                onBack={() => setCurrentScreen('HOD_DASHBOARD')}
+              />
+            );
           default:
             return (
               <HODDashboardContainer
@@ -776,6 +797,16 @@ const App: React.FC = () => {
                 userId={hr.hrCode}
                 userType="hr"
                 onBack={navigateBack}
+              />
+            );
+          case 'GUEST_PRE_REQUEST':
+            return (
+              <GuestPreRequestScreen
+                creatorRole="HR"
+                creatorStaffCode={hr.hrCode}
+                creatorName={hr.hrName || hr.name}
+                creatorDepartment={hr.department}
+                onBack={() => setCurrentScreen('HR_DASHBOARD')}
               />
             );
           default:

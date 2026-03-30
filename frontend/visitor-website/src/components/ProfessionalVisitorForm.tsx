@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { VisitorRegistration, VisitorResponse, Staff } from '../types';
-import { api } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { VisitorResponse, Staff } from '../types';
 
 interface ProfessionalVisitorFormProps {
   onBack?: () => void;
@@ -10,6 +9,38 @@ interface Department {
   id: string;
   code: string;
   name: string;
+}
+
+const VISITOR_SESSION_KEY = 'ritgate_visitor_session_v1';
+
+interface StoredVisitorSession {
+  requestId: number;
+  machineId: string;
+  name: string;
+  email: string;
+  department: string;
+  personToMeet: string;
+  approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+  qrCode?: string;
+  manualCode?: string;
+}
+
+function readStoredSession(): StoredVisitorSession | null {
+  try {
+    const raw = localStorage.getItem(VISITOR_SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as StoredVisitorSession;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredSession(s: StoredVisitorSession) {
+  localStorage.setItem(VISITOR_SESSION_KEY, JSON.stringify(s));
+}
+
+function clearStoredSession() {
+  localStorage.removeItem(VISITOR_SESSION_KEY);
 }
 
 const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBack }) => {
@@ -46,6 +77,8 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
   const [focusedField, setFocusedField] = useState<string>('');
   const [hoveredCard, setHoveredCard] = useState<string>('');
   const [hoveredBack, setHoveredBack] = useState<boolean>(false);
+  const [showApprovalBanner, setShowApprovalBanner] = useState(false);
+  const prevApprovalRef = useRef<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
   const [machineId] = useState<string>(() => {
     const key = 'ritgate_machine_id';
     const existing = localStorage.getItem(key);
@@ -61,6 +94,33 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
     }, 100);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const stored = readStoredSession();
+    if (!stored || stored.machineId !== machineId) return;
+    prevApprovalRef.current = stored.approvalStatus;
+    setRegisteredVisitor({
+      id: stored.requestId,
+      name: stored.name,
+      email: stored.email,
+      department: stored.department,
+      personToMeet: stored.personToMeet,
+    } as VisitorResponse);
+    setApprovalStatus(stored.approvalStatus);
+    setApprovedQrCode(stored.qrCode || '');
+    setApprovedManualCode(stored.manualCode || '');
+    setShowSuccess(true);
+  }, [machineId]);
+
+  useEffect(() => {
+    if (approvalStatus === 'APPROVED' && prevApprovalRef.current !== 'APPROVED') {
+      setShowApprovalBanner(true);
+      const t = window.setTimeout(() => setShowApprovalBanner(false), 9000);
+      return () => window.clearTimeout(t);
+    }
+    prevApprovalRef.current = approvalStatus;
+    return undefined;
+  }, [approvalStatus]);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -229,6 +289,15 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
       setRegisteredVisitor(visitor);
       setApprovalStatus('PENDING');
       setShowSuccess(true);
+      writeStoredSession({
+        requestId: visitor.id,
+        machineId,
+        name: visitor.name,
+        email: visitor.email,
+        department: visitor.department,
+        personToMeet: visitor.personToMeet,
+        approvalStatus: 'PENDING',
+      });
       
       setNumberOfVisitors(1);
       setVisitorNames(['']);
@@ -249,42 +318,94 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
   };
 
   const handleNewRegistration = () => {
+    clearStoredSession();
     setShowSuccess(false);
     setRegisteredVisitor(null);
     setApprovalStatus('PENDING');
     setApprovedQrCode('');
     setApprovedManualCode('');
+    setShowApprovalBanner(false);
+    prevApprovalRef.current = 'PENDING';
   };
 
   useEffect(() => {
     if (!showSuccess || !registeredVisitor?.id) return;
-    if (approvalStatus === 'APPROVED' || approvalStatus === 'REJECTED') return;
 
     const apiBase = process.env.REACT_APP_API_URL || 'https://ritgate-backend.onrender.com/api';
-    const interval = setInterval(async () => {
+    const tick = async () => {
       try {
         const resp = await fetch(
           `${apiBase}/unified-visitors/status/${registeredVisitor.id}?machineId=${encodeURIComponent(machineId)}`
         );
         if (!resp.ok) return;
         const data = await resp.json();
-        if (data?.success && data?.status) {
-          const status = String(data.status).toUpperCase();
+        if (!data?.success) return;
+
+        const scanCount =
+          typeof data.scanCount === 'number' ? data.scanCount : parseInt(String(data.scanCount || 0), 10) || 0;
+        const statusUpper = String(data.status || '').toUpperCase();
+        if (scanCount >= 2 || statusUpper === 'EXITED') {
+          clearStoredSession();
+          setShowSuccess(false);
+          setRegisteredVisitor(null);
+          setApprovalStatus('PENDING');
+          setApprovedQrCode('');
+          setApprovedManualCode('');
+          setShowApprovalBanner(false);
+          prevApprovalRef.current = 'PENDING';
+          return;
+        }
+
+        if (data?.status) {
+          const status = statusUpper;
           if (status === 'APPROVED') {
+            const qr = (data.qrCode as string) || '';
+            const manual = (data.manualCode as string) || '';
             setApprovalStatus('APPROVED');
-            setApprovedQrCode(data.qrCode || '');
-            setApprovedManualCode(data.manualCode || '');
+            setApprovedQrCode(qr);
+            setApprovedManualCode(manual);
+            writeStoredSession({
+              requestId: registeredVisitor.id,
+              machineId,
+              name: registeredVisitor.name,
+              email: registeredVisitor.email,
+              department: registeredVisitor.department,
+              personToMeet: registeredVisitor.personToMeet,
+              approvalStatus: 'APPROVED',
+              qrCode: qr,
+              manualCode: manual,
+            });
           } else if (status === 'REJECTED') {
             setApprovalStatus('REJECTED');
+            writeStoredSession({
+              requestId: registeredVisitor.id,
+              machineId,
+              name: registeredVisitor.name,
+              email: registeredVisitor.email,
+              department: registeredVisitor.department,
+              personToMeet: registeredVisitor.personToMeet,
+              approvalStatus: 'REJECTED',
+            });
           } else {
             setApprovalStatus('PENDING');
+            writeStoredSession({
+              requestId: registeredVisitor.id,
+              machineId,
+              name: registeredVisitor.name,
+              email: registeredVisitor.email,
+              department: registeredVisitor.department,
+              personToMeet: registeredVisitor.personToMeet,
+              approvalStatus: 'PENDING',
+            });
           }
         }
       } catch (_) {}
-    }, 5000);
+    };
 
+    tick();
+    const interval = setInterval(tick, 4000);
     return () => clearInterval(interval);
-  }, [showSuccess, registeredVisitor?.id, machineId, approvalStatus]);
+  }, [showSuccess, registeredVisitor?.id, registeredVisitor?.name, machineId]);
 
   // Styles
   const styles = {
@@ -501,6 +622,26 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
       padding: '12px 0',
       borderBottom: '1px solid #e5e7eb',
     },
+    approvalBanner: {
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 2000,
+      background: 'linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%)',
+      color: '#ffffff',
+      padding: '18px 22px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '14px',
+      boxShadow: '0 12px 40px rgba(5, 150, 105, 0.45)',
+      animation: 'approvalArrival 0.9s cubic-bezier(0.34, 1.45, 0.64, 1) both',
+    },
+    approvalBannerIcon: {
+      fontSize: '36px',
+      lineHeight: 1,
+      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+    },
     staffItem: {
       display: 'flex',
       flexDirection: 'column' as const,
@@ -570,12 +711,43 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
         transform: scale(1.1);
       }
     }
+
+    @keyframes approvalArrival {
+      0% {
+        opacity: 0;
+        transform: translateY(-120%);
+      }
+      55% {
+        opacity: 1;
+        transform: translateY(14px);
+      }
+      75% {
+        transform: translateY(-6px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   `;
 
   if (showSuccess && registeredVisitor) {
     return (
       <div style={styles.container}>
         <style>{keyframes}</style>
+        {showApprovalBanner && (
+          <div style={styles.approvalBanner} role="status" aria-live="polite">
+            <span style={styles.approvalBannerIcon} aria-hidden>✓</span>
+            <div>
+              <div style={{ fontSize: '17px', fontWeight: 800, letterSpacing: '0.02em' }}>
+                Staff has approved your visit
+              </div>
+              <div style={{ fontSize: '14px', marginTop: '6px', opacity: 0.95, fontWeight: 500 }}>
+                Your gate pass is ready — use the QR or manual code at security. This notice will hide shortly.
+              </div>
+            </div>
+          </div>
+        )}
         {onBack && (
           <button
             onClick={onBack}
@@ -612,8 +784,23 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
                   <h3 style={{ fontSize: '22px', fontWeight: '700', color: '#166534', marginBottom: '12px' }}>
                     Approved - Your Pass Is Ready
                   </h3>
-                  <p style={{ fontSize: '14px', color: '#166534', marginBottom: '8px', wordBreak: 'break-all' }}>
-                    <strong>QR:</strong> {approvedQrCode || 'N/A'}
+                  {approvedQrCode ? (
+                    <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(approvedQrCode)}`}
+                        alt="Gate pass QR code"
+                        style={{
+                          borderRadius: '16px',
+                          border: '4px solid #166534',
+                          background: '#ffffff',
+                          maxWidth: 'min(240px, 85vw)',
+                          height: 'auto',
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                  <p style={{ fontSize: '13px', color: '#166534', marginBottom: '8px', wordBreak: 'break-all' }}>
+                    <strong>QR data:</strong> {approvedQrCode || '…'}
                   </p>
                   <p style={{ fontSize: '18px', color: '#14532d', fontWeight: 800, letterSpacing: '2px' }}>
                     Manual Code: {approvedManualCode || 'N/A'}
@@ -786,7 +973,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
 
             {/* Department */}
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Role</label>
+              <label style={styles.label}>Visitor or vendor</label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value as 'VISITOR' | 'VENDOR')}

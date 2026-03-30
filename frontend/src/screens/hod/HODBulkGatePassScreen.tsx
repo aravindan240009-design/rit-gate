@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
-  TouchableOpacity, ActivityIndicator, Image, Modal,
+  TouchableOpacity, ActivityIndicator, Image, Modal, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import ImagePicker from '../../utils/safeImagePicker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { HOD } from '../../types';
 import { apiService } from '../../services/api';
 import SuccessModal from '../../components/SuccessModal';
@@ -81,7 +82,12 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [attachment, setAttachment] = useState<{ name: string; base64Uri: string } | null>(null);
+  const [attachment, setAttachment] = useState<{
+    name: string;
+    base64Uri: string;
+    uri?: string;
+    mimeType?: string;
+  } | null>(null);
 
   // All data
   const [allStudents, setAllStudents] = useState<Student[]>([]);
@@ -192,11 +198,27 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
   const totalSelected = selectedStudents.size + selectedStaff.size;
 
   const pickAttachment = async () => {
-    const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, base64: true, quality: 0.7 });
-    if (!r.canceled && r.assets?.[0]) {
-      const a = r.assets[0];
-      setAttachment({ name: a.fileName || 'attachment.jpg', base64Uri: `data:${a.mimeType || 'image/jpeg'};base64,${a.base64}` });
-    }
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['image/*', 'application/pdf'],
+      copyToCacheDirectory: true,
+      multiple: false,
+    });
+
+    if (result.canceled) return;
+    const file = result.assets?.[0];
+    if (!file) return;
+
+    const mimeType =
+      file.mimeType || (file.uri?.toLowerCase?.().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+    const base64 = await FileSystem.readAsStringAsync(file.uri, {
+      encoding: (FileSystem as any).EncodingType?.Base64 ?? 'base64',
+    });
+    setAttachment({
+      name: file.name || 'attachment',
+      base64Uri: `data:${mimeType};base64,${base64}`,
+      uri: file.uri,
+      mimeType,
+    });
   };
 
   const handleSubmit = async () => {
@@ -413,10 +435,28 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
           <Text style={s.fieldLabel}>Attachment (Optional)</Text>
           <TouchableOpacity style={s.uploadBtn} onPress={pickAttachment}>
             <Ionicons name="attach-outline" size={22} color="#9CA3AF" />
-            <Text style={s.uploadText}>{attachment ? attachment.name : 'Tap to upload image'}</Text>
+            <Text style={s.uploadText}>{attachment ? attachment.name : 'Tap to upload (image/PDF)'}</Text>
             {attachment && <TouchableOpacity onPress={() => setAttachment(null)}><Ionicons name="close-circle" size={20} color="#EF4444" /></TouchableOpacity>}
           </TouchableOpacity>
-          {attachment && <Image source={{ uri: attachment.base64Uri }} style={s.attachPreview} resizeMode="cover" />}
+          {attachment && (
+            attachment.mimeType?.startsWith('image') ? (
+              <Image source={{ uri: attachment.base64Uri }} style={s.attachPreview} resizeMode="cover" />
+            ) : (
+              <TouchableOpacity
+                style={[s.filePreview, { borderColor: '#E5E7EB', backgroundColor: '#FFFFFF' }]}
+                onPress={() => {
+                  const uri = attachment.uri || attachment.base64Uri;
+                  if (uri) Linking.openURL(uri);
+                }}
+              >
+                <Ionicons name="document-text-outline" size={20} color="#1D4ED8" />
+                <Text style={s.filePreviewText} numberOfLines={1}>
+                  Tap to preview {attachment.name}
+                </Text>
+                <Ionicons name="open-outline" size={18} color="#6B7280" />
+              </TouchableOpacity>
+            )
+          )}
         </View>
 
         {/* Submit */}
@@ -507,6 +547,8 @@ const s = StyleSheet.create({
   uploadBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#D1D5DB', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, gap: 10, marginTop: 4 },
   uploadText: { flex: 1, fontSize: 14, color: '#6B7280' },
   attachPreview: { width: '100%', height: 150, borderRadius: 10, marginTop: 10 },
+  filePreview: { marginTop: 10, borderWidth: 1, borderRadius: 10, paddingVertical: 12, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  filePreviewText: { flex: 1, fontSize: 14, fontWeight: '600', color: '#1F2937' },
   submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#10B981', marginHorizontal: 16, marginTop: 16, paddingVertical: 16, borderRadius: 12, gap: 8 },
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnText: { fontSize: 16, fontWeight: '700', color: '#FFF' },

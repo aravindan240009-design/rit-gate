@@ -529,6 +529,9 @@ public class SecurityController {
                                 Visitor visitor = visitorOpt.get();
                                 visitor.setExitTime(java.time.LocalDateTime.now());
                                 visitor.setScanCount(2);
+                                visitor.setQrCode(null);
+                                visitor.setManualCode(null);
+                                visitor.setStatus("EXITED");
                                 visitorRepository.save(visitor);
                                 System.out.println("✅ Visitor exit time recorded: " + visitor.getName());
                             }
@@ -2354,6 +2357,9 @@ public class SecurityController {
                                 Visitor v = visitorOpt.get();
                                 v.setExitTime(LocalDateTime.now());
                                 v.setScanCount(2);
+                                v.setQrCode(null);
+                                v.setManualCode(null);
+                                v.setStatus("EXITED");
                                 visitorRepository.save(v);
                             }
                         } catch (Exception ignored) {}
@@ -2643,6 +2649,9 @@ public class SecurityController {
                     Visitor v = visitors.get(0);
                     v.setExitTime(exitTime);
                     v.setScanCount(2);
+                    v.setQrCode(null);
+                    v.setManualCode(null);
+                    v.setStatus("EXITED");
                     visitorRepository.save(v);
                     visitorUserId = v.getId().toString();
                     if (v.getDepartment() != null) department = v.getDepartment();

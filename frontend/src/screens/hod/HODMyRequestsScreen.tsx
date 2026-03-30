@@ -16,6 +16,7 @@ import { useTheme } from '../../context/ThemeContext';
 import MyRequestsBulkModal from '../../components/MyRequestsBulkModal';
 import GatePassQRModal from '../../components/GatePassQRModal';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 
 interface HODMyRequestsScreenProps {
   user: HOD;
@@ -254,6 +255,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack 
         <View style={{ width: 40 }} />
       </View>
 
+      <ScreenContentContainer>
       <ScrollView
         style={styles.content}
         refreshControl={
@@ -281,6 +283,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack 
 
         <View style={{ height: 100 }} />
       </ScrollView>
+      </ScreenContentContainer>
 
       {/* Detail — full-screen */}
       <SinglePassDetailsModal

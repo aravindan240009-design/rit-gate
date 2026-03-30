@@ -23,6 +23,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useActionLock } from '../../context/ActionLockContext';
 import NotificationDropdown from '../../components/NotificationDropdown';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import { formatTime as fmtTime, getRelativeTimeShort } from '../../utils/dateUtils';
@@ -275,6 +276,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       </View>
 
       {/* Stats Cards */}
+      <ScreenContentContainer style={{ flex: 1 }}>
       <ScrollView
         style={styles.outerScroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -429,6 +431,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
         )}
         <View style={{ height: 100 }} />
       </ScrollView>
+      </ScreenContentContainer>
 
       {/* Bottom Navigation */}
       <SecurityBottomNav activeTab="home" onNavigate={onNavigate} />

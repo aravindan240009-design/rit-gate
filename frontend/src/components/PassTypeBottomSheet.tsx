@@ -13,6 +13,8 @@ interface PassTypeBottomSheetProps {
   onClose: () => void;
   onSelectSingle: () => void;
   onSelectBulk: () => void;
+  /** Pre-register guest (instant QR) — Staff / HOD flows */
+  onSelectGuest?: () => void;
 }
 
 const { width } = Dimensions.get('window');
@@ -22,6 +24,7 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
   onClose,
   onSelectSingle,
   onSelectBulk,
+  onSelectGuest,
 }) => {
   const { theme } = useTheme();
 
@@ -105,6 +108,35 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
               <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
             </View>
           </TouchableOpacity>
+
+          {onSelectGuest ? (
+            <TouchableOpacity
+              style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+              onPress={() => {
+                onClose();
+                onSelectGuest();
+              }}
+              activeOpacity={0.8}
+            >
+              <TypedLinearGradient
+                colors={['#0d9488', '#14b8a6']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.iconContainer}
+              >
+                <Ionicons name="person-add" size={28} color="#FFF" />
+              </TypedLinearGradient>
+              <View style={styles.cardContent}>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>Pre-register guest</Text>
+                <Text style={[styles.cardDescription, { color: theme.textSecondary }]}>
+                  Instant visitor pass — QR &amp; manual code (share via WhatsApp)
+                </Text>
+              </View>
+              <View style={styles.arrowContainer}>
+                <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
+              </View>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         {/* Cancel Button */}

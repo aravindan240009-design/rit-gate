@@ -11,7 +11,9 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Alert,
 } from 'react-native';
+import { Calendar } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { HR, ScreenName } from '../../types';
@@ -28,6 +30,8 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import { exportStyledPdfReport } from '../../utils/pdfReport';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
+import GuestPreRequestScreen from '../shared/GuestPreRequestScreen';
 
 interface NewHRDashboardProps {
   hr: HR;
@@ -45,11 +49,12 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   const [requests, setRequests] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
-  const [bottomTab, setBottomTab] = useState<'HOME' | 'EXITS' | 'PROFILE'>('HOME');
+  const [bottomTab, setBottomTab] = useState<'HOME' | 'GUEST' | 'EXITS' | 'PROFILE'>('HOME');
   const [exitLogs, setExitLogs] = useState<any[]>([]);
   const [rangeModalVisible, setRangeModalVisible] = useState(false);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [selectingDateType, setSelectingDateType] = useState<'FROM' | 'TO'>('FROM');
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
@@ -157,26 +162,38 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   };
 
   const exportExitsPdf = async (rows: any[]) => {
-    await exportStyledPdfReport({
-      title: 'Staff & Student Exit Report',
-      subtitle: 'RIT Gate Management System',
-      columns: [
-        { key: 'userType', label: 'ROLE' },
-        { key: 'userId', label: 'ID' },
-        { key: 'name', label: 'NAME' },
-        { key: 'department', label: 'DEPARTMENT' },
-        { key: 'purpose', label: 'PURPOSE' },
-        { key: 'exitTime', label: 'EXIT TIME' },
-      ],
-      rows: rows.map((r: any) => ({
-        userType: r.userType || '-',
-        userId: r.userId || '-',
-        name: r.name || '-',
-        department: r.department || '-',
-        purpose: r.purpose || '-',
-        exitTime: formatDateShort(r.exitTime),
-      })),
-    });
+    try {
+      const savedPath = await exportStyledPdfReport({
+        title: 'Staff & Student Exit Report',
+        subtitle: 'Consolidated exit activity — Registrar / HR view',
+        sectionHeading: 'Exit records',
+        brandFooterLine: 'RIT Gate Management System',
+        columns: [
+          { key: 'userType', label: 'ROLE' },
+          { key: 'userId', label: 'ID' },
+          { key: 'name', label: 'NAME' },
+          { key: 'department', label: 'DEPARTMENT' },
+          { key: 'purpose', label: 'PURPOSE' },
+          { key: 'exitTime', label: 'EXIT TIME' },
+        ],
+        rows: rows.map((r: any) => ({
+          userType: r.userType || '-',
+          userId: r.userId || '-',
+          name: r.name || '-',
+          department: r.department || '-',
+          purpose: r.purpose || '-',
+          exitTime: formatDateShort(r.exitTime),
+        })),
+      });
+
+      if (savedPath) {
+        Alert.alert('PDF downloaded', savedPath);
+      } else {
+        Alert.alert('PDF downloaded', 'Saved to your device storage.');
+      }
+    } catch (e: any) {
+      Alert.alert('PDF download failed', e?.message || 'Failed to download PDF.');
+    }
   };
 
   const filteredRequests = requests.filter(request => {
@@ -286,6 +303,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
       {/* Header */}
+      {bottomTab !== 'GUEST' && (
       <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
@@ -293,13 +311,13 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
               <Image source={{ uri: profileImage }} style={styles.avatarImage} />
             ) : (
               <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-                <Text style={styles.avatarText}>{getInitials(hr.name || 'HR')}</Text>
+                <Text style={styles.avatarText}>{getInitials(hr.hrName || hr.name || 'HR')}</Text>
               </View>
             )}
           </TouchableOpacity>
           <View style={styles.headerInfo}>
             <Text style={[styles.greeting, { color: theme.textSecondary }]}>GOOD MORNING,</Text>
-            <Text style={[styles.userName, { color: theme.text }]}>{(hr.name || 'HR').toUpperCase()}</Text>
+            <Text style={[styles.userName, { color: theme.text }]}>{(hr.hrName || hr.name || 'HR').toUpperCase()}</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -309,10 +327,12 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           </TouchableOpacity>
         </View>
       </View>
+      )}
 
       {bottomTab === 'HOME' && (
       <>
       {/* Search Bar */}
+      <ScreenContentContainer>
       <ScrollView
         style={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -475,10 +495,24 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
         )}
       </View>
       </ScrollView>
+      </ScreenContentContainer>
       </>
       )}
 
+      {bottomTab === 'GUEST' && (
+        <View style={{ flex: 1 }}>
+          <GuestPreRequestScreen
+            creatorRole="HR"
+            creatorStaffCode={hr.hrCode}
+            creatorName={hr.hrName || hr.name}
+            creatorDepartment={hr.department}
+            onBack={() => setBottomTab('HOME')}
+          />
+        </View>
+      )}
+
       {bottomTab === 'EXITS' && (
+        <ScreenContentContainer>
         <ScrollView
           style={styles.content}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -527,6 +561,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
             )}
           </View>
         </ScrollView>
+        </ScreenContentContainer>
       )}
 
       {/* Bottom Navigation */}
@@ -535,6 +570,11 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
           <Text style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</Text>
           {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('GUEST')}>
+          <Ionicons name={bottomTab === 'GUEST' ? 'person-add' : 'person-add-outline'} size={22} color={bottomTab === 'GUEST' ? theme.primary : theme.textTertiary} />
+          <Text style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'GUEST' && { color: theme.primary }]}>Guest</Text>
+          {bottomTab === 'GUEST' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('EXITS'); loadExitLogs(); }}>
           <Ionicons name={bottomTab === 'EXITS' ? 'log-out' : 'log-out-outline'} size={22} color={bottomTab === 'EXITS' ? theme.primary : theme.textTertiary} />
@@ -624,20 +664,64 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
         <View style={styles.modalOverlay}>
           <View style={[styles.rangeModalCard, { backgroundColor: theme.surface }]}>
             <Text style={[styles.modalTitle, { color: theme.text }]}>Filter Exit Date Range</Text>
-            <TextInput
-              style={[styles.modalInput, { color: theme.text, borderColor: theme.border }]}
-              value={fromDate}
-              onChangeText={setFromDate}
-              placeholder="From (YYYY-MM-DD)"
-              placeholderTextColor={theme.textTertiary}
-            />
-            <TextInput
-              style={[styles.modalInput, { color: theme.text, borderColor: theme.border }]}
-              value={toDate}
-              onChangeText={setToDate}
-              placeholder="To (YYYY-MM-DD)"
-              placeholderTextColor={theme.textTertiary}
-            />
+            <View style={[styles.dateTypeTabs, { borderColor: theme.border }]}>
+              <TouchableOpacity
+                style={[
+                  styles.dateTypeTab,
+                  { backgroundColor: theme.surface, borderColor: theme.border },
+                  selectingDateType === 'FROM' && { backgroundColor: theme.primary + '15', borderColor: theme.primary },
+                ]}
+                onPress={() => setSelectingDateType('FROM')}
+              >
+                <Text style={[styles.dateTypeTabText, { color: selectingDateType === 'FROM' ? theme.primary : theme.textTertiary }]}>
+                  From
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.dateTypeTab,
+                  { backgroundColor: theme.surface, borderColor: theme.border },
+                  selectingDateType === 'TO' && { backgroundColor: theme.primary + '15', borderColor: theme.primary },
+                ]}
+                onPress={() => setSelectingDateType('TO')}
+              >
+                <Text style={[styles.dateTypeTabText, { color: selectingDateType === 'TO' ? theme.primary : theme.textTertiary }]}>
+                  To
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.calendarWrap}>
+              <Calendar
+                onDayPress={(day) => {
+                  const d = day.dateString;
+                  if (selectingDateType === 'FROM') setFromDate(d);
+                  else setToDate(d);
+                }}
+                markedDates={{
+                  ...(fromDate ? { [fromDate]: { selected: true, selectedColor: theme.primary } } : {}),
+                  ...(toDate ? { [toDate]: { selected: true, selectedColor: theme.primary } } : {}),
+                }}
+                theme={{
+                  selectedDayBackgroundColor: theme.primary,
+                  todayTextColor: theme.primary,
+                  arrowColor: theme.primary,
+                  dotColor: theme.primary,
+                }}
+              />
+            </View>
+
+            <View style={styles.rangeSummaryRow}>
+              <View style={[styles.rangeSummaryCell, { borderColor: theme.border, backgroundColor: theme.surface }]}>
+                <Text style={[styles.rangeSummaryLabel, { color: theme.textTertiary }]}>From</Text>
+                <Text style={[styles.rangeSummaryValue, { color: theme.text }]}>{fromDate || '-'}</Text>
+              </View>
+              <View style={[styles.rangeSummaryCell, { borderColor: theme.border, backgroundColor: theme.surface }]}>
+                <Text style={[styles.rangeSummaryLabel, { color: theme.textTertiary }]}>To</Text>
+                <Text style={[styles.rangeSummaryValue, { color: theme.text }]}>{toDate || '-'}</Text>
+              </View>
+            </View>
+
             <View style={styles.actionButtons}>
               <TouchableOpacity style={styles.rejectButton} onPress={() => setRangeModalVisible(false)}>
                 <Text style={styles.rejectButtonText}>Cancel</Text>
@@ -716,6 +800,14 @@ const styles = StyleSheet.create({
   modalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   modalLabel: { fontSize: 14 },
   modalValue: { fontSize: 14, fontWeight: '600' },
+  dateTypeTabs: { flexDirection: 'row', borderRadius: 14, overflow: 'hidden', borderWidth: 1 },
+  dateTypeTab: { flex: 1, paddingVertical: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  dateTypeTabText: { fontSize: 13, fontWeight: '700' },
+  calendarWrap: { marginTop: 12, borderRadius: 12, overflow: 'hidden' },
+  rangeSummaryRow: { flexDirection: 'row', marginTop: 10, gap: 10 },
+  rangeSummaryCell: { flex: 1, borderRadius: 12, padding: 12, borderWidth: 1 },
+  rangeSummaryLabel: { fontSize: 11, fontWeight: '700', marginBottom: 6 },
+  rangeSummaryValue: { fontSize: 14, fontWeight: '800' },
   actionButtons: { flexDirection: 'row', gap: 12, marginTop: 16, marginBottom: 8 },
   rejectButton: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#EF4444', paddingVertical: 14, borderRadius: 12, gap: 8 },
   rejectButtonText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },

@@ -21,6 +21,7 @@ import SecurityBottomNav from '../../components/SecurityBottomNav';
 import { formatDateTime } from '../../utils/dateUtils';
 import { exportStyledPdfReport } from '../../utils/pdfReport';
 import { Calendar } from 'react-native-calendars';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 
 interface ModernScanHistoryScreenProps {
   security: SecurityPersonnel;
@@ -69,7 +70,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [rangeModalVisible, setRangeModalVisible] = useState(false);
+  const [rangePickerPage, setRangePickerPage] = useState(false);
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
   const [rangeMode, setRangeMode] = useState(false);
@@ -176,28 +177,36 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   });
 
   const exportScanPdf = async () => {
-    const savedPath = await exportStyledPdfReport({
-      title: 'Security Scan History Report',
-      subtitle: rangeMode
-        ? `From ${fromDate ? fromDate.toLocaleDateString() : '-'} To ${toDate ? toDate.toLocaleDateString() : '-'}`
-        : 'Today',
-      columns: [
-        { key: 'name', label: 'NAME' },
-        { key: 'type', label: 'TYPE' },
-        { key: 'purpose', label: 'PURPOSE' },
-        { key: 'status', label: 'STATUS' },
-        { key: 'time', label: 'TIME' },
-      ],
-      rows: filteredScans.map((scan) => ({
-        name: scan.name,
-        type: scan.type,
-        purpose: scan.purpose || scan.reason || '-',
-        status: scan.status,
-        time: formatTime(scan.outTime || scan.inTime),
-      })),
-    });
-    if (savedPath) {
-      Alert.alert('PDF Downloaded', `Saved to device storage:\n${savedPath}`);
+    try {
+      const savedPath = await exportStyledPdfReport({
+        title: 'Security Scan History Report',
+        subtitle: rangeMode
+          ? `From ${fromDate ? fromDate.toLocaleDateString() : '-'} To ${toDate ? toDate.toLocaleDateString() : '-'}`
+          : 'Today',
+        sectionHeading: 'Scan records',
+        brandFooterLine: 'RIT Gate Management System',
+        columns: [
+          { key: 'name', label: 'NAME' },
+          { key: 'type', label: 'TYPE' },
+          { key: 'purpose', label: 'PURPOSE' },
+          { key: 'status', label: 'STATUS' },
+          { key: 'time', label: 'TIME' },
+        ],
+        rows: filteredScans.map((scan) => ({
+          name: scan.name,
+          type: scan.type,
+          purpose: scan.purpose || scan.reason || '-',
+          status: scan.status,
+          time: formatTime(scan.outTime || scan.inTime),
+        })),
+      });
+      if (savedPath) {
+        Alert.alert('PDF downloaded', savedPath);
+      } else {
+        Alert.alert('PDF downloaded', 'Saved to your device storage.');
+      }
+    } catch (e: any) {
+      Alert.alert('PDF download failed', e?.message || 'Failed to generate PDF.');
     }
   };
 
@@ -207,8 +216,13 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
     const to = new Date(toDate);
     if (from > to) return;
     setRangeMode(true);
-    setRangeModalVisible(false);
+    setRangePickerPage(false);
     setRangeResultsVisible(true);
+  };
+
+  const closeRangeResults = () => {
+    setRangeResultsVisible(false);
+    setRangeMode(false);
   };
 
   const getInitials = (name: string) => {
@@ -229,6 +243,136 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       return timeString;
     }
   };
+
+  if (rangeResultsVisible) {
+    return (
+      <SafeAreaView style={styles.fsScreen} edges={['top', 'bottom']}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.fsHeader}>
+          <TouchableOpacity style={styles.fsBackBtn} onPress={closeRangeResults}>
+            <Ionicons name="arrow-back" size={22} color="#1F2937" />
+          </TouchableOpacity>
+          <Text style={styles.fsHeaderTitle}>Date range results</Text>
+          <View style={styles.fsStatusPill}>
+            <Text style={styles.fsStatusPillText}>{filteredScans.length}</Text>
+          </View>
+        </View>
+        <ScreenContentContainer style={{ flex: 1 }}>
+          <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+            <View style={styles.rangeResultsTop}>
+              <Text style={styles.rangeResultsSub}>
+                {fromDate?.toLocaleDateString()} — {toDate?.toLocaleDateString()}
+              </Text>
+              <TouchableOpacity style={styles.rangeResultsDownloadBtn} onPress={exportScanPdf}>
+                <Ionicons name="download-outline" size={16} color="#fff" />
+                <Text style={styles.rangeResultsDownloadText}>Download PDF</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.scrollContent}>
+              {filteredScans.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Ionicons name="time-outline" size={64} color="#D1D5DB" />
+                  <Text style={styles.emptyText}>No scan records in selected range</Text>
+                </View>
+              ) : (
+                filteredScans.map((scan, index) => (
+                  <View key={`range-${scan.id}-${index}`} style={styles.scanCard}>
+                    <View style={styles.scanAvatar}>
+                      <Text style={styles.scanAvatarText}>{scan.isBulkPass ? 'GP' : getInitials(scan.name)}</Text>
+                    </View>
+                    <View style={styles.scanInfo}>
+                      <Text style={styles.scanName}>{scan.name}</Text>
+                      <Text style={styles.scanType}>{scan.type}</Text>
+                      <Text style={styles.scanPurpose} numberOfLines={1}>{scan.purpose}</Text>
+                    </View>
+                    <View style={styles.scanRight}>
+                      <Text style={styles.scanTime}>{formatTime(scan.outTime || scan.inTime)}</Text>
+                    </View>
+                  </View>
+                ))
+              )}
+            </View>
+          </ScrollView>
+        </ScreenContentContainer>
+        <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
+      </SafeAreaView>
+    );
+  }
+
+  if (rangePickerPage) {
+    return (
+      <SafeAreaView style={styles.fsScreen} edges={['top', 'bottom']}>
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => setRangePickerPage(false)}>
+            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Select date range</Text>
+          <View style={styles.headerRight} />
+        </View>
+        <ScreenContentContainer style={{ flex: 1 }}>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }} keyboardShouldPersistTaps="handled">
+            <Text style={[styles.modalTitle, { textAlign: 'center', width: '100%', marginBottom: 12 }]}>Scan history date range</Text>
+            <View style={styles.dateTypeTabs}>
+              <TouchableOpacity
+                style={[styles.dateTypeTab, selectingDateType === 'FROM' && styles.dateTypeTabActive]}
+                onPress={() => setSelectingDateType('FROM')}
+              >
+                <Text style={[styles.dateTypeTabText, selectingDateType === 'FROM' && styles.dateTypeTabTextActive]}>From</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.dateTypeTab, selectingDateType === 'TO' && styles.dateTypeTabActive]}
+                onPress={() => setSelectingDateType('TO')}
+              >
+                <Text style={[styles.dateTypeTabText, selectingDateType === 'TO' && styles.dateTypeTabTextActive]}>To</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.dateInputButton} onPress={() => setSelectingDateType('FROM')}>
+              <Ionicons name="calendar-outline" size={18} color="#00BCD4" />
+              <Text style={styles.dateInputText}>
+                {fromDate ? fromDate.toLocaleDateString() : 'Select from date'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.dateInputButton} onPress={() => setSelectingDateType('TO')}>
+              <Ionicons name="calendar-outline" size={18} color="#00BCD4" />
+              <Text style={styles.dateInputText}>
+                {toDate ? toDate.toLocaleDateString() : 'Select to date'}
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.calendarWrap}>
+              <Calendar
+                onDayPress={(day) => {
+                  const selected = new Date(`${day.dateString}T00:00:00`);
+                  if (selectingDateType === 'FROM') setFromDate(selected);
+                  else setToDate(selected);
+                }}
+                markedDates={{
+                  ...(fromDate ? { [fromDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: '#00BCD4' } } : {}),
+                  ...(toDate ? { [toDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: '#0EA5E9' } } : {}),
+                }}
+                theme={{
+                  selectedDayBackgroundColor: '#00BCD4',
+                  todayTextColor: '#00BCD4',
+                  arrowColor: '#00BCD4',
+                }}
+              />
+            </View>
+            <View style={styles.actionButtons}>
+              <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn]} onPress={() => setRangePickerPage(false)}>
+                <Text style={styles.actionBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.actionBtn, styles.applyBtn]} onPress={applyDateRange}>
+                <Text style={styles.actionBtnText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </ScreenContentContainer>
+        <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -281,6 +425,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       </View>
 
       {/* Search Bar */}
+      <ScreenContentContainer style={{ flex: 1 }}>
       <ScrollView
         style={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -302,7 +447,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       {activeTab === 'SCANS' && (
         <>
         <View style={styles.rangeActionsRow}>
-          <TouchableOpacity style={styles.rangeActionBtn} onPress={() => setRangeModalVisible(true)}>
+          <TouchableOpacity style={styles.rangeActionBtn} onPress={() => setRangePickerPage(true)}>
             <Ionicons name="calendar-outline" size={16} color="#00BCD4" />
             <Text style={styles.rangeActionText}>From / To</Text>
           </TouchableOpacity>
@@ -459,6 +604,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
         </View>
       )}
       </ScrollView>
+      </ScreenContentContainer>
 
       {/* Scan Detail — full-screen modal */}
       <Modal
@@ -748,117 +894,6 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
       {/* Bottom Navigation */}
       <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
-
-      <Modal visible={rangeModalVisible} transparent animationType="fade" onRequestClose={() => setRangeModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.rangeModalCard}>
-            <Text style={[styles.modalTitle, { textAlign: 'center', width: '100%' }]}>Scan History Date Range</Text>
-            <View style={styles.dateTypeTabs}>
-              <TouchableOpacity
-                style={[styles.dateTypeTab, selectingDateType === 'FROM' && styles.dateTypeTabActive]}
-                onPress={() => setSelectingDateType('FROM')}
-              >
-                <Text style={[styles.dateTypeTabText, selectingDateType === 'FROM' && styles.dateTypeTabTextActive]}>From</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.dateTypeTab, selectingDateType === 'TO' && styles.dateTypeTabActive]}
-                onPress={() => setSelectingDateType('TO')}
-              >
-                <Text style={[styles.dateTypeTabText, selectingDateType === 'TO' && styles.dateTypeTabTextActive]}>To</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity style={styles.dateInputButton} onPress={() => setSelectingDateType('FROM')}>
-              <Ionicons name="calendar-outline" size={18} color="#00BCD4" />
-              <Text style={styles.dateInputText}>
-                {fromDate ? fromDate.toLocaleDateString() : 'Select From Date'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.dateInputButton} onPress={() => setSelectingDateType('TO')}>
-              <Ionicons name="calendar-outline" size={18} color="#00BCD4" />
-              <Text style={styles.dateInputText}>
-                {toDate ? toDate.toLocaleDateString() : 'Select To Date'}
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.calendarWrap}>
-              <Calendar
-                onDayPress={(day) => {
-                  const selected = new Date(`${day.dateString}T00:00:00`);
-                  if (selectingDateType === 'FROM') setFromDate(selected);
-                  else setToDate(selected);
-                }}
-                markedDates={{
-                  ...(fromDate ? { [fromDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: '#00BCD4' } } : {}),
-                  ...(toDate ? { [toDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: '#0EA5E9' } } : {}),
-                }}
-                theme={{
-                  selectedDayBackgroundColor: '#00BCD4',
-                  todayTextColor: '#00BCD4',
-                  arrowColor: '#00BCD4',
-                }}
-              />
-            </View>
-            <View style={styles.actionButtons}>
-              <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn]} onPress={() => setRangeModalVisible(false)}>
-                <Text style={styles.actionBtnText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, styles.applyBtn]} onPress={applyDateRange}>
-                <Text style={styles.actionBtnText}>Apply</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={rangeResultsVisible} animationType="slide" transparent={false} onRequestClose={() => setRangeResultsVisible(false)}>
-        <SafeAreaView style={styles.fsScreen} edges={['top', 'bottom']}>
-          <View style={styles.fsHeader}>
-            <TouchableOpacity style={styles.fsBackBtn} onPress={() => setRangeResultsVisible(false)}>
-              <Ionicons name="arrow-back" size={22} color="#1F2937" />
-            </TouchableOpacity>
-            <Text style={styles.fsHeaderTitle}>Date Range Results</Text>
-            <View style={styles.fsStatusPill}>
-              <Text style={styles.fsStatusPillText}>{filteredScans.length}</Text>
-            </View>
-          </View>
-          <View style={styles.rangeResultsTop}>
-            <Text style={styles.rangeResultsSub}>
-              {fromDate?.toLocaleDateString()} - {toDate?.toLocaleDateString()}
-            </Text>
-            <TouchableOpacity style={styles.rangeResultsDownloadBtn} onPress={exportScanPdf}>
-              <Ionicons name="download-outline" size={16} color="#fff" />
-              <Text style={styles.rangeResultsDownloadText}>Download PDF</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 40 }}>
-            <View style={styles.scrollContent}>
-              {filteredScans.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Ionicons name="time-outline" size={64} color="#D1D5DB" />
-                  <Text style={styles.emptyText}>No scan records in selected range</Text>
-                </View>
-              ) : (
-                filteredScans.map((scan, index) => (
-                  <View key={`range-${scan.id}-${index}`} style={styles.scanCard}>
-                    <View style={styles.scanAvatar}>
-                      <Text style={styles.scanAvatarText}>{scan.isBulkPass ? 'GP' : getInitials(scan.name)}</Text>
-                    </View>
-                    <View style={styles.scanInfo}>
-                      <Text style={styles.scanName}>{scan.name}</Text>
-                      <Text style={styles.scanType}>{scan.type}</Text>
-                      <Text style={styles.scanPurpose} numberOfLines={1}>{scan.purpose}</Text>
-                    </View>
-                    <View style={styles.scanRight}>
-                      <Text style={styles.scanTime}>{formatTime(scan.outTime || scan.inTime)}</Text>
-                    </View>
-                  </View>
-                ))
-              )}
-            </View>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
     </SafeAreaView>
   );
 };

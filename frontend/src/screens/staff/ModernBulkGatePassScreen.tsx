@@ -8,11 +8,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Linking,
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import ImagePicker from '../../utils/safeImagePicker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { Staff } from '../../types';
 import { apiService } from '../../services/api';
 import SuccessModal from '../../components/SuccessModal';
@@ -48,7 +50,12 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
   const [receiverId, setReceiverId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [attachment, setAttachment] = useState<{ name: string; base64Uri: string } | null>(null);
+  const [attachment, setAttachment] = useState<{
+    name: string;
+    base64Uri: string;
+    uri?: string;
+    mimeType?: string;
+  } | null>(null);
   // Track which sections are collapsed
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
@@ -154,16 +161,27 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
   };
 
   const pickAttachment = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      base64: true,
-      quality: 0.7,
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['image/*', 'application/pdf'],
+      copyToCacheDirectory: true,
+      multiple: false,
     });
-    if (!result.canceled && result.assets?.[0]) {
-      const asset = result.assets[0];
-      const mimeType = asset.mimeType || 'image/jpeg';
-      setAttachment({ name: asset.fileName || 'attachment.jpg', base64Uri: `data:${mimeType};base64,${asset.base64}` });
-    }
+
+    if (result.canceled) return;
+    const file = result.assets?.[0];
+    if (!file) return;
+
+    const mimeType = file.mimeType || (file.uri?.toLowerCase?.().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+    // Convert to base64 data URI so the backend can store it reliably.
+    const base64 = await FileSystem.readAsStringAsync(file.uri, {
+      encoding: (FileSystem as any).EncodingType?.Base64 ?? 'base64',
+    });
+    setAttachment({
+      name: file.name || 'attachment',
+      base64Uri: `data:${mimeType};base64,${base64}`,
+      uri: file.uri,
+      mimeType,
+    });
   };
 
   const handleSubmit = async () => {
@@ -455,7 +473,7 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
             <TouchableOpacity style={styles.uploadBtn} onPress={pickAttachment}>
               <Ionicons name="attach-outline" size={24} color="#9CA3AF" />
               <Text style={styles.uploadText}>
-                {attachment ? attachment.name : 'Tap to upload image'}
+                {attachment ? attachment.name : 'Tap to upload (image/PDF)'}
               </Text>
               {attachment && (
                 <TouchableOpacity onPress={() => setAttachment(null)}>
@@ -464,7 +482,23 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
               )}
             </TouchableOpacity>
             {attachment && (
-              <Image source={{ uri: attachment.base64Uri }} style={styles.attachmentPreview} resizeMode="cover" />
+              attachment.mimeType?.startsWith('image') ? (
+                <Image source={{ uri: attachment.base64Uri }} style={styles.attachmentPreview} resizeMode="cover" />
+              ) : (
+                <TouchableOpacity
+                  style={[styles.filePreview, { borderColor: '#D1D5DB', backgroundColor: '#FFFFFF' }]}
+                  onPress={() => {
+                    const uri = attachment.uri || attachment.base64Uri;
+                    if (uri) Linking.openURL(uri);
+                  }}
+                >
+                  <Ionicons name="document-text-outline" size={20} color="#1D4ED8" />
+                  <Text style={styles.filePreviewText} numberOfLines={1}>
+                    Tap to preview {attachment.name}
+                  </Text>
+                  <Ionicons name="open-outline" size={18} color="#6B7280" />
+                </TouchableOpacity>
+              )
             )}
           </View>
         </View>
@@ -572,6 +606,8 @@ const styles = StyleSheet.create({
   uploadBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#D1D5DB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, gap: 10 },
   uploadText: { flex: 1, fontSize: 14, color: '#6B7280', fontWeight: '500' },
   attachmentPreview: { width: '100%', height: 160, borderRadius: 12, marginTop: 10 },
+  filePreview: { marginTop: 10, borderWidth: 1, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  filePreviewText: { flex: 1, fontSize: 14, fontWeight: '600', color: '#1F2937' },
   submitButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#10B981', marginHorizontal: 20, marginTop: 20, paddingVertical: 16, borderRadius: 12, gap: 8, elevation: 3 },
   submitButtonDisabled: { opacity: 0.5 },
   submitButtonText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },

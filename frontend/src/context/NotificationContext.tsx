@@ -34,29 +34,44 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const currentUserRef = useRef<{ userId: string; userType: UserType } | null>(null);
   const shownNotificationIdsRef = useRef<Set<number>>(new Set());
 
+  const isToday = (value?: string) => {
+    if (!value) return false;
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return false;
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  const fetchFromBackend = async (userId: string, userType: UserType) => {
+  const fetchFromBackend = async (
+    userId: string,
+    userType: UserType,
+    options: { scheduleBanners: boolean }
+  ) => {
     try {
       const url = `${API_CONFIG.BASE_URL}/notifications/${userType}/${userId}`;
       const response = await fetch(url);
       const data = await response.json();
       if (data.success && Array.isArray(data.notifications)) {
         const latest = data.notifications as Notification[];
-        const unreadNew = latest.filter(n => !n.isRead && !shownNotificationIdsRef.current.has(n.id));
-        for (const n of unreadNew) {
-          shownNotificationIdsRef.current.add(n.id);
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: n.title || 'New Notification',
-              body: n.message || '',
-              data: { actionRoute: n.actionRoute || '' },
-              sound: 'default',
-            },
-            trigger: null,
-          });
+        const todaysOnly = latest.filter((n) => isToday(n.timestamp || n.createdAt));
+        if (options.scheduleBanners) {
+          const unreadNew = todaysOnly.filter(n => !n.isRead && !shownNotificationIdsRef.current.has(n.id));
+          for (const n of unreadNew) {
+            shownNotificationIdsRef.current.add(n.id);
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: n.title || 'New Notification',
+                body: n.message || '',
+                data: { actionRoute: n.actionRoute || '' },
+                sound: 'default',
+              },
+              trigger: null,
+            });
+          }
         }
-        setNotifications(latest);
+        setNotifications(todaysOnly);
       }
     } catch (error) {
       // silent — polling will retry
@@ -65,7 +80,20 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const loadNotifications = async (userId: string, userType: UserType) => {
     currentUserRef.current = { userId, userType };
-    await fetchFromBackend(userId, userType);
+    try {
+      const url = `${API_CONFIG.BASE_URL}/notifications/${userType}/${userId}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.success && Array.isArray(data.notifications)) {
+        const latest = data.notifications as Notification[];
+        const todaysOnly = latest.filter((n) => isToday(n.timestamp || n.createdAt));
+        // Fresh login: do not banner old unread items; only rows that arrive after this point.
+        shownNotificationIdsRef.current = new Set(todaysOnly.map(n => n.id));
+        setNotifications(todaysOnly);
+      }
+    } catch (error) {
+      // silent — polling will retry
+    }
   };
 
   const markAsRead = async (notificationId: number) => {
@@ -94,7 +122,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const refreshNotifications = () => {
     if (currentUserRef.current) {
-      fetchFromBackend(currentUserRef.current.userId, currentUserRef.current.userType);
+      fetchFromBackend(currentUserRef.current.userId, currentUserRef.current.userType, {
+        scheduleBanners: true,
+      });
     }
   };
 
@@ -102,7 +132,9 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   useEffect(() => {
     const interval = setInterval(() => {
       if (currentUserRef.current) {
-        fetchFromBackend(currentUserRef.current.userId, currentUserRef.current.userType);
+        fetchFromBackend(currentUserRef.current.userId, currentUserRef.current.userType, {
+          scheduleBanners: true,
+        });
       }
     }, 15000);
     return () => clearInterval(interval);

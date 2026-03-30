@@ -11,6 +11,7 @@ import { useTheme } from '../../context/ThemeContext';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import MyRequestsBulkModal from '../../components/MyRequestsBulkModal';
 import GatePassQRModal from '../../components/GatePassQRModal';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 
 interface MyRequestsScreenProps {
   user: Staff;
@@ -208,6 +209,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
         <View style={{ width: 40 }} />
       </View>
 
+      <ScreenContentContainer>
       <ScrollView
         style={[styles.content, { backgroundColor: theme.background }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
@@ -230,6 +232,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
         </View>
         <View style={{ height: 100 }} />
       </ScrollView>
+      </ScreenContentContainer>
 
       <SinglePassDetailsModal
         visible={showDetailModal}

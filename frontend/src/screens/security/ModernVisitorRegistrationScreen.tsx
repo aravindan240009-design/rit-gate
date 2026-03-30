@@ -204,6 +204,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
               <TextInput
                 style={styles.input}
                 placeholder="1"
+                placeholderTextColor="#6B7280"
                 value={numberOfVisitors}
                 onChangeText={setNumberOfVisitors}
                 keyboardType="number-pad"
@@ -222,6 +223,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
                 <TextInput
                   style={styles.input}
                   placeholder={`Enter visitor ${index + 1} name`}
+                  placeholderTextColor="#6B7280"
                   value={name}
                   onChangeText={(value) => updateVisitorName(index, value)}
                 />
@@ -236,6 +238,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
               <TextInput
                 style={styles.input}
                 placeholder="Enter email address"
+                placeholderTextColor="#6B7280"
                 value={visitorEmail}
                 onChangeText={setVisitorEmail}
                 keyboardType="email-address"
@@ -251,6 +254,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
               <TextInput
                 style={styles.input}
                 placeholder="Enter phone number (min 10 digits)"
+                placeholderTextColor="#6B7280"
                 value={visitorPhone}
                 onChangeText={setVisitorPhone}
                 keyboardType="phone-pad"
@@ -265,6 +269,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
               <TextInput
                 style={styles.input}
                 placeholder="Enter vehicle number"
+                placeholderTextColor="#6B7280"
                 value={vehicleNumber}
                 onChangeText={setVehicleNumber}
                 autoCapitalize="characters"
@@ -334,6 +339,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
               <TextInput
                 style={styles.textArea}
                 placeholder="Enter purpose of visit"
+                placeholderTextColor="#6B7280"
                 value={purpose}
                 onChangeText={setPurpose}
                 multiline
@@ -473,6 +479,8 @@ const styles = StyleSheet.create({
   picker: {
     flex: 1,
     height: 50,
+    color: '#1F2937',
+    backgroundColor: '#FFFFFF',
   },
   textAreaContainer: {
     flexDirection: 'row',

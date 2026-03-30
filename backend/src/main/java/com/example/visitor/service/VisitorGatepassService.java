@@ -70,6 +70,10 @@ public class VisitorGatepassService {
                          ", Visitor=" + savedRequest.getName() + 
                          ", Staff=" + request.getStaffCode());
 
+        if (isInstantPreGuest(savedRequest)) {
+            return savedRequest;
+        }
+
         // Notify and email assigned staff (keeps visitor workflow consistent with UnifiedVisitorService).
         try {
             String staffId = savedRequest.getStaffCode();
@@ -167,17 +171,20 @@ public class VisitorGatepassService {
             Staff staff = staffRepository.findByStaffCode(savedRequest.getStaffCode()).orElse(null);
             String personToMeet = staff != null ? staff.getStaffName() : savedRequest.getStaffCode();
 
-            notificationService.createUserNotification(
-                savedRequest.getStaffCode(),
-                "Visitor Approved",
-                "Visitor pass approved for " + savedRequest.getName() + ". QR/manual codes are ready.",
-                "APPROVAL",
-                "URGENT"
-            );
+            if (!isInstantPreGuest(savedRequest)) {
+                notificationService.createUserNotification(
+                    savedRequest.getStaffCode(),
+                    "Visitor Approved",
+                    "Visitor pass approved for " + savedRequest.getName() + ". QR/manual codes are ready.",
+                    "APPROVAL",
+                    "URGENT"
+                );
+            }
 
             String registeredBy = savedRequest.getRegisteredBy();
             boolean websiteOrigin = registeredBy != null && registeredBy.startsWith("WEB-");
-            if (!websiteOrigin) {
+            boolean quietInstant = isInstantPreGuest(savedRequest);
+            if (!websiteOrigin && !quietInstant) {
                 String visitDate = savedRequest.getVisitDate() != null ? savedRequest.getVisitDate().toString() : "";
                 String visitTime = savedRequest.getVisitTime() != null ? savedRequest.getVisitTime().toString() : "";
 
@@ -197,6 +204,31 @@ public class VisitorGatepassService {
         }
         
         return savedRequest;
+    }
+
+    private boolean isInstantPreGuest(Visitor v) {
+        String rb = v.getRegisteredBy();
+        return rb != null && rb.startsWith("INSTANT-");
+    }
+
+    /**
+     * Staff/HOD/HR pre-registers a guest: create pending visitor, then auto-approve with QR + manual code.
+     */
+    @Transactional
+    public Visitor createInstantGuestPass(Visitor request, String creatorStaffCode, String creatorRole) throws Exception {
+        if (creatorStaffCode == null || creatorStaffCode.isBlank()) {
+            throw new Exception("creatorStaffCode is required");
+        }
+        if (!staffRepository.findByStaffCode(creatorStaffCode).isPresent()) {
+            throw new Exception("Creator staff not found: " + creatorStaffCode);
+        }
+        String role = creatorRole != null ? creatorRole.trim().toUpperCase() : "STAFF";
+        if (!role.equals("STAFF") && !role.equals("HOD") && !role.equals("HR")) {
+            throw new Exception("creatorRole must be STAFF, HOD, or HR");
+        }
+        request.setRegisteredBy("INSTANT-" + role + ":" + creatorStaffCode);
+        Visitor saved = createRequest(request);
+        return approveRequest(saved.getId());
     }
     
     /**

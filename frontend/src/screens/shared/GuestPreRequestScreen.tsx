@@ -1,0 +1,354 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  StatusBar,
+  Linking,
+  Platform,
+  Share,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { apiService } from '../../services/api';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
+import ErrorModal from '../../components/ErrorModal';
+import { useTheme } from '../../context/ThemeContext';
+
+export type GuestPreRequestRole = 'STAFF' | 'HOD' | 'HR';
+
+interface GuestPreRequestScreenProps {
+  creatorRole: GuestPreRequestRole;
+  creatorStaffCode: string;
+  creatorName?: string;
+  /** Prevents unreliable backend directory lookups; pass the department from the logged-in user */
+  creatorDepartment?: string;
+  onBack: () => void;
+}
+
+const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
+  creatorRole,
+  creatorStaffCode,
+  creatorName,
+  creatorDepartment: creatorDepartmentProp,
+  onBack,
+}) => {
+  const { theme } = useTheme();
+
+  const [visitorName, setVisitorName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [numberOfPeople, setNumberOfPeople] = useState('1');
+
+  const [creatorDepartment, setCreatorDepartment] = useState(creatorDepartmentProp || '');
+  const [creatorDisplayName, setCreatorDisplayName] = useState(creatorName || creatorRole);
+  const [loadingCreator, setLoadingCreator] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [showErr, setShowErr] = useState(false);
+  const [errMsg, setErrMsg] = useState('');
+  const [qrCode, setQrCode] = useState('');
+  const [manualCode, setManualCode] = useState('');
+
+  useEffect(() => {
+    // When we already know the department from the authenticated user, skip directory lookup.
+    if (creatorDepartmentProp) {
+      setCreatorDepartment(creatorDepartmentProp);
+      setLoadingCreator(false);
+      if (creatorName) setCreatorDisplayName(creatorName);
+      return;
+    }
+
+    (async () => {
+      setLoadingCreator(true);
+      try {
+        const dir = await apiService.getStaffDirectory();
+        const list = Array.isArray(dir) ? dir : [];
+        const creator = list.find((s: any) => {
+          const id = s.staffId ?? s.staffCode ?? s.staff_id ?? s.id ?? '';
+          return String(id) === String(creatorStaffCode);
+        });
+
+        if (!creator) {
+          setErrMsg('Could not load your department details for guest pre-request.');
+          setShowErr(true);
+          return;
+        }
+
+        const dept = creator.department ?? '';
+        if (!dept) {
+          setErrMsg('Department not found for your account.');
+          setShowErr(true);
+          return;
+        }
+
+        setCreatorDepartment(dept);
+        const nm = creator.staffName ?? creator.name ?? '';
+        if (nm) setCreatorDisplayName(nm);
+      } catch {
+        setErrMsg('Could not load staff directory.');
+        setShowErr(true);
+      } finally {
+        setLoadingCreator(false);
+      }
+    })();
+  }, [creatorStaffCode, creatorDepartmentProp, creatorName]);
+
+  const guestEmail = useMemo(() => {
+    const digits = phone.replace(/\D/g, '');
+    const local = digits ? digits.slice(-10) : 'guest';
+    return `${local}@guest.ritgate.local`;
+  }, [phone]);
+
+  const shareWhatsApp = async () => {
+    const body = `RIT Gate — Guest pass\nName: ${visitorName}\nQR: ${qrCode}\nManual code: ${manualCode}\nPresent these at security.`;
+    const url = `https://wa.me/?text=${encodeURIComponent(body)}`;
+    if (Platform.OS === 'web') {
+      await Linking.openURL(url);
+      return;
+    }
+    const can = await Linking.canOpenURL('whatsapp://send').catch(() => false);
+    if (can) {
+      await Linking.openURL(`whatsapp://send?text=${encodeURIComponent(body)}`);
+    } else {
+      await Linking.openURL(url);
+    }
+  };
+
+  const shareGeneric = async () => {
+    try {
+      await Share.share({
+        message: `RIT Gate guest pass\nQR: ${qrCode}\nManual: ${manualCode}`,
+        title: 'Guest gate pass',
+      });
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const submit = async () => {
+    if (!visitorName.trim() || !phone.trim() || phone.replace(/\D/g, '').length < 10) {
+      setErrMsg('Enter valid guest name and phone (min 10 digits).');
+      setShowErr(true);
+      return;
+    }
+    if (!creatorDepartment) {
+      setErrMsg('Department is missing. Please try again.');
+      setShowErr(true);
+      return;
+    }
+
+    const people = Math.max(1, parseInt(numberOfPeople, 10) || 1);
+
+    setSubmitting(true);
+    try {
+      const res = await apiService.createInstantGuestPass({
+        name: visitorName.trim(),
+        email: guestEmail,
+        phone: phone.trim(),
+        department: creatorDepartment,
+        // Backend sets personToMeet = staffCode for instant guests.
+        staffCode: creatorStaffCode,
+        purpose: 'Pre-request visitor',
+        numberOfPeople: people,
+        vehicleNumber: undefined,
+        creatorStaffCode,
+        creatorRole,
+      });
+      if (!res.success) {
+        setErrMsg(res.message || 'Could not create guest pass');
+        setShowErr(true);
+        return;
+      }
+      setQrCode(res.qrCode || '');
+      setManualCode(res.manualCode || '');
+    } catch (e: any) {
+      setErrMsg(e?.message || 'Request failed');
+      setShowErr(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle="dark-content" />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+          <Ionicons name="arrow-back" size={22} color={theme.text} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Pre-register guest</Text>
+        <View style={{ width: 40 }} />
+      </View>
+      <ScreenContentContainer>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={[styles.hint, { color: theme.textSecondary }]}>
+            Creates an approved visitor pass with QR and manual code (no waiting). Share with your guest.
+          </Text>
+          {creatorName ? (
+            <Text style={[styles.subHint, { color: theme.textTertiary }]}>Logged in as {creatorName} ({creatorRole})</Text>
+          ) : null}
+
+          {loadingCreator ? (
+            <View style={styles.loadingWrap}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <Text style={[styles.loadingText, { color: theme.textSecondary }]}>Loading your profile…</Text>
+            </View>
+          ) : (
+            <>
+              <View style={[styles.meetCard, { borderColor: theme.border, backgroundColor: theme.inputBackground }]}>
+                <Text style={[styles.meetLabel, { color: theme.textTertiary }]}>Person to meet</Text>
+                <Text style={[styles.meetValue, { color: theme.text }]}>{creatorDisplayName || creatorName || 'Creator'}</Text>
+              </View>
+
+              <Text style={[styles.label, { color: theme.textSecondary }]}>Number of people *</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
+                value={numberOfPeople}
+                onChangeText={setNumberOfPeople}
+                keyboardType="number-pad"
+                placeholder="1"
+                placeholderTextColor={theme.textTertiary}
+              />
+
+              <Text style={[styles.label, { color: theme.textSecondary }]}>Guest name *</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
+                value={visitorName}
+                onChangeText={setVisitorName}
+                placeholder="Full name"
+                placeholderTextColor={theme.textTertiary}
+                autoCapitalize="words"
+              />
+
+              <Text style={[styles.label, { color: theme.textSecondary }]}>Phone number *</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
+                placeholder="+91..."
+                placeholderTextColor={theme.textTertiary}
+              />
+            </>
+          )}
+
+          {!qrCode ? (
+            <TouchableOpacity
+              style={[styles.primaryBtn, { backgroundColor: theme.primary }]}
+              onPress={submit}
+              disabled={submitting || loadingCreator}
+            >
+              {submitting ? (
+                <ActivityIndicator color={theme.textInverse} />
+              ) : (
+                <Text style={[styles.primaryBtnText, { color: theme.textInverse }]}>Register &amp; generate pass</Text>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <View style={[styles.resultCard, { backgroundColor: theme.success + '22', borderColor: theme.success + '44' }]}>
+              <Text style={[styles.resultTitle, { color: theme.success }]}>Pass generated</Text>
+              <Text style={[styles.resultMono, { color: theme.textSecondary }]} selectable>
+                {qrCode}
+              </Text>
+              <Text style={[styles.manualBig, { color: theme.success }]}>Manual: {manualCode}</Text>
+              <View style={styles.resultActions}>
+                <TouchableOpacity style={[styles.waBtn, { backgroundColor: theme.success }]} onPress={shareWhatsApp}>
+                  <Ionicons name="logo-whatsapp" size={22} color={theme.textInverse} />
+                  <Text style={[styles.waBtnText, { color: theme.textInverse }]}>WhatsApp</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.shareBtn, { borderColor: theme.primary, backgroundColor: theme.surface }]} onPress={shareGeneric}>
+                  <Ionicons name="share-outline" size={20} color={theme.primary} />
+                  <Text style={[styles.shareBtnText, { color: theme.primary }]}>Share</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity style={[styles.doneBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+                <Text style={[styles.doneBtnText, { color: theme.textSecondary }]}>Done</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      </ScreenContentContainer>
+
+      <ErrorModal
+        visible={showErr}
+        type="general"
+        title="Could not register"
+        message={errMsg}
+        onClose={() => setShowErr(false)}
+      />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: '#f9fafb' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '700' },
+  scroll: { padding: 16, paddingBottom: 120 },
+  hint: { fontSize: 14, marginBottom: 8 },
+  subHint: { fontSize: 12, marginBottom: 16 },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: 6, marginTop: 12 },
+  input: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+  },
+  loadingWrap: { paddingVertical: 24, alignItems: 'center', justifyContent: 'center' },
+  loadingText: { marginTop: 10, fontSize: 13, fontWeight: '600' },
+  meetCard: { borderWidth: 1, borderRadius: 16, padding: 14, marginTop: 8 },
+  meetLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.4, marginBottom: 6 },
+  meetValue: { fontSize: 16, fontWeight: '800' },
+  primaryBtn: { paddingVertical: 14, borderRadius: 14, alignItems: 'center', marginTop: 24 },
+  primaryBtnText: { fontSize: 16, fontWeight: '700' },
+  waBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 14,
+    gap: 8,
+    paddingHorizontal: 20,
+  },
+  waBtnText: { fontWeight: '700' },
+  shareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  shareBtnText: { fontWeight: '700' },
+  resultCard: {
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  resultTitle: { fontSize: 18, fontWeight: '800', marginBottom: 8 },
+  resultMono: { fontSize: 12, marginBottom: 8 },
+  manualBig: { fontSize: 20, fontWeight: '800', letterSpacing: 2, marginBottom: 16 },
+  resultActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 },
+  doneBtn: { marginTop: 16, padding: 14, alignItems: 'center', borderRadius: 12 },
+  doneBtnText: { fontWeight: '700' },
+});
+
+export default GuestPreRequestScreen;

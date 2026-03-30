@@ -51,7 +51,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     phone: user.contactNo || user.phone || '',
   });
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -173,7 +172,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     );
   };
 
-  const toggleNotifications = () => setNotificationsEnabled(prev => !prev);
+  // Notification preferences removed from UI (requested).
 
   const handleSaveProfile = async () => {
     setSavingProfile(true);
@@ -303,14 +302,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           )}
         </View>
 
-        <Text style={[styles.sectionHeader, { color: theme.text }]}>APP PREFERENCES</Text>
-        <View style={[styles.preferencesCard, { backgroundColor: theme.surface }]}>
-          <View style={styles.prefRow}>
-            <View style={[styles.prefIconBox, { backgroundColor: theme.surfaceHighlight }]}><Ionicons name="notifications-outline" size={20} color={theme.accent} /></View>
-            <Text style={[styles.prefLabel, { color: theme.text, flex: 1 }]}>Allow Notifications</Text>
-            <Switch value={notificationsEnabled} onValueChange={toggleNotifications} trackColor={{ false: theme.border, true: theme.accent }} thumbColor={'#FFFFFF'} />
-          </View>
-        </View>
+        {/* Notification preferences intentionally removed */}
 
         <TouchableOpacity style={[styles.logoutButton, { backgroundColor: theme.surface, borderColor: theme.error }]} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color={theme.error} style={{ marginRight: 8 }} />

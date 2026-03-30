@@ -27,6 +27,7 @@ import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 
 interface NewHODDashboardProps {
   hod: HOD;
@@ -83,7 +84,8 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         apiService.getHODVisitorRequests(hod.hodCode),
       ]);
 
-      const gatePassList = gatePassResponse.success && gatePassResponse.requests ? gatePassResponse.requests : [];
+      const gatePassList =
+        gatePassResponse.success && gatePassResponse.data ? gatePassResponse.data : [];
       const combined = [...gatePassList, ...visitorRequests];
       setRequests(combined);
 
@@ -255,6 +257,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       </View>
 
       {/* Search Bar */}
+      <ScreenContentContainer>
       <ScrollView
         style={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -407,6 +410,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         )}
       </View>
       </ScrollView>
+      </ScreenContentContainer>
 
       {/* Bottom Navigation */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
@@ -453,6 +457,10 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         onSelectBulk={() => {
           setShowPassTypeModal(false);
           onNavigate('HOD_BULK_GATE_PASS');
+        }}
+        onSelectGuest={() => {
+          setShowPassTypeModal(false);
+          onNavigate('GUEST_PRE_REQUEST');
         }}
       />
 

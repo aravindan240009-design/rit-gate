@@ -140,6 +140,21 @@ public class NotificationService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyStaffOfHODPendingHR(GatePassRequest request) {
+        try {
+            String passType = "BULK".equals(request.getPassType()) ? "Bulk Gate Pass" : "Gate Pass";
+            save(request.getRegNo(),
+                "Approved by HOD",
+                String.format("Your %s was approved by HOD and is waiting for HR approval. Your QR will be ready after HR approves.", passType),
+                Notification.NotificationType.APPROVAL, Notification.NotificationPriority.HIGH,
+                "/staff/my-requests");
+        } catch (Exception e) {
+            log.error("Error notifying staff of HOD pending HR", e);
+        }
+    }
+
+    /** Staff/HOD-only: QR exists only after HR; call this only when HOD approval fully completes the request (legacy paths). */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyStaffOfHODApproval(GatePassRequest request) {
         try {
             String passType = "BULK".equals(request.getPassType()) ? "Bulk Gate Pass" : "Gate Pass";
@@ -204,8 +219,10 @@ public class NotificationService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyHROfNewHODRequest(GatePassRequest request) {
         try {
-            String message = String.format("HOD %s has requested a Gate Pass. Please review.", request.getStudentName());
-            save(request.getAssignedHrCode(), "New HOD Request", message,
+            String message = String.format(
+                "Gate pass for %s was approved by HOD and is waiting for your approval.",
+                request.getStudentName());
+            save(request.getAssignedHrCode(), "Pending HR approval", message,
                 Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.HIGH,
                 "/hr/pending-approvals");
         } catch (Exception e) {

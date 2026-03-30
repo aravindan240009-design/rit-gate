@@ -65,6 +65,47 @@ public class UnifiedVisitorController {
     }
     
     /**
+     * Staff/HOD/HR pre-request: create visitor gate pass and auto-approve (QR + manual code immediately).
+     * POST /api/unified-visitors/instant-guest
+     */
+    @PostMapping("/instant-guest")
+    public ResponseEntity<?> instantGuest(@RequestBody InstantGuestRequest req) {
+        try {
+            if (req.getCreatorStaffCode() == null || req.getCreatorStaffCode().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "creatorStaffCode required"));
+            }
+            Visitor visitor = new Visitor();
+            visitor.setName(req.getName());
+            visitor.setEmail(req.getEmail());
+            visitor.setPhone(req.getPhone());
+            visitor.setDepartment(req.getDepartment());
+            visitor.setStaffCode(req.getStaffCode());
+            visitor.setPersonToMeet(req.getStaffCode());
+            visitor.setPurpose(req.getPurpose() != null ? req.getPurpose() : "");
+            visitor.setNumberOfPeople(req.getNumberOfPeople() != null ? req.getNumberOfPeople() : 1);
+            visitor.setVehicleNumber(req.getVehicleNumber());
+            visitor.setRole("VISITOR");
+            visitor.setType("VISITOR");
+
+            Visitor approved = visitorGatepassService.createInstantGuestPass(
+                visitor,
+                req.getCreatorStaffCode(),
+                req.getCreatorRole() != null ? req.getCreatorRole() : "STAFF"
+            );
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "id", approved.getId(),
+                "qrCode", approved.getQrCode() != null ? approved.getQrCode() : "",
+                "manualCode", approved.getManualCode() != null ? approved.getManualCode() : "",
+                "message", "Guest pass created and approved."
+            ));
+        } catch (Exception e) {
+            System.err.println("instant-guest: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    /**
      * Register visitor from security dashboard
      * POST /api/unified-visitors/security-register
      */
@@ -217,8 +258,9 @@ public class UnifiedVisitorController {
                     "success", true,
                     "requestId", v.getId(),
                     "status", v.getStatus(),
-                    "qrCode", v.getQrCode(),
-                    "manualCode", v.getManualCode(),
+                    "scanCount", v.getScanCount() != null ? v.getScanCount() : 0,
+                    "qrCode", v.getQrCode() != null ? v.getQrCode() : "",
+                    "manualCode", v.getManualCode() != null ? v.getManualCode() : "",
                     "name", v.getName(),
                     "role", v.getRole() != null ? v.getRole() : "VISITOR"
                 )))
@@ -266,6 +308,40 @@ public class UnifiedVisitorController {
     }
     
     // Request/Response DTOs
+    public static class InstantGuestRequest {
+        private String name;
+        private String email;
+        private String phone;
+        private String department;
+        private String staffCode;
+        private String purpose;
+        private Integer numberOfPeople;
+        private String vehicleNumber;
+        private String creatorStaffCode;
+        private String creatorRole;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPhone() { return phone; }
+        public void setPhone(String phone) { this.phone = phone; }
+        public String getDepartment() { return department; }
+        public void setDepartment(String department) { this.department = department; }
+        public String getStaffCode() { return staffCode; }
+        public void setStaffCode(String staffCode) { this.staffCode = staffCode; }
+        public String getPurpose() { return purpose; }
+        public void setPurpose(String purpose) { this.purpose = purpose; }
+        public Integer getNumberOfPeople() { return numberOfPeople; }
+        public void setNumberOfPeople(Integer numberOfPeople) { this.numberOfPeople = numberOfPeople; }
+        public String getVehicleNumber() { return vehicleNumber; }
+        public void setVehicleNumber(String vehicleNumber) { this.vehicleNumber = vehicleNumber; }
+        public String getCreatorStaffCode() { return creatorStaffCode; }
+        public void setCreatorStaffCode(String creatorStaffCode) { this.creatorStaffCode = creatorStaffCode; }
+        public String getCreatorRole() { return creatorRole; }
+        public void setCreatorRole(String creatorRole) { this.creatorRole = creatorRole; }
+    }
+
     public static class VisitorRegistrationRequest {
         private String name;
         private String email;

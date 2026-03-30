@@ -45,6 +45,14 @@ export default function NotificationDropdown({
   const [loading, setLoading] = useState(true);
   const { refreshNotifications } = useNotifications();
 
+  const isToday = (value?: string) => {
+    if (!value) return false;
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return false;
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   useEffect(() => {
     if (visible) {
       fetchNotifications();
@@ -58,7 +66,9 @@ export default function NotificationDropdown({
       const data = await response.json();
       
       if (data.success && data.notifications) {
-        setNotifications(data.notifications.slice(0, 10));
+        const latest = data.notifications as Notification[];
+        const todaysOnly = latest.filter((n) => isToday(n.timestamp || (n as any).createdAt));
+        setNotifications(todaysOnly.slice(0, 10));
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);

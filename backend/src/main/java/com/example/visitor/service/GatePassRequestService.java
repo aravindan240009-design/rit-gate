@@ -281,9 +281,14 @@ public class GatePassRequestService {
                 request.setStatus(GatePassRequest.RequestStatus.PENDING_HR);
                 request.setHrApproval(GatePassRequest.ApprovalStatus.PENDING);
             } else {
+                // Only students receive a QR immediately after HOD. Staff and HOD passes always need HR first.
+                if (!"STUDENT".equals(request.getUserType())) {
+                    throw new IllegalStateException(
+                        "Staff and HOD gate passes require HR approval before a QR can be issued; request should be pending HR.");
+                }
                 request.setStatus(GatePassRequest.RequestStatus.APPROVED);
                 
-                // Generate QR code after HOD approval for student-only flow
+                // Generate QR code after HOD approval (student flow only)
                 if ("BULK".equals(request.getPassType())) {
                     log.info("Generating QR code for approved bulk pass request {}", requestId);
                     try {
@@ -307,10 +312,8 @@ public class GatePassRequestService {
         GatePassRequest saved = gatePassRequestRepository.save(request);
         log.info("Request {} approved by HOD", requestId);
         
-        // Send notification to student (QR ready)
         if ("STUDENT".equals(saved.getUserType())) {
             notificationService.notifyStudentOfHODApproval(saved);
-            // Email student — gate pass fully approved, QR ready (fire-and-forget)
             try {
                 studentRepository.findByRegNo(saved.getRegNo()).ifPresent(student -> {
                     if (student.getEmail() != null && !student.getEmail().isBlank()) {
@@ -336,6 +339,11 @@ public class GatePassRequestService {
                     notificationService.notifyHROfNewHODRequest(saved);
                 } catch (Exception e) {
                     log.error("Failed to notify HR of staff request awaiting HR approval for request {}", requestId, e);
+                }
+                try {
+                    notificationService.notifyStaffOfHODPendingHR(saved);
+                } catch (Exception e) {
+                    log.error("Failed to notify staff of pending HR after HOD for request {}", requestId, e);
                 }
             } else {
                 notificationService.notifyStaffOfHODApproval(saved);
@@ -841,6 +849,14 @@ public class GatePassRequestService {
             log.warn("QR code requested for non-approved request {} (status: {})", requestId, request.getStatus());
             throw new RuntimeException("QR code is only available for approved requests");
         }
+
+        // Staff and HOD gate passes: QR only after HR approval (even if status were ever APPROVED without HR)
+        if ("STAFF".equals(request.getUserType()) || "HOD".equals(request.getUserType())) {
+            if (request.getHrApproval() != GatePassRequest.ApprovalStatus.APPROVED) {
+                log.warn("QR requested for staff/HOD request {} before HR approval (hrApproval={})", requestId, request.getHrApproval());
+                throw new RuntimeException("QR code is available only after HR approval");
+            }
+        }
         
         // Check if QR code exists
         if (request.getQrCode() == null || request.getQrCode().isEmpty()) {
@@ -866,6 +882,13 @@ public class GatePassRequestService {
         }
 
         GatePassRequest request = requestOpt.get();
+
+        if ("STAFF".equals(request.getUserType()) || "HOD".equals(request.getUserType())) {
+            if (request.getHrApproval() != GatePassRequest.ApprovalStatus.APPROVED
+                    || request.getStatus() != GatePassRequest.RequestStatus.APPROVED) {
+                throw new RuntimeException("Regenerate QR is only allowed after full approval including HR");
+            }
+        }
 
         // Delete existing QR codes for this request
         List<QRTable> existingQRs = qrTableRepository.findAll().stream()

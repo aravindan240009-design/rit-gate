@@ -348,10 +348,13 @@ public class BulkGatePassService {
             requestData.put("status", request.getStatus());
             requestData.put("staffApproval", request.getStaffApproval());
             requestData.put("hodApproval", request.getHodApproval());
+            requestData.put("hrApproval", request.getHrApproval());
             requestData.put("studentCount", request.getStudentCount() != null ? request.getStudentCount() : 0);
             requestData.put("participantCount", participants.size());
             requestData.put("participants", participants);
-            requestData.put("qrCode", request.getQrCode());
+            // Staff bulk passes: QR/manual only after HR approval (QR is generated on HR approve).
+            boolean bulkQrReleased = request.getHrApproval() == GatePassRequest.ApprovalStatus.APPROVED;
+            requestData.put("qrCode", bulkQrReleased ? request.getQrCode() : null);
             requestData.put("includeStaff", request.getIncludeStaff());
             requestData.put("qrOwnerId", request.getQrOwnerId());
             requestData.put("receiverId", request.getReceiverId());
@@ -360,10 +363,13 @@ public class BulkGatePassService {
             requestData.put("attachmentUri", request.getAttachmentUri());
             requestData.put("hodRemark", request.getHodRemark());
             
-            // Fetch manual entry code from QRTable
-            Optional<QRTable> qrOpt = qrTableRepository.findByPassRequestId(request.getId());
-            if (qrOpt.isPresent()) {
-                requestData.put("manualCode", qrOpt.get().getManualEntryCode());
+            if (bulkQrReleased) {
+                Optional<QRTable> qrOpt = qrTableRepository.findByPassRequestId(request.getId());
+                if (qrOpt.isPresent()) {
+                    requestData.put("manualCode", qrOpt.get().getManualEntryCode());
+                }
+            } else {
+                requestData.put("manualCode", null);
             }
             
             response.put("success", true);
@@ -413,10 +419,11 @@ public class BulkGatePassService {
             requestInfo.put("status", request.getStatus());
             requestInfo.put("hrApproval", request.getHrApproval());
             requestInfo.put("hodApproval", request.getHodApproval());
-            requestInfo.put("qrCode", request.getQrCode());
-            requestInfo.put("manualCode", request.getManualCode());
+            boolean bulkQrReleased = request.getHrApproval() == GatePassRequest.ApprovalStatus.APPROVED;
+            requestInfo.put("qrCode", bulkQrReleased ? request.getQrCode() : null);
+            requestInfo.put("manualCode", bulkQrReleased ? request.getManualCode() : null);
             requestInfo.put("qrOwnerId", request.getQrOwnerId());
-            requestInfo.put("qrGenerated", request.getQrCode() != null);
+            requestInfo.put("qrGenerated", bulkQrReleased && request.getQrCode() != null);
             requestInfo.put("requestDate", request.getRequestDate());
             requestInfo.put("attachmentUri", request.getAttachmentUri());
             requestInfo.put("hodRemark", request.getHodRemark());

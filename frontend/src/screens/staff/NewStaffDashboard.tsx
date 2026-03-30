@@ -28,6 +28,7 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 
 interface NewStaffDashboardProps {
   staff: Staff;
@@ -343,7 +344,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         </View>
       </View>
 
-      {/* Search Bar */}
+      <ScreenContentContainer>
       <ScrollView
         style={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -508,6 +509,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         )}
       </View>
       </ScrollView>
+      </ScreenContentContainer>
 
       {/* Bottom Navigation */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
@@ -596,6 +598,10 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         onSelectBulk={() => {
           setShowPassTypeModal(false);
           onNavigate('STAFF_BULK_GATE_PASS');
+        }}
+        onSelectGuest={() => {
+          setShowPassTypeModal(false);
+          onNavigate('GUEST_PRE_REQUEST');
         }}
       />
 

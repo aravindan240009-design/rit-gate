@@ -523,6 +523,39 @@ class ApiService {
     } catch (e: any) { return { success: false, data: [], message: e.message }; }
   }
 
+  /** Staff/HOD/HR: pre-register guest — instant approved visitor QR + manual code */
+  async createInstantGuestPass(d: {
+    name: string;
+    email: string;
+    phone: string;
+    department: string;
+    staffCode: string;
+    purpose: string;
+    numberOfPeople?: number;
+    vehicleNumber?: string;
+    creatorStaffCode: string;
+    creatorRole: string;
+  }): Promise<{ success: boolean; id?: number; qrCode?: string; manualCode?: string; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/unified-visitors/instant-guest`, {
+        method: 'POST',
+        body: JSON.stringify(d),
+      });
+      if (data.success === false) {
+        return { success: false, message: data.message || 'Request failed' };
+      }
+      return {
+        success: true,
+        id: data.id,
+        qrCode: data.qrCode,
+        manualCode: data.manualCode,
+        message: data.message,
+      };
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Failed to create guest pass' };
+    }
+  }
+
   // ── Security scan history & vehicles ─────────────────────────────────────
   async getScanHistory(securityId: string): Promise<{ success: boolean; data?: any[]; message?: string }> {
     try {
