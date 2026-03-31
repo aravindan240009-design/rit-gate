@@ -193,7 +193,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={[styles.requestsContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={styles.requestsContainer}>
         {filteredRequests.length === 0 ? (
           <View style={styles.empty}>
             <Ionicons name="document-text-outline" size={64} color={theme.border} />
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 16 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 },
-  requestsContainer: { borderRadius: 16, borderWidth: 1, padding: 12 },
+  requestsContainer: { borderRadius: 16, padding: 12 },
   empty: { paddingVertical: 80, alignItems: 'center' },
   emptyText: { fontSize: 16, fontWeight: '600', marginTop: 16 },
 

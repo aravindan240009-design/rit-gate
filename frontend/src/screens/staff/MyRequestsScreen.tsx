@@ -220,7 +220,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.requestsContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View style={styles.requestsContainer}>
         {allRequests.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="document-text-outline" size={64} color={theme.textTertiary} />
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 12, fontSize: 14 },
   content: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
-  requestsContainer: { borderRadius: 16, borderWidth: 1, padding: 12 },
+  requestsContainer: { borderRadius: 16, padding: 12 },
   emptyState: { paddingVertical: 80, alignItems: 'center' },
   emptyStateText: { fontSize: 18, fontWeight: '600', marginTop: 16 },
   emptyStateSubtext: { fontSize: 14, marginTop: 8 },

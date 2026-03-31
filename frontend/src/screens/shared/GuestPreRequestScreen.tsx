@@ -8,9 +8,9 @@ import {
   ActivityIndicator,
   StatusBar,
   Linking,
-  Platform,
-  Share
+  Platform
 } from 'react-native';
+import Share from 'react-native-share';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import QRCode from 'react-native-qrcode-svg';
@@ -122,17 +122,26 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
   };
 
   const shareWhatsApp = async () => {
-    // Use system share sheet (WhatsApp will appear if installed). Avoid exposing raw QR payload text.
-    await shareGeneric();
+    try {
+      const url = await writeTempQrPng();
+      await Share.shareSingle({
+        title: 'Guest gate pass',
+        message: `RIT Gate — Guest pass\nName: ${visitorName}\nManual code: ${manualCode}\nShow this QR at security.`,
+        url: url || undefined,
+        social: Share.Social.WHATSAPP as any,
+      });
+    } catch {
+      await shareGeneric();
+    }
   };
 
   const shareGeneric = async () => {
     try {
       const url = await writeTempQrPng();
-      await Share.share({
+      await Share.open({
         title: 'Guest gate pass',
         message: `RIT Gate — Guest pass\nName: ${visitorName}\nManual code: ${manualCode}\nShow this QR at security.`,
-        ...(url ? { url } : {}),
+        url: url || undefined,
       });
     } catch {
       /* ignore */

@@ -460,13 +460,14 @@ const App: React.FC = () => {
     if (isLoading) return;
     if ((global as any).__actionLocked) return;
 
-    if (currentScreen === 'HOME') {
+    if (ROOT_SCREENS.includes(currentScreen)) {
       runExitAnimationAndClose();
       return;
     }
-    // Product requirement: any back/swipe (not on Home) returns to Home.
-    goBackToHome();
-  }, [currentScreen, isLoading, goBackToHome, navigateBack, runExitAnimationAndClose]);
+    // Product requirement: any back/swipe (not on Root) returns to Dashboard.
+    if (userType) navigateBack();
+    else setCurrentScreen('HOME');
+  }, [currentScreen, isLoading, userType, navigateBack, runExitAnimationAndClose]);
 
   React.useEffect(() => {
     const onBackPress = () => {
@@ -476,19 +477,20 @@ const App: React.FC = () => {
       // Block back if action lock is active (checked via global ref set by ActionLockProvider)
       if ((global as any).__actionLocked) return true;
 
-      if (currentScreen === 'HOME') {
+      if (ROOT_SCREENS.includes(currentScreen)) {
         runExitAnimationAndClose();
         return true;
       }
 
-      // Product requirement: any back (not on Home) returns to Home.
-      goBackToHome();
+      // Product requirement: any back/swipe (not on Root) returns to Dashboard.
+      if (userType) navigateBack();
+      else setCurrentScreen('HOME');
       return true;
     };
 
     const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => sub.remove();
-  }, [currentScreen, userType, isLoading, goBackToHome, runExitAnimationAndClose]);
+  }, [currentScreen, userType, isLoading, navigateBack, runExitAnimationAndClose]);
 
   const renderCurrentScreen = () => {
     console.log(`📱 RENDER: screen=${currentScreen}, userType=${userType}, isLoading=${isLoading}`);

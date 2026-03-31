@@ -25,6 +25,8 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 
+import ScreenContentContainer from '../../components/ScreenContentContainer';
+
 interface ProfileScreenProps {
   user: any;
   userType: 'STUDENT' | 'STAFF' | 'HOD' | 'HR' | 'SECURITY' | 'student' | 'staff' | 'hod' | 'hr' | 'security';
@@ -226,6 +228,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
       </View>
+      <ScreenContentContainer>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} nestedScrollEnabled scrollEnabled={outerScrollEnabled} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}>
         <View style={styles.headerSection}>
           <View style={styles.avatarContainer}>
@@ -310,6 +313,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </TouchableOpacity>
         <View style={{ height: showBottomNav ? 100 : 40 }} />
       </ScrollView>
+      </ScreenContentContainer>
 
       {showBottomNav && onTabChange && (
         <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
