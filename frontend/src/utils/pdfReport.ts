@@ -1,6 +1,5 @@
 import { Platform } from 'react-native';
-import * as Print from 'expo-print';
-import * as FileSystem from 'expo-file-system';
+import { generatePDF } from 'react-native-html-to-pdf';
 
 type ReportColumn = { key: string; label: string };
 type ReportRow = Record<string, any>;
@@ -118,26 +117,12 @@ export async function exportStyledPdfReport(params: {
     return;
   }
 
-  const file = await Print.printToFileAsync({ html });
   const safeTitle = (params.filename || title || 'report').replace(/[^a-z0-9-_]/gi, '_');
   const stampedName = `${safeTitle}_${new Date().toISOString().slice(0, 10)}.pdf`;
-  const fs: any = FileSystem as any;
-  if (Platform.OS === 'android') {
-    const permissions = await fs.StorageAccessFramework?.requestDirectoryPermissionsAsync?.();
-    if (permissions.granted) {
-      const base64 = await fs.readAsStringAsync(file.uri, { encoding: fs.EncodingType?.Base64 ?? 'base64' });
-      const targetUri = await fs.StorageAccessFramework.createFileAsync(
-        permissions.directoryUri,
-        stampedName,
-        'application/pdf'
-      );
-      await fs.writeAsStringAsync(targetUri, base64, { encoding: fs.EncodingType?.Base64 ?? 'base64' });
-      return targetUri;
-    }
-  }
-
-  const baseDir = fs.documentDirectory || fs.cacheDirectory || '';
-  const targetUri = `${baseDir}${stampedName}`;
-  await fs.copyAsync({ from: file.uri, to: targetUri });
-  return targetUri;
+  const pdf = await generatePDF({
+    html,
+    fileName: stampedName.replace(/\.pdf$/i, ''),
+    directory: 'Documents',
+  });
+  return pdf.filePath ? `file://${pdf.filePath}` : '';
 }

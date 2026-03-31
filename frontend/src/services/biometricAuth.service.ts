@@ -1,12 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as LocalAuthentication from 'expo-local-authentication';
-import * as SecureStore from 'expo-secure-store';
+import ReactNativeBiometrics from 'react-native-biometrics';
+import * as Keychain from 'react-native-keychain';
 
 const SESSION_KEY = 'mygate_biometric_session';
 
 async function setSecureValue(key: string, value: string): Promise<void> {
   try {
-    await SecureStore.setItemAsync(key, value);
+    await Keychain.setGenericPassword(key, value, { service: key });
   } catch {
     await AsyncStorage.setItem(key, value);
   }
@@ -14,19 +14,17 @@ async function setSecureValue(key: string, value: string): Promise<void> {
 
 async function getSecureValue(key: string): Promise<string | null> {
   try {
-    const secure = await SecureStore.getItemAsync(key);
-    if (secure !== null) return secure;
+    const secure = await Keychain.getGenericPassword({ service: key });
+    if (secure && typeof secure.password === 'string') return secure.password;
   } catch {
-    // ignore and fallback
   }
   return AsyncStorage.getItem(key);
 }
 
 async function removeSecureValue(key: string): Promise<void> {
   try {
-    await SecureStore.deleteItemAsync(key);
+    await Keychain.resetGenericPassword({ service: key });
   } catch {
-    // ignore and fallback
   }
   await AsyncStorage.removeItem(key);
 }
@@ -46,12 +44,9 @@ export const biometricAuthService = {
   },
 
   async canUseBiometricOrDeviceCredential(): Promise<{ available: boolean; reason?: string }> {
-    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const rnBiometrics = new ReactNativeBiometrics();
+    const { available: hasHardware } = await rnBiometrics.isSensorAvailable();
     if (!hasHardware) return { available: false, reason: 'Biometric hardware not available' };
-
-    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-    if (!isEnrolled) return { available: false, reason: 'No biometric or device credential enrolled' };
-
     return { available: true };
   },
 
@@ -64,15 +59,13 @@ export const biometricAuthService = {
       return { success: false, error: available.reason };
     }
 
-    const result = await LocalAuthentication.authenticateAsync({
+    const rnBiometrics = new ReactNativeBiometrics();
+    const result = await rnBiometrics.simplePrompt({
       promptMessage: 'Authenticate to continue',
-      cancelLabel: 'Cancel',
-      fallbackLabel: 'Use device passcode',
-      disableDeviceFallback: false,
+      cancelButtonText: 'Cancel',
     });
-
     if (result.success) return { success: true };
-    return { success: false, error: result.error || 'Authentication failed' };
+    return { success: false, error: 'Authentication failed' };
   },
 };
 

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import ImagePicker from '../utils/safeImagePicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { THEME } from '../config/api.config';
 
 interface ProfilePhotoManagerProps {

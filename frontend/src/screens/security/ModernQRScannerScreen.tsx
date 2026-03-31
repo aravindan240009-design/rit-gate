@@ -11,8 +11,8 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Camera, CameraView } from 'expo-camera';
-import { Ionicons } from '@expo/vector-icons';
+import { Camera, CameraView } from '../../shims/expoCamera';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SecurityPersonnel, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import SecurityBottomNav from '../../components/SecurityBottomNav';

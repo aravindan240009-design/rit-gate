@@ -31,8 +31,41 @@ const fallbackImagePicker: any = {
 let imagePicker: any = fallbackImagePicker;
 
 try {
-  // Load native module at runtime to avoid hard crash when module is unavailable.
-  imagePicker = require("expo-image-picker");
+  const nativePicker = require('react-native-image-picker');
+  imagePicker = {
+    MediaTypeOptions: {
+      Images: 'photo',
+    },
+    async requestCameraPermissionsAsync(): Promise<PermissionResult> {
+      return { status: 'granted', granted: true, canAskAgain: true };
+    },
+    async requestMediaLibraryPermissionsAsync(): Promise<PermissionResult> {
+      return { status: 'granted', granted: true, canAskAgain: true };
+    },
+    async launchCameraAsync(options?: any) {
+      const result = await nativePicker.launchCamera({
+        mediaType: 'photo',
+        includeBase64: !!options?.base64,
+        quality: options?.quality ?? 0.8,
+      });
+      if (result.didCancel || !result.assets?.length) {
+        return { canceled: true, assets: [] };
+      }
+      return { canceled: false, assets: result.assets };
+    },
+    async launchImageLibraryAsync(options?: any) {
+      const result = await nativePicker.launchImageLibrary({
+        mediaType: 'photo',
+        includeBase64: !!options?.base64,
+        quality: options?.quality ?? 0.8,
+        selectionLimit: 1,
+      });
+      if (result.didCancel || !result.assets?.length) {
+        return { canceled: true, assets: [] };
+      }
+      return { canceled: false, assets: result.assets };
+    },
+  };
 } catch (_error) {
   imagePicker = fallbackImagePicker;
 }

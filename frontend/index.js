@@ -1,4 +1,4 @@
-import { registerRootComponent } from 'expo';
+import { AppRegistry } from 'react-native';
 import React from 'react';
 import App from './App';
 import ErrorBoundary from './src/components/ErrorBoundary';
@@ -11,4 +11,4 @@ function Root() {
   );
 }
 
-registerRootComponent(Root);
+AppRegistry.registerComponent('main', () => Root);

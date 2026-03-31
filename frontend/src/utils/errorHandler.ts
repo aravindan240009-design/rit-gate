@@ -22,59 +22,53 @@ export class AppError extends Error {
 }
 
 export const parseError = (error: any): ErrorInfo => {
-  // Network errors
   if (error.message?.includes('Network request failed') || 
       error.message?.includes('Failed to fetch') ||
       error.code === 'NETWORK_ERROR') {
     return {
       type: 'network',
-      title: 'No Internet Connection',
-      message: 'Please check your internet connection and try again.',
+      title: 'Network Connectivity Issue',
+      message: 'A stable internet connection is required to continue. Please try again.',
       canRetry: true,
     };
   }
 
-  // Timeout errors
   if (error.message?.includes('timeout') || error.code === 'ECONNABORTED') {
     return {
       type: 'timeout',
-      title: 'Request Timeout',
-      message: 'The request took too long to complete. Please try again.',
+      title: 'Request Timed Out',
+      message: 'The request exceeded the expected response time. Please retry.',
       canRetry: true,
     };
   }
 
-  // Authentication errors
   if (error.response?.status === 401 || error.response?.status === 403) {
     return {
       type: 'auth',
-      title: 'Authentication Failed',
-      message: error.response?.data?.message || 'Your session has expired. Please login again.',
+      title: 'Authorization Required',
+      message: error.response?.data?.message || 'Your session is no longer valid. Please sign in again.',
       canRetry: false,
     };
   }
 
-  // Validation errors
   if (error.response?.status === 400 || error.response?.status === 422) {
     return {
       type: 'validation',
-      title: 'Invalid Input',
-      message: error.response?.data?.message || 'Please check your input and try again.',
+      title: 'Input Validation Required',
+      message: error.response?.data?.message || 'One or more fields require attention. Please review and submit again.',
       canRetry: false,
     };
   }
 
-  // Server errors
   if (error.response?.status >= 500) {
     return {
       type: 'api',
-      title: 'Server Error',
-      message: 'Our servers are experiencing issues. Please try again later.',
+      title: 'Service Unavailable',
+      message: 'The service is temporarily unavailable. Please try again shortly.',
       canRetry: true,
     };
   }
 
-  // API errors with custom messages
   if (error.response?.data?.message) {
     return {
       type: 'api',
@@ -83,7 +77,6 @@ export const parseError = (error: any): ErrorInfo => {
     };
   }
 
-  // AppError instances
   if (error instanceof AppError) {
     return {
       type: error.type,
@@ -93,16 +86,14 @@ export const parseError = (error: any): ErrorInfo => {
     };
   }
 
-  // Generic errors (don't show these in modal - let them crash)
   if (error instanceof TypeError || error instanceof ReferenceError) {
-    throw error; // Re-throw critical errors
+    throw error;
   }
 
-  // Unknown errors
   return {
     type: 'general',
-    title: 'Something Went Wrong',
-    message: error.message || 'An unexpected error occurred. Please try again.',
+    title: 'Unexpected Application Error',
+    message: error.message || 'An unexpected issue occurred while processing your request.',
     canRetry: true,
   };
 };
@@ -119,7 +110,6 @@ export const handleError = (
     }
     showModal(errorInfo);
   } catch (criticalError) {
-    // Critical errors should crash the app for debugging
     throw criticalError;
   }
 };

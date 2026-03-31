@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { Alert } from 'react-native';
 import { API_CONFIG } from '../config/api.config';
-import * as Notifications from 'expo-notifications';
 
 interface Notification {
   id: number;
@@ -60,15 +60,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
           const unreadNew = todaysOnly.filter(n => !n.isRead && !shownNotificationIdsRef.current.has(n.id));
           for (const n of unreadNew) {
             shownNotificationIdsRef.current.add(n.id);
-            await Notifications.scheduleNotificationAsync({
-              content: {
-                title: n.title || 'New Notification',
-                body: n.message || '',
-                data: { actionRoute: n.actionRoute || '' },
-                sound: 'default',
-              },
-              trigger: null,
-            });
+            Alert.alert(n.title || 'New Notification', n.message || '');
           }
         }
         setNotifications(todaysOnly);

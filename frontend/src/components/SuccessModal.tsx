@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 
 interface SuccessModalProps {
@@ -21,7 +21,7 @@ interface SuccessModalProps {
 
 const SuccessModal: React.FC<SuccessModalProps> = ({
   visible,
-  title = 'Success',
+  title = 'Completed Successfully',
   message,
   onClose,
   autoClose = true,
@@ -31,9 +31,14 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
   const scaleAnim = React.useRef(new Animated.Value(0.9)).current;
   const opacityAnim = React.useRef(new Animated.Value(0)).current;
   const contentTranslateY = React.useRef(new Animated.Value(20)).current;
+  const [secondsRemaining, setSecondsRemaining] = React.useState(
+    Math.max(1, Math.ceil(autoCloseDelay / 1000))
+  );
 
   React.useEffect(() => {
     if (visible) {
+      const initialSeconds = Math.max(1, Math.ceil(autoCloseDelay / 1000));
+      setSecondsRemaining(initialSeconds);
       Animated.parallel([
         Animated.timing(opacityAnim, {
           toValue: 1,
@@ -54,10 +59,16 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
       ]).start();
 
       if (autoClose) {
+        const countdownTimer = setInterval(() => {
+          setSecondsRemaining((prev) => Math.max(0, prev - 1));
+        }, 1000);
         const timer = setTimeout(() => {
           onClose();
         }, autoCloseDelay);
-        return () => clearTimeout(timer);
+        return () => {
+          clearTimeout(timer);
+          clearInterval(countdownTimer);
+        };
       }
     } else {
       opacityAnim.setValue(0);
@@ -104,7 +115,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
               activeOpacity={0.7}
             >
               <Text style={[styles.closeButtonText, { color: theme.textSecondary }]}>
-                {autoClose ? 'Please wait...' : 'Continue'}
+                {autoClose ? `OK (${secondsRemaining}s)` : 'OK'}
               </Text>
             </TouchableOpacity>
           </View>

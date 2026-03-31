@@ -1,12 +1,14 @@
 {
-  "extends": "./node_modules/expo/tsconfig.base",
   "compilerOptions": {
+    "target": "esnext",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "jsx": "react-native",
     "module": "esnext",
-    "moduleResolution": "bundler"
-  }
+    "moduleResolution": "bundler",
+    "baseUrl": "."
+  },
+  "include": ["src", "App.tsx", "index.js", "visitor-website/src"]
 }

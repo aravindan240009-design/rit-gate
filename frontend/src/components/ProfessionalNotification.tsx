@@ -8,7 +8,7 @@ import {
   Easing,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { THEME } from '../config/api.config';
 
 interface ProfessionalNotificationProps {

@@ -7,8 +7,9 @@ import {
   ScrollView,
   Switch,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme, THEME_PRESETS, ThemePresetId } from '../context/ThemeContext';
+import GradientText from './GradientText';
 
 interface ThemePresetSelectorProps {
   onScrollLock?: (locked: boolean) => void;
@@ -23,10 +24,7 @@ const ThemePresetSelector: React.FC<ThemePresetSelectorProps> = ({ onScrollLock 
   };
 
   return (
-    // Outer wrapper — no overflow:hidden, no clipping
     <View style={[styles.wrapper, { backgroundColor: theme.surface }]}>
-
-      {/* Header row */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Ionicons name="color-palette-outline" size={18} color={theme.primary} />
@@ -48,7 +46,6 @@ const ThemePresetSelector: React.FC<ThemePresetSelectorProps> = ({ onScrollLock 
         </View>
       </View>
 
-      {/* Horizontal scroll — extends edge-to-edge */}
       <View
         onTouchStart={() => onScrollLock?.(true)}
         onTouchEnd={() => onScrollLock?.(false)}
@@ -97,9 +94,9 @@ const ThemePresetSelector: React.FC<ThemePresetSelectorProps> = ({ onScrollLock 
                   <View style={[styles.miniBar, { backgroundColor: c2, width: '50%', opacity: 0.7 }]} />
                   <View style={[styles.miniDot, { backgroundColor: c1 }]} />
                 </View>
-                <Text style={[styles.presetName, { color: theme.text }]} numberOfLines={1}>
-                  {preset.name}
-                </Text>
+                <View style={styles.presetNameWrap}>
+                  <GradientText text={preset.name} colors={[c1, c2]} style={styles.presetName} />
+                </View>
                 <Text style={[styles.presetDesc, { color: theme.textTertiary }]} numberOfLines={1}>
                   {preset.description}
                 </Text>
@@ -114,7 +111,6 @@ const ThemePresetSelector: React.FC<ThemePresetSelectorProps> = ({ onScrollLock 
         </ScrollView>
       </View>
 
-      {/* Footer */}
       <View style={[styles.activeRow, { borderTopColor: theme.border }]}>
         <View style={[styles.activeDot, { backgroundColor: theme.primary }]} />
         <Text style={[styles.activeLabel, { color: theme.textSecondary }]}>
@@ -134,7 +130,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
-    // NO overflow:hidden — lets ScrollView extend naturally
   },
   header: {
     flexDirection: 'row',
@@ -203,6 +198,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   presetName: { fontSize: 12, fontWeight: '700', marginBottom: 2 },
+  presetNameWrap: { marginBottom: 2 },
   presetDesc: { fontSize: 10, fontWeight: '500' },
   activeBadge: {
     position: 'absolute',

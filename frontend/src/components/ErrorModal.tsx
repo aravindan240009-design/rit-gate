@@ -6,9 +6,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 export type ErrorType = 'network' | 'api' | 'validation' | 'auth' | 'timeout' | 'general';
 
@@ -19,6 +18,8 @@ interface ErrorModalProps {
   message: string;
   onClose: () => void;
   onRetry?: () => void;
+  autoClose?: boolean;
+  autoCloseDelay?: number;
 }
 
 const ErrorModal: React.FC<ErrorModalProps> = ({
@@ -28,13 +29,20 @@ const ErrorModal: React.FC<ErrorModalProps> = ({
   message,
   onClose,
   onRetry,
+  autoClose = true,
+  autoCloseDelay = 3500,
 }) => {
   const scaleAnim = React.useRef(new Animated.Value(0.9)).current;
   const opacityAnim = React.useRef(new Animated.Value(0)).current;
   const contentTranslateY = React.useRef(new Animated.Value(20)).current;
+  const [secondsRemaining, setSecondsRemaining] = React.useState(
+    Math.max(1, Math.ceil(autoCloseDelay / 1000))
+  );
 
   React.useEffect(() => {
     if (visible) {
+      const initialSeconds = Math.max(1, Math.ceil(autoCloseDelay / 1000));
+      setSecondsRemaining(initialSeconds);
       Animated.parallel([
         Animated.timing(opacityAnim, {
           toValue: 1,
@@ -53,27 +61,40 @@ const ErrorModal: React.FC<ErrorModalProps> = ({
           useNativeDriver: true,
         }),
       ]).start();
+
+      if (autoClose && !onRetry) {
+        const countdownTimer = setInterval(() => {
+          setSecondsRemaining((prev) => Math.max(0, prev - 1));
+        }, 1000);
+        const timer = setTimeout(() => {
+          onClose();
+        }, autoCloseDelay);
+        return () => {
+          clearTimeout(timer);
+          clearInterval(countdownTimer);
+        };
+      }
     } else {
       opacityAnim.setValue(0);
       scaleAnim.setValue(0.9);
       contentTranslateY.setValue(20);
     }
-  }, [visible]);
+  }, [visible, autoClose, autoCloseDelay, onRetry, onClose]);
 
   const getErrorConfig = () => {
     switch (type) {
       case 'network':
-        return { icon: 'cloud-offline' as const, color: '#F59E0B', defaultTitle: 'Connection Error' };
+        return { icon: 'cloud-offline' as const, color: '#F59E0B', defaultTitle: 'Network Connectivity Issue' };
       case 'api':
-        return { icon: 'server' as const, color: '#EF4444', defaultTitle: 'Server Issue' };
+        return { icon: 'server' as const, color: '#EF4444', defaultTitle: 'Service Unavailable' };
       case 'validation':
-        return { icon: 'alert-circle' as const, color: '#F59E0B', defaultTitle: 'Check Inputs' };
+        return { icon: 'alert-circle' as const, color: '#F59E0B', defaultTitle: 'Input Validation Required' };
       case 'auth':
-        return { icon: 'lock-closed' as const, color: '#EF4444', defaultTitle: 'Access Denied' };
+        return { icon: 'lock-closed' as const, color: '#EF4444', defaultTitle: 'Authorization Required' };
       case 'timeout':
-        return { icon: 'time-outline' as const, color: '#F59E0B', defaultTitle: 'System Timeout' };
+        return { icon: 'time-outline' as const, color: '#F59E0B', defaultTitle: 'Request Timed Out' };
       default:
-        return { icon: 'warning' as const, color: '#EF4444', defaultTitle: 'Oops! Error' };
+        return { icon: 'warning' as const, color: '#EF4444', defaultTitle: 'Unexpected Application Error' };
     }
   };
 
@@ -123,7 +144,9 @@ const ErrorModal: React.FC<ErrorModalProps> = ({
               </TouchableOpacity>
             )}
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeButtonText}>{onRetry ? 'Cancel' : 'Close'}</Text>
+              <Text style={styles.closeButtonText}>
+                {onRetry ? 'Cancel' : (autoClose ? `OK (${secondsRemaining}s)` : 'OK')}
+              </Text>
             </TouchableOpacity>
           </View>
         </Animated.View>

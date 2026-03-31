@@ -9,17 +9,8 @@ const PRODUCTION_URL = 'https://ritgate-backend.onrender.com/api';
 
 const getBackendUrl = (): string => {
   // Env override (CI/staging only)
-  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  const envUrl = process.env.REACT_NATIVE_API_URL || process.env.EXPO_PUBLIC_API_URL;
   if (envUrl) return envUrl;
-
-  // In dev mode with Expo Go, use local server
-  try {
-    const Constants = require('expo-constants').default;
-    if (__DEV__ && Constants.expoConfig?.hostUri) {
-      const ip = Constants.expoConfig.hostUri.split(':')[0];
-      return `http://${ip}:8080/api`;
-    }
-  } catch (_) {}
 
   return PRODUCTION_URL;
 };

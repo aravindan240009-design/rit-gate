@@ -12,9 +12,9 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import * as DocumentPicker from '../../shims/expoDocumentPicker';
+import * as FileSystem from '../../shims/expoFileSystem';
 import { Staff } from '../../types';
 import { apiService } from '../../services/api';
 import SuccessModal from '../../components/SuccessModal';
