@@ -14,6 +14,7 @@ import {
   Platform
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Student, Staff, HOD, HR, SecurityPersonnel, UserType, UserRole, ScreenName } from './types';
 import { offlineStorage } from './services/offlineStorage';
 import { professionalTheme } from './styles/professionalTheme';
@@ -914,54 +915,56 @@ const App: React.FC = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider userId={
-        student?.regNo ||
-        staff?.staffCode ||
-        hod?.hodCode ||
-        hr?.hrCode ||
-        security?.securityId ||
-        undefined
-      }>
-        <ActionLockProvider>
-          <NotificationProvider>
-            <ProfileProvider>
-              <ThemedApp>
-                <View style={[styles.container, { backgroundColor: '#F8FAFC' }]}>
-                  <StatusBar
-                    barStyle="dark-content"
-                    backgroundColor="transparent"
-                    translucent={true}
-                  />
-                  <AppNavigator
-                    isRootScreen={isRootScreen}
-                    isLoading={isLoading}
-                    onBack={handleSwipeBack}
-                  >
-                    <ErrorBoundary fallbackScreen={goBackToHome}>
-                      {renderCurrentScreen()}
-                    </ErrorBoundary>
-                  </AppNavigator>
-                  {exitAnimating && (
-                    <Animated.View
-                      pointerEvents="none"
-                      style={[
-                        StyleSheet.absoluteFillObject,
-                        styles.exitOverlay,
-                        { opacity: exitOpacity },
-                      ]}
+      <SafeAreaProvider>
+        <ThemeProvider userId={
+          student?.regNo ||
+          staff?.staffCode ||
+          hod?.hodCode ||
+          hr?.hrCode ||
+          security?.securityId ||
+          undefined
+        }>
+          <ActionLockProvider>
+            <NotificationProvider>
+              <ProfileProvider>
+                <ThemedApp>
+                  <View style={[styles.container, { backgroundColor: '#F8FAFC' }]}>
+                    <StatusBar
+                      barStyle="dark-content"
+                      backgroundColor="transparent"
+                      translucent={true}
+                    />
+                    <AppNavigator
+                      isRootScreen={isRootScreen}
+                      isLoading={isLoading}
+                      onBack={handleSwipeBack}
                     >
-                      <Animated.View style={[styles.exitToast, { transform: [{ translateY: exitTranslateY }] }]}>
-                        <ThemedText style={styles.exitToastTitle}>Closing application</ThemedText>
-                        <ThemedText style={styles.exitToastSub}>Please wait…</ThemedText>
+                      <ErrorBoundary fallbackScreen={goBackToHome}>
+                        {renderCurrentScreen()}
+                      </ErrorBoundary>
+                    </AppNavigator>
+                    {exitAnimating && (
+                      <Animated.View
+                        pointerEvents="none"
+                        style={[
+                          StyleSheet.absoluteFillObject,
+                          styles.exitOverlay,
+                          { opacity: exitOpacity },
+                        ]}
+                      >
+                        <Animated.View style={[styles.exitToast, { transform: [{ translateY: exitTranslateY }] }]}>
+                          <ThemedText style={styles.exitToastTitle}>Closing application</ThemedText>
+                          <ThemedText style={styles.exitToastSub}>Please wait…</ThemedText>
+                        </Animated.View>
                       </Animated.View>
-                    </Animated.View>
-                  )}
-                </View>
-              </ThemedApp>
-            </ProfileProvider>
-          </NotificationProvider>
-        </ActionLockProvider>
-      </ThemeProvider>
+                    )}
+                  </View>
+                </ThemedApp>
+              </ProfileProvider>
+            </NotificationProvider>
+          </ActionLockProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 };

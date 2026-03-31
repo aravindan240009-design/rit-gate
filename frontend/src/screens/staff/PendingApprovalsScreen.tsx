@@ -20,6 +20,7 @@ import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 
 interface PendingApprovalsScreenProps {
   user: Staff;
@@ -164,6 +165,7 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
         <View style={{ width: 40 }} />
       </View>
 
+      <ScreenContentContainer>
       <ScrollView
         style={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -299,6 +301,7 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
           ))
         )}
       </ScrollView>
+      </ScreenContentContainer>
 
       <BulkDetailsModal
         visible={showBulkModal}

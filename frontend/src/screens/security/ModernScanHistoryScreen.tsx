@@ -10,7 +10,6 @@ import {
   Modal,
   ActivityIndicator,
   Platform,
-  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -22,6 +21,9 @@ import { exportStyledPdfReport } from '../../utils/pdfReport';
 import { Calendar } from 'react-native-calendars';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
+import SuccessModal from '../../components/SuccessModal';
+import ErrorModal from '../../components/ErrorModal';
+import { useTheme } from '../../context/ThemeContext';
 
 interface ModernScanHistoryScreenProps {
   security: SecurityPersonnel;
@@ -59,6 +61,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   onBack,
   onNavigate,
 }) => {
+  const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [scans, setScans] = useState<ScanRecord[]>([]);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -76,6 +79,11 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   const [rangeMode, setRangeMode] = useState(false);
   const [rangeResultsVisible, setRangeResultsVisible] = useState(false);
   const [selectingDateType, setSelectingDateType] = useState<'FROM' | 'TO'>('FROM');
+  const [showDownloadSuccess, setShowDownloadSuccess] = useState(false);
+  const [showDownloadError, setShowDownloadError] = useState(false);
+  const [downloadMessage, setDownloadMessage] = useState('');
+  const [downloadErrorMessage, setDownloadErrorMessage] = useState('');
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'SCANS') {
@@ -177,6 +185,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   });
 
   const exportScanPdf = async () => {
+    setIsDownloading(true);
     try {
       const savedPath = await exportStyledPdfReport({
         title: 'Security Scan History Report',
@@ -200,13 +209,13 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           time: formatTime(scan.outTime || scan.inTime),
         })),
       });
-      if (savedPath) {
-        Alert.alert('PDF downloaded', savedPath);
-      } else {
-        Alert.alert('PDF downloaded', 'Saved to your device storage.');
-      }
+      setDownloadMessage('PDF report has been saved to your Downloads folder.');
+      setShowDownloadSuccess(true);
     } catch (e: any) {
-      Alert.alert('PDF download failed', e?.message || 'Failed to generate PDF.');
+      setDownloadErrorMessage(e?.message || 'Failed to generate PDF.');
+      setShowDownloadError(true);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -894,6 +903,35 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
       {/* Bottom Navigation */}
       <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
+
+      {/* Downloading overlay */}
+      {isDownloading && (
+        <View style={styles.downloadingOverlay}>
+          <View style={[styles.downloadingBox, { backgroundColor: theme.surface }]}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <ThemedText style={[styles.downloadingText, { color: theme.text }]}>Generating PDF...</ThemedText>
+          </View>
+        </View>
+      )}
+
+      {/* Download Success Modal */}
+      <SuccessModal
+        visible={showDownloadSuccess}
+        title="Download Complete"
+        message={downloadMessage}
+        onClose={() => setShowDownloadSuccess(false)}
+        autoClose={true}
+        autoCloseDelay={3000}
+      />
+
+      {/* Download Error Modal */}
+      <ErrorModal
+        visible={showDownloadError}
+        type="general"
+        title="Download Failed"
+        message={downloadErrorMessage}
+        onClose={() => setShowDownloadError(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -1494,6 +1532,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#00BCD4',
   },
   fsCloseBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+  downloadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  downloadingBox: {
+    borderRadius: 20,
+    paddingHorizontal: 32,
+    paddingVertical: 28,
+    alignItems: 'center',
+    gap: 14,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+  },
+  downloadingText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
 });
 
 export default ModernScanHistoryScreen;

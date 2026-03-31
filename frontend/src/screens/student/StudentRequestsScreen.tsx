@@ -20,6 +20,7 @@ import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import { useErrorModal } from '../../hooks/useErrorModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 
 interface StudentRequestsScreenProps {
   student: Student;
@@ -186,6 +187,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
         />
       </View>
 
+      <ScreenContentContainer>
       <ScrollView
         style={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
@@ -202,6 +204,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
         )}
         </View>
       </ScrollView>
+      </ScreenContentContainer>
 
       {/* Bottom nav */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>

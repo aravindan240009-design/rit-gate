@@ -13,6 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import QRCode from 'react-native-qrcode-svg';
+import Clipboard from '@react-native-clipboard/clipboard';
+import RNFS from 'react-native-fs';
 import { apiService } from '../../services/api';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ErrorModal from '../../components/ErrorModal';
@@ -102,30 +105,43 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
     return `${local}@guest.ritgate.local`;
   }, [phone]);
 
+  const qrSvgRef = React.useRef<any>(null);
+
+  const writeTempQrPng = async () => {
+    if (!qrCode) return null;
+    const ref = qrSvgRef.current;
+    if (!ref?.toDataURL) return null;
+    const base64 = await new Promise<string | null>((resolve) => {
+      ref.toDataURL((data: string) => resolve(data || null));
+    });
+    if (!base64) return null;
+    const filename = `visitor-qr-${Date.now()}.png`;
+    const path = `${RNFS.CachesDirectoryPath}/${filename}`;
+    await RNFS.writeFile(path, base64, 'base64');
+    return `file://${path}`;
+  };
+
   const shareWhatsApp = async () => {
-    const body = `RIT Gate — Guest pass\nName: ${visitorName}\nQR: ${qrCode}\nManual code: ${manualCode}\nPresent these at security.`;
-    const url = `https://wa.me/?text=${encodeURIComponent(body)}`;
-    if (Platform.OS === 'web') {
-      await Linking.openURL(url);
-      return;
-    }
-    const can = await Linking.canOpenURL('whatsapp://send').catch(() => false);
-    if (can) {
-      await Linking.openURL(`whatsapp://send?text=${encodeURIComponent(body)}`);
-    } else {
-      await Linking.openURL(url);
-    }
+    // Use system share sheet (WhatsApp will appear if installed). Avoid exposing raw QR payload text.
+    await shareGeneric();
   };
 
   const shareGeneric = async () => {
     try {
+      const url = await writeTempQrPng();
       await Share.share({
-        message: `RIT Gate guest pass\nQR: ${qrCode}\nManual: ${manualCode}`,
         title: 'Guest gate pass',
+        message: `RIT Gate — Guest pass\nName: ${visitorName}\nManual code: ${manualCode}\nShow this QR at security.`,
+        ...(url ? { url } : {}),
       });
     } catch {
       /* ignore */
     }
+  };
+
+  const copyManual = () => {
+    if (!manualCode) return;
+    Clipboard.setString(manualCode);
   };
 
   const submit = async () => {
@@ -254,9 +270,17 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
           ) : (
             <View style={[styles.resultCard, { backgroundColor: theme.success + '22', borderColor: theme.success + '44' }]}>
               <ThemedText style={[styles.resultTitle, { color: theme.success }]}>Pass generated</ThemedText>
-              <ThemedText style={[styles.resultMono, { color: theme.textSecondary }]} selectable>
-                {qrCode}
-              </ThemedText>
+              <View style={[styles.qrWrap, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <QRCode
+                  value={qrCode}
+                  size={200}
+                  color="#0B1220"
+                  backgroundColor="#FFFFFF"
+                  getRef={(c: any) => {
+                    qrSvgRef.current = c;
+                  }}
+                />
+              </View>
               <ThemedText style={[styles.manualBig, { color: theme.success }]}>Manual: {manualCode}</ThemedText>
               <View style={styles.resultActions}>
                 <TouchableOpacity style={[styles.waBtn, { backgroundColor: theme.success }]} onPress={shareWhatsApp}>
@@ -266,6 +290,10 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
                 <TouchableOpacity style={[styles.shareBtn, { borderColor: theme.primary, backgroundColor: theme.surface }]} onPress={shareGeneric}>
                   <Ionicons name="share-outline" size={20} color={theme.primary} />
                   <ThemedText style={[styles.shareBtnText, { color: theme.primary }]}>Share</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.copyBtn, { borderColor: theme.border, backgroundColor: theme.surface }]} onPress={copyManual}>
+                  <Ionicons name="copy-outline" size={20} color={theme.text} />
+                  <ThemedText style={[styles.copyBtnText, { color: theme.text }]}>Copy</ThemedText>
                 </TouchableOpacity>
               </View>
               <TouchableOpacity style={[styles.doneBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
@@ -344,9 +372,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   resultTitle: { fontSize: 18, fontWeight: '800', marginBottom: 8 },
-  resultMono: { fontSize: 12, marginBottom: 8 },
+  qrWrap: {
+    alignSelf: 'center',
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 14,
+  },
   manualBig: { fontSize: 20, fontWeight: '800', letterSpacing: 2, marginBottom: 16 },
   resultActions: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 },
+  copyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  copyBtnText: { fontWeight: '800' },
   doneBtn: { marginTop: 16, padding: 14, alignItems: 'center', borderRadius: 12 },
   doneBtnText: { fontWeight: '700' },
 });

@@ -13,6 +13,7 @@ import { Student } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { formatDateTime } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 
 interface EntryExitHistoryScreenProps {
   user: Student;
@@ -89,6 +90,7 @@ const EntryExitHistoryScreen: React.FC<EntryExitHistoryScreenProps> = ({ user, n
         <View style={{ width: 40 }} />
       </View>
 
+      <ScreenContentContainer>
       <ScrollView
         style={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
@@ -151,6 +153,7 @@ const EntryExitHistoryScreen: React.FC<EntryExitHistoryScreenProps> = ({ user, n
           ))
         )}
       </ScrollView>
+      </ScreenContentContainer>
     </SafeAreaView>
   );
 };

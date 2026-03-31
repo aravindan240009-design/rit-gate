@@ -12,6 +12,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { API_CONFIG } from '../../config/api.config';
 import { useTheme } from '../../context/ThemeContext';
 import ThemedText from '../../components/ThemedText';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 
 interface Notification {
   id: number;
@@ -206,6 +207,7 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
       </View>
 
       {notifications.length === 0 ? (
+        <ScreenContentContainer>
         <View style={styles.emptyContainer}>
           <Ionicons name="notifications-off-outline" size={64} color={theme.border} />
           <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No notifications yet</ThemedText>
@@ -213,7 +215,9 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
             You'll see your latest notifications here
           </ThemedText>
         </View>
+        </ScreenContentContainer>
       ) : (
+        <ScreenContentContainer>
         <FlatList
           data={notifications}
           renderItem={({ item }) => {
@@ -258,6 +262,7 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
             />
           }
         />
+        </ScreenContentContainer>
       )}
     </SafeAreaView>
   );

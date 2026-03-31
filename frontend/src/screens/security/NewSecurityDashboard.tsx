@@ -557,49 +557,104 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
         </SafeAreaView>
       </Modal>
 
-      {/* Visitor Detail Modal */}
-      <Modal visible={showVisitorModal} animationType="slide" transparent={true} onRequestClose={() => setShowVisitorModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContainer, { backgroundColor: theme.surface }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
-              <ThemedText style={[styles.modalTitle, { color: theme.text }]}>Visitor Request</ThemedText>
-              <TouchableOpacity onPress={() => setShowVisitorModal(false)} style={[styles.closeButton, { backgroundColor: theme.surfaceHighlight }]}>
-                <Ionicons name="close" size={24} color={theme.textSecondary} />
-              </TouchableOpacity>
+      {/* Visitor Detail — Full Screen (matching SinglePassDetailsModal style) */}
+      <Modal visible={showVisitorModal} animationType="slide" transparent={false} statusBarTranslucent onRequestClose={() => setShowVisitorModal(false)}>
+        <SafeAreaView style={[detailStyles.screen, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+          <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
+
+          {/* Header */}
+          <View style={[detailStyles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+            <TouchableOpacity onPress={() => setShowVisitorModal(false)} style={[detailStyles.backBtn, { backgroundColor: theme.inputBackground }]}>
+              <Ionicons name="arrow-back" size={22} color={theme.text} />
+            </TouchableOpacity>
+            <ThemedText style={[detailStyles.headerTitle, { color: theme.text }]}>Visitor Request</ThemedText>
+            <View style={[detailStyles.statusPill, { backgroundColor: theme.warning + '22' }]}>
+              <ThemedText style={[detailStyles.statusPillText, { color: theme.warning }]}>ESCALATED</ThemedText>
             </View>
-            {selectedVisitor && (
-              <ScrollView style={styles.modalContent} contentContainerStyle={styles.modalScrollContent}>
-                <View style={[styles.urgentBanner, { backgroundColor: theme.error + '22' }]}>
-                  <Ionicons name="alert-circle" size={20} color={theme.error} />
-                  <ThemedText style={[styles.urgentBannerText, { color: theme.error }]}>Request escalated - No response from {selectedVisitor.personToMeet}</ThemedText>
-                </View>
-                <View style={styles.modalSection}>
-                  <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Visitor Information</ThemedText>
-                  <View style={styles.modalRow}><ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>Name</ThemedText><ThemedText style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.name}</ThemedText></View>
-                  <View style={styles.modalRow}><ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>Email</ThemedText><ThemedText style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.email}</ThemedText></View>
-                  <View style={styles.modalRow}><ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>Phone</ThemedText><ThemedText style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.phone}</ThemedText></View>
-                  <View style={styles.modalRow}><ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>People</ThemedText><ThemedText style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.numberOfPeople}</ThemedText></View>
-                </View>
-                <View style={styles.modalSection}>
-                  <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Visit Details</ThemedText>
-                  <View style={styles.modalRow}><ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>Person to Meet</ThemedText><ThemedText style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.personToMeet}</ThemedText></View>
-                  <View style={styles.modalRow}><ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>Department</ThemedText><ThemedText style={[styles.modalValue, { color: theme.text }]}>{selectedVisitor.department}</ThemedText></View>
-                  <View style={styles.modalRow}><ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>Purpose of Visit</ThemedText><ThemedText style={[styles.modalValue, { color: theme.text, flex: 1, textAlign: 'right' }]}>{selectedVisitor.purpose}</ThemedText></View>
-                </View>
-                <View style={styles.modalActions}>
-                  <TouchableOpacity style={[styles.modalApproveBtn, { backgroundColor: theme.success }]} onPress={() => handleApproveVisitor(selectedVisitor)}>
-                    <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-                    <ThemedText style={styles.modalBtnText}>Approve</ThemedText>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.modalRejectBtn, { backgroundColor: theme.error }]} onPress={() => handleRejectVisitor(selectedVisitor)}>
-                    <Ionicons name="close-circle" size={20} color="#FFF" />
-                    <ThemedText style={styles.modalBtnText}>Reject</ThemedText>
-                  </TouchableOpacity>
-                </View>
-              </ScrollView>
-            )}
           </View>
-        </View>
+
+          {selectedVisitor && (
+            <ScrollView style={detailStyles.scroll} showsVerticalScrollIndicator={false} contentContainerStyle={detailStyles.scrollContent}>
+              {/* Escalation Warning Banner */}
+              <View style={[visitorDetailStyles.urgentBanner, { backgroundColor: theme.error + '15' }]}>
+                <Ionicons name="alert-circle" size={20} color={theme.error} />
+                <ThemedText style={[visitorDetailStyles.urgentBannerText, { color: theme.error }]}>
+                  Request escalated — No response from {selectedVisitor.personToMeet}
+                </ThemedText>
+              </View>
+
+              {/* Profile Row */}
+              <View style={[detailStyles.profileRow, { backgroundColor: theme.surface }]}>
+                <View style={[detailStyles.avatar, { backgroundColor: theme.error }]}>
+                  <ThemedText style={detailStyles.avatarText}>{getInitials(selectedVisitor.name)}</ThemedText>
+                </View>
+                <View style={detailStyles.profileInfo}>
+                  <View style={[visitorDetailStyles.visitorBadge, { backgroundColor: theme.error + '22' }]}>
+                    <ThemedText style={[visitorDetailStyles.visitorBadgeText, { color: theme.error }]}>VISITOR</ThemedText>
+                  </View>
+                  <ThemedText style={[detailStyles.profileName, { color: theme.text }]} numberOfLines={1}>{selectedVisitor.name}</ThemedText>
+                  <ThemedText style={[visitorDetailStyles.profileSub, { color: theme.textSecondary }]} numberOfLines={1}>
+                    {selectedVisitor.email}
+                  </ThemedText>
+                </View>
+              </View>
+
+              {/* Info Grid — People & Phone */}
+              <View style={[detailStyles.infoGrid, { backgroundColor: theme.surface }]}>
+                <View style={detailStyles.infoCell}>
+                  <ThemedText style={[detailStyles.infoLabel, { color: theme.textTertiary }]}>PEOPLE</ThemedText>
+                  <ThemedText style={[detailStyles.infoValue, { color: theme.text }]}>{selectedVisitor.numberOfPeople}</ThemedText>
+                </View>
+                <View style={[detailStyles.infoDivider, { backgroundColor: theme.border }]} />
+                <View style={detailStyles.infoCell}>
+                  <ThemedText style={[detailStyles.infoLabel, { color: theme.textTertiary }]}>PHONE</ThemedText>
+                  <ThemedText style={[detailStyles.infoValue, { color: theme.text }]}>{selectedVisitor.phone}</ThemedText>
+                </View>
+              </View>
+
+              {/* Visit Details */}
+              <View style={[detailStyles.block, { backgroundColor: theme.surface }]}>
+                <ThemedText style={[detailStyles.blockLabel, { color: theme.textTertiary }]}>VISIT DETAILS</ThemedText>
+                <View style={visitorDetailStyles.detailRow}>
+                  <ThemedText style={[visitorDetailStyles.detailLabel, { color: theme.textSecondary }]}>Person to Meet</ThemedText>
+                  <ThemedText style={[visitorDetailStyles.detailValue, { color: theme.text }]}>{selectedVisitor.personToMeet}</ThemedText>
+                </View>
+                <View style={visitorDetailStyles.detailRow}>
+                  <ThemedText style={[visitorDetailStyles.detailLabel, { color: theme.textSecondary }]}>Department</ThemedText>
+                  <ThemedText style={[visitorDetailStyles.detailValue, { color: theme.text }]}>{selectedVisitor.department}</ThemedText>
+                </View>
+                <View style={visitorDetailStyles.detailRow}>
+                  <ThemedText style={[visitorDetailStyles.detailLabel, { color: theme.textSecondary }]}>Purpose of Visit</ThemedText>
+                  <ThemedText style={[visitorDetailStyles.detailValue, { color: theme.text, flex: 1, textAlign: 'right' }]}>{selectedVisitor.purpose}</ThemedText>
+                </View>
+              </View>
+
+              <View style={{ height: 16 }} />
+            </ScrollView>
+          )}
+
+          {/* Footer with Approve/Reject buttons */}
+          {selectedVisitor && (
+            <View style={[detailStyles.footer, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+              <View style={visitorDetailStyles.actionRow}>
+                <TouchableOpacity
+                  style={[visitorDetailStyles.actionBtn, { backgroundColor: theme.success }]}
+                  onPress={() => handleApproveVisitor(selectedVisitor)}
+                >
+                  <Ionicons name="checkmark-circle" size={20} color="#FFF" />
+                  <ThemedText style={visitorDetailStyles.actionBtnText}>Approve</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[visitorDetailStyles.actionBtn, { backgroundColor: theme.error }]}
+                  onPress={() => handleRejectVisitor(selectedVisitor)}
+                >
+                  <Ionicons name="close-circle" size={20} color="#FFF" />
+                  <ThemedText style={visitorDetailStyles.actionBtnText}>Reject</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </SafeAreaView>
       </Modal>
 
       {/* Rejection Reason Modal */}
@@ -800,6 +855,41 @@ const detailStyles = StyleSheet.create({
   footer: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: Platform.OS === 'ios' ? 8 : 14, borderTopWidth: 1 },
   exitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 14, gap: 8 },
   exitBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
+});
+
+const visitorDetailStyles = StyleSheet.create({
+  urgentBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 12,
+    gap: 10,
+  },
+  urgentBannerText: { flex: 1, fontSize: 13, fontWeight: '600', lineHeight: 18 },
+  visitorBadge: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 5, alignSelf: 'flex-start', marginBottom: 3 },
+  visitorBadgeText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  profileSub: { fontSize: 13, marginTop: 3 },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  detailLabel: { fontSize: 14, fontWeight: '500' },
+  detailValue: { fontSize: 14, fontWeight: '700' },
+  actionRow: { flexDirection: 'row', gap: 12 },
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 16,
+    gap: 8,
+  },
+  actionBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
 });
 
 export default NewSecurityDashboard;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -6,389 +6,217 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   const [hoveredCard, setHoveredCard] = useState<string>('');
+  const [scrolled, setScrolled] = useState(false);
 
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      background: '#ffffff',
-      display: 'flex',
-      flexDirection: 'column' as const,
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-    },
-    heroSection: {
-      flex: 1,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '60px 20px',
-      textAlign: 'center' as const,
-      animation: 'fadeIn 1s ease-out',
-    },
-    heroContent: {
-      maxWidth: '900px',
-      width: '100%',
-    },
-    logoContainer: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '16px',
-      marginBottom: '32px',
-      animation: 'slideDown 0.8s ease-out',
-    },
-    logoImage: {
-      width: '180px',
-      height: '180px',
-      objectFit: 'contain' as const,
-      filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.2))',
-    },
-    institutionName: {
-      fontSize: '48px',
-      fontWeight: '900',
-      color: '#2d3748',
-      margin: 0,
-      textShadow: '0 2px 10px rgba(0,0,0,0.1)',
-      letterSpacing: '-1px',
-    },
-    heroTitle: {
-      fontSize: '36px',
-      fontWeight: '700',
-      color: '#2d3748',
-      marginBottom: '20px',
-      textShadow: '0 2px 8px rgba(0,0,0,0.05)',
-      animation: 'slideUp 0.8s ease-out',
-    },
-    heroSubtitle: {
-      fontSize: '20px',
-      color: '#4a5568',
-      marginBottom: '48px',
-      lineHeight: '1.6',
-      maxWidth: '700px',
-      margin: '0 auto 48px',
-      animation: 'slideUp 1s ease-out',
-    },
-    ctaButton: (isHovered: boolean) => ({
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '12px',
-      padding: '18px 48px',
-      fontSize: '18px',
-      fontWeight: '700',
-      color: '#ffffff',
-      background: isHovered ? 'linear-gradient(135deg, #0097A7 0%, #00BCD4 100%)' : 'linear-gradient(135deg, #00BCD4 0%, #0097A7 100%)',
-      border: 'none',
-      borderRadius: '50px',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      boxShadow: isHovered ? '0 15px 40px rgba(0, 188, 212, 0.4)' : '0 10px 30px rgba(0, 188, 212, 0.3)',
-      transform: isHovered ? 'translateY(-4px) scale(1.05)' : 'translateY(0) scale(1)',
-      animation: 'pulse 2s ease-in-out infinite',
-    }),
-    ctaIcon: {
-      fontSize: '24px',
-    },
-    ctaArrow: {
-      fontSize: '24px',
-      transition: 'transform 0.3s ease',
-    },
-    heroStats: {
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: '48px',
-      marginTop: '64px',
-      flexWrap: 'wrap' as const,
-      animation: 'fadeIn 1.2s ease-out',
-    },
-    statItem: {
-      textAlign: 'center' as const,
-    },
-    statNumber: {
-      fontSize: '36px',
-      fontWeight: '800',
-      color: '#00BCD4',
-      marginBottom: '8px',
-      textShadow: '0 2px 10px rgba(0, 188, 212, 0.2)',
-    },
-    statLabel: {
-      fontSize: '14px',
-      color: '#4a5568',
-      fontWeight: '500',
-    },
-    statDivider: {
-      width: '2px',
-      height: '60px',
-      background: '#e2e8f0',
-    },
-    featuresSection: {
-      padding: '80px 20px',
-      background: '#f7fafc',
-    },
-    sectionTitle: {
-      fontSize: '32px',
-      fontWeight: '800',
-      color: '#2d3748',
-      textAlign: 'center' as const,
-      marginBottom: '48px',
-      textShadow: '0 2px 10px rgba(0,0,0,0.05)',
-    },
-    featuresGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-      gap: '32px',
-      maxWidth: '1200px',
-      margin: '0 auto',
-    },
-    featureCard: (isHovered: boolean) => ({
-      background: '#ffffff',
-      borderRadius: '20px',
-      padding: '40px 32px',
-      textAlign: 'center' as const,
-      transition: 'all 0.3s ease',
-      boxShadow: isHovered ? '0 15px 40px rgba(0,0,0,0.15)' : '0 8px 25px rgba(0,0,0,0.08)',
-      transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
-      cursor: 'default',
-      border: isHovered ? '2px solid #00BCD4' : '2px solid transparent',
-    }),
-    featureIcon: {
-      fontSize: '56px',
-      marginBottom: '20px',
-      display: 'block',
-    },
-    featureTitle: {
-      fontSize: '22px',
-      fontWeight: '700',
-      color: '#00BCD4',
-      marginBottom: '12px',
-    },
-    featureDescription: {
-      fontSize: '15px',
-      color: '#6b7280',
-      lineHeight: '1.6',
-      margin: 0,
-    },
-    infoSection: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-      gap: '24px',
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '60px 20px',
-    },
-    infoCard: (isHovered: boolean) => ({
-      background: '#ffffff',
-      borderRadius: '16px',
-      padding: '32px 24px',
-      textAlign: 'center' as const,
-      transition: 'all 0.3s ease',
-      border: isHovered ? '2px solid #00BCD4' : '2px solid #e2e8f0',
-      transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
-      boxShadow: isHovered ? '0 8px 20px rgba(0, 188, 212, 0.15)' : '0 2px 8px rgba(0,0,0,0.05)',
-    }),
-    infoIcon: {
-      fontSize: '48px',
-      marginBottom: '16px',
-      display: 'block',
-    },
-    infoTitle: {
-      fontSize: '20px',
-      fontWeight: '700',
-      color: '#2d3748',
-      marginBottom: '8px',
-    },
-    infoText: {
-      fontSize: '15px',
-      color: '#4a5568',
-      lineHeight: '1.5',
-      margin: 0,
-    },
-    footer: {
-      padding: '32px 20px',
-      textAlign: 'center' as const,
-      background: '#f7fafc',
-      borderTop: '1px solid #e2e8f0',
-    },
-    footerText: {
-      fontSize: '14px',
-      color: '#718096',
-      margin: 0,
-    },
-  };
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
-  const keyframes = `
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+  const css = `
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { overflow-x: hidden; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-12px); }
     }
-    
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(0,188,212,0.4); }
+      70%  { box-shadow: 0 0 0 20px rgba(0,188,212,0); }
+      100% { box-shadow: 0 0 0 0 rgba(0,188,212,0); }
     }
-    
-    @keyframes pulse {
-      0%, 100% {
-        box-shadow: 0 10px 30px rgba(0, 188, 212, 0.3);
-      }
-      50% {
-        box-shadow: 0 15px 40px rgba(0, 188, 212, 0.5);
-      }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(0,188,212,0.12); border: 1px solid rgba(0,188,212,0.3);
+      color: #00838F; font-size: 13px; font-weight: 600; letter-spacing: 0.5px;
+      padding: 6px 16px; border-radius: 50px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-title {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 900; line-height: 1.1; letter-spacing: -2px; color: #0f172a;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, #00BCD4 0%, #0097A7 50%, #006064 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 20px); color: #475569; line-height: 1.7;
+      max-width: 600px; margin: 0 auto;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 40px; font-size: 17px; font-weight: 700;
+      color: #fff; border: none; border-radius: 50px; cursor: pointer;
+      background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%);
+      box-shadow: 0 8px 32px rgba(0,188,212,0.35);
+      transition: all 0.25s ease;
+      animation: fadeUp 0.7s 0.3s ease both, pulse-ring 2.5s 1s ease infinite;
+    }
+    .cta-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 16px 48px rgba(0,188,212,0.45); }
+    .stat-num {
+      font-size: 36px; font-weight: 800;
+      background: linear-gradient(135deg, #00BCD4, #0097A7);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .feature-card {
+      background: #fff; border-radius: 20px; padding: 36px 28px;
+      text-align: center; transition: all 0.3s ease; border: 2px solid #e2e8f0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+    .feature-card:hover { transform: translateY(-8px); border-color: #00BCD4; box-shadow: 0 16px 48px rgba(0,188,212,0.15); }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, #00BCD4, #0097A7);
+      color: #fff; font-size: 18px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+    }
+    .info-card {
+      background: #fff; border-radius: 16px; padding: 28px 20px;
+      text-align: center; transition: all 0.3s ease; border: 2px solid #e2e8f0;
+    }
+    .info-card:hover { border-color: #00BCD4; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,188,212,0.12); }
+    .nav-link { color: #475569; font-size: 15px; font-weight: 500; text-decoration: none; transition: color 0.2s; }
+    .nav-link:hover { color: #00BCD4; }
+    @media (max-width: 640px) {
+      .hero-stats { flex-direction: column !important; gap: 24px !important; }
+      .stat-divider { display: none !important; }
     }
   `;
 
   return (
-    <div style={styles.container}>
-      <style>{keyframes}</style>
-      
-      {/* Hero Section */}
-      <div style={styles.heroSection}>
-        <div style={styles.heroContent}>
-          <div style={styles.logoContainer}>
-            <img 
-              src="/logo.png" 
-              alt="RIT Gate Logo" 
-              style={styles.logoImage}
-            />
-            <h1 style={styles.institutionName}>RIT Gate</h1>
+    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', overflowX: 'hidden', background: '#f8fafc' }}>
+      <style>{css}</style>
+
+      {/* Navbar */}
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        background: scrolled ? 'rgba(255,255,255,0.92)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(12px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(0,0,0,0.06)' : 'none',
+        transition: 'all 0.3s ease', padding: '16px 40px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img src="/logo.png" alt="RIT Gate" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+          <span style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>RIT Gate</span>
+        </div>
+        <div style={{ display: 'flex', gap: 32 }}>
+          <a href="#how-it-works" className="nav-link">How it works</a>
+          <a href="#features" className="nav-link">Features</a>
+        </div>
+        <button className="cta-btn" style={{ padding: '10px 24px', fontSize: 14, animation: 'none' }} onClick={onGetStarted}>
+          Register Visit
+        </button>
+      </nav>
+
+      {/* Hero */}
+      <section style={{
+        minHeight: '100vh', background: 'linear-gradient(160deg, #f0fdff 0%, #e0f7fa 40%, #f8fafc 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '120px 24px 80px', textAlign: 'center', position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,188,212,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '10%', right: '5%', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,150,136,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 800, width: '100%', position: 'relative' }}>
+          <div className="hero-badge"><span>🏛️</span> Rajalakshmi Institute of Technology</div>
+          <div style={{ marginTop: 24, marginBottom: 24 }}>
+            <img src="/logo.png" alt="RIT Gate" style={{ width: 100, height: 100, objectFit: 'contain', animation: 'float 4s ease-in-out infinite', filter: 'drop-shadow(0 8px 24px rgba(0,188,212,0.25))' }} />
           </div>
-          
-          <h2 style={styles.heroTitle}>Visitor Management System</h2>
-          <p style={styles.heroSubtitle}>
-            Welcome to our campus. Register your visit in seconds and receive your digital pass instantly.
-          </p>
-          
-          <button 
-            style={styles.ctaButton(hoveredCard === 'cta')}
-            onClick={onGetStarted}
-            onMouseEnter={() => setHoveredCard('cta')}
-            onMouseLeave={() => setHoveredCard('')}
-          >
-            <span style={styles.ctaIcon}>✎</span>
-            Register Your Visit
-            <span style={{
-              ...styles.ctaArrow,
-              transform: hoveredCard === 'cta' ? 'translateX(4px)' : 'translateX(0)',
-            }}>→</span>
+          <h1 className="hero-title" style={{ marginBottom: 20 }}>Smart Visitor<br /><span>Management System</span></h1>
+          <p className="hero-sub" style={{ marginBottom: 40 }}>Register your campus visit in seconds. Get instant digital approval and a QR pass — no paperwork, no waiting.</p>
+          <button className="cta-btn" onClick={onGetStarted}><span style={{ fontSize: 20 }}>✎</span>Register Your Visit<span style={{ fontSize: 20 }}>→</span></button>
+          <div className="hero-stats" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 48, marginTop: 64, flexWrap: 'wrap', animation: 'fadeIn 1s 0.5s ease both' }}>
+            {[{ num: '5000+', label: 'Visitors Registered' }, { num: '< 2 min', label: 'Avg Registration Time' }, { num: '24/7', label: 'System Availability' }].map((s, i) => (
+              <React.Fragment key={s.label}>
+                {i > 0 && <div className="stat-divider" style={{ width: 1, height: 48, background: '#cbd5e1' }} />}
+                <div style={{ textAlign: 'center' }}>
+                  <div className="stat-num">{s.num}</div>
+                  <div style={{ fontSize: 13, color: '#64748b', fontWeight: 500, marginTop: 4 }}>{s.label}</div>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section id="how-it-works" style={{ padding: '80px 24px', background: '#fff' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <div style={{ display: 'inline-block', background: 'rgba(0,188,212,0.08)', color: '#0097A7', fontSize: 13, fontWeight: 700, letterSpacing: 1, padding: '6px 16px', borderRadius: 50, marginBottom: 16 }}>HOW IT WORKS</div>
+            <h2 style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 800, color: '#0f172a', letterSpacing: -1 }}>Three simple steps</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 28 }}>
+            {[
+              { icon: '📝', title: 'Fill the Form', desc: 'Provide your basic details and purpose of visit in our simple, guided form.' },
+              { icon: '⚡', title: 'Instant Approval', desc: "Your request is sent to the relevant staff. Get notified the moment it's approved." },
+              { icon: '📱', title: 'Show & Enter', desc: 'Present your QR code at the gate for quick, contactless, secure entry.' },
+            ].map((f, i) => (
+              <div key={f.title} className="feature-card" onMouseEnter={() => setHoveredCard(`step${i}`)} onMouseLeave={() => setHoveredCard('')}>
+                <div className="step-num">{i + 1}</div>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>{f.icon}</div>
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>{f.title}</h3>
+                <p style={{ fontSize: 15, color: '#64748b', lineHeight: 1.6 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section id="features" style={{ padding: '80px 24px', background: 'linear-gradient(160deg, #f0fdff 0%, #e0f7fa 60%, #f8fafc 100%)' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 56 }}>
+            <div style={{ display: 'inline-block', background: 'rgba(0,188,212,0.08)', color: '#0097A7', fontSize: 13, fontWeight: 700, letterSpacing: 1, padding: '6px 16px', borderRadius: 50, marginBottom: 16 }}>FEATURES</div>
+            <h2 style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 800, color: '#0f172a', letterSpacing: -1 }}>Why choose RIT Gate?</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
+            {[
+              { icon: '🔒', title: 'Secure & Private', desc: 'Your information is encrypted and stored securely on our servers.' },
+              { icon: '⏱️', title: 'Quick Process', desc: 'Complete your registration in under 2 minutes from any device.' },
+              { icon: '📲', title: 'Digital QR Pass', desc: 'Receive a unique QR code for contactless, paperless gate entry.' },
+              { icon: '🔔', title: 'Real-time Updates', desc: 'Get instant notifications when your visit request is approved or rejected.' },
+              { icon: '🌐', title: 'Works Everywhere', desc: 'Access from any browser — mobile, tablet, or desktop.' },
+              { icon: '📞', title: '24/7 Support', desc: 'Security personnel are always available to assist you at the gate.' },
+            ].map((f) => (
+              <div key={f.title} className="info-card">
+                <div style={{ fontSize: 40, marginBottom: 14 }}>{f.icon}</div>
+                <h4 style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{f.title}</h4>
+                <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6 }}>{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Banner */}
+      <section style={{ padding: '80px 24px', background: 'linear-gradient(135deg, #006064 0%, #00838F 50%, #00BCD4 100%)', textAlign: 'center' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto' }}>
+          <h2 style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 800, color: '#fff', marginBottom: 16, letterSpacing: -1 }}>Ready to visit our campus?</h2>
+          <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.85)', marginBottom: 36, lineHeight: 1.6 }}>Register now and get your digital pass in minutes.</p>
+          <button className="cta-btn" style={{ background: '#fff', color: '#0097A7', boxShadow: '0 8px 32px rgba(0,0,0,0.2)', animation: 'none' }} onClick={onGetStarted}>
+            <span style={{ fontSize: 20 }}>✎</span>Register Your Visit<span style={{ fontSize: 20 }}>→</span>
           </button>
-          
-          <div style={styles.heroStats}>
-            <div style={styles.statItem}>
-              <div style={styles.statNumber}>5000+</div>
-              <div style={styles.statLabel}>Visitors Registered</div>
-            </div>
-            <div style={styles.statDivider}></div>
-            <div style={styles.statItem}>
-              <div style={styles.statNumber}>&lt; 2 min</div>
-              <div style={styles.statLabel}>Average Registration Time</div>
-            </div>
-            <div style={styles.statDivider}></div>
-            <div style={styles.statItem}>
-              <div style={styles.statNumber}>24/7</div>
-              <div style={styles.statLabel}>System Availability</div>
-            </div>
-          </div>
         </div>
-      </div>
-      
-      {/* Features Section */}
-      <div style={styles.featuresSection}>
-        <h3 style={styles.sectionTitle}>How It Works</h3>
-        <div style={styles.featuresGrid}>
-          <div 
-            style={styles.featureCard(hoveredCard === 'feature1')}
-            onMouseEnter={() => setHoveredCard('feature1')}
-            onMouseLeave={() => setHoveredCard('')}
-          >
-            <span style={styles.featureIcon}>📝</span>
-            <h4 style={styles.featureTitle}>1. Fill the Form</h4>
-            <p style={styles.featureDescription}>
-              Provide your basic details and purpose of visit in our simple form
-            </p>
-          </div>
-          
-          <div 
-            style={styles.featureCard(hoveredCard === 'feature2')}
-            onMouseEnter={() => setHoveredCard('feature2')}
-            onMouseLeave={() => setHoveredCard('')}
-          >
-            <span style={styles.featureIcon}>⚡</span>
-            <h4 style={styles.featureTitle}>2. Instant Approval</h4>
-            <p style={styles.featureDescription}>
-              Get immediate confirmation and your unique visitor QR code
-            </p>
-          </div>
-          
-          <div 
-            style={styles.featureCard(hoveredCard === 'feature3')}
-            onMouseEnter={() => setHoveredCard('feature3')}
-            onMouseLeave={() => setHoveredCard('')}
-          >
-            <span style={styles.featureIcon}>📱</span>
-            <h4 style={styles.featureTitle}>3. Show & Enter</h4>
-            <p style={styles.featureDescription}>
-              Present your QR code at the gate for quick and secure entry
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Info Section */}
-      <div style={styles.infoSection}>
-        <div 
-          style={styles.infoCard(hoveredCard === 'info1')}
-          onMouseEnter={() => setHoveredCard('info1')}
-          onMouseLeave={() => setHoveredCard('')}
-        >
-          <span style={styles.infoIcon}>🔒</span>
-          <h4 style={styles.infoTitle}>Secure & Private</h4>
-          <p style={styles.infoText}>Your information is encrypted and stored securely</p>
-        </div>
-        
-        <div 
-          style={styles.infoCard(hoveredCard === 'info2')}
-          onMouseEnter={() => setHoveredCard('info2')}
-          onMouseLeave={() => setHoveredCard('')}
-        >
-          <span style={styles.infoIcon}>⏱️</span>
-          <h4 style={styles.infoTitle}>Quick Process</h4>
-          <p style={styles.infoText}>Complete registration in under 2 minutes</p>
-        </div>
-        
-        <div 
-          style={styles.infoCard(hoveredCard === 'info3')}
-          onMouseEnter={() => setHoveredCard('info3')}
-          onMouseLeave={() => setHoveredCard('')}
-        >
-          <span style={styles.infoIcon}>📞</span>
-          <h4 style={styles.infoTitle}>24/7 Support</h4>
-          <p style={styles.infoText}>Need help? Contact security at the gate</p>
-        </div>
-      </div>
-      
+      </section>
+
       {/* Footer */}
-      <div style={styles.footer}>
-        <p style={styles.footerText}>
-          © 2026 RIT Gate. All rights reserved. | Powered by Campus Security
-        </p>
-      </div>
+      <footer style={{ padding: '32px 24px', background: '#0f172a', textAlign: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 12 }}>
+          <img src="/logo.png" alt="RIT Gate" style={{ width: 28, height: 28, objectFit: 'contain', filter: 'brightness(0) invert(1) opacity(0.7)' }} />
+          <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 15, fontWeight: 600 }}>RIT Gate</span>
+        </div>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>© 2026 Rajalakshmi Institute of Technology. All rights reserved.</p>
+      </footer>
     </div>
   );
 };

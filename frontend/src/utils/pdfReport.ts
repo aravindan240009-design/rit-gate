@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import { generatePDF } from 'react-native-html-to-pdf';
+import RNFS from 'react-native-fs';
 
 type ReportColumn = { key: string; label: string };
 type ReportRow = Record<string, any>;
@@ -124,5 +125,24 @@ export async function exportStyledPdfReport(params: {
     fileName: stampedName.replace(/\.pdf$/i, ''),
     directory: 'Documents',
   });
-  return pdf.filePath ? `file://${pdf.filePath}` : '';
+
+  if (!pdf.filePath) return '';
+
+  // Copy to public Downloads directory so the file appears in the device's Downloads app
+  if (Platform.OS === 'android') {
+    try {
+      const downloadsDir = RNFS.DownloadDirectoryPath;
+      const destPath = `${downloadsDir}/${stampedName}`;
+      await RNFS.copyFile(pdf.filePath, destPath);
+      // Trigger media scan so file appears immediately in Downloads app
+      await RNFS.scanFile(destPath);
+      return destPath;
+    } catch (copyError) {
+      // Fallback to internal path if copy fails
+      console.warn('Failed to copy PDF to Downloads:', copyError);
+      return `file://${pdf.filePath}`;
+    }
+  }
+
+  return `file://${pdf.filePath}`;
 }

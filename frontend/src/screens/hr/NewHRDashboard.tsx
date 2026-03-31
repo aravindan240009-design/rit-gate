@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Image,
   Modal,
-  Alert
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -70,6 +69,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   const { unreadCount, loadNotifications } = useNotifications();
   const { profileImage } = useProfile();
   const { lock, unlock } = useActionLock();
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const [stats, setStats] = useState({
     pending: 0,
@@ -170,6 +170,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   };
 
   const exportExitsPdf = async (rows: any[]) => {
+    setIsDownloading(true);
     try {
       const savedPath = await exportStyledPdfReport({
         title: 'Staff & Student Exit Report',
@@ -193,14 +194,15 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           exitTime: formatDateShort(r.exitTime),
         })),
       });
-
-      if (savedPath) {
-        Alert.alert('PDF downloaded', savedPath);
-      } else {
-        Alert.alert('PDF downloaded', 'Saved to your device storage.');
-      }
+      setModalTitle('Download Complete');
+      setModalMessage('PDF report has been saved to your Downloads folder.');
+      setShowSuccessModal(true);
     } catch (e: any) {
-      Alert.alert('PDF download failed', e?.message || 'Failed to download PDF.');
+      setModalTitle('Download Failed');
+      setModalMessage(e?.message || 'Failed to download PDF.');
+      setShowErrorModal(true);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -664,6 +666,16 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           <View style={styles.processingBox}>
             <ActivityIndicator size="large" color={theme.primary} />
             <ThemedText style={[styles.processingText, { color: theme.text }]}>Processing...</ThemedText>
+          </View>
+        </View>
+      )}
+
+      {/* Downloading overlay */}
+      {isDownloading && (
+        <View style={styles.processingOverlay} pointerEvents="box-only">
+          <View style={styles.processingBox}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <ThemedText style={[styles.processingText, { color: theme.text }]}>Generating PDF...</ThemedText>
           </View>
         </View>
       )}

@@ -13,6 +13,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { Student } from '../../types';
 import { apiService } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 
 interface StudentHistoryScreenProps {
@@ -148,6 +149,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>History</ThemedText>
       </View>
+      <ScreenContentContainer>
       <ScrollView
         style={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
@@ -183,6 +185,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
           ))
         )}
       </ScrollView>
+      </ScreenContentContainer>
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
           <Ionicons name="home-outline" size={24} color={theme.textTertiary} />
