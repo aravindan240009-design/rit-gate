@@ -45,11 +45,7 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
 }) => {
   const { theme } = useTheme();
 
-  const handleCopyManualCode = () => {
-    if (!manualCode) return;
-    Clipboard.setString(manualCode);
-    if (Platform.OS === 'android') ToastAndroid.show('Copied to clipboard', ToastAndroid.SHORT);
-  };
+
   return (
     <Modal
       visible={visible}
@@ -123,17 +119,6 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
             </View>
 
             <View style={styles.actions}>
-              <TouchableOpacity
-                style={[
-                  styles.actionBtn,
-                  { backgroundColor: theme.surfaceHighlight, opacity: manualCode ? 1 : 0.5 },
-                ]}
-                onPress={handleCopyManualCode}
-                disabled={!manualCode}
-              >
-                <Ionicons name="copy-outline" size={18} color={theme.text} />
-                <ThemedText style={[styles.actionText, { color: theme.text }]}>Copy code</ThemedText>
-              </TouchableOpacity>
             </View>
           </ScrollView>
         </View>
@@ -278,24 +263,6 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     gap: 10,
-  },
-  actionBtn: {
-    flex: 1,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionTextPrimary: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '800',
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '800',
   },
 });
 

@@ -40,11 +40,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
   // - Single: SF/ST/VG|staffCode/studentId/null|token
   const isQRString = qrCodeData && !isBase64Image;
 
-  const handleCopyManualCode = () => {
-    if (!manualCode) return;
-    Clipboard.setString(manualCode);
-    if (Platform.OS === 'android') ToastAndroid.show('Copied to clipboard', ToastAndroid.SHORT);
-  };
+
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
@@ -173,18 +169,6 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[
-              styles.copyButton,
-              { backgroundColor: theme.surfaceHighlight, opacity: manualCode ? 1 : 0.5 },
-            ]}
-            onPress={handleCopyManualCode}
-            disabled={!manualCode}
-          >
-            <Ionicons name="copy-outline" size={20} color={theme.text} />
-            <ThemedText style={[styles.copyButtonText, { color: theme.text }]}>Copy code</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={[styles.closeButtonBottom, { backgroundColor: theme.background }]}
             onPress={onClose}
           >
@@ -293,31 +277,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     gap: 12,
-  },
-  shareButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  shareButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  copyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  copyButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
   },
   closeButtonBottom: {
     alignItems: 'center',
