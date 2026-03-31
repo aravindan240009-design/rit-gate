@@ -19,6 +19,7 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import { useTheme } from '../../context/ThemeContext';
 
 
 interface ModernQRScannerScreenProps {
@@ -28,6 +29,7 @@ interface ModernQRScannerScreenProps {
 }
 
 const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security, onBack, onNavigate }) => {
+  const { theme } = useTheme();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -214,15 +216,15 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>QR/Barcode Scanner</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>QR Scanner</ThemedText>
         <View style={styles.headerRight} />
       </View>
 
@@ -230,34 +232,34 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         <VerticalScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
           {/* Scanner Type Selection */}
           <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Select Scan Type</ThemedText>
+            <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Select Scan Type</ThemedText>
             
             <TouchableOpacity
-              style={styles.scanTypeCard}
+              style={[styles.scanTypeCard, { backgroundColor: theme.surface }]}
               onPress={() => startScanning('ENTRY')}
             >
-              <View style={[styles.scanTypeIcon, { backgroundColor: '#DBEAFE' }]}>
-                <Ionicons name="log-in" size={32} color="#3B82F6" />
+              <View style={[styles.scanTypeIcon, { backgroundColor: theme.success }]}>
+                <Ionicons name="log-in" size={32} color="#FFFFFF" />
               </View>
               <View style={styles.scanTypeInfo}>
-                <ThemedText style={styles.scanTypeTitle}>Entry Scan</ThemedText>
-                <ThemedText style={styles.scanTypeDesc}>Scan QR code or barcode for campus entry</ThemedText>
+                <ThemedText style={[styles.scanTypeTitle, { color: theme.text }]}>Entry Scan</ThemedText>
+                <ThemedText style={[styles.scanTypeDesc, { color: theme.textSecondary }]}>Scan QR code or barcode for campus entry</ThemedText>
               </View>
-              <Ionicons name="chevron-forward" size={24} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={24} color={theme.textTertiary} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.scanTypeCard}
+              style={[styles.scanTypeCard, { backgroundColor: theme.surface }]}
               onPress={() => startScanning('EXIT')}
             >
-              <View style={[styles.scanTypeIcon, { backgroundColor: '#FEE2E2' }]}>
-                <Ionicons name="log-out" size={32} color="#EF4444" />
+              <View style={[styles.scanTypeIcon, { backgroundColor: theme.error }]}>
+                <Ionicons name="log-out" size={32} color="#FFFFFF" />
               </View>
               <View style={styles.scanTypeInfo}>
-                <ThemedText style={styles.scanTypeTitle}>Exit Scan</ThemedText>
-                <ThemedText style={styles.scanTypeDesc}>Scan QR code or barcode for campus exit</ThemedText>
+                <ThemedText style={[styles.scanTypeTitle, { color: theme.text }]}>Exit Scan</ThemedText>
+                <ThemedText style={[styles.scanTypeDesc, { color: theme.textSecondary }]}>Scan QR code or barcode for campus exit</ThemedText>
               </View>
-              <Ionicons name="chevron-forward" size={24} color="#9CA3AF" />
+              <Ionicons name="chevron-forward" size={24} color={theme.textTertiary} />
             </TouchableOpacity>
           </View>
 

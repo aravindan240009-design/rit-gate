@@ -18,6 +18,7 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import { useTheme } from '../../context/ThemeContext';
 
 interface ModernVehicleRegistrationScreenProps {
   security: SecurityPersonnel;
@@ -39,6 +40,7 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
   onBack,
   onNavigate,
 }) => {
+  const { theme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Vehicle[]>([]);
@@ -166,84 +168,85 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Vehicle Registration</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Vehicle Registration</ThemedText>
         <View style={styles.headerRight} />
       </View>
 
       <VerticalScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         {/* Search Section */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Search Vehicle</ThemedText>
-          <View style={styles.searchCard}>
-            <View style={styles.searchInputContainer}>
-              <Ionicons name="search" size={20} color="#9CA3AF" />
+          <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Search Vehicle</ThemedText>
+          <View style={[styles.searchCard, { backgroundColor: theme.surface }]}>
+            <View style={[styles.searchInputContainer, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+              <Ionicons name="search" size={20} color={theme.textTertiary} />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: theme.text }]}
                 placeholder="Enter license plate number"
+                placeholderTextColor={theme.textTertiary}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoCapitalize="characters"
               />
             </View>
             <TouchableOpacity
-              style={styles.searchButton}
+              style={[styles.searchButton, { backgroundColor: theme.primary }]}
               onPress={handleSearch}
               disabled={loading}
             >
               {loading ? (
-                <ActivityIndicator color="#FFF" size="small" />
+                <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <ThemedText style={styles.searchButtonText}>Search</ThemedText>
               )}
             </TouchableOpacity>
           </View>
-
-          {searchResults.length > 0 && (
-            <View style={styles.resultsContainer}>
-              <ThemedText style={styles.resultsHeader}>
-                Found {searchResults.length} vehicle{searchResults.length > 1 ? 's' : ''}. Tap to load details.
-              </ThemedText>
-              {searchResults.map((vehicle) => (
-                <TouchableOpacity
-                  key={vehicle.id}
-                  style={styles.vehicleCard}
-                  onPress={() => {
-                    fillFormWithVehicleData(vehicle);
-                    setSuccessMessage('Vehicle details have been loaded into the form. You can update the information if needed.');
-                    setShowSuccessModal(true);
-                  }}
-                >
-                  <View style={styles.vehicleIcon}>
-                    <Ionicons name={getVehicleIcon(vehicle.vehicleType) as any} size={24} color="#00BCD4" />
-                  </View>
-                  <View style={styles.vehicleInfo}>
-                    <ThemedText style={styles.vehiclePlate}>{vehicle.licensePlate}</ThemedText>
-                    <ThemedText style={styles.vehicleType}>{vehicle.vehicleType}</ThemedText>
-                    <ThemedText style={styles.vehicleOwner}>{vehicle.ownerName}</ThemedText>
-                  </View>
-                  <Ionicons name="arrow-down-circle" size={20} color="#00BCD4" />
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
         </View>
+
+        {searchResults.length > 0 && (
+          <View style={styles.resultsContainer}>
+            <ThemedText style={[styles.resultsHeader, { color: theme.textSecondary }]}>
+              Found {searchResults.length} vehicle{searchResults.length > 1 ? 's' : ''}. Tap to load details.
+            </ThemedText>
+            {searchResults.map((vehicle) => (
+              <TouchableOpacity
+                key={vehicle.id}
+                style={[styles.vehicleCard, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}
+                onPress={() => {
+                  fillFormWithVehicleData(vehicle);
+                  setSuccessMessage('Vehicle details have been loaded into the form. You can update the information if needed.');
+                  setShowSuccessModal(true);
+                }}
+              >
+                <View style={[styles.vehicleIcon, { backgroundColor: theme.primary + '20' }]}>
+                  <Ionicons name={getVehicleIcon(vehicle.vehicleType) as any} size={24} color={theme.primary} />
+                </View>
+                <View style={styles.vehicleInfo}>
+                  <ThemedText style={[styles.vehiclePlate, { color: theme.text }]}>{vehicle.licensePlate}</ThemedText>
+                  <ThemedText style={[styles.vehicleType, { color: theme.textSecondary }]}>{vehicle.vehicleType}</ThemedText>
+                  <ThemedText style={[styles.vehicleOwner, { color: theme.textSecondary }]}>{vehicle.ownerName}</ThemedText>
+                </View>
+                <Ionicons name="arrow-down-circle" size={20} color={theme.primary} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Registration Form */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>
+          <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>
             {searchResults.length > 0 ? 'Update Vehicle Details' : 'Register New Vehicle'}
           </ThemedText>
           
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Owner Type *</ThemedText>
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Owner Type *</ThemedText>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ownerTypeScroll}>
               <View style={styles.ownerTypeChips}>
                 {ownerTypes.map((type) => (
@@ -251,19 +254,22 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
                     key={type.id}
                     style={[
                       styles.ownerTypeChip,
-                      ownerType === type.id && styles.ownerTypeChipActive
+                      { backgroundColor: theme.surfaceHighlight, borderColor: theme.border },
+                      ownerType === type.id && { backgroundColor: theme.primary, borderColor: theme.primary }
                     ]}
                     onPress={() => setOwnerType(type.id as any)}
                   >
-                    <Ionicons
-                      name={type.icon as any}
-                      size={18}
-                      color={ownerType === type.id ? '#FFF' : '#6B7280'}
+                    <Ionicons 
+                      name={type.icon as any} 
+                      size={18} 
+                      color={ownerType === type.id ? '#FFFFFF' : theme.textSecondary} 
                     />
-                    <ThemedText style={[
-                      styles.ownerTypeChipText,
-                      ownerType === type.id && styles.ownerTypeChipTextActive
-                    ]}>
+                    <ThemedText 
+                      style={[
+                        styles.ownerTypeChipText, 
+                        { color: ownerType === type.id ? '#FFFFFF' : theme.textSecondary }
+                      ]}
+                    >
                       {type.label}
                     </ThemedText>
                   </TouchableOpacity>
@@ -273,12 +279,13 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>License Plate *</ThemedText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="card-outline" size={20} color="#9CA3AF" />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>License Plate *</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+              <Ionicons name="card-outline" size={20} color={theme.textTertiary} />
               <TextInput
-                style={styles.input}
-                placeholder="e.g., KA01AB1234"
+                style={[styles.input, { color: theme.text }]}
+                placeholder="ABC 1234"
+                placeholderTextColor={theme.textTertiary}
                 value={licensePlate}
                 onChangeText={setLicensePlate}
                 autoCapitalize="characters"
@@ -287,26 +294,29 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Vehicle Type *</ThemedText>
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Vehicle Type *</ThemedText>
             <View style={styles.typeChips}>
               {vehicleTypes.map((type) => (
                 <TouchableOpacity
                   key={type.id}
                   style={[
                     styles.typeChip,
-                    vehicleType === type.id && styles.typeChipActive
+                    { backgroundColor: theme.surfaceHighlight, borderColor: theme.border },
+                    vehicleType === type.id && { backgroundColor: theme.primary, borderColor: theme.primary }
                   ]}
                   onPress={() => setVehicleType(type.id as any)}
                 >
-                  <Ionicons
-                    name={type.icon as any}
-                    size={20}
-                    color={vehicleType === type.id ? '#FFF' : '#6B7280'}
+                  <Ionicons 
+                    name={type.icon as any} 
+                    size={20} 
+                    color={vehicleType === type.id ? '#FFFFFF' : theme.textSecondary} 
                   />
-                  <ThemedText style={[
-                    styles.typeChipText,
-                    vehicleType === type.id && styles.typeChipTextActive
-                  ]}>
+                  <ThemedText 
+                    style={[
+                      styles.typeChipText, 
+                      { color: vehicleType === type.id ? '#FFFFFF' : theme.textSecondary }
+                    ]}
+                  >
                     {type.label}
                   </ThemedText>
                 </TouchableOpacity>
@@ -315,12 +325,13 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Vehicle Model</ThemedText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="car-sport-outline" size={20} color="#9CA3AF" />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Vehicle Model</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+              <Ionicons name="car-sport-outline" size={20} color={theme.textTertiary} />
               <TextInput
-                style={styles.input}
-                placeholder="e.g., Honda Activa, Maruti Swift"
+                style={[styles.input, { color: theme.text }]}
+                placeholder="e.g., Maruti Swift"
+                placeholderTextColor={theme.textTertiary}
                 value={vehicleModel}
                 onChangeText={setVehicleModel}
               />
@@ -328,12 +339,13 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Vehicle Color</ThemedText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="color-palette-outline" size={20} color="#9CA3AF" />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Vehicle Color</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+              <Ionicons name="color-palette-outline" size={20} color={theme.textTertiary} />
               <TextInput
-                style={styles.input}
-                placeholder="e.g., Red, Blue, Black"
+                style={[styles.input, { color: theme.text }]}
+                placeholder="e.g., Red"
+                placeholderTextColor={theme.textTertiary}
                 value={vehicleColor}
                 onChangeText={setVehicleColor}
               />
@@ -341,12 +353,13 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Owner Name *</ThemedText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={20} color="#9CA3AF" />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Owner Name *</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+              <Ionicons name="person-outline" size={20} color={theme.textTertiary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="Enter owner name"
+                placeholderTextColor={theme.textTertiary}
                 value={ownerName}
                 onChangeText={setOwnerName}
               />
@@ -354,12 +367,13 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Owner Phone *</ThemedText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="call-outline" size={20} color="#9CA3AF" />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Owner Phone *</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+              <Ionicons name="call-outline" size={20} color={theme.textTertiary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="Enter phone number"
+                placeholderTextColor={theme.textTertiary}
                 value={ownerPhone}
                 onChangeText={setOwnerPhone}
                 keyboardType="phone-pad"
@@ -368,14 +382,21 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
           </View>
 
           <TouchableOpacity
-            style={styles.registerButton}
-            onPress={handleRegister}
-          >
-            <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-            <ThemedText style={styles.registerButtonText}>
-              {searchResults.length > 0 ? 'Update Vehicle' : 'Register Vehicle'}
-            </ThemedText>
-          </TouchableOpacity>
+          style={[styles.registerButton, { backgroundColor: loading ? theme.textTertiary : theme.primary }]}
+          onPress={handleRegister}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <>
+              <Ionicons name="checkmark-circle-outline" size={22} color="#FFFFFF" />
+              <ThemedText style={styles.registerButtonText}>
+                {searchResults.length > 0 ? 'Update Vehicle' : 'Register Vehicle'}
+              </ThemedText>
+            </>
+          )}
+        </TouchableOpacity>
         </View>
 
         {/* Recent Vehicles */}

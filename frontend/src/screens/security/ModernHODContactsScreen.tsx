@@ -18,6 +18,7 @@ import SecurityBottomNav from '../../components/SecurityBottomNav';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import { useTheme } from '../../context/ThemeContext';
 
 interface HODContactsScreenProps {
   security: SecurityPersonnel;
@@ -26,6 +27,7 @@ interface HODContactsScreenProps {
 }
 
 export default function HODContactsScreen({ security, onBack, onNavigate }: HODContactsScreenProps) {
+  const { theme } = useTheme();
   const [hods, setHods] = useState<HODContact[]>([]);
   const [filteredHods, setFilteredHods] = useState<HODContact[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,37 +147,37 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>HOD CONTACT{'\n'}DIRECTORY</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>HOD Contacts</ThemedText>
         <View style={styles.headerRight} />
       </View>
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
+      <View style={[styles.searchContainer, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+        <Ionicons name="search" size={20} color={theme.textTertiary} style={styles.searchIcon} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: theme.text }]}
           placeholder="Search by HOD name or department"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={theme.textTertiary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
-            <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+            <Ionicons name="close-circle" size={20} color={theme.textTertiary} />
           </TouchableOpacity>
         )}
       </View>
 
       {/* Department Filter */}
-      <View style={styles.filterContainer}>
+      <View style={[styles.filterContainer, { backgroundColor: theme.background }]}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -186,7 +188,8 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
               key={dept}
               style={[
                 styles.filterChip,
-                selectedDepartment === dept && styles.filterChipActive,
+                { backgroundColor: theme.surface, borderColor: theme.border },
+                selectedDepartment === dept && { backgroundColor: theme.primary, borderColor: theme.primary },
               ]}
               onPress={() => setSelectedDepartment(dept)}
               activeOpacity={0.7}
@@ -194,7 +197,8 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
               <ThemedText
                 style={[
                   styles.filterChipText,
-                  selectedDepartment === dept && styles.filterChipTextActive,
+                  { color: theme.textSecondary },
+                  selectedDepartment === dept && { color: '#FFFFFF' },
                 ]}
               >
                 {dept}
@@ -209,25 +213,25 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
         style={styles.listContainer}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        refreshControl={
+            refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={['#00BCD4']}
-            tintColor="#00BCD4"
+            colors={[theme.primary]}
+            tintColor={theme.primary}
           />
         }
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#00BCD4" />
-            <ThemedText style={styles.loadingText}>Loading HOD contacts...</ThemedText>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <ThemedText style={[styles.loadingText, { color: theme.textSecondary }]}>Loading HOD contacts...</ThemedText>
           </View>
         ) : filteredHods.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={64} color="#D1D5DB" />
-            <ThemedText style={styles.emptyStateText}>No HOD contact records found</ThemedText>
-            <ThemedText style={styles.emptyStateSubtext}>
+            <Ionicons name="people-outline" size={64} color={theme.textTertiary} />
+            <ThemedText style={[styles.emptyStateText, { color: theme.text }]}>No HOD contact records found</ThemedText>
+            <ThemedText style={[styles.emptyStateSubtext, { color: theme.textTertiary }]}>
               {searchQuery || selectedDepartment !== 'ALL'
                 ? 'Try adjusting your search or filter'
                 : 'No HOD contacts available'}
@@ -235,43 +239,43 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
           </View>
         ) : (
           filteredHods.map(hod => (
-            <View key={hod.id} style={styles.hodCard}>
+            <View key={hod.id} style={[styles.hodCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               {/* Avatar and Info */}
               <View style={styles.hodHeader}>
-                <View style={styles.avatar}>
-                  <ThemedText style={styles.avatarText}>{getInitials(hod.name)}</ThemedText>
+                <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
+                  <ThemedText style={[styles.avatarText, { color: '#FFFFFF' }]}>{getInitials(hod.name)}</ThemedText>
                 </View>
                 <View style={styles.hodInfo}>
-                  <ThemedText style={styles.hodName}>{hod.name || 'Unknown HOD'}</ThemedText>
-                  <ThemedText style={styles.hodDepartment}>
+                  <ThemedText style={[styles.hodName, { color: theme.text }]}>{hod.name || 'Unknown HOD'}</ThemedText>
+                  <ThemedText style={[styles.hodDepartment, { color: theme.textSecondary }]}>
                     {hod.department || 'N/A'} • {hod.department || 'N/A'}
                   </ThemedText>
-                  <View style={styles.designationBadge}>
-                    <ThemedText style={styles.designationText}>Head of Department</ThemedText>
+                  <View style={[styles.designationBadge, { backgroundColor: theme.surfaceHighlight }]}>
+                    <ThemedText style={[styles.designationText, { color: theme.textSecondary }]}>Head of Department</ThemedText>
                   </View>
                 </View>
                 <View style={styles.statusIndicator}>
-                  <View style={styles.statusDot} />
-                  <ThemedText style={styles.statusText}>Active</ThemedText>
+                  <View style={[styles.statusDot, { backgroundColor: theme.primary }]} />
+                  <ThemedText style={[styles.statusText, { color: theme.primary }]}>Active</ThemedText>
                 </View>
               </View>
 
               {/* Contact Info */}
-              <View style={styles.contactSection}>
+              <View style={[styles.contactSection, { backgroundColor: theme.surfaceHighlight }]}>
                 <View style={styles.contactRow}>
-                  <Ionicons name="call-outline" size={16} color="#6B7280" />
-                  <ThemedText style={styles.contactText}>{hod.phone || 'N/A'}</ThemedText>
+                  <Ionicons name="call-outline" size={16} color={theme.textSecondary} />
+                  <ThemedText style={[styles.contactText, { color: theme.text }]}>{hod.phone || 'N/A'}</ThemedText>
                 </View>
                 <View style={styles.contactRow}>
-                  <Ionicons name="mail-outline" size={16} color="#6B7280" />
-                  <ThemedText style={styles.contactEmail}>{hod.email || 'N/A'}</ThemedText>
+                  <Ionicons name="mail-outline" size={16} color={theme.textSecondary} />
+                  <ThemedText style={[styles.contactEmail, { color: theme.textSecondary }]}>{hod.email || 'N/A'}</ThemedText>
                 </View>
               </View>
 
               {/* Action Buttons */}
               <View style={styles.actionButtons}>
                 <TouchableOpacity
-                  style={styles.callButton}
+                  style={[styles.callButton, { backgroundColor: theme.primary }]}
                   onPress={() => handleCall(hod.phone)}
                   activeOpacity={0.8}
                 >
@@ -279,12 +283,12 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
                   <ThemedText style={styles.callButtonText}>Call</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.messageButton}
+                  style={[styles.messageButton, { backgroundColor: theme.surface, borderColor: theme.border }]}
                   onPress={() => handleMessage(hod.phone)}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="chatbubble-outline" size={18} color="#6B7280" />
-                  <ThemedText style={styles.messageButtonText}>Message</ThemedText>
+                  <Ionicons name="chatbubble-outline" size={18} color={theme.textSecondary} />
+                  <ThemedText style={[styles.messageButtonText, { color: theme.textSecondary }]}>Message</ThemedText>
                 </TouchableOpacity>
               </View>
             </View>

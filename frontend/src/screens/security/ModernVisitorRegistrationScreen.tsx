@@ -18,6 +18,7 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import { useTheme } from '../../context/ThemeContext';
 
 
 interface ModernVisitorRegistrationScreenProps {
@@ -31,6 +32,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
   onBack,
   onNavigate,
 }) => {
+  const { theme } = useTheme();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   
@@ -177,36 +179,36 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Visitor Registration</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Visitor Registration</ThemedText>
         <TouchableOpacity 
           style={styles.qrButton} 
           onPress={() => onNavigate('VISITOR_QR')}
         >
-          <Ionicons name="qr-code-outline" size={20} color="#00BCD4" />
+          <Ionicons name="qr-code-outline" size={20} color={theme.primary} />
         </TouchableOpacity>
       </View>
 
       <VerticalScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
         {/* Visitor Information */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Visitor Information</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Visitor Information</ThemedText>
           
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Number of Visitors *</ThemedText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="people-outline" size={20} color="#9CA3AF" />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Number of Visitors *</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Ionicons name="people-outline" size={20} color={theme.textTertiary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="1"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor={theme.textTertiary}
                 value={numberOfVisitors}
                 onChangeText={setNumberOfVisitors}
                 keyboardType="number-pad"
@@ -217,15 +219,15 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
           {/* Dynamic Visitor Names */}
           {visitorNames.map((name, index) => (
             <View key={index} style={styles.inputGroup}>
-              <ThemedText style={styles.inputLabel}>
+              <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>
                 {index === 0 ? 'Main Visitor Name *' : `Visitor ${index + 1} Name *`}
               </ThemedText>
-              <View style={styles.inputContainer}>
-                <Ionicons name="person-outline" size={20} color="#9CA3AF" />
+              <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <Ionicons name="person-outline" size={20} color={theme.textTertiary} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.text }]}
                   placeholder={`Enter visitor ${index + 1} name`}
-                  placeholderTextColor="#6B7280"
+                  placeholderTextColor={theme.textTertiary}
                   value={name}
                   onChangeText={(value) => updateVisitorName(index, value)}
                 />
@@ -234,13 +236,13 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
           ))}
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Email *</ThemedText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#9CA3AF" />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Email *</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Ionicons name="mail-outline" size={20} color={theme.textTertiary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="Enter email address"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor={theme.textTertiary}
                 value={visitorEmail}
                 onChangeText={setVisitorEmail}
                 keyboardType="email-address"
@@ -250,13 +252,13 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Phone Number *</ThemedText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="call-outline" size={20} color="#9CA3AF" />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Phone Number *</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Ionicons name="call-outline" size={20} color={theme.textTertiary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="Enter phone number (min 10 digits)"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor={theme.textTertiary}
                 value={visitorPhone}
                 onChangeText={setVisitorPhone}
                 keyboardType="phone-pad"
@@ -265,13 +267,13 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Vehicle Number (Optional)</ThemedText>
-            <View style={styles.inputContainer}>
-              <Ionicons name="car-outline" size={20} color="#9CA3AF" />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Vehicle Number (Optional)</ThemedText>
+            <View style={[styles.inputContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Ionicons name="car-outline" size={20} color={theme.textTertiary} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="Enter vehicle number"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor={theme.textTertiary}
                 value={vehicleNumber}
                 onChangeText={setVehicleNumber}
                 autoCapitalize="characters"
@@ -282,66 +284,69 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
 
         {/* Visit Details */}
         <View style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Visit Details</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Visit Details</ThemedText>
           
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Role *</ThemedText>
-            <View style={styles.pickerContainer}>
-              <Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.pickerIcon} />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Role *</ThemedText>
+            <View style={[styles.pickerContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Ionicons name="person-outline" size={20} color={theme.textTertiary} style={styles.pickerIcon} />
               <Picker
                 selectedValue={role}
                 onValueChange={(value) => setRole(value)}
-                style={styles.picker}
+                style={[styles.picker, { color: theme.text }]}
+                dropdownIconColor={theme.text}
               >
-                <Picker.Item label="Visitor" value="VISITOR" />
-                <Picker.Item label="Vendor" value="VENDOR" />
+                <Picker.Item label="Visitor" value="VISITOR" color={theme.text} />
+                <Picker.Item label="Vendor" value="VENDOR" color={theme.text} />
               </Picker>
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Department *</ThemedText>
-            <View style={styles.pickerContainer}>
-              <Ionicons name="business-outline" size={20} color="#9CA3AF" style={styles.pickerIcon} />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Department *</ThemedText>
+            <View style={[styles.pickerContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Ionicons name="business-outline" size={20} color={theme.textTertiary} style={styles.pickerIcon} />
               <Picker
                 selectedValue={selectedDepartment}
                 onValueChange={setSelectedDepartment}
-                style={styles.picker}
+                style={[styles.picker, { color: theme.text }]}
+                dropdownIconColor={theme.text}
               >
-                <Picker.Item label="Select Department" value="" />
+                <Picker.Item label="Select Department" value="" color={theme.textTertiary} />
                 {departments.map(dept => (
-                  <Picker.Item key={dept.id} label={dept.name} value={dept.id.toString()} />
+                  <Picker.Item key={dept.id} label={dept.name} value={dept.id.toString()} color={theme.text} />
                 ))}
               </Picker>
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Staff to Meet *</ThemedText>
-            <View style={styles.pickerContainer}>
-              <Ionicons name="person-circle-outline" size={20} color="#9CA3AF" style={styles.pickerIcon} />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Staff to Meet *</ThemedText>
+            <View style={[styles.pickerContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Ionicons name="person-circle-outline" size={20} color={theme.textTertiary} style={styles.pickerIcon} />
               <Picker
                 selectedValue={selectedStaff}
                 onValueChange={setSelectedStaff}
-                style={styles.picker}
+                style={[styles.picker, { color: theme.text }]}
                 enabled={!!selectedDepartment}
+                dropdownIconColor={theme.text}
               >
-                <Picker.Item label="Select Staff" value="" />
+                <Picker.Item label="Select Staff" value="" color={theme.textTertiary} />
                 {staffMembers.map(staff => (
-                  <Picker.Item key={staff.id} label={staff.name} value={staff.id.toString()} />
+                  <Picker.Item key={staff.id} label={staff.name} value={staff.id.toString()} color={theme.text} />
                 ))}
               </Picker>
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <ThemedText style={styles.inputLabel}>Purpose of Visit *</ThemedText>
-            <View style={styles.textAreaContainer}>
-              <Ionicons name="document-text-outline" size={20} color="#9CA3AF" style={styles.textAreaIcon} />
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Purpose of Visit *</ThemedText>
+            <View style={[styles.textAreaContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <Ionicons name="document-text-outline" size={20} color={theme.textTertiary} style={styles.textAreaIcon} />
               <TextInput
-                style={styles.textArea}
+                style={[styles.textArea, { color: theme.text }]}
                 placeholder="Enter purpose of visit"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor={theme.textTertiary}
                 value={purpose}
                 onChangeText={setPurpose}
                 multiline
@@ -354,7 +359,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
 
         {/* Submit Button */}
         <TouchableOpacity
-          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+          style={[styles.submitButton, { backgroundColor: isSubmitting ? theme.textTertiary : theme.primary }]}
           onPress={handleSubmit}
           disabled={isSubmitting}
         >

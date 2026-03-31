@@ -50,6 +50,7 @@ import MyRequestsScreen from './screens/staff/MyRequestsScreen';
 import NotificationsScreen from './screens/shared/NotificationsScreen';
 import SwipeBackWrapper from './components/SwipeBackWrapper';
 import ErrorBoundary from './components/ErrorBoundary';
+import ExitConfirmModal from './components/navigation/ExitConfirmModal';
 import { initPushNotifications, unregisterPushToken, setupNotificationTapHandler, handleInitialNotification } from './services/pushNotification.service';
 import { biometricAuthService } from './services/biometricAuth.service';
 
@@ -105,6 +106,7 @@ const App: React.FC = () => {
   const [exitAnimating, setExitAnimating] = React.useState(false);
   const exitOpacity = useRef(new Animated.Value(0)).current;
   const exitTranslateY = useRef(new Animated.Value(12)).current;
+  const [showExitModal, setShowExitModal] = React.useState(false);
 
   // ── Notification tap → screen navigation ────────────────────────────────
   // Maps actionRoute strings (set by backend) to ScreenName values
@@ -461,13 +463,13 @@ const App: React.FC = () => {
     if ((global as any).__actionLocked) return;
 
     if (ROOT_SCREENS.includes(currentScreen)) {
-      runExitAnimationAndClose();
+      setShowExitModal(true);
       return;
     }
     // Product requirement: any back/swipe (not on Root) returns to Dashboard.
     if (userType) navigateBack();
     else setCurrentScreen('HOME');
-  }, [currentScreen, isLoading, userType, navigateBack, runExitAnimationAndClose]);
+  }, [currentScreen, isLoading, userType, navigateBack]);
 
   React.useEffect(() => {
     const onBackPress = () => {
@@ -478,7 +480,7 @@ const App: React.FC = () => {
       if ((global as any).__actionLocked) return true;
 
       if (ROOT_SCREENS.includes(currentScreen)) {
-        runExitAnimationAndClose();
+        setShowExitModal(true);
         return true;
       }
 
@@ -960,6 +962,12 @@ const App: React.FC = () => {
                         </Animated.View>
                       </Animated.View>
                     )}
+ 
+                    <ExitConfirmModal
+                      visible={showExitModal}
+                      onCancel={() => setShowExitModal(false)}
+                      onConfirm={runExitAnimationAndClose}
+                    />
                   </View>
                 </ThemedApp>
               </ProfileProvider>

@@ -257,11 +257,11 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
   if (rangeResultsVisible) {
     return (
-      <SafeAreaView style={styles.fsScreen} edges={['top', 'bottom']}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-        <View style={styles.fsHeader}>
-          <TouchableOpacity style={styles.fsBackBtn} onPress={closeRangeResults}>
-            <Ionicons name="arrow-back" size={22} color="#1F2937" />
+      <SafeAreaView style={[styles.fsScreen, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+        <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+        <View style={[styles.fsHeader, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+          <TouchableOpacity style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={closeRangeResults}>
+            <Ionicons name="arrow-back" size={22} color={theme.text} />
           </TouchableOpacity>
           <ThemedText style={styles.fsHeaderTitle}>Date range results</ThemedText>
           <View style={styles.fsStatusPill}>
@@ -274,8 +274,8 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               <ThemedText style={styles.rangeResultsSub}>
                 {fromDate?.toLocaleDateString()} — {toDate?.toLocaleDateString()}
               </ThemedText>
-              <TouchableOpacity style={styles.rangeResultsDownloadBtn} onPress={exportScanPdf}>
-                <Ionicons name="download-outline" size={16} color="#fff" />
+              <TouchableOpacity style={[styles.rangeResultsDownloadBtn, { backgroundColor: theme.primary }]} onPress={exportScanPdf}>
+                <Ionicons name="download-outline" size={16} color="#ffffff" />
                 <ThemedText style={styles.rangeResultsDownloadText}>Download PDF</ThemedText>
               </TouchableOpacity>
             </View>
@@ -312,13 +312,13 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
   if (rangePickerPage) {
     return (
-      <SafeAreaView style={styles.fsScreen} edges={['top', 'bottom']}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => setRangePickerPage(false)}>
-            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+      <SafeAreaView style={[styles.fsScreen, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+        <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+          <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => setRangePickerPage(false)}>
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
-          <ThemedText style={styles.headerTitle}>Select date range</ThemedText>
+          <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Select date range</ThemedText>
           <View style={styles.headerRight} />
         </View>
         <ScreenContentContainer style={{ flex: 1 }}>
@@ -339,15 +339,15 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.dateInputButton} onPress={() => setSelectingDateType('FROM')}>
-              <Ionicons name="calendar-outline" size={18} color="#00BCD4" />
-              <ThemedText style={styles.dateInputText}>
+            <TouchableOpacity style={[styles.dateInputButton, { borderColor: theme.border, backgroundColor: theme.surface }]} onPress={() => setSelectingDateType('FROM')}>
+              <Ionicons name="calendar-outline" size={18} color={theme.primary} />
+              <ThemedText style={[styles.dateInputText, { color: theme.text }]}>
                 {fromDate ? fromDate.toLocaleDateString() : 'Select from date'}
               </ThemedText>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.dateInputButton} onPress={() => setSelectingDateType('TO')}>
-              <Ionicons name="calendar-outline" size={18} color="#00BCD4" />
-              <ThemedText style={styles.dateInputText}>
+            <TouchableOpacity style={[styles.dateInputButton, { borderColor: theme.border, backgroundColor: theme.surface }]} onPress={() => setSelectingDateType('TO')}>
+              <Ionicons name="calendar-outline" size={18} color={theme.primary} />
+              <ThemedText style={[styles.dateInputText, { color: theme.text }]}>
                 {toDate ? toDate.toLocaleDateString() : 'Select to date'}
               </ThemedText>
             </TouchableOpacity>
@@ -360,13 +360,22 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   else setToDate(selected);
                 }}
                 markedDates={{
-                  ...(fromDate ? { [fromDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: '#00BCD4' } } : {}),
-                  ...(toDate ? { [toDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: '#0EA5E9' } } : {}),
+                  ...(fromDate ? { [fromDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary } } : {}),
+                  ...(toDate ? { [toDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.accent || theme.secondary } } : {}),
                 }}
                 theme={{
-                  selectedDayBackgroundColor: '#00BCD4',
-                  todayTextColor: '#00BCD4',
-                  arrowColor: '#00BCD4',
+                  calendarBackground: theme.surface,
+                  textSectionTitleColor: theme.textSecondary,
+                  selectedDayBackgroundColor: theme.primary,
+                  selectedDayTextColor: '#ffffff',
+                  todayTextColor: theme.primary,
+                  dayTextColor: theme.text,
+                  textDisabledColor: theme.textTertiary,
+                  dotColor: theme.primary,
+                  selectedDotColor: '#ffffff',
+                  arrowColor: theme.primary,
+                  monthTextColor: theme.text,
+                  indicatorColor: theme.primary,
                 }}
               />
             </View>
@@ -386,22 +395,22 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>History</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>History</ThemedText>
         <View style={styles.headerRight} />
       </View>
 
       {/* Main Tab Switcher */}
-      <View style={styles.mainTabContainer}>
+      <View style={[styles.mainTabContainer, { backgroundColor: theme.surfaceHighlight }]}>
         <TouchableOpacity
-          style={[styles.mainTab, activeTab === 'SCANS' && styles.mainTabActive]}
+          style={[styles.mainTab, activeTab === 'SCANS' && [styles.mainTabActive, { backgroundColor: theme.surface }]]}
           onPress={() => {
             setActiveTab('SCANS');
             setSearchQuery('');
@@ -411,14 +420,14 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           <Ionicons 
             name="qr-code" 
             size={20} 
-            color={activeTab === 'SCANS' ? '#00BCD4' : '#9CA3AF'} 
+            color={activeTab === 'SCANS' ? theme.primary : theme.textTertiary} 
           />
-          <ThemedText style={[styles.mainTabText, activeTab === 'SCANS' && styles.mainTabTextActive]}>
+          <ThemedText style={[styles.mainTabText, activeTab === 'SCANS' ? { color: theme.primary, fontWeight: '700' } : { color: theme.textTertiary }]}>
             Scan History
           </ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.mainTab, activeTab === 'VEHICLES' && styles.mainTabActive]}
+          style={[styles.mainTab, activeTab === 'VEHICLES' && [styles.mainTabActive, { backgroundColor: theme.surface }]]}
           onPress={() => {
             setActiveTab('VEHICLES');
             setSearchQuery('');
@@ -427,9 +436,9 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           <Ionicons 
             name="car" 
             size={20} 
-            color={activeTab === 'VEHICLES' ? '#00BCD4' : '#9CA3AF'} 
+            color={activeTab === 'VEHICLES' ? theme.primary : theme.textTertiary} 
           />
-          <ThemedText style={[styles.mainTabText, activeTab === 'VEHICLES' && styles.mainTabTextActive]}>
+          <ThemedText style={[styles.mainTabText, activeTab === 'VEHICLES' ? { color: theme.primary, fontWeight: '700' } : { color: theme.textTertiary }]}>
             Vehicle History
           </ThemedText>
         </TouchableOpacity>
@@ -443,12 +452,12 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#9CA3AF" />
+      <View style={[styles.searchContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <Ionicons name="search" size={20} color={theme.textTertiary} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: theme.text }]}
           placeholder={activeTab === 'SCANS' ? "Search by name or type..." : "Search by owner, plate, or type..."}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={theme.textTertiary}
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
@@ -458,9 +467,9 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       {activeTab === 'SCANS' && (
         <>
         <View style={styles.rangeActionsRow}>
-          <TouchableOpacity style={styles.rangeActionBtn} onPress={() => setRangePickerPage(true)}>
-            <Ionicons name="calendar-outline" size={16} color="#00BCD4" />
-            <ThemedText style={styles.rangeActionText}>From / To</ThemedText>
+          <TouchableOpacity style={[styles.rangeActionBtn, { backgroundColor: theme.surface, borderColor: theme.primary + '33' }]} onPress={() => setRangePickerPage(true)}>
+            <Ionicons name="calendar-outline" size={16} color={theme.primary} />
+            <ThemedText style={[styles.rangeActionText, { color: theme.primary }]}>From / To</ThemedText>
           </TouchableOpacity>
         </View>
         <View style={styles.filterContainer}>
@@ -582,8 +591,8 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     setShowVehicleModal(true);
                   }}
                 >
-                  <View style={[styles.scanAvatar, { backgroundColor: '#F59E0B' }]}>
-                    <Ionicons name="car" size={24} color="#FFF" />
+                  <View style={[styles.scanAvatar, { backgroundColor: theme.warning }]}>
+                    <Ionicons name="car" size={24} color="#FFFFFF" />
                   </View>
                   <View style={styles.scanInfo}>
                     <ThemedText style={styles.scanName}>{vehicle.licensePlate || 'N/A'}</ThemedText>
@@ -602,7 +611,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                         size={12}
                         color="#10B981"
                       />
-                      <ThemedText style={[styles.scanStatusText, styles.scanStatusTextEntry]}>
+                      <ThemedText ignoreGradient style={[styles.scanStatusText, { color: '#FFFFFF' }]}>
                         REGISTERED
                       </ThemedText>
                     </View>
@@ -635,11 +644,11 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             const statusLabel = isExited ? 'EXITED' : 'ACTIVE';
             return (
               <>
-                <View style={styles.fsHeader}>
-                  <TouchableOpacity style={styles.fsBackBtn} onPress={() => setShowDetailModal(false)}>
-                    <Ionicons name="arrow-back" size={22} color="#1F2937" />
+                <View style={[styles.fsHeader, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+                  <TouchableOpacity style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => setShowDetailModal(false)}>
+                    <Ionicons name="arrow-back" size={22} color={theme.text} />
                   </TouchableOpacity>
-                  <ThemedText style={styles.fsHeaderTitle}>Scan Details</ThemedText>
+                  <ThemedText style={[styles.fsHeaderTitle, { color: theme.text }]}>Scan Details</ThemedText>
                   <View style={[styles.fsStatusPill, { backgroundColor: statusColor }]}>
                     <ThemedText ignoreGradient style={[styles.fsStatusPillText, { color: '#FFFFFF' }]}>{statusLabel}</ThemedText>
                   </View>
@@ -649,13 +658,13 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   {selectedScan.isBulkPass ? (
                     <>
                       {/* Bulk pass profile row */}
-                      <View style={styles.fsProfileRow}>
-                        <View style={[styles.fsAvatar, { backgroundColor: '#F59E0B' }]}>
+                      <View style={[styles.fsProfileRow, { backgroundColor: theme.surface }]}>
+                        <View style={[styles.fsAvatar, { backgroundColor: theme.warning }]}>
                           <ThemedText style={styles.fsAvatarText}>GP</ThemedText>
                         </View>
                         <View style={styles.fsProfileInfo}>
-                          <ThemedText style={styles.fsProfileName}>Bulk Pass</ThemedText>
-                          <ThemedText style={styles.fsProfileSub}>
+                          <ThemedText style={[styles.fsProfileName, { color: theme.text }]}>Bulk Pass</ThemedText>
+                          <ThemedText style={[styles.fsProfileSub, { color: theme.textSecondary }]}>
                             {selectedScan.incharge} • {selectedScan.subtype}
                           </ThemedText>
                         </View>
@@ -718,13 +727,13 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   ) : (
                     <>
                       {/* Single pass profile row */}
-                      <View style={styles.fsProfileRow}>
+                      <View style={[styles.fsProfileRow, { backgroundColor: theme.surface }]}>
                         <View style={[styles.fsAvatar, { backgroundColor: statusColor }]}>
                           <ThemedText style={styles.fsAvatarText}>{getInitials(selectedScan.name)}</ThemedText>
                         </View>
                         <View style={styles.fsProfileInfo}>
-                          <ThemedText style={styles.fsProfileName}>{selectedScan.name}</ThemedText>
-                          <ThemedText style={styles.fsProfileSub}>
+                          <ThemedText style={[styles.fsProfileName, { color: theme.text }]}>{selectedScan.name}</ThemedText>
+                          <ThemedText style={[styles.fsProfileSub, { color: theme.textSecondary }]}>
                             {selectedScan.regNo ? `${selectedScan.regNo} • ` : ''}{selectedScan.type}
                             {selectedScan.department ? ` • ${selectedScan.department}` : ''}
                           </ThemedText>
@@ -790,8 +799,8 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                 </VerticalScrollView>
 
                 {/* Footer close button */}
-                <View style={styles.fsFooter}>
-                  <TouchableOpacity style={styles.fsCloseBtn} onPress={() => setShowDetailModal(false)}>
+                <View style={[styles.fsFooter, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+                  <TouchableOpacity style={[styles.fsCloseBtn, { backgroundColor: theme.primary }]} onPress={() => setShowDetailModal(false)}>
                     <ThemedText style={styles.fsCloseBtnText}>Close</ThemedText>
                   </TouchableOpacity>
                 </View>

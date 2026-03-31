@@ -99,37 +99,62 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
   const loadDashboardData = async () => {
     try {
       const personsResponse = await apiService.getActivePersons();
+      const historyResponse = await apiService.getScanHistory(user.securityId);
+      
+      let mergedPersons: ActivePerson[] = [];
 
       if (personsResponse.success && personsResponse.data) {
-        const validPersons = personsResponse.data.filter((person: ActivePerson) => 
+        mergedPersons = personsResponse.data.filter((person: ActivePerson) => 
           person.name && 
           !person.name.startsWith('QR Not Found') && 
           !person.name.includes('Unknown')
         );
-        setActivePersons(validPersons);
-
-        // Active count comes directly from the active-persons list
-        const activeCount = validPersons.length;
-
-        // For exited + total, fetch scan history and count today's records
-        try {
-          const historyResponse = await apiService.getScanHistory(user.securityId);
-          if (historyResponse.success && historyResponse.data) {
-            const today = new Date().toDateString();
-            const todayRecords = historyResponse.data.filter((r: any) => {
-              const t = r.exitTime || r.entryTime || r.inTime || r.outTime;
-              return t && new Date(t).toDateString() === today;
-            });
-            const exitedCount = todayRecords.filter((r: any) => r.status === 'EXITED' || !!r.exitTime).length;
-            const totalCount = activeCount + exitedCount;
-            setStats({ active: activeCount, exited: exitedCount, total: totalCount });
-          } else {
-            setStats({ active: activeCount, exited: 0, total: activeCount });
-          }
-        } catch {
-          setStats({ active: activeCount, exited: 0, total: activeCount });
-        }
       }
+
+      // If we have history, find visitors who entered today but haven't exited
+      if (historyResponse.success && historyResponse.data) {
+        const today = new Date().toDateString();
+        const activeVisitors = historyResponse.data.filter((r: any) => {
+          const entryTime = r.entryTime || r.inTime;
+          const exitTime = r.exitTime || r.outTime;
+          // People with entry today but no exit
+          return entryTime && 
+                 !exitTime && 
+                 new Date(entryTime).toDateString() === today &&
+                 (r.type === 'VISITOR' || r.type === 'VENDOR');
+        }).map((r: any) => ({
+          id: r.id || Math.random(),
+          name: r.name,
+          type: r.type || 'VISITOR',
+          purpose: r.purpose || r.reason || 'Visit',
+          status: 'PENDING' as 'PENDING',
+          inTime: r.entryTime || r.inTime,
+          outTime: null,
+          qrCode: r.qrCode || '',
+        }));
+
+        // Merge only if not already in the list (by name + type)
+        activeVisitors.forEach(v => {
+          const exists = mergedPersons.some(p => p.name === v.name && p.type === v.type);
+          if (!exists) mergedPersons.push(v);
+        });
+
+        // Update stats
+        const activeCount = mergedPersons.filter(p => p.status === 'PENDING').length;
+        const todayRecords = historyResponse.data.filter((r: any) => {
+          const t = r.exitTime || r.entryTime || r.inTime || r.outTime;
+          return t && new Date(t).toDateString() === today;
+        });
+        const exitedCount = todayRecords.filter((r: any) => r.status === 'EXITED' || !!r.exitTime).length;
+        const totalCount = activeCount + exitedCount;
+        
+        setStats({ active: activeCount, exited: exitedCount, total: totalCount });
+      } else {
+        const activeCount = mergedPersons.length;
+        setStats({ active: activeCount, exited: 0, total: activeCount });
+      }
+
+      setActivePersons(mergedPersons);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -252,7 +277,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface }]}>
@@ -261,7 +286,9 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.avatarImage} />
             ) : (
-              <ThemedText style={styles.avatarText}>{getInitials(user.name || user.securityName || 'SG')}</ThemedText>
+              <View style={[styles.avatarFallback, { backgroundColor: theme.surfaceHighlight }]}>
+                <ThemedText style={[styles.avatarText, { color: theme.primary }]}>{getInitials(user.name || user.securityName || 'SG')}</ThemedText>
+              </View>
             )}
           </TouchableOpacity>
           <View style={styles.headerInfo}>
@@ -286,22 +313,22 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       >
         <View style={styles.statsContainer}>
           <View style={[styles.statCard, { backgroundColor: theme.surface }]}>
-            <View style={[styles.statIcon, { backgroundColor: theme.success + '22' }]}>
-              <Ionicons name="enter-outline" size={20} color={theme.success} />
+            <View style={[styles.statIcon, { backgroundColor: theme.success }]}>
+              <Ionicons name="enter-outline" size={20} color="#FFFFFF" />
             </View>
             <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.active}</ThemedText>
             <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Active</ThemedText>
           </View>
           <View style={[styles.statCard, { backgroundColor: theme.surface }]}>
-            <View style={[styles.statIcon, { backgroundColor: theme.error + '22' }]}>
-              <Ionicons name="exit-outline" size={20} color={theme.error} />
+            <View style={[styles.statIcon, { backgroundColor: theme.error }]}>
+              <Ionicons name="exit-outline" size={20} color="#FFFFFF" />
             </View>
             <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.exited}</ThemedText>
             <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Exited</ThemedText>
           </View>
           <View style={[styles.statCard, { backgroundColor: theme.surface }]}>
-            <View style={[styles.statIcon, { backgroundColor: theme.info + '22' }]}>
-              <Ionicons name="people-outline" size={20} color={theme.info} />
+            <View style={[styles.statIcon, { backgroundColor: theme.primary }]}>
+              <Ionicons name="people-outline" size={20} color="#FFFFFF" />
             </View>
             <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.total}</ThemedText>
             <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Total</ThemedText>
@@ -377,15 +404,15 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                   style={[styles.actionBtn, { backgroundColor: theme.success }]}
                   onPress={(e) => { e.stopPropagation(); handleApproveVisitor(visitor); }}
                 >
-                  <Ionicons name="checkmark" size={14} color="#FFF" />
-                  <ThemedText style={styles.actionBtnText}>Approve</ThemedText>
+                  <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                  <ThemedText ignoreGradient style={[styles.actionBtnText, { color: '#FFFFFF' }]}>Approve</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: theme.error }]}
                   onPress={(e) => { e.stopPropagation(); handleRejectVisitor(visitor); }}
                 >
-                  <Ionicons name="close" size={14} color="#FFF" />
-                  <ThemedText style={styles.actionBtnText}>Reject</ThemedText>
+                  <Ionicons name="close" size={14} color="#FFFFFF" />
+                  <ThemedText ignoreGradient style={[styles.actionBtnText, { color: '#FFFFFF' }]}>Reject</ThemedText>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
@@ -424,8 +451,8 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                 </View>
                 <ThemedText style={[styles.personTime, { color: theme.textTertiary }]}>{formatTime(person.inTime)}</ThemedText>
                 <TouchableOpacity style={[styles.exitButton, { backgroundColor: theme.error }]} onPress={(e) => { e.stopPropagation(); handleManualExit(person); }}>
-                  <Ionicons name="log-out-outline" size={16} color="#FFF" />
-                  <ThemedText style={styles.exitButtonText}>Exit</ThemedText>
+                  <Ionicons name="log-out-outline" size={16} color="#FFFFFF" />
+                  <ThemedText ignoreGradient style={[styles.exitButtonText, { color: '#FFFFFF' }]}>Exit</ThemedText>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
@@ -733,7 +760,8 @@ const styles = StyleSheet.create({
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   avatarImage: { width: 48, height: 48, borderRadius: 24 },
-  avatarText: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
+  avatarFallback: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
+  avatarText: { fontSize: 18, fontWeight: '800' },
   headerInfo: { gap: 2 },
   greeting: { fontSize: 13 },
   userName: { fontSize: 18, fontWeight: '700' },
@@ -778,12 +806,12 @@ const styles = StyleSheet.create({
   personAvatarText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
   personInfo: { flex: 1 },
   personName: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  personType: { fontSize: 13, fontWeight: '600', marginBottom: 2 },
+  personType: { fontSize: 13, fontWeight: '800', marginBottom: 2 },
   personPurpose: { fontSize: 13 },
   personRight: { alignItems: 'flex-end' },
   statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginBottom: 6 },
-  statusDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
-  statusText: { fontSize: 11, fontWeight: '700' },
+  statusDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6, backgroundColor: '#FFFFFF' },
+  statusText: { fontSize: 11, fontWeight: '800' },
   personTime: { fontSize: 12, marginBottom: 6 },
   exitButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, gap: 4 },
   exitButtonText: { fontSize: 11, fontWeight: '700', color: '#FFF' },

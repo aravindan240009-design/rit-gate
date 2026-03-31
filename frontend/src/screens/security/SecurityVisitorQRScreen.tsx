@@ -19,6 +19,7 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import { useTheme } from '../../context/ThemeContext';
 
 
 interface VisitorRequest {
@@ -42,6 +43,7 @@ interface Props {
 }
 
 const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate }) => {
+  const { theme } = useTheme();
   const [visitors, setVisitors] = useState<VisitorRequest[]>([]);
   const [filteredVisitors, setFilteredVisitors] = useState<VisitorRequest[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
@@ -116,15 +118,15 @@ const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate
     (name || 'VR').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => onNavigate('VISITOR_REGISTRATION')} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity onPress={() => onNavigate('VISITOR_REGISTRATION')} style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>Visitor QR Codes</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Visitor QR Codes</ThemedText>
         <View style={{ width: 40 }} />
       </View>
 
@@ -133,10 +135,18 @@ const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate
         {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as const).map(f => (
           <TouchableOpacity
             key={f}
-            style={[styles.filterTab, selectedFilter === f && styles.filterTabActive]}
+            style={[
+              styles.filterTab, 
+              { backgroundColor: theme.surface, borderColor: theme.border },
+              selectedFilter === f && { backgroundColor: theme.primary + '15', borderColor: theme.primary }
+            ]}
             onPress={() => setSelectedFilter(f)}
           >
-            <ThemedText style={[styles.filterText, selectedFilter === f && styles.filterTextActive]}>{f}</ThemedText>
+            <ThemedText style={[
+              styles.filterText, 
+              { color: theme.textSecondary },
+              selectedFilter === f && { color: theme.primary, fontWeight: '700' }
+            ]}>{f}</ThemedText>
           </TouchableOpacity>
         ))}
       </View>
@@ -159,39 +169,39 @@ const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate
           filteredVisitors.map(visitor => (
             <TouchableOpacity
               key={visitor.id}
-              style={styles.card}
+              style={[styles.card, { backgroundColor: theme.surface }]}
               onPress={() => openQRModal(visitor)}
               disabled={visitor.status !== 'APPROVED'}
               activeOpacity={0.7}
             >
               <View style={styles.cardHeader}>
-                <View style={[styles.avatar, { backgroundColor: '#E0F7FA' }]}>
-                  <ThemedText style={styles.avatarText}>{getInitials(visitor.name)}</ThemedText>
+                <View style={[styles.avatar, { backgroundColor: theme.primary + '15' }]}>
+                  <ThemedText style={[styles.avatarText, { color: theme.primary }]}>{getInitials(visitor.name)}</ThemedText>
                 </View>
                 <View style={styles.cardInfo}>
-                  <ThemedText style={styles.visitorName}>{visitor.name}</ThemedText>
-                  <ThemedText style={styles.visitorPhone}>{visitor.phone}</ThemedText>
+                  <ThemedText style={[styles.visitorName, { color: theme.text }]}>{visitor.name}</ThemedText>
+                  <ThemedText style={[styles.visitorPhone, { color: theme.textSecondary }]}>{visitor.phone}</ThemedText>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusBg(visitor.status) }]}>
-                  <ThemedText style={[styles.statusText, { color: getStatusColor(visitor.status) }]}>{visitor.status}</ThemedText>
+                  <ThemedText ignoreGradient style={[styles.statusText, { color: '#FFFFFF' }]}>{visitor.status}</ThemedText>
                 </View>
               </View>
 
-              <View style={styles.cardDivider} />
+              <View style={[styles.cardDivider, { backgroundColor: theme.border }]} />
 
               <View style={styles.cardBody}>
                 <View style={styles.infoRow}>
-                  <Ionicons name="document-text-outline" size={16} color="#6B7280" />
-                  <ThemedText style={styles.infoText}>{visitor.purpose}</ThemedText>
+                  <Ionicons name="document-text-outline" size={16} color={theme.textTertiary} />
+                  <ThemedText style={[styles.infoText, { color: theme.textSecondary }]}>{visitor.purpose}</ThemedText>
                 </View>
                 <View style={styles.infoRow}>
-                  <Ionicons name="person-outline" size={16} color="#6B7280" />
-                  <ThemedText style={styles.infoText}>Meeting: {visitor.personToMeet}</ThemedText>
+                  <Ionicons name="person-outline" size={16} color={theme.textTertiary} />
+                  <ThemedText style={[styles.infoText, { color: theme.textSecondary }]}>Meeting: {visitor.personToMeet}</ThemedText>
                 </View>
                 {visitor.status === 'APPROVED' && (
-                  <View style={styles.qrHint}>
-                    <Ionicons name="qr-code" size={14} color="#00BCD4" />
-                    <ThemedText style={styles.qrHintText}>Tap to view QR code</ThemedText>
+                  <View style={[styles.qrHint, { backgroundColor: theme.primary + '10' }]}>
+                    <Ionicons name="qr-code" size={14} color={theme.primary} />
+                    <ThemedText style={[styles.qrHintText, { color: theme.primary }]}>Tap to view QR code</ThemedText>
                   </View>
                 )}
               </View>
@@ -202,28 +212,28 @@ const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate
 
       {/* QR Modal — floating card style */}
       <Modal visible={showQRModal} animationType="fade" transparent={true} statusBarTranslucent onRequestClose={() => setShowQRModal(false)}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowQRModal(false)}>
+        <TouchableOpacity style={[styles.modalOverlay, { backgroundColor: theme.type === 'dark' ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.55)' }]} activeOpacity={1} onPress={() => setShowQRModal(false)}>
           <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-            <View style={styles.passCard}>
+            <View style={[styles.passCard, { backgroundColor: theme.surface }]}>
               {/* Close button */}
-              <TouchableOpacity style={styles.passCloseBtn} onPress={() => setShowQRModal(false)}>
-                <Ionicons name="close" size={20} color="#6B7280" />
+              <TouchableOpacity style={[styles.passCloseBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => setShowQRModal(false)}>
+                <Ionicons name="close" size={20} color={theme.textSecondary} />
               </TouchableOpacity>
 
               {selectedVisitor && (
                 <>
                   {/* Name + ID */}
-                  <ThemedText style={styles.passName}>{selectedVisitor.name}</ThemedText>
-                  <ThemedText style={styles.passId}>Visitor Pass</ThemedText>
+                  <ThemedText style={[styles.passName, { color: theme.text }]}>{selectedVisitor.name}</ThemedText>
+                  <ThemedText style={[styles.passId, { color: theme.textTertiary }]}>Visitor Pass</ThemedText>
 
                   {/* QR Code centered */}
-                  <View style={styles.passQrWrapper}>
+                  <View style={[styles.passQrWrapper, { backgroundColor: '#FFFFFF', borderColor: theme.border }]}>
                     {selectedVisitor.qrCode ? (
                       <QRCode value={selectedVisitor.qrCode} size={180} backgroundColor="white" color="black" />
                     ) : (
                       <>
-                        <Ionicons name="qr-code-outline" size={64} color="#D1D5DB" />
-                        <ThemedText style={{ color: '#9CA3AF', marginTop: 8, fontSize: 13 }}>QR not available</ThemedText>
+                        <Ionicons name="qr-code-outline" size={64} color={theme.textTertiary} />
+                        <ThemedText style={{ color: theme.textTertiary, marginTop: 8, fontSize: 13 }}>QR not available</ThemedText>
                       </>
                     )}
                   </View>
@@ -231,28 +241,31 @@ const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate
                   {/* Manual code — dashed border box */}
                   {selectedVisitor.manualCode && (
                     <>
-                      <TouchableOpacity style={styles.passManualBox} onPress={() => copyManualCode(selectedVisitor.manualCode!)}>
-                        <ThemedText style={styles.passManualDigits}>{selectedVisitor.manualCode}</ThemedText>
+                      <TouchableOpacity 
+                        style={[styles.passManualBox, { borderColor: theme.primary }]} 
+                        onPress={() => copyManualCode(selectedVisitor.manualCode!)}
+                      >
+                        <ThemedText style={[styles.passManualDigits, { color: theme.primary }]}>{selectedVisitor.manualCode}</ThemedText>
                       </TouchableOpacity>
-                      <ThemedText style={styles.passScanLabel}>SCAN AT MAIN GATE EXIT</ThemedText>
+                      <ThemedText style={[styles.passScanLabel, { color: theme.textTertiary }]}>SCAN AT MAIN GATE EXIT</ThemedText>
                     </>
                   )}
 
-                  <View style={styles.passDivider} />
+                  <View style={[styles.passDivider, { backgroundColor: theme.border }]} />
 
                   {/* Reason + Meeting rows */}
-                  <View style={styles.passInfoRow}>
-                    <ThemedText style={styles.passInfoLabel}>Reason</ThemedText>
-                    <ThemedText style={styles.passInfoValue}>{selectedVisitor.purpose}</ThemedText>
+                  <View style={[styles.passInfoRow, { borderBottomColor: theme.surfaceHighlight }]}>
+                    <ThemedText style={[styles.passInfoLabel, { color: theme.textTertiary }]}>Reason</ThemedText>
+                    <ThemedText style={[styles.passInfoValue, { color: theme.text }]}>{selectedVisitor.purpose}</ThemedText>
                   </View>
-                  <View style={styles.passInfoRow}>
-                    <ThemedText style={styles.passInfoLabel}>Meeting</ThemedText>
-                    <ThemedText style={styles.passInfoValue}>{selectedVisitor.personToMeet}</ThemedText>
+                  <View style={[styles.passInfoRow, { borderBottomColor: theme.surfaceHighlight }]}>
+                    <ThemedText style={[styles.passInfoLabel, { color: theme.textTertiary }]}>Meeting</ThemedText>
+                    <ThemedText style={[styles.passInfoValue, { color: theme.text }]}>{selectedVisitor.personToMeet}</ThemedText>
                   </View>
                   {(selectedVisitor.numberOfPeople || 1) > 1 && (
-                    <View style={styles.passInfoRow}>
-                      <ThemedText style={styles.passInfoLabel}>Visitors</ThemedText>
-                      <ThemedText style={styles.passInfoValue}>{selectedVisitor.numberOfPeople} people</ThemedText>
+                    <View style={[styles.passInfoRow, { borderBottomColor: theme.surfaceHighlight }]}>
+                      <ThemedText style={[styles.passInfoLabel, { color: theme.textTertiary }]}>Visitors</ThemedText>
+                      <ThemedText style={[styles.passInfoValue, { color: theme.text }]}>{selectedVisitor.numberOfPeople} people</ThemedText>
                     </View>
                   )}
                 </>
