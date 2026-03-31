@@ -67,7 +67,7 @@ const SwipeBackWrapper: React.FC<SwipeBackWrapperProps> = ({
         navigating.current = true;
         Animated.timing(translateX, {
           toValue: SCREEN_WIDTH,
-          duration: 200,
+          duration: 0, // Instant transition
           useNativeDriver: true,
         }).start(() => {
           translateX.setValue(0);
@@ -90,18 +90,7 @@ const SwipeBackWrapper: React.FC<SwipeBackWrapperProps> = ({
     return <>{children}</>;
   }
 
-  const clampedTranslate = translateX.interpolate({
-    inputRange: [0, SCREEN_WIDTH],
-    outputRange: [0, SCREEN_WIDTH],
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-
-  const shadowOpacity = translateX.interpolate({
-    inputRange: [0, SCREEN_WIDTH * 0.5],
-    outputRange: [0, 0.15],
-    extrapolate: 'clamp',
-  });
+  // Removed horizontal translation interpolation and shadow to prevent background exposure
 
   return (
     <PanGestureHandler
@@ -111,14 +100,8 @@ const SwipeBackWrapper: React.FC<SwipeBackWrapperProps> = ({
       failOffsetY={[-15, 15]}
       enabled={!locked}
     >
-      <Animated.View
-        style={[styles.container, { transform: [{ translateX: clampedTranslate }] }]}
-      >
+      <Animated.View style={styles.container}>
         {children}
-        <Animated.View
-          pointerEvents="none"
-          style={[styles.edgeShadow, { opacity: shadowOpacity }]}
-        />
       </Animated.View>
     </PanGestureHandler>
   );
@@ -126,14 +109,6 @@ const SwipeBackWrapper: React.FC<SwipeBackWrapperProps> = ({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  edgeShadow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    width: 20,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-  },
 });
 
 export default SwipeBackWrapper;
