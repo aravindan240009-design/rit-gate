@@ -104,11 +104,19 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       let mergedPersons: ActivePerson[] = [];
 
       if (personsResponse.success && personsResponse.data) {
-        mergedPersons = personsResponse.data.filter((person: ActivePerson) => 
-          person.name && 
-          !person.name.startsWith('QR Not Found') && 
-          !person.name.includes('Unknown')
-        );
+        mergedPersons = personsResponse.data.filter((person: ActivePerson) => {
+          const name = person.name || (person as any).fullName || (person as any).studentName;
+          return name && 
+            !name.startsWith('QR Not Found') && 
+            !name.includes('Unknown');
+        }).map((person: ActivePerson) => {
+          // Normalize name
+          let name = person.name || (person as any).fullName || (person as any).studentName;
+          if (!name || name === 'Visitor-null' || name.includes('-null')) {
+            name = person.type === 'VISITOR' ? 'Visitor' : (name || 'User');
+          }
+          return { ...person, name };
+        });
       }
 
       // If we have history, find visitors who entered today but haven't exited
@@ -122,16 +130,24 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                  !exitTime && 
                  new Date(entryTime).toDateString() === today &&
                  (r.type === 'VISITOR' || r.type === 'VENDOR');
-        }).map((r: any) => ({
-          id: r.id || Math.random(),
-          name: r.name,
-          type: r.type || 'VISITOR',
-          purpose: r.purpose || r.reason || 'Visit',
-          status: 'PENDING' as 'PENDING',
-          inTime: r.entryTime || r.inTime,
-          outTime: null,
-          qrCode: r.qrCode || '',
-        }));
+        }).map((r: any) => {
+          // Normalize name to handle "Visitor-null" or missing names
+          let normalizedName = r.name || r.fullName || r.studentName || r.staffName;
+          if (!normalizedName || normalizedName === 'Visitor-null' || normalizedName.includes('-null')) {
+            normalizedName = r.type === 'VISITOR' ? 'Visitor' : (normalizedName || 'User');
+          }
+
+          return {
+            id: r.id || Math.random(),
+            name: normalizedName,
+            type: r.type || 'VISITOR',
+            purpose: r.purpose || r.reason || 'Visit',
+            status: 'PENDING' as 'PENDING',
+            inTime: r.entryTime || r.inTime,
+            outTime: null,
+            qrCode: r.qrCode || '',
+          };
+        });
 
         // Merge only if not already in the list (by name + type)
         activeVisitors.forEach(v => {

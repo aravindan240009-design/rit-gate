@@ -106,8 +106,17 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           // For exit-only records (RailwayExitLog), backend sets both entryTime and exitTime
           // to the same value with status="EXITED". Distinguish using status field.
           const isExitOnly = scan.status === 'EXITED' && inTime === outTime;
+          
+          // Normalize name to handle "Visitor-null" or missing names
+          let normalizedName = scan.name || scan.fullName || scan.studentName || scan.staffName;
+          
+          if (!normalizedName || normalizedName === 'Visitor-null' || normalizedName.includes('-null')) {
+            normalizedName = scan.type === 'VISITOR' ? 'Visitor' : (normalizedName || 'User');
+          }
+
           return {
             ...scan,
+            name: normalizedName,
             inTime: isExitOnly ? undefined : inTime,
             outTime,
           };

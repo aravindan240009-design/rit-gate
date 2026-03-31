@@ -7,7 +7,8 @@ import {
   TextInput,
   ScrollView,
   StatusBar,
-  Modal
+  Modal,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, CameraView } from '../../shims/expoCamera';
@@ -219,14 +220,16 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color={theme.text} />
-        </TouchableOpacity>
-        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>QR Scanner</ThemedText>
-        <View style={styles.headerRight} />
-      </View>
+      {/* Header - Hidden when camera is active for a "full-screen" feel */}
+      {!showCamera && (
+        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+          <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
+          </TouchableOpacity>
+          <ThemedText style={[styles.headerTitle, { color: theme.text }]}>QR Scanner</ThemedText>
+          <View style={styles.headerRight} />
+        </View>
+      )}
 
       {!showCamera ? (
         <VerticalScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
@@ -610,11 +613,13 @@ const styles = StyleSheet.create({
   scanTypeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#00BCD4',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 24,
-    gap: 8,
+    backgroundColor: 'rgba(0, 188, 212, 0.9)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
   },
   scanTypeBadgeText: {
     fontSize: 16,
