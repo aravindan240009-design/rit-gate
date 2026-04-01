@@ -210,10 +210,10 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
                 </View>
                 <View style={styles.headerMainInfo}>
                   <View style={styles.nameRow}>
-                    <ThemedText style={[styles.requestStudentName, { color: theme.text }]}>
+                    <ThemedText ignoreGradient style={[styles.requestStudentName, { color: theme.text }]}>
                       {request.passType === 'BULK' ? (request.requestedByStaffName || 'Bulk Request') : request.passType === 'VISITOR' ? (request.visitorName || 'Visitor') : request.regNo}
                     </ThemedText>
-                    <ThemedText style={[styles.passTypeLabel, { color: theme.textSecondary }]}>
+                    <ThemedText ignoreGradient style={[styles.passTypeLabel, { color: theme.textSecondary }]}>
                       {request.passType === 'BULK'
                         ? '(Bulk Gatepass)'
                         : request.passType === 'VISITOR'
@@ -221,7 +221,7 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
                         : '(Single Gatepass)'}
                     </ThemedText>
                   </View>
-                  <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
+                  <ThemedText ignoreGradient style={[styles.studentIdSub, { color: theme.textSecondary }]}>
                     {request.passType === 'BULK'
                       ? `${request.userType || 'Staff'} • ${request.department || 'Dept'}`
                       : request.passType === 'VISITOR'
@@ -230,21 +230,21 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
                   </ThemedText>
                 </View>
                 <View style={styles.timeAgoContainer}>
-                  <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</ThemedText>
+                  <ThemedText ignoreGradient style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</ThemedText>
                 </View>
               </View>
 
               <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
                 <View style={styles.detailItem}>
                   <Ionicons name={request.passType === 'VISITOR' ? 'document-text-outline' : 'medical'} size={16} color={theme.textSecondary} />
-                  <ThemedText style={[styles.detailText, { color: theme.text }]}>
+                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
                     {request.passType === 'VISITOR' ? `Purpose of Visit: ${request.purpose || 'General'}` : (request.purpose || 'General')}
                   </ThemedText>
                 </View>
                 {request.passType === 'VISITOR' ? (
                   <View style={styles.detailItem}>
                     <Ionicons name="people" size={16} color={theme.textSecondary} />
-                    <ThemedText style={[styles.detailText, { color: theme.text }]}>
+                    <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
                       {request.numberOfPeople || 1} visitor{(request.numberOfPeople || 1) > 1 ? 's' : ''}
                       {request.vehicleNumber ? ` • ${request.vehicleNumber}` : ''}
                     </ThemedText>
@@ -252,7 +252,7 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
                 ) : (
                   <View style={styles.detailItem}>
                     <Ionicons name="calendar" size={16} color={theme.textSecondary} />
-                    <ThemedText style={[styles.detailText, { color: theme.text }]}>
+                    <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
                       Exit: {new Date(request.exitDateTime || request.requestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </ThemedText>
                   </View>
@@ -260,7 +260,7 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
                 {request.passType === 'BULK' && (
                   <View style={styles.detailItem}>
                     <Ionicons name="people" size={16} color={theme.textSecondary} />
-                    <ThemedText style={[styles.detailText, { color: theme.text }]}>
+                    <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
                       {(() => {
                         const parts: string[] = [];
                         if (request.includeStaff) parts.push('Staff - 1');

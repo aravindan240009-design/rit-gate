@@ -414,13 +414,13 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
             >
               <View style={styles.cardTopRow}>
                 <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                  <ThemedText style={[styles.cardAvatarText, { color: theme.textSecondary }]}>
+                  <ThemedText ignoreGradient style={[styles.cardAvatarText, { color: theme.textSecondary }]}>
                     {getInitials(request.requestType === 'BULK' ? (request.hodCode || 'HOD') : request.requestType === 'VISITOR' ? (request.visitorName || 'VR') : (request.requestedByStaffName || request.studentName || 'ST'))}
                   </ThemedText>
                 </View>
                 <View style={styles.headerMainInfo}>
                   <View style={styles.nameRow}>
-                    <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
+                    <ThemedText ignoreGradient style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
                       {request.requestType === 'VISITOR'
                         ? (request.visitorName || request.studentName || 'Visitor')
                         : request.requestType === 'SINGLE'
@@ -435,7 +435,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                         : '(Single Gatepass)'}
                     </ThemedText>
                   </View>
-                  <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
+                  <ThemedText ignoreGradient style={[styles.studentIdSub, { color: theme.textSecondary }]}>
                     {request.requestType === 'VISITOR'
                       ? `${request.visitorPhone || ''} • ${request.department || 'Department'}`
                       : request.requestType === 'SINGLE'
@@ -444,25 +444,25 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                   </ThemedText>
                 </View>
                 <View style={styles.timeAgoContainer}>
-                  <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</ThemedText>
+                  <ThemedText ignoreGradient style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</ThemedText>
                 </View>
               </View>
 
               <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
                 <View style={styles.detailItem}>
                   <Ionicons name="medical" size={16} color={theme.textSecondary} />
-                  <ThemedText style={[styles.detailText, { color: theme.text }]}>{request.purpose || 'General'}</ThemedText>
+                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>{request.purpose || 'General'}</ThemedText>
                 </View>
                 <View style={styles.detailItem}>
                   <Ionicons name="calendar" size={16} color={theme.textSecondary} />
-                  <ThemedText style={[styles.detailText, { color: theme.text }]}>
+                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
                     Exit: {formatDateShort(request.exitDateTime || request.requestDate)}
                   </ThemedText>
                 </View>
                 {request.requestType === 'BULK' && (
                   <View style={styles.detailItem}>
                     <Ionicons name="people" size={16} color={theme.textSecondary} />
-                    <ThemedText style={[styles.detailText, { color: theme.text }]}>
+                    <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
                       {(() => {
                         const parts: string[] = [];
                         const total = request.participantCount || 0;
@@ -552,20 +552,32 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
               </View>
             ) : (
               exitLogs.map((item) => (
-                <View key={`exit-${item.id}`} style={[styles.requestCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
-                  <View style={styles.cardTopRow}>
-                    <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                      <ThemedText style={[styles.cardAvatarText, { color: theme.textSecondary }]}>{getInitials(item.name || item.userId || 'NA')}</ThemedText>
+                <View key={`exit-${item.id}`} style={[styles.exitCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+                  {/* Top row: avatar + name + type badge */}
+                  <View style={styles.exitTopRow}>
+                    <View style={[styles.exitAvatar, { backgroundColor: theme.error + '18' }]}>
+                      <ThemedText ignoreGradient style={[styles.exitAvatarText, { color: theme.error }]}>{getInitials(item.name || item.userId || 'NA')}</ThemedText>
                     </View>
-                    <View style={styles.headerMainInfo}>
-                      <ThemedText style={[styles.requestStudentName, { color: theme.text }]}>{item.name || item.userId}</ThemedText>
-                      <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>{item.userType} • {item.userId}</ThemedText>
+                    <View style={styles.exitInfo}>
+                      <ThemedText ignoreGradient style={[styles.exitName, { color: theme.text }]} numberOfLines={1}>{item.name || item.userId || 'Unknown'}</ThemedText>
+                      <ThemedText ignoreGradient style={[styles.exitSub, { color: theme.textSecondary }]} numberOfLines={1}>{item.userId}{item.department ? ` • ${item.department}` : ''}</ThemedText>
+                    </View>
+                    <View style={[styles.exitTypeBadge, { backgroundColor: theme.error + '15' }]}>
+                      <ThemedText ignoreGradient style={[styles.exitTypeText, { color: theme.error }]}>{item.userType || 'EXIT'}</ThemedText>
                     </View>
                   </View>
-                  <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
-                    <ThemedText style={[styles.detailText, { color: theme.text }]}>{item.department || '-'}</ThemedText>
-                    <ThemedText style={[styles.detailText, { color: theme.text }]}>{item.purpose || 'General'}</ThemedText>
-                    <ThemedText style={[styles.detailText, { color: theme.textSecondary }]}>Exited: {formatDateShort(item.exitTime)}</ThemedText>
+                  {/* Details row */}
+                  <View style={[styles.exitDetails, { backgroundColor: theme.inputBackground }]}>
+                    {item.purpose ? (
+                      <View style={styles.exitDetailRow}>
+                        <Ionicons name="document-text-outline" size={13} color={theme.textTertiary} />
+                        <ThemedText ignoreGradient style={[styles.exitDetailText, { color: theme.text }]} numberOfLines={1}>{item.purpose}</ThemedText>
+                      </View>
+                    ) : null}
+                    <View style={styles.exitDetailRow}>
+                      <Ionicons name="time-outline" size={13} color={theme.error} />
+                      <ThemedText ignoreGradient style={[styles.exitDetailText, { color: theme.error }]}>{formatDateShort(item.exitTime)}</ThemedText>
+                    </View>
                   </View>
                 </View>
               ))
@@ -880,6 +892,19 @@ const styles = StyleSheet.create({
   processingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', zIndex: 999 },
   processingBox: { backgroundColor: '#fff', borderRadius: 16, padding: 28, alignItems: 'center', gap: 14, minWidth: 160, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 },
   processingText: { fontSize: 15, fontWeight: '600' },
+  // Exit card styles
+  exitCard: { borderRadius: 14, marginBottom: 12, borderWidth: 1, overflow: 'hidden', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3 },
+  exitTopRow: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
+  exitAvatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  exitAvatarText: { fontSize: 15, fontWeight: '800' },
+  exitInfo: { flex: 1, minWidth: 0 },
+  exitName: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  exitSub: { fontSize: 12 },
+  exitTypeBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexShrink: 0 },
+  exitTypeText: { fontSize: 11, fontWeight: '700' },
+  exitDetails: { paddingHorizontal: 14, paddingVertical: 10, gap: 6 },
+  exitDetailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  exitDetailText: { fontSize: 13, flex: 1 },
 });
 
 export default NewHRDashboard;

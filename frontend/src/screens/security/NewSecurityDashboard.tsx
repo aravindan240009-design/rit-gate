@@ -381,20 +381,20 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                 </View>
                 <View style={styles.headerMainInfo}>
                   <View style={styles.nameRow}>
-                    <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
+                    <ThemedText ignoreGradient style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
                       {visitor.name}
                     </ThemedText>
                     <View style={[styles.passTypePill, { backgroundColor: theme.error + '15', borderColor: theme.error + '44' }]}>
-                      <ThemedText style={[styles.passTypePillText, { color: theme.error }]}>Visitor</ThemedText>
+                      <ThemedText ignoreGradient style={[styles.passTypePillText, { color: theme.error }]}>Visitor</ThemedText>
                     </View>
                   </View>
-                  <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
+                  <ThemedText ignoreGradient style={[styles.studentIdSub, { color: theme.textSecondary }]}>
                     To meet: {visitor.personToMeet} • {visitor.department}
                   </ThemedText>
                 </View>
                 <View style={styles.timeAgoContainer}>
                   <Ionicons name="time-outline" size={12} color={theme.error} />
-                  <ThemedText style={[styles.timeAgoText, { color: theme.error }]}>
+                  <ThemedText ignoreGradient style={[styles.timeAgoText, { color: theme.error }]}>
                     {getRelativeTimeShort(visitor.escalationTime || visitor.createdAt)}
                   </ThemedText>
                 </View>
@@ -403,15 +403,15 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
               <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
                 <View style={styles.detailItem}>
                   <Ionicons name="document-text-outline" size={14} color={theme.textSecondary} />
-                  <ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{visitor.purpose}</ThemedText>
+                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{visitor.purpose}</ThemedText>
                 </View>
                 <View style={styles.detailItem}>
                   <Ionicons name="people-outline" size={14} color={theme.textSecondary} />
-                  <ThemedText style={[styles.detailText, { color: theme.text }]}>{visitor.numberOfPeople} {visitor.numberOfPeople === 1 ? 'person' : 'people'}</ThemedText>
+                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>{visitor.numberOfPeople} {visitor.numberOfPeople === 1 ? 'person' : 'people'}</ThemedText>
                 </View>
                 <View style={styles.detailItem}>
                   <Ionicons name="call-outline" size={14} color={theme.textSecondary} />
-                  <ThemedText style={[styles.detailText, { color: theme.text }]}>{visitor.phone}</ThemedText>
+                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>{visitor.phone}</ThemedText>
                 </View>
               </View>
 

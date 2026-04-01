@@ -141,12 +141,12 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
           </View>
           <View style={styles.cardNameBlock}>
             <View style={styles.cardNameRow}>
-              <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>
+              <ThemedText ignoreGradient style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>
               <View style={[styles.typePillInline, { backgroundColor: theme.inputBackground }]}>
                 <ThemedText style={[styles.typePillInlineText, { color: theme.text }]}>{isBulk ? 'Bulk Gatepass' : 'Single Gatepass'}</ThemedText>
               </View>
             </View>
-            <ThemedText style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Staff • {user.department || 'Department'}</ThemedText>
+            <ThemedText ignoreGradient style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Staff • {user.department || 'Department'}</ThemedText>
           </View>
           <ThemedText style={[styles.cardTimeAgo, { color: theme.textTertiary }]}>{getTimeAgo(dateStr)}</ThemedText>
         </View>

@@ -279,12 +279,12 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
               )}
             </TouchableOpacity>
           ) : (
-            <View style={[styles.resultCard, { backgroundColor: theme.success, borderColor: theme.success }]}>
+            <View style={[styles.resultCard, { backgroundColor: theme.success + 'EE', borderColor: theme.success }]}>
               <ThemedText ignoreGradient style={[styles.resultTitle, { color: '#FFFFFF' }]}>Pass generated</ThemedText>
-              <View style={[styles.qrWrap, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <View style={[styles.qrWrap, { backgroundColor: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)' }]}>
                 <QRCode
                   value={qrCode}
-                  size={200}
+                  size={180}
                   color="#0B1220"
                   backgroundColor="#FFFFFF"
                   getRef={(c: any) => {
@@ -292,23 +292,26 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
                   }}
                 />
               </View>
-              <ThemedText ignoreGradient style={[styles.manualBig, { color: '#FFFFFF' }]}>Manual: {manualCode}</ThemedText>
+              <View style={styles.manualRow}>
+                <Ionicons name="keypad-outline" size={18} color="rgba(255,255,255,0.8)" />
+                <ThemedText ignoreGradient style={[styles.manualBig, { color: '#FFFFFF' }]}>{manualCode}</ThemedText>
+              </View>
               <View style={styles.resultActions}>
-                <TouchableOpacity style={[styles.waBtn, { backgroundColor: theme.success }]} onPress={shareWhatsApp}>
-                  <Ionicons name="logo-whatsapp" size={22} color={theme.textInverse} />
-                  <ThemedText style={[styles.waBtnText, { color: theme.textInverse }]}>WhatsApp</ThemedText>
+                <TouchableOpacity style={styles.waBtnNew} onPress={shareWhatsApp}>
+                  <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+                  <ThemedText style={styles.waBtnNewText}>WhatsApp</ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.shareBtn, { borderColor: theme.primary, backgroundColor: theme.surface }]} onPress={shareGeneric}>
-                  <Ionicons name="share-outline" size={20} color={theme.primary} />
-                  <ThemedText style={[styles.shareBtnText, { color: theme.primary }]}>Share</ThemedText>
+                <TouchableOpacity style={styles.shareBtnNew} onPress={shareGeneric}>
+                  <Ionicons name="share-outline" size={20} color="#FFFFFF" />
+                  <ThemedText style={styles.shareBtnNewText}>Share</ThemedText>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.copyBtn, { borderColor: theme.border, backgroundColor: theme.surface }]} onPress={copyManual}>
-                  <Ionicons name="copy-outline" size={20} color={theme.text} />
-                  <ThemedText style={[styles.copyBtnText, { color: theme.text }]}>Copy</ThemedText>
+                <TouchableOpacity style={styles.copyBtnNew} onPress={copyManual}>
+                  <Ionicons name="copy-outline" size={20} color="#FFFFFF" />
+                  <ThemedText style={styles.copyBtnNewText}>Copy</ThemedText>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity style={[styles.doneBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-                <ThemedText style={[styles.doneBtnText, { color: theme.textSecondary }]}>Done</ThemedText>
+              <TouchableOpacity style={styles.doneBtnNew} onPress={onBack}>
+                <ThemedText style={styles.doneBtnNewText}>Done</ThemedText>
               </TouchableOpacity>
             </View>
           )}
@@ -404,6 +407,16 @@ const styles = StyleSheet.create({
   copyBtnText: { fontWeight: '800' },
   doneBtn: { marginTop: 16, padding: 14, alignItems: 'center', borderRadius: 12 },
   doneBtnText: { fontWeight: '700' },
+  // New result card styles
+  manualRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
+  waBtnNew: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12, backgroundColor: '#FFFFFF' },
+  waBtnNewText: { fontWeight: '700', color: '#1F2937', fontSize: 14 },
+  shareBtnNew: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
+  shareBtnNewText: { fontWeight: '700', color: '#FFFFFF', fontSize: 14 },
+  copyBtnNew: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
+  copyBtnNewText: { fontWeight: '700', color: '#FFFFFF', fontSize: 14 },
+  doneBtnNew: { marginTop: 16, padding: 14, alignItems: 'center', borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.15)' },
+  doneBtnNewText: { fontWeight: '700', color: '#FFFFFF', fontSize: 15 },
 });
 
 export default GuestPreRequestScreen;

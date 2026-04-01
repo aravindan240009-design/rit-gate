@@ -338,11 +338,11 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
                 </View>
                 <View style={styles.headerMainInfo}>
                   <View style={styles.nameRow}>
-                    <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
+                    <ThemedText ignoreGradient style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
                       {request.passType === 'BULK' ? (request.requestedByStaffName || `Staff: ${request.requestedByStaffCode}`) : request.passType === 'VISITOR' ? (request.visitorName || request.studentName || 'Visitor') : request.studentName || 'Unknown'}
                     </ThemedText>
                     <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
-                      <ThemedText style={[styles.passTypePillText, { color: theme.text }]}>
+                      <ThemedText ignoreGradient style={[styles.passTypePillText, { color: theme.text }]}>
                         {request.passType === 'BULK'
                           ? 'Bulk Gatepass'
                           : request.passType === 'VISITOR'
@@ -351,30 +351,30 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
                       </ThemedText>
                     </View>
                   </View>
-                  <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
+                  <ThemedText ignoreGradient style={[styles.studentIdSub, { color: theme.textSecondary }]}>
                     {request.passType === 'BULK' ? `${request.userType || 'Staff'} • ${request.department || 'Department'}` : request.passType === 'VISITOR' ? `${request.visitorPhone || ''} • ${request.department || 'Department'}` : `${request.regNo || 'N/A'} • ${request.department || 'Department'}`}
                   </ThemedText>
                 </View>
                 <View style={styles.timeAgoContainer}>
-                  <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</ThemedText>
+                  <ThemedText ignoreGradient style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</ThemedText>
                 </View>
               </View>
 
               <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
                 <View style={styles.detailItem}>
                   <Ionicons name="medical" size={16} color={theme.textSecondary} />
-                  <ThemedText style={[styles.detailText, { color: theme.text }]}>{request.purpose || 'General'}</ThemedText>
+                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>{request.purpose || 'General'}</ThemedText>
                 </View>
                 <View style={styles.detailItem}>
                   <Ionicons name="calendar" size={16} color={theme.textSecondary} />
-                  <ThemedText style={[styles.detailText, { color: theme.text }]}>
+                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
                     Exit: {new Date(request.exitDateTime || request.requestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </ThemedText>
                 </View>
                 {request.passType === 'BULK' && (
                   <View style={styles.detailItem}>
                     <Ionicons name="people" size={16} color={theme.textSecondary} />
-                    <ThemedText style={[styles.detailText, { color: theme.text }]}>
+                    <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
                       {(() => {
                         const parts: string[] = [];
                         const total = request.participantCount || 0;
