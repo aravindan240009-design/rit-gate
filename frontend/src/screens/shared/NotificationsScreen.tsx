@@ -36,7 +36,6 @@ interface NotificationsScreenProps {
 
 export default function NotificationsScreen({ userId, userType, onBack }: NotificationsScreenProps) {
   const { theme } = useTheme();
-  const insets = useSafeAreaInsets();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

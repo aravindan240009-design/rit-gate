@@ -585,7 +585,7 @@ const App: React.FC = () => {
               <NotificationsScreen
                 userId={student.regNo}
                 userType="student"
-                onBack={goBackToHome}
+                onBack={navigateBack}
               />
             );
           default:
@@ -677,7 +677,7 @@ const App: React.FC = () => {
               <NotificationsScreen
                 userId={staff.staffCode}
                 userType="staff"
-                onBack={goBackToHome}
+                onBack={navigateBack}
               />
             );
           case 'GUEST_PRE_REQUEST':
@@ -771,7 +771,7 @@ const App: React.FC = () => {
               <NotificationsScreen
                 userId={hod.hodCode}
                 userType="hod"
-                onBack={goBackToHome}
+                onBack={navigateBack}
               />
             );
           case 'GUEST_PRE_REQUEST':
@@ -819,7 +819,7 @@ const App: React.FC = () => {
               <NotificationsScreen
                 userId={hr.hrCode}
                 userType="hr"
-                onBack={goBackToHome}
+                onBack={navigateBack}
               />
             );
           case 'GUEST_PRE_REQUEST':
