@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
-  View, TextInput, TouchableOpacity, FlatList, StyleSheet, Modal,
+  View, TouchableOpacity, FlatList, StyleSheet, Modal,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
@@ -17,42 +17,33 @@ interface SearchableDropdownProps {
   onSelect: (value: string, label: string) => void;
   placeholder?: string;
   disabled?: boolean;
-  icon?: string;
 }
 
 const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   items,
   selectedValue,
   onSelect,
-  placeholder = 'Select or type...',
+  placeholder = 'Select...',
   disabled = false,
-  icon = 'chevron-down',
 }) => {
   const { theme } = useTheme();
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState('');
 
   const selectedLabel = items.find(i => i.value === selectedValue)?.label || '';
 
-  const filtered = query.trim()
-    ? items.filter(i => i.label.toLowerCase().includes(query.toLowerCase()))
-    : items;
-
   const handleOpen = () => {
     if (disabled) return;
-    setQuery('');
     setOpen(true);
   };
 
   const handleSelect = (item: DropdownItem) => {
     onSelect(item.value, item.label);
     setOpen(false);
-    setQuery('');
   };
 
   return (
     <>
-      {/* Trigger */}
+      {/* Trigger — tappable field */}
       <TouchableOpacity
         style={[
           styles.trigger,
@@ -70,7 +61,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
         >
           {selectedLabel || placeholder}
         </ThemedText>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={theme.primary} />
+        <Ionicons name="chevron-down" size={18} color={theme.primary} />
       </TouchableOpacity>
 
       {/* Dropdown Modal */}
@@ -82,32 +73,12 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
       >
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={() => setOpen(false)} />
         <View style={[styles.dropdownCard, { backgroundColor: theme.surface, borderColor: theme.primary }]}>
-          {/* Search input */}
-          <View style={[styles.searchRow, { borderBottomColor: theme.border }]}>
-            <Ionicons name="search-outline" size={16} color={theme.textTertiary} />
-            <TextInput
-              style={[styles.searchInput, { color: theme.text }]}
-              placeholder={placeholder}
-              placeholderTextColor={theme.textTertiary}
-              value={query}
-              onChangeText={setQuery}
-              autoFocus
-              autoCapitalize="none"
-            />
-            {query.length > 0 && (
-              <TouchableOpacity onPress={() => setQuery('')}>
-                <Ionicons name="close-circle" size={16} color={theme.textTertiary} />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* List */}
           <FlatList
-            data={filtered}
+            data={items}
             keyExtractor={item => item.value}
             style={styles.list}
             keyboardShouldPersistTaps="handled"
-            renderItem={({ item, index }) => (
+            renderItem={({ item }) => (
               <TouchableOpacity
                 style={[
                   styles.listItem,
@@ -134,7 +105,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
             )}
             ListEmptyComponent={
               <View style={styles.empty}>
-                <ThemedText ignoreGradient style={[styles.emptyText, { color: theme.textTertiary }]}>No results</ThemedText>
+                <ThemedText ignoreGradient style={[styles.emptyText, { color: theme.textTertiary }]}>No options</ThemedText>
               </View>
             }
           />
@@ -172,16 +143,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 16,
   },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    gap: 8,
-  },
-  searchInput: { flex: 1, fontSize: 15, paddingVertical: 0 },
-  list: { maxHeight: 280 },
+  list: { maxHeight: 360 },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',

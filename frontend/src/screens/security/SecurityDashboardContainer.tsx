@@ -21,59 +21,77 @@ type InternalScreen =
   | 'DASHBOARD'
   | 'QR_SCANNER'
   | 'VISITOR_REGISTRATION'
-  | 'VISITOR_QR'
+  | 'VISITOR_QR'          // sub-page of VISITOR_REGISTRATION
   | 'VEHICLE_REGISTRATION'
   | 'SCAN_HISTORY'
   | 'HOD_CONTACTS'
   | 'PROFILE'
   | 'NOTIFICATIONS';
 
+// Main pages: back goes to DASHBOARD
+const MAIN_PAGES: InternalScreen[] = [
+  'QR_SCANNER', 'VISITOR_REGISTRATION', 'VEHICLE_REGISTRATION',
+  'SCAN_HISTORY', 'HOD_CONTACTS', 'PROFILE', 'NOTIFICATIONS',
+];
+
 const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
   security,
   onLogout,
   onNavigate,
 }) => {
-  // Stack-based navigation: back pops to previous screen
-  const [stack, setStack] = useState<InternalScreen[]>(['DASHBOARD']);
-
-  const activeScreen = stack[stack.length - 1];
-
-  const push = useCallback((screen: InternalScreen) => {
-    setStack(prev => [...prev, screen]);
-  }, []);
-
-  const pop = useCallback(() => {
-    setStack(prev => (prev.length > 1 ? prev.slice(0, -1) : prev));
-  }, []);
+  // Stack only used for sub-pages (e.g. VISITOR_QR inside VISITOR_REGISTRATION)
+  // Main pages are set directly (replacing current, not pushing)
+  const [activeScreen, setActiveScreen] = useState<InternalScreen>('DASHBOARD');
+  const [prevScreen, setPrevScreen] = useState<InternalScreen>('DASHBOARD');
 
   const goHome = useCallback(() => {
-    setStack(['DASHBOARD']);
+    setActiveScreen('DASHBOARD');
+    setPrevScreen('DASHBOARD');
   }, []);
 
-  // Hardware back: pop stack; if at DASHBOARD let App.tsx handle (exit modal)
+  const goTo = useCallback((screen: InternalScreen) => {
+    // Main pages: remember DASHBOARD as parent
+    setPrevScreen('DASHBOARD');
+    setActiveScreen(screen);
+  }, []);
+
+  const pushSubPage = useCallback((screen: InternalScreen, parent: InternalScreen) => {
+    // Sub-page: remember parent screen
+    setPrevScreen(parent);
+    setActiveScreen(screen);
+  }, []);
+
+  const goBack = useCallback(() => {
+    if (activeScreen === 'DASHBOARD') return false;
+    setActiveScreen(prevScreen);
+    setPrevScreen('DASHBOARD');
+    return true;
+  }, [activeScreen, prevScreen]);
+
+  // Hardware back
   useEffect(() => {
     const onBack = () => {
-      if (stack.length > 1) {
-        pop();
-        return true;
-      }
-      return false; // DASHBOARD — let App.tsx show exit modal
+      if (activeScreen === 'DASHBOARD') return false; // let App.tsx handle (exit modal)
+      goBack();
+      return true;
     };
     const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
     return () => sub.remove();
-  }, [stack, pop]);
+  }, [activeScreen, goBack]);
 
   const handleNavigate = (screen: ScreenName) => {
     switch (screen) {
       case 'SECURITY_DASHBOARD':   goHome(); break;
-      case 'QR_SCANNER':           push('QR_SCANNER'); break;
-      case 'VISITOR_REGISTRATION': push('VISITOR_REGISTRATION'); break;
-      case 'VISITOR_QR':           push('VISITOR_QR'); break;
-      case 'VEHICLE_REGISTRATION': push('VEHICLE_REGISTRATION'); break;
-      case 'SCAN_HISTORY':         push('SCAN_HISTORY'); break;
-      case 'HOD_CONTACTS':         push('HOD_CONTACTS'); break;
-      case 'PROFILE':              push('PROFILE'); break;
-      case 'NOTIFICATIONS':        push('NOTIFICATIONS'); break;
+      // Main pages — back goes to DASHBOARD
+      case 'QR_SCANNER':           goTo('QR_SCANNER'); break;
+      case 'VISITOR_REGISTRATION': goTo('VISITOR_REGISTRATION'); break;
+      case 'VEHICLE_REGISTRATION': goTo('VEHICLE_REGISTRATION'); break;
+      case 'SCAN_HISTORY':         goTo('SCAN_HISTORY'); break;
+      case 'HOD_CONTACTS':         goTo('HOD_CONTACTS'); break;
+      case 'PROFILE':              goTo('PROFILE'); break;
+      case 'NOTIFICATIONS':        goTo('NOTIFICATIONS'); break;
+      // Sub-pages — back goes to parent
+      case 'VISITOR_QR':           pushSubPage('VISITOR_QR', 'VISITOR_REGISTRATION'); break;
       default:                     onNavigate(screen); break;
     }
   };
@@ -83,7 +101,7 @@ const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
       return (
         <ModernQRScannerScreen
           security={security}
-          onBack={pop}
+          onBack={goHome}
           onNavigate={handleNavigate}
         />
       );
@@ -91,7 +109,7 @@ const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
       return (
         <ModernVisitorRegistrationScreen
           security={security}
-          onBack={pop}
+          onBack={goHome}
           onNavigate={handleNavigate}
         />
       );
@@ -99,7 +117,7 @@ const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
       return (
         <SecurityVisitorQRScreen
           security={security}
-          onBack={pop}
+          onBack={() => goBack()}
           onNavigate={handleNavigate}
         />
       );
@@ -107,7 +125,7 @@ const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
       return (
         <ModernVehicleRegistrationScreen
           security={security}
-          onBack={pop}
+          onBack={goHome}
           onNavigate={handleNavigate}
         />
       );
@@ -115,7 +133,7 @@ const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
       return (
         <ModernScanHistoryScreen
           security={security}
-          onBack={pop}
+          onBack={goHome}
           onNavigate={handleNavigate}
         />
       );
@@ -123,7 +141,7 @@ const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
       return (
         <ModernHODContactsScreen
           security={security}
-          onBack={pop}
+          onBack={goHome}
           onNavigate={handleNavigate}
         />
       );
@@ -132,7 +150,7 @@ const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
         <ProfileScreen
           user={security}
           userType="SECURITY"
-          onBack={pop}
+          onBack={goHome}
           onLogout={onLogout}
         />
       );
@@ -141,7 +159,7 @@ const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
         <NotificationsScreen
           userId={security.securityId}
           userType="security"
-          onBack={pop}
+          onBack={goHome}
         />
       );
     default:
