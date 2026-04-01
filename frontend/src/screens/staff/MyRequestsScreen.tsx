@@ -137,16 +137,16 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
       <TouchableOpacity style={[styles.requestCard, { backgroundColor: theme.surface }]} onPress={() => handleReviewRequest(request)} activeOpacity={0.85}>
         <View style={styles.cardTopRow}>
           <View style={[styles.avatarCircle, { backgroundColor: theme.warning }]}>
-            <ThemedText ignoreGradient style={[styles.avatarText, { color: '#FFFFFF' }]}>{initials}</ThemedText>
+            <ThemedText style={[styles.avatarText, { color: '#FFFFFF' }]}>{initials}</ThemedText>
           </View>
           <View style={styles.cardNameBlock}>
             <View style={styles.cardNameRow}>
-              <ThemedText ignoreGradient style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>
+              <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>
               <View style={[styles.typePillInline, { backgroundColor: theme.inputBackground }]}>
                 <ThemedText style={[styles.typePillInlineText, { color: theme.text }]}>{isBulk ? 'Bulk Gatepass' : 'Single Gatepass'}</ThemedText>
               </View>
             </View>
-            <ThemedText ignoreGradient style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Staff • {user.department || 'Department'}</ThemedText>
+            <ThemedText style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Staff • {user.department || 'Department'}</ThemedText>
           </View>
           <ThemedText style={[styles.cardTimeAgo, { color: theme.textTertiary }]}>{getTimeAgo(dateStr)}</ThemedText>
         </View>
@@ -180,7 +180,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
 
         <View style={styles.cardBottomRow}>
           <View style={[styles.statusTag, { backgroundColor: badge.bgColor }]}>
-            <ThemedText ignoreGradient style={[styles.statusTagText, { color: badge.color }]}>{badge.text}</ThemedText>
+            <ThemedText style={[styles.statusTagText, { color: badge.color }]}>{badge.text}</ThemedText>
           </View>
         </View>
       </TouchableOpacity>

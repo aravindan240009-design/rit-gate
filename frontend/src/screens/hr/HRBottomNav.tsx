@@ -27,7 +27,7 @@ const HRBottomNav: React.FC<HRBottomNavProps> = ({ activeTab, onTabChange }) => 
         return (
           <TouchableOpacity key={tab.key} style={styles.item} onPress={() => onTabChange(tab.key)}>
             <Ionicons name={active ? tab.iconActive : tab.icon} size={22} color={active ? theme.primary : theme.textTertiary} />
-            <ThemedText ignoreGradient style={[styles.label, { color: active ? theme.primary : theme.textTertiary, fontWeight: active ? '700' : '500' }]}>
+            <ThemedText style={[styles.label, { color: active ? theme.primary : theme.textTertiary, fontWeight: active ? '700' : '500' }]}>
               {tab.label}
             </ThemedText>
             {active && <View style={[styles.indicator, { backgroundColor: theme.primary }]} />}

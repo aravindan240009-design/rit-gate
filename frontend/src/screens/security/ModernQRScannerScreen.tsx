@@ -244,7 +244,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
             {/* Scan Type Badge */}
             <View style={[styles.scanTypeBadge, { marginTop: Platform.OS === 'android' ? 48 : 60, backgroundColor: theme.primary + 'E6' }]}>
               <Ionicons name={scannerType === 'ENTRY' ? 'log-in' : 'log-out'} size={20} color="#FFF" />
-              <ThemedText ignoreGradient style={styles.scanTypeBadgeText}>
+              <ThemedText style={styles.scanTypeBadgeText}>
                 {scannerType === 'ENTRY' ? 'ENTRY SCAN' : 'EXIT SCAN'}
               </ThemedText>
             </View>
@@ -355,7 +355,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
               onPress={() => setShowManualModal(true)}
             >
               <Ionicons name="keypad" size={24} color={theme.primary} />
-              <ThemedText ignoreGradient style={[styles.manualButtonText, { color: theme.primary }]}>Enter Code Manually</ThemedText>
+              <ThemedText style={[styles.manualButtonText, { color: theme.primary }]}>Enter Code Manually</ThemedText>
             </TouchableOpacity>
           </View>
 
@@ -363,8 +363,8 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
           <View style={[styles.instructionsCard, { backgroundColor: theme.info + '22' }]}>
             <Ionicons name="information-circle" size={24} color={theme.info} />
             <View style={styles.instructionsContent}>
-              <ThemedText ignoreGradient style={[styles.instructionsTitle, { color: theme.info }]}>How to Scan</ThemedText>
-              <ThemedText ignoreGradient style={[styles.instructionsText, { color: theme.textSecondary }]}>
+              <ThemedText style={[styles.instructionsTitle, { color: theme.info }]}>How to Scan</ThemedText>
+              <ThemedText style={[styles.instructionsText, { color: theme.textSecondary }]}>
                 Entry Scanner:{'\n'}
                 • QR codes & Barcodes → Regular entry/exit{'\n'}
                 • Plain ID codes → Late entry{'\n'}
@@ -408,7 +408,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
                   ]}
                   onPress={() => setScannerType('ENTRY')}
                 >
-                  <ThemedText ignoreGradient style={[
+                  <ThemedText style={[
                     styles.typeButtonText, { color: theme.textSecondary },
                     scannerType === 'ENTRY' && { color: '#FFF' }
                   ]}>
@@ -422,7 +422,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
                   ]}
                   onPress={() => setScannerType('EXIT')}
                 >
-                  <ThemedText ignoreGradient style={[
+                  <ThemedText style={[
                     styles.typeButtonText, { color: theme.textSecondary },
                     scannerType === 'EXIT' && { color: '#FFF' }
                   ]}>
@@ -455,7 +455,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
                 ) : (
                   <>
                     <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-                    <ThemedText ignoreGradient style={[styles.submitButtonText, { color: '#FFF' }]}>Submit</ThemedText>
+                    <ThemedText style={[styles.submitButtonText, { color: '#FFF' }]}>Submit</ThemedText>
                   </>
                 )}
               </TouchableOpacity>

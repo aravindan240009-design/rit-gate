@@ -55,7 +55,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
         disabled={disabled}
       >
         <ThemedText
-          ignoreGradient
+         
           style={[styles.triggerText, { color: selectedValue ? theme.text : theme.textTertiary }]}
           numberOfLines={1}
         >
@@ -89,7 +89,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                 activeOpacity={0.7}
               >
                 <ThemedText
-                  ignoreGradient
+                 
                   style={[
                     styles.listItemText,
                     { color: theme.text },
@@ -105,7 +105,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
             )}
             ListEmptyComponent={
               <View style={styles.empty}>
-                <ThemedText ignoreGradient style={[styles.emptyText, { color: theme.textTertiary }]}>No options</ThemedText>
+                <ThemedText style={[styles.emptyText, { color: theme.textTertiary }]}>No options</ThemedText>
               </View>
             }
           />

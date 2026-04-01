@@ -113,7 +113,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
             {isReadOnly ? 'Request Details' : 'Pass Verification'}
           </ThemedText>
           <View style={[styles.statusPill, { backgroundColor: statusColor }]}>
-            <ThemedText ignoreGradient style={[styles.statusPillText, { color: '#FFFFFF' }]}>{statusLabel}</ThemedText>
+            <ThemedText style={[styles.statusPillText, { color: '#FFFFFF' }]}>{statusLabel}</ThemedText>
           </View>
         </View>
 
@@ -126,7 +126,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
             <View style={styles.profileInfo}>
               {request.requestType === 'VISITOR' && (
                 <View style={[styles.visitorBadge, { backgroundColor: theme.primary }]}>
-                  <ThemedText ignoreGradient style={[styles.visitorBadgeText, { color: '#FFFFFF' }]}>VISITOR</ThemedText>
+                  <ThemedText style={[styles.visitorBadgeText, { color: '#FFFFFF' }]}>VISITOR</ThemedText>
                 </View>
               )}
               <ThemedText style={[styles.profileName, { color: theme.text }]} numberOfLines={1}>

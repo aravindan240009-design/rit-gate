@@ -132,7 +132,7 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
         <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]} onPress={onBack}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <ThemedText ignoreGradient style={[styles.headerTitle, { color: theme.text }]}>New Gate Pass Request</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>New Gate Pass Request</ThemedText>
         <View style={{ width: 44 }} />
       </View>
 
@@ -143,29 +143,29 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
           <View style={[styles.infoCard, { backgroundColor: theme.surface }]}>
             <View style={styles.avatarContainer}>
               <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-                <ThemedText ignoreGradient style={[styles.avatarText, { color: '#FFFFFF' }]}>{getInitials(user.hodName)}</ThemedText>
+                <ThemedText style={[styles.avatarText, { color: '#FFFFFF' }]}>{getInitials(user.hodName)}</ThemedText>
               </View>
               <View style={{ flex: 1 }}>
-                <ThemedText ignoreGradient style={[styles.userName, { color: theme.text }]} numberOfLines={1}>{user.hodName}</ThemedText>
-                <ThemedText ignoreGradient style={[styles.userDetail, { color: theme.textSecondary }]}>Department: {user.department}</ThemedText>
+                <ThemedText style={[styles.userName, { color: theme.text }]} numberOfLines={1}>{user.hodName}</ThemedText>
+                <ThemedText style={[styles.userDetail, { color: theme.textSecondary }]}>Department: {user.department}</ThemedText>
               </View>
             </View>
             <View style={[styles.activeBadge, { backgroundColor: theme.success }]}>
-              <ThemedText ignoreGradient style={[styles.activeText, { color: '#FFFFFF' }]}>ACTIVE</ThemedText>
+              <ThemedText style={[styles.activeText, { color: '#FFFFFF' }]}>ACTIVE</ThemedText>
             </View>
           </View>
 
           {/* Date & Time */}
           <View style={styles.formSection}>
-            <ThemedText ignoreGradient style={[styles.label, { color: theme.textSecondary }]}>REQUEST DATE & TIME</ThemedText>
+            <ThemedText style={[styles.label, { color: theme.textSecondary }]}>REQUEST DATE & TIME</ThemedText>
             <View style={styles.row}>
               <TouchableOpacity style={[styles.selector, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setShowDatePicker(true)}>
                 <Ionicons name="calendar-outline" size={20} color={theme.primary} />
-                <ThemedText ignoreGradient style={[styles.selectorText, { color: theme.text }]}>{requestDate.toLocaleDateString()}</ThemedText>
+                <ThemedText style={[styles.selectorText, { color: theme.text }]}>{requestDate.toLocaleDateString()}</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.selector, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setShowTimePicker(true)}>
                 <Ionicons name="time-outline" size={20} color={theme.primary} />
-                <ThemedText ignoreGradient style={[styles.selectorText, { color: theme.text }]}>
+                <ThemedText style={[styles.selectorText, { color: theme.text }]}>
                   {requestDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase()}
                 </ThemedText>
               </TouchableOpacity>
@@ -174,7 +174,7 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
 
           {/* Purpose */}
           <View style={styles.formSection}>
-            <ThemedText ignoreGradient style={[styles.label, { color: theme.textSecondary }]}>PURPOSE</ThemedText>
+            <ThemedText style={[styles.label, { color: theme.textSecondary }]}>PURPOSE</ThemedText>
             <TextInput
               style={[styles.purposeInput, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
               placeholder="e.g. Conference, Official Meeting..."
@@ -186,7 +186,7 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
 
           {/* Reason */}
           <View style={styles.formSection}>
-            <ThemedText ignoreGradient style={[styles.label, { color: theme.textSecondary }]}>REASON</ThemedText>
+            <ThemedText style={[styles.label, { color: theme.textSecondary }]}>REASON</ThemedText>
             <TextInput
               style={[styles.textArea, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
               placeholder="e.g. Medical Appointment, Family Emergency..."
@@ -199,10 +199,10 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
 
           {/* Attachment */}
           <View style={styles.formSection}>
-            <ThemedText ignoreGradient style={[styles.label, { color: theme.textSecondary }]}>ATTACHMENT (OPTIONAL)</ThemedText>
+            <ThemedText style={[styles.label, { color: theme.textSecondary }]}>ATTACHMENT (OPTIONAL)</ThemedText>
             <TouchableOpacity style={[styles.uploadBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]} onPress={pickDocument}>
               <Ionicons name="attach-outline" size={22} color={theme.textTertiary} />
-              <ThemedText ignoreGradient style={[styles.uploadText, { color: theme.textSecondary }]}>
+              <ThemedText style={[styles.uploadText, { color: theme.textSecondary }]}>
                 {attachment ? attachment.name : 'Tap to upload image'}
               </ThemedText>
               {attachment && (
@@ -233,7 +233,7 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
               ) : (
                 <View style={styles.btnContent}>
                   <Ionicons name="send" size={20} color="#FFF" />
-                  <ThemedText ignoreGradient style={styles.submitText}>SUBMIT REQUEST</ThemedText>
+                  <ThemedText style={styles.submitText}>SUBMIT REQUEST</ThemedText>
                 </View>
               )}
             </LinearGradient>

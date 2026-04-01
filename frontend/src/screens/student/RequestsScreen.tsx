@@ -316,7 +316,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
                       ]}
                     >
                       <ThemedText
-                        ignoreGradient
+                       
                         style={[
                           styles.statusText,
                           { color: '#FFFFFF' }
@@ -340,7 +340,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
                     >
                       <View style={styles.cardFooter}>
                         <Ionicons name="qr-code-outline" size={16} color={theme.primary} />
-                        <ThemedText ignoreGradient style={[styles.cardFooterText, { color: theme.primary }]}>
+                        <ThemedText style={[styles.cardFooterText, { color: theme.primary }]}>
                           {request.passType === 'BULK' ? 'View Group Pass QR' : 'View QR Code'}
                         </ThemedText>
                       </View>

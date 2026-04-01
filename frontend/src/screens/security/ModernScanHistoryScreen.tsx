@@ -292,7 +292,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               </ThemedText>
               <TouchableOpacity style={[styles.rangeResultsDownloadBtn, { backgroundColor: theme.primary }]} onPress={exportScanPdf}>
                 <Ionicons name="download-outline" size={16} color="#ffffff" />
-                <ThemedText ignoreGradient style={[styles.rangeResultsDownloadText, { color: '#ffffff' }]}>Download PDF</ThemedText>
+                <ThemedText style={[styles.rangeResultsDownloadText, { color: '#ffffff' }]}>Download PDF</ThemedText>
               </TouchableOpacity>
             </View>
             <View style={styles.scrollContent}>
@@ -607,7 +607,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                         size={12}
                         color={scan.status === 'EXITED' || scan.outTime ? theme.error : theme.success}
                       />
-                      <ThemedText ignoreGradient style={[
+                      <ThemedText style={[
                         styles.scanStatusText,
                         { color: scan.status === 'EXITED' || scan.outTime ? theme.error : theme.success }
                       ]}>
@@ -649,7 +649,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   <View style={styles.scanRight}>
                     <View style={[styles.scanStatusBadge, { backgroundColor: theme.success + '15' }]}>
                       <Ionicons name="checkmark-circle" size={12} color={theme.success} />
-                      <ThemedText ignoreGradient style={[styles.scanStatusText, { color: theme.success }]}>REGISTERED</ThemedText>
+                      <ThemedText style={[styles.scanStatusText, { color: theme.success }]}>REGISTERED</ThemedText>
                     </View>
                     <ThemedText style={[styles.scanTime, { color: theme.textTertiary }]}>{formatTime(vehicle.createdAt)}</ThemedText>
                   </View>
@@ -686,7 +686,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   </TouchableOpacity>
                   <ThemedText style={[styles.fsHeaderTitle, { color: theme.text }]}>Scan Details</ThemedText>
                   <View style={[styles.fsStatusPill, { backgroundColor: statusColor }]}>
-                    <ThemedText ignoreGradient style={[styles.fsStatusPillText, { color: '#FFFFFF' }]}>{statusLabel}</ThemedText>
+                    <ThemedText style={[styles.fsStatusPillText, { color: '#FFFFFF' }]}>{statusLabel}</ThemedText>
                   </View>
                 </View>
 

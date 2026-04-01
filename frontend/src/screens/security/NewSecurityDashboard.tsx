@@ -381,20 +381,20 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                 </View>
                 <View style={styles.headerMainInfo}>
                   <View style={styles.nameRow}>
-                    <ThemedText ignoreGradient style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
+                    <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
                       {visitor.name}
                     </ThemedText>
                     <View style={[styles.passTypePill, { backgroundColor: theme.error + '15', borderColor: theme.error + '44' }]}>
-                      <ThemedText ignoreGradient style={[styles.passTypePillText, { color: theme.error }]}>Visitor</ThemedText>
+                      <ThemedText style={[styles.passTypePillText, { color: theme.error }]}>Visitor</ThemedText>
                     </View>
                   </View>
-                  <ThemedText ignoreGradient style={[styles.studentIdSub, { color: theme.textSecondary }]}>
+                  <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
                     To meet: {visitor.personToMeet} • {visitor.department}
                   </ThemedText>
                 </View>
                 <View style={styles.timeAgoContainer}>
                   <Ionicons name="time-outline" size={12} color={theme.error} />
-                  <ThemedText ignoreGradient style={[styles.timeAgoText, { color: theme.error }]}>
+                  <ThemedText style={[styles.timeAgoText, { color: theme.error }]}>
                     {getRelativeTimeShort(visitor.escalationTime || visitor.createdAt)}
                   </ThemedText>
                 </View>
@@ -403,15 +403,15 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
               <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
                 <View style={styles.detailItem}>
                   <Ionicons name="document-text-outline" size={14} color={theme.textSecondary} />
-                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{visitor.purpose}</ThemedText>
+                  <ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{visitor.purpose}</ThemedText>
                 </View>
                 <View style={styles.detailItem}>
                   <Ionicons name="people-outline" size={14} color={theme.textSecondary} />
-                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>{visitor.numberOfPeople} {visitor.numberOfPeople === 1 ? 'person' : 'people'}</ThemedText>
+                  <ThemedText style={[styles.detailText, { color: theme.text }]}>{visitor.numberOfPeople} {visitor.numberOfPeople === 1 ? 'person' : 'people'}</ThemedText>
                 </View>
                 <View style={styles.detailItem}>
                   <Ionicons name="call-outline" size={14} color={theme.textSecondary} />
-                  <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>{visitor.phone}</ThemedText>
+                  <ThemedText style={[styles.detailText, { color: theme.text }]}>{visitor.phone}</ThemedText>
                 </View>
               </View>
 
@@ -421,14 +421,14 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                   onPress={(e) => { e.stopPropagation(); handleApproveVisitor(visitor); }}
                 >
                   <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                  <ThemedText ignoreGradient style={[styles.actionBtnText, { color: '#FFFFFF' }]}>Approve</ThemedText>
+                  <ThemedText style={[styles.actionBtnText, { color: '#FFFFFF' }]}>Approve</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.actionBtn, { backgroundColor: theme.error }]}
                   onPress={(e) => { e.stopPropagation(); handleRejectVisitor(visitor); }}
                 >
                   <Ionicons name="close" size={14} color="#FFFFFF" />
-                  <ThemedText ignoreGradient style={[styles.actionBtnText, { color: '#FFFFFF' }]}>Reject</ThemedText>
+                  <ThemedText style={[styles.actionBtnText, { color: '#FFFFFF' }]}>Reject</ThemedText>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
@@ -463,12 +463,12 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
               <View style={styles.personRight}>
                 <View style={[styles.statusBadge, { backgroundColor: theme.success }]}>
                   <View style={[styles.statusDot, { backgroundColor: '#FFFFFF' }]} />
-                  <ThemedText ignoreGradient style={[styles.statusText, { color: '#FFFFFF' }]}>ACTIVE</ThemedText>
+                  <ThemedText style={[styles.statusText, { color: '#FFFFFF' }]}>ACTIVE</ThemedText>
                 </View>
                 <ThemedText style={[styles.personTime, { color: theme.textTertiary }]}>{formatTime(person.inTime)}</ThemedText>
                 <TouchableOpacity style={[styles.exitButton, { backgroundColor: theme.error }]} onPress={(e) => { e.stopPropagation(); handleManualExit(person); }}>
                   <Ionicons name="log-out-outline" size={16} color="#FFFFFF" />
-                  <ThemedText ignoreGradient style={[styles.exitButtonText, { color: '#FFFFFF' }]}>Exit</ThemedText>
+                  <ThemedText style={[styles.exitButtonText, { color: '#FFFFFF' }]}>Exit</ThemedText>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
@@ -595,7 +595,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                 onPress={() => { setShowDetailModal(false); handleManualExit(selectedPerson); }}
               >
                 <Ionicons name="log-out-outline" size={20} color="#FFF" />
-                <ThemedText ignoreGradient style={[detailStyles.exitBtnText, { color: '#FFF' }]}>Mark as Exited</ThemedText>
+                <ThemedText style={[detailStyles.exitBtnText, { color: '#FFF' }]}>Mark as Exited</ThemedText>
               </TouchableOpacity>
             </View>
           )}
@@ -614,7 +614,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
             </TouchableOpacity>
             <ThemedText style={[detailStyles.headerTitle, { color: theme.text }]}>Visitor Request</ThemedText>
             <View style={[detailStyles.statusPill, { backgroundColor: theme.warning }]}>
-              <ThemedText ignoreGradient style={[detailStyles.statusPillText, { color: '#FFFFFF' }]}>ESCALATED</ThemedText>
+              <ThemedText style={[detailStyles.statusPillText, { color: '#FFFFFF' }]}>ESCALATED</ThemedText>
             </View>
           </View>
 
@@ -623,7 +623,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
               {/* Escalation Warning Banner */}
               <View style={[visitorDetailStyles.urgentBanner, { backgroundColor: theme.error }]}>
                 <Ionicons name="alert-circle" size={20} color="#FFFFFF" />
-                <ThemedText ignoreGradient style={[visitorDetailStyles.urgentBannerText, { color: '#FFFFFF' }]}>
+                <ThemedText style={[visitorDetailStyles.urgentBannerText, { color: '#FFFFFF' }]}>
                   Request escalated — No response from {selectedVisitor.personToMeet}
                 </ThemedText>
               </View>
@@ -635,7 +635,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                 </View>
                 <View style={detailStyles.profileInfo}>
                   <View style={[visitorDetailStyles.visitorBadge, { backgroundColor: theme.error }]}>
-                    <ThemedText ignoreGradient style={[visitorDetailStyles.visitorBadgeText, { color: '#FFFFFF' }]}>VISITOR</ThemedText>
+                    <ThemedText style={[visitorDetailStyles.visitorBadgeText, { color: '#FFFFFF' }]}>VISITOR</ThemedText>
                   </View>
                   <ThemedText style={[detailStyles.profileName, { color: theme.text }]} numberOfLines={1}>{selectedVisitor.name}</ThemedText>
                   <ThemedText style={[visitorDetailStyles.profileSub, { color: theme.textSecondary }]} numberOfLines={1}>
@@ -687,14 +687,14 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                   onPress={() => handleApproveVisitor(selectedVisitor)}
                 >
                   <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-                  <ThemedText ignoreGradient style={[visitorDetailStyles.actionBtnText, { color: '#FFF' }]}>Approve</ThemedText>
+                  <ThemedText style={[visitorDetailStyles.actionBtnText, { color: '#FFF' }]}>Approve</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[visitorDetailStyles.actionBtn, { backgroundColor: theme.error }]}
                   onPress={() => handleRejectVisitor(selectedVisitor)}
                 >
                   <Ionicons name="close-circle" size={20} color="#FFF" />
-                  <ThemedText ignoreGradient style={[visitorDetailStyles.actionBtnText, { color: '#FFF' }]}>Reject</ThemedText>
+                  <ThemedText style={[visitorDetailStyles.actionBtnText, { color: '#FFF' }]}>Reject</ThemedText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -729,7 +729,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
               </TouchableOpacity>
               <TouchableOpacity style={[styles.rejectModalConfirmBtn, { backgroundColor: theme.error }]} onPress={confirmRejectVisitor}>
                 <Ionicons name="close-circle" size={20} color="#FFF" />
-                <ThemedText ignoreGradient style={[styles.rejectModalConfirmText, { color: '#FFF' }]}>Reject</ThemedText>
+                <ThemedText style={[styles.rejectModalConfirmText, { color: '#FFF' }]}>Reject</ThemedText>
               </TouchableOpacity>
             </View>
           </View>

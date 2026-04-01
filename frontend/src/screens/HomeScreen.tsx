@@ -100,12 +100,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectUserType }) => {
               />
             </View>
             <View style={styles.titleContainer}>
-              <ThemedText ignoreGradient style={[styles.titleMain, { color: "#000000" }]}>RIT</ThemedText>
-              <ThemedText ignoreGradient variant="primary" style={[styles.titleAccent, { color: "#000000" }]}>
+              <ThemedText style={[styles.titleMain, { color: "#000000" }]}>RIT</ThemedText>
+              <ThemedText variant="primary" style={[styles.titleAccent, { color: "#000000" }]}>
                 GATE
               </ThemedText>
             </View>
-            <ThemedText ignoreGradient style={[styles.subtitle, { color: "#000000" }]}>Secure Access Control System</ThemedText>
+            <ThemedText style={[styles.subtitle, { color: "#000000" }]}>Secure Access Control System</ThemedText>
           </View>
 
           {/* Features Grid */}
@@ -122,15 +122,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectUserType }) => {
                 }]}>
                   <Ionicons name={item.icon as any} size={24} color={"#1D4ED8"} />
                 </View>
-                <ThemedText ignoreGradient style={[styles.featureText, { color: "#000000" }]}>{item.label}</ThemedText>
+                <ThemedText style={[styles.featureText, { color: "#000000" }]}>{item.label}</ThemedText>
               </View>
             ))}
           </View>
 
           {/* Info Text */}
           <View style={styles.infoSection}>
-            <ThemedText ignoreGradient style={[styles.infoTitle, { color: "#000000" }]}>Universal Access</ThemedText>
-            <ThemedText ignoreGradient style={[styles.infoDescription, { color: "#000000" }]}>
+            <ThemedText style={[styles.infoTitle, { color: "#000000" }]}>Universal Access</ThemedText>
+            <ThemedText style={[styles.infoDescription, { color: "#000000" }]}>
               One credential for all roles{'\n'}Auto-detection enabled
             </ThemedText>
           </View>
@@ -139,7 +139,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectUserType }) => {
           <View style={styles.sliderSection}>
             <View style={[styles.sliderTrack, { backgroundColor: "#FFFFFF", borderColor: "#1D4ED8" }]}>
               <Animated.View style={[styles.sliderTextContainer, { opacity: textOpacity }]}>
-                <ThemedText ignoreGradient variant="primary" style={[styles.sliderText, { color: "#000000" }]}>
+                <ThemedText variant="primary" style={[styles.sliderText, { color: "#000000" }]}>
                   Swipe to Access
                 </ThemedText>
                 <Ionicons name="arrow-forward" size={20} color={"#1D4ED8"} />
@@ -161,7 +161,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectUserType }) => {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <ThemedText ignoreGradient style={[styles.footerText, { color: "#000000" }]}>SECURE GATEWAY • RIT TECHNOLOGY © 2026</ThemedText>
+            <ThemedText style={[styles.footerText, { color: "#000000" }]}>SECURE GATEWAY • RIT TECHNOLOGY © 2026</ThemedText>
           </View>
         </Animated.View>
       </SafeAreaView>

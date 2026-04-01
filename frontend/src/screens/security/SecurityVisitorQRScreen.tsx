@@ -183,7 +183,7 @@ const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate
                   <ThemedText style={[styles.visitorPhone, { color: theme.textSecondary }]}>{visitor.phone}</ThemedText>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusBg(visitor.status) }]}>
-                  <ThemedText ignoreGradient style={[styles.statusText, { color: '#FFFFFF' }]}>{visitor.status}</ThemedText>
+                  <ThemedText style={[styles.statusText, { color: '#FFFFFF' }]}>{visitor.status}</ThemedText>
                 </View>
               </View>
 

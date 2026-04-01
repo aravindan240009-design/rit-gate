@@ -310,7 +310,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </View>
           {isEditing && (
             <TouchableOpacity style={[styles.saveButton, { backgroundColor: theme.primary }]} onPress={handleSaveProfile} disabled={savingProfile}>
-              {savingProfile ? <ActivityIndicator color="#FFF" size="small" /> : <ThemedText ignoreGradient style={[styles.saveButtonText, { color: '#FFF' }]}>Save Changes</ThemedText>}
+              {savingProfile ? <ActivityIndicator color="#FFF" size="small" /> : <ThemedText style={[styles.saveButtonText, { color: '#FFF' }]}>Save Changes</ThemedText>}
             </TouchableOpacity>
           )}
         </View>

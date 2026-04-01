@@ -37,7 +37,7 @@ export interface Theme {
   };
 }
 
-export type TextStyleMode = 'solid' | 'gradient';
+export type TextStyleMode = 'solid'; // gradient removed
 
 export type ThemePresetId = 'ocean' | 'neon' | 'sunset' | 'minimal';
 
@@ -296,11 +296,11 @@ interface ThemeContextType {
   theme: Theme;
   isDark: boolean;
   activePreset: ThemePresetId;
-  textStyleMode: TextStyleMode;
+  textStyleMode: TextStyleMode; // always 'solid' now
   transitioning: boolean;
   toggleTheme: () => void;
   applyPreset: (presetId: ThemePresetId) => void;
-  setTextStyleMode: (mode: TextStyleMode) => void;
+  setTextStyleMode: (mode: TextStyleMode) => void; // no-op
   resetTheme: () => void;
   /** Animated opacity value (0→1) that fires on every theme change — use for fade transitions */
   transitionOpacity: Animated.Value;
@@ -319,7 +319,6 @@ export const ThemeProvider: React.FC<{ children: ReactNode; userId?: string }> =
 }) => {
   const [isDark, setIsDark] = useState(false);
   const [activePreset, setActivePreset] = useState<ThemePresetId>('ocean');
-  const [textStyleMode, setTextStyleModeState] = useState<TextStyleMode>('solid');
   const [transitioning, setTransitioning] = useState(false);
   const transitionOpacity = useRef(new Animated.Value(1)).current;
 
@@ -330,16 +329,12 @@ export const ThemeProvider: React.FC<{ children: ReactNode; userId?: string }> =
 
   const loadPreferences = async () => {
     try {
-      const [savedMode, savedPreset, savedTextStyle] = await Promise.all([
+      const [savedMode, savedPreset] = await Promise.all([
         AsyncStorage.getItem(storageKey('mode', userId)),
         AsyncStorage.getItem(storageKey('preset', userId)),
-        AsyncStorage.getItem(storageKey('textStyle', userId)),
       ]);
       if (savedMode)   setIsDark(savedMode === 'dark');
       if (savedPreset) setActivePreset(savedPreset as ThemePresetId);
-      if (savedTextStyle === 'solid' || savedTextStyle === 'gradient') {
-        setTextStyleModeState(savedTextStyle);
-      }
     } catch (e) {
       console.error('ThemeContext: load error', e);
     }
@@ -372,10 +367,9 @@ export const ThemeProvider: React.FC<{ children: ReactNode; userId?: string }> =
     });
   }, [userId, runTransition]);
 
-  const setTextStyleMode = useCallback((mode: TextStyleMode) => {
-    setTextStyleModeState(mode);
-    AsyncStorage.setItem(storageKey('textStyle', userId), mode).catch(() => {});
-  }, [userId]);
+  const setTextStyleMode = useCallback((_mode: TextStyleMode) => {
+    // no-op — gradient mode removed
+  }, []);
 
   // ── Reset ─────────────────────────────────────────────────────────────────
   const resetTheme = useCallback(() => {
@@ -409,7 +403,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode; userId?: string }> =
         theme,
         isDark,
         activePreset,
-        textStyleMode,
+        textStyleMode: 'solid' as TextStyleMode,
         transitioning,
         toggleTheme,
         applyPreset,

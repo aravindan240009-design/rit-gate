@@ -172,34 +172,34 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack 
         {/* Top row: avatar + name + badge + time */}
         <View style={styles.cardTopRow}>
           <View style={[styles.avatarCircle, { backgroundColor: theme.primary }]}>
-            <ThemedText ignoreGradient style={[styles.avatarText, { color: '#FFFFFF' }]}>{initials}</ThemedText>
+            <ThemedText style={[styles.avatarText, { color: '#FFFFFF' }]}>{initials}</ThemedText>
           </View>
           <View style={styles.cardNameBlock}>
             <View style={styles.cardNameRow}>
-              <ThemedText ignoreGradient style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>
+              <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>
               <View style={[styles.typePillInline, { backgroundColor: theme.inputBackground }]}>
-                <ThemedText ignoreGradient style={[styles.typePillInlineText, { color: theme.text }]}>{isBulk ? 'Bulk Gatepass' : 'Single Gatepass'}</ThemedText>
+                <ThemedText style={[styles.typePillInlineText, { color: theme.text }]}>{isBulk ? 'Bulk Gatepass' : 'Single Gatepass'}</ThemedText>
               </View>
             </View>
-            <ThemedText ignoreGradient style={[styles.cardSubtitle, { color: theme.textSecondary }]}>HOD • {user.department || 'Department'}</ThemedText>
+            <ThemedText style={[styles.cardSubtitle, { color: theme.textSecondary }]}>HOD • {user.department || 'Department'}</ThemedText>
           </View>
-          <ThemedText ignoreGradient style={[styles.cardTimeAgo, { color: theme.textTertiary }]}>{getTimeAgo(dateStr)}</ThemedText>
+          <ThemedText style={[styles.cardTimeAgo, { color: theme.textTertiary }]}>{getTimeAgo(dateStr)}</ThemedText>
         </View>
 
         {/* Info box */}
         <View style={[styles.infoBox, { backgroundColor: theme.inputBackground }]}>
           <View style={styles.infoBoxRow}>
             <Ionicons name="document-text-outline" size={14} color={theme.textSecondary} />
-            <ThemedText ignoreGradient style={[styles.infoBoxText, { color: theme.text }]} numberOfLines={1}>{request.purpose || 'General'}</ThemedText>
+            <ThemedText style={[styles.infoBoxText, { color: theme.text }]} numberOfLines={1}>{request.purpose || 'General'}</ThemedText>
           </View>
           <View style={styles.infoBoxRow}>
             <Ionicons name="calendar-outline" size={14} color={theme.textSecondary} />
-            <ThemedText ignoreGradient style={[styles.infoBoxText, { color: theme.text }]}>{formatDate(dateStr)}</ThemedText>
+            <ThemedText style={[styles.infoBoxText, { color: theme.text }]}>{formatDate(dateStr)}</ThemedText>
           </View>
           {isBulk && (
             <View style={styles.infoBoxRow}>
               <Ionicons name="people-outline" size={14} color={theme.textSecondary} />
-              <ThemedText ignoreGradient style={[styles.infoBoxText, { color: theme.text }]}>
+              <ThemedText style={[styles.infoBoxText, { color: theme.text }]}>
                 {(() => {
                   const parts: string[] = [];
                   const sc = request.staffCount ?? 0;
@@ -220,7 +220,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack 
         {/* Bottom row: status pill */}
         <View style={styles.cardBottomRow}>
           <View style={[styles.statusPill, { backgroundColor: badge.bgColor }]}>
-            <ThemedText ignoreGradient style={[styles.statusPillText, { color: badge.color }]}>{badge.text}</ThemedText>
+            <ThemedText style={[styles.statusPillText, { color: badge.color }]}>{badge.text}</ThemedText>
           </View>
         </View>
       </TouchableOpacity>

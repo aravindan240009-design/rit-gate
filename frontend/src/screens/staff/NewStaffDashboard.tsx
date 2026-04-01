@@ -430,22 +430,22 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
                     <View style={styles.headerMainInfo}>
                       <View style={styles.nameRow}>
-                        <ThemedText ignoreGradient style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
+                        <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
                           {request.studentName || 'Unknown'}
                         </ThemedText>
                         {request.requestType === 'VISITOR' ? (
                           <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
-                            <ThemedText ignoreGradient style={[styles.passTypePillText, { color: theme.text }]}>Visitor</ThemedText>
+                            <ThemedText style={[styles.passTypePillText, { color: theme.text }]}>Visitor</ThemedText>
                           </View>
                         ) : (
                           <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
-                            <ThemedText ignoreGradient style={[styles.passTypePillText, { color: theme.text }]}>
+                            <ThemedText style={[styles.passTypePillText, { color: theme.text }]}>
                               {request.passType === 'BULK' ? 'Bulk Gatepass' : 'Single Gatepass'}
                             </ThemedText>
                           </View>
                         )}
                       </View>
-                      <ThemedText ignoreGradient style={[styles.studentIdSub, { color: theme.textSecondary }]}>
+                      <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
                         {request.requestType === 'VISITOR'
                           ? `Visitor • ${request.visitorPhone || ''}`
                           : `${request.regNo || 'N/A'} • ${request.department || 'Department'}`}
@@ -453,7 +453,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                     </View>
 
                     <View style={styles.timeAgoContainer}>
-                      <ThemedText ignoreGradient style={[styles.timeAgoText, { color: theme.textTertiary }]}>
+                      <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>
                         {getRelativeTime(request.requestDate || request.createdAt)}
                       </ThemedText>
                     </View>
@@ -462,11 +462,11 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                   <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
                     <View style={styles.detailItem}>
                       <Ionicons name="document-text-outline" size={16} color={theme.textSecondary} />
-                      <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>{request.purpose || 'General'}</ThemedText>
+                      <ThemedText style={[styles.detailText, { color: theme.text }]}>{request.purpose || 'General'}</ThemedText>
                     </View>
                     <View style={styles.detailItem}>
                       <Ionicons name="calendar-outline" size={16} color={theme.textSecondary} />
-                      <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
+                      <ThemedText style={[styles.detailText, { color: theme.text }]}>
                         {request.requestType === 'VISITOR' && request.visitDate
                           ? `${request.visitDate}${request.visitTime ? ` at ${request.visitTime}` : ''}`
                           : formatDateShort(request.requestDate || request.createdAt)}
@@ -475,7 +475,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                     {request.passType === 'BULK' && (
                       <View style={styles.detailItem}>
                         <Ionicons name="people-outline" size={16} color={theme.textSecondary} />
-                        <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
+                        <ThemedText style={[styles.detailText, { color: theme.text }]}>
                           {(() => {
                             const parts: string[] = [];
                             const sc = request.staffCount ?? 0;
@@ -496,7 +496,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                       request.staffApproval === 'APPROVED' && { backgroundColor: theme.success },
                       request.staffApproval === 'REJECTED' && { backgroundColor: theme.error },
                     ]}>
-                      <ThemedText ignoreGradient style={[
+                      <ThemedText style={[
                         styles.statusText,
                         { color: '#FFFFFF' }
                       ]}>

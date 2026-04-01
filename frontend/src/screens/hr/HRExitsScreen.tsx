@@ -134,7 +134,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
           <View style={styles.actions}>
             <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.primary }]} onPress={() => setRangeModalVisible(true)}>
               <Ionicons name="calendar-outline" size={16} color="#fff" />
-              <ThemedText ignoreGradient style={[styles.actionBtnText, { color: '#FFF' }]}>Date Range</ThemedText>
+              <ThemedText style={[styles.actionBtnText, { color: '#FFF' }]}>Date Range</ThemedText>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionBtn, { backgroundColor: exitLogs.length > 0 ? theme.success : theme.border }]}
@@ -144,7 +144,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
               {isDownloading
                 ? <ActivityIndicator size="small" color="#fff" />
                 : <Ionicons name="download-outline" size={16} color="#fff" />}
-              <ThemedText ignoreGradient style={[styles.actionBtnText, { color: '#FFF' }]}>Download PDF</ThemedText>
+              <ThemedText style={[styles.actionBtnText, { color: '#FFF' }]}>Download PDF</ThemedText>
             </TouchableOpacity>
           </View>
 
@@ -168,28 +168,28 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
               <View key={`exit-${item.id}`} style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                 <View style={styles.cardTop}>
                   <View style={[styles.avatar, { backgroundColor: theme.error + '18' }]}>
-                    <ThemedText ignoreGradient style={[styles.avatarText, { color: theme.error }]}>{getInitials(item.name || item.userId)}</ThemedText>
+                    <ThemedText style={[styles.avatarText, { color: theme.error }]}>{getInitials(item.name || item.userId)}</ThemedText>
                   </View>
                   <View style={styles.cardInfo}>
-                    <ThemedText ignoreGradient style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{item.name || item.userId || 'Unknown'}</ThemedText>
-                    <ThemedText ignoreGradient style={[styles.cardSub, { color: theme.textSecondary }]} numberOfLines={1}>
+                    <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{item.name || item.userId || 'Unknown'}</ThemedText>
+                    <ThemedText style={[styles.cardSub, { color: theme.textSecondary }]} numberOfLines={1}>
                       {item.userId}{item.department ? ` • ${item.department}` : ''}
                     </ThemedText>
                   </View>
                   <View style={[styles.badge, { backgroundColor: theme.error + '15' }]}>
-                    <ThemedText ignoreGradient style={[styles.badgeText, { color: theme.error }]}>{item.userType || 'EXIT'}</ThemedText>
+                    <ThemedText style={[styles.badgeText, { color: theme.error }]}>{item.userType || 'EXIT'}</ThemedText>
                   </View>
                 </View>
                 <View style={[styles.cardDetails, { backgroundColor: theme.inputBackground }]}>
                   {item.purpose ? (
                     <View style={styles.detailRow}>
                       <Ionicons name="document-text-outline" size={13} color={theme.textTertiary} />
-                      <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{item.purpose}</ThemedText>
+                      <ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{item.purpose}</ThemedText>
                     </View>
                   ) : null}
                   <View style={styles.detailRow}>
                     <Ionicons name="time-outline" size={13} color={theme.error} />
-                    <ThemedText ignoreGradient style={[styles.detailText, { color: theme.error }]}>{formatDateShort(item.exitTime)}</ThemedText>
+                    <ThemedText style={[styles.detailText, { color: theme.error }]}>{formatDateShort(item.exitTime)}</ThemedText>
                   </View>
                 </View>
               </View>
@@ -216,8 +216,8 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
                   onPress={() => setSelectingDateType(type)}
                 >
                   <Ionicons name="calendar-outline" size={13} color={selectingDateType === type ? '#fff' : theme.textSecondary} />
-                  <ThemedText ignoreGradient style={[styles.pillLabel, { color: selectingDateType === type ? '#fff' : theme.textSecondary }]}>{type}</ThemedText>
-                  <ThemedText ignoreGradient style={[styles.pillValue, { color: selectingDateType === type ? '#fff' : theme.text }]}>
+                  <ThemedText style={[styles.pillLabel, { color: selectingDateType === type ? '#fff' : theme.textSecondary }]}>{type}</ThemedText>
+                  <ThemedText style={[styles.pillValue, { color: selectingDateType === type ? '#fff' : theme.text }]}>
                     {type === 'FROM' ? (fromDate || 'Select') : (toDate || 'Select')}
                   </ThemedText>
                 </TouchableOpacity>
@@ -247,7 +247,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
             </View>
             <View style={styles.modalActions}>
               <TouchableOpacity style={[styles.clearBtn, { borderColor: theme.border }]} onPress={() => { setFromDate(''); setToDate(''); setSelectingDateType('FROM'); setRangeLabel("Today's exits"); loadExitLogs(); setRangeModalVisible(false); }}>
-                <ThemedText ignoreGradient style={[styles.clearBtnText, { color: theme.textSecondary }]}>Reset</ThemedText>
+                <ThemedText style={[styles.clearBtnText, { color: theme.textSecondary }]}>Reset</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.applyBtn, { backgroundColor: fromDate && toDate ? theme.primary : theme.border }]}
@@ -258,7 +258,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
                   loadExitLogs(fromDate, toDate);
                 }}
               >
-                <ThemedText ignoreGradient style={[styles.applyBtnText, { color: '#FFF' }]}>Apply</ThemedText>
+                <ThemedText style={[styles.applyBtnText, { color: '#FFF' }]}>Apply</ThemedText>
               </TouchableOpacity>
             </View>
           </View>

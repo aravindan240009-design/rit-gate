@@ -7,8 +7,7 @@ import {
   Switch
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useTheme, THEME_PRESETS, ThemePresetId, TextStyleMode } from '../context/ThemeContext';
-import GradientText from './GradientText';
+import { useTheme, THEME_PRESETS, ThemePresetId } from '../context/ThemeContext';
 import ThemedText from './ThemedText';
 
 interface ThemePresetSelectorProps {
@@ -16,7 +15,7 @@ interface ThemePresetSelectorProps {
 }
 
 const ThemePresetSelector: React.FC<ThemePresetSelectorProps> = ({ onScrollLock }) => {
-  const { theme, isDark, activePreset, transitioning, applyPreset, toggleTheme, textStyleMode, setTextStyleMode } = useTheme();
+  const { theme, isDark, activePreset, transitioning, applyPreset, toggleTheme } = useTheme();
 
   const handlePress = (id: ThemePresetId) => {
     if (transitioning) return;
@@ -43,36 +42,6 @@ const ThemePresetSelector: React.FC<ThemePresetSelectorProps> = ({ onScrollLock 
             thumbColor={isDark ? '#A78BFA' : '#FFFFFF'}
             style={{ transform: [{ scaleX: 0.85 }, { scaleY: 0.85 }] }}
           />
-        </View>
-      </View>
-
-      <View style={[styles.textModeRow, { borderTopColor: theme.border }]}>
-        <View style={styles.textModeLeft}>
-          <Ionicons name="text-outline" size={16} color={theme.textSecondary} />
-          <ThemedText style={[styles.textModeLabel, { color: theme.textSecondary }]}>Text Style</ThemedText>
-        </View>
-        <View style={[styles.segment, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
-          {([
-            { id: 'solid' as TextStyleMode, label: 'Normal' },
-            { id: 'gradient' as TextStyleMode, label: 'Gradient' },
-          ]).map((opt) => {
-            const active = textStyleMode === opt.id;
-            return (
-              <TouchableOpacity
-                key={opt.id}
-                onPress={() => setTextStyleMode(opt.id)}
-                style={[
-                  styles.segmentItem,
-                  active && { backgroundColor: theme.surface },
-                ]}
-                activeOpacity={0.85}
-              >
-                <ThemedText style={[styles.segmentText, { color: active ? theme.text : theme.textTertiary }]}>
-                  {opt.label}
-                </ThemedText>
-              </TouchableOpacity>
-            );
-          })}
         </View>
       </View>
 
@@ -125,7 +94,7 @@ const ThemePresetSelector: React.FC<ThemePresetSelectorProps> = ({ onScrollLock 
                   <View style={[styles.miniDot, { backgroundColor: c1 }]} />
                 </View>
                 <View style={styles.presetNameWrap}>
-                  <GradientText text={preset.name} colors={[c1, c2]} style={styles.presetName} />
+                  <ThemedText style={[styles.presetName, { color: c1 }]}>{preset.name}</ThemedText>
                 </View>
                 <ThemedText style={[styles.presetDesc, { color: theme.textTertiary }]} numberOfLines={1}>
                   {preset.description}
@@ -184,29 +153,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  textModeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderTopWidth: 1,
-    gap: 12,
-  },
-  textModeLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  textModeLabel: { fontSize: 12, fontWeight: '700' },
-  segment: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    padding: 2,
-    borderWidth: 1,
-  },
-  segmentItem: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  segmentText: { fontSize: 12, fontWeight: '800', letterSpacing: 0.2 },
   presetRow: {
     paddingHorizontal: 12,
     paddingBottom: 12,

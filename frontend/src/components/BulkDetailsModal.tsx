@@ -130,7 +130,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
           <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Bulk Pass Details</ThemedText>
           {!loading && !error && (
             <View style={[styles.statusPill, { backgroundColor: statusColor }]}>
-              <ThemedText ignoreGradient style={[styles.statusPillText, { color: '#FFFFFF' }]}>{statusLabel}</ThemedText>
+              <ThemedText style={[styles.statusPillText, { color: '#FFFFFF' }]}>{statusLabel}</ThemedText>
             </View>
           )}
         </View>
@@ -169,7 +169,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
               {participants.length > 0 && (
                 <View style={[styles.countPill, { backgroundColor: theme.primary }]}>
                   <Ionicons name="people" size={14} color="#FFFFFF" />
-                  <ThemedText ignoreGradient style={[styles.countPillText, { color: '#FFFFFF' }]}>{participants.length}</ThemedText>
+                  <ThemedText style={[styles.countPillText, { color: '#FFFFFF' }]}>{participants.length}</ThemedText>
                 </View>
               )}
             </View>

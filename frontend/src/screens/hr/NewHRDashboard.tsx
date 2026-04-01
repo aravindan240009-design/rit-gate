@@ -413,13 +413,13 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                     >
                       <View style={styles.cardTopRow}>
                         <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                          <ThemedText ignoreGradient style={[styles.cardAvatarText, { color: theme.textSecondary }]}>
+                          <ThemedText style={[styles.cardAvatarText, { color: theme.textSecondary }]}>
                             {getInitials(request.requestType === 'BULK' ? (request.hodCode || 'HOD') : request.requestType === 'VISITOR' ? (request.visitorName || 'VR') : (request.requestedByStaffName || request.studentName || 'ST'))}
                           </ThemedText>
                         </View>
                         <View style={styles.headerMainInfo}>
                           <View style={styles.nameRow}>
-                            <ThemedText ignoreGradient style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
+                            <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
                               {request.requestType === 'VISITOR'
                                 ? (request.visitorName || request.studentName || 'Visitor')
                                 : request.requestType === 'SINGLE'
@@ -434,7 +434,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                                   : '(Single Gatepass)'}
                             </ThemedText>
                           </View>
-                          <ThemedText ignoreGradient style={[styles.studentIdSub, { color: theme.textSecondary }]}>
+                          <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
                             {request.requestType === 'VISITOR'
                               ? `${request.visitorPhone || ''} • ${request.department || 'Department'}`
                               : request.requestType === 'SINGLE'
@@ -443,25 +443,25 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                           </ThemedText>
                         </View>
                         <View style={styles.timeAgoContainer}>
-                          <ThemedText ignoreGradient style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</ThemedText>
+                          <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</ThemedText>
                         </View>
                       </View>
 
                       <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
                         <View style={styles.detailItem}>
                           <Ionicons name="medical" size={16} color={theme.textSecondary} />
-                          <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>{request.purpose || 'General'}</ThemedText>
+                          <ThemedText style={[styles.detailText, { color: theme.text }]}>{request.purpose || 'General'}</ThemedText>
                         </View>
                         <View style={styles.detailItem}>
                           <Ionicons name="calendar" size={16} color={theme.textSecondary} />
-                          <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
+                          <ThemedText style={[styles.detailText, { color: theme.text }]}>
                             Exit: {formatDateShort(request.exitDateTime || request.requestDate)}
                           </ThemedText>
                         </View>
                         {request.requestType === 'BULK' && (
                           <View style={styles.detailItem}>
                             <Ionicons name="people" size={16} color={theme.textSecondary} />
-                            <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]}>
+                            <ThemedText style={[styles.detailText, { color: theme.text }]}>
                               {(() => {
                                 const parts: string[] = [];
                                 const total = request.participantCount || 0;
@@ -486,7 +486,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                             return { backgroundColor: theme.warning };
                           })(),
                         ]}>
-                          <ThemedText ignoreGradient style={[styles.statusText, { color: '#FFFFFF' }]}>
+                          <ThemedText style={[styles.statusText, { color: '#FFFFFF' }]}>
                             {(() => {
                               const s = (request.requestType === 'VISITOR' ? request.status : (request.hrApproval || request.status)) || 'PENDING';
                               return (s === 'PENDING_HR' || s === 'PENDING' || !s) ? 'PENDING' : s;
@@ -517,22 +517,22 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('HOME')}>
           <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
-          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
           {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('GUEST'); onNavigate('GUEST_PRE_REQUEST'); }}>
           <Ionicons name={bottomTab === 'GUEST' ? 'person-add' : 'person-add-outline'} size={22} color={bottomTab === 'GUEST' ? theme.primary : theme.textTertiary} />
-          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'GUEST' && { color: theme.primary }]}>Guest</ThemedText>
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'GUEST' && { color: theme.primary }]}>Guest</ThemedText>
           {bottomTab === 'GUEST' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('EXITS'); onNavigate('HR_EXITS'); }}>
           <Ionicons name={bottomTab === 'EXITS' ? 'log-out' : 'log-out-outline'} size={22} color={bottomTab === 'EXITS' ? theme.primary : theme.textTertiary} />
-          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'EXITS' && { color: theme.primary }]}>Exits</ThemedText>
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'EXITS' && { color: theme.primary }]}>Exits</ThemedText>
           {bottomTab === 'EXITS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
           <Ionicons name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'} size={22} color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary} />
-          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</ThemedText>
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</ThemedText>
           {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
       </View>

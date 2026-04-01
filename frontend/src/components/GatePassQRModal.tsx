@@ -185,15 +185,15 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
               <View style={styles.shareSection}>
                 <TouchableOpacity style={[styles.shareBtn, { backgroundColor: '#25D366' }]} onPress={handleWhatsApp}>
                   <Ionicons name="logo-whatsapp" size={18} color="#fff" />
-                  <ThemedText ignoreGradient style={styles.shareBtnText}>WhatsApp</ThemedText>
+                  <ThemedText style={styles.shareBtnText}>WhatsApp</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.shareBtn, { backgroundColor: theme.primary }]} onPress={handleShare}>
                   <Ionicons name="share-outline" size={18} color="#fff" />
-                  <ThemedText ignoreGradient style={styles.shareBtnText}>Share</ThemedText>
+                  <ThemedText style={styles.shareBtnText}>Share</ThemedText>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.shareBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={handleCopy}>
                   <Ionicons name="copy-outline" size={18} color={theme.text} />
-                  <ThemedText ignoreGradient style={[styles.shareBtnText, { color: theme.text }]}>Copy Code</ThemedText>
+                  <ThemedText style={[styles.shareBtnText, { color: theme.text }]}>Copy Code</ThemedText>
                 </TouchableOpacity>
               </View>
             )}

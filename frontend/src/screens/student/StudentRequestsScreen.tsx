@@ -129,42 +129,42 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
         {/* Top row */}
         <View style={styles.cardTopRow}>
           <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-            <ThemedText ignoreGradient style={[styles.avatarText, { color: '#FFFFFF' }]}>{initials}</ThemedText>
+            <ThemedText style={[styles.avatarText, { color: '#FFFFFF' }]}>{initials}</ThemedText>
           </View>
           <View style={styles.nameBlock}>
             <View style={styles.nameRow}>
-              <ThemedText ignoreGradient style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>
+              <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>
               <View style={[styles.typePill, { backgroundColor: theme.inputBackground }]}>
-                <ThemedText ignoreGradient style={[styles.typePillText, { color: theme.text }]}>
+                <ThemedText style={[styles.typePillText, { color: theme.text }]}>
                   {isBulk ? 'Bulk Gatepass' : 'Single Gatepass'}
                 </ThemedText>
               </View>
             </View>
-            <ThemedText ignoreGradient style={[styles.cardSub, { color: theme.textSecondary }]}>
+            <ThemedText style={[styles.cardSub, { color: theme.textSecondary }]}>
               Student • {student.department || 'Department'}
             </ThemedText>
           </View>
-          <ThemedText ignoreGradient style={[styles.timeAgo, { color: theme.textTertiary }]}>{getTimeAgo(dateStr)}</ThemedText>
+          <ThemedText style={[styles.timeAgo, { color: theme.textTertiary }]}>{getTimeAgo(dateStr)}</ThemedText>
         </View>
 
         {/* Info box */}
         <View style={[styles.infoBox, { backgroundColor: theme.inputBackground }]}>
           <View style={styles.infoRow}>
             <Ionicons name="document-text-outline" size={14} color={theme.textSecondary} />
-            <ThemedText ignoreGradient style={[styles.infoText, { color: theme.text }]} numberOfLines={1}>
+            <ThemedText style={[styles.infoText, { color: theme.text }]} numberOfLines={1}>
               {request.purpose || request.reason || 'Gate Pass Request'}
             </ThemedText>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="calendar-outline" size={14} color={theme.textSecondary} />
-            <ThemedText ignoreGradient style={[styles.infoText, { color: theme.text }]}>{formatDate(dateStr)}</ThemedText>
+            <ThemedText style={[styles.infoText, { color: theme.text }]}>{formatDate(dateStr)}</ThemedText>
           </View>
         </View>
 
         {/* Status pill */}
         <View style={[styles.statusPill, { backgroundColor: badge.bg }]}>
           <View style={[styles.statusDot, { backgroundColor: badge.color }]} />
-          <ThemedText ignoreGradient style={[styles.statusText, { color: badge.color }]}>{badge.text}</ThemedText>
+          <ThemedText style={[styles.statusText, { color: badge.color }]}>{badge.text}</ThemedText>
         </View>
       </TouchableOpacity>
     );
