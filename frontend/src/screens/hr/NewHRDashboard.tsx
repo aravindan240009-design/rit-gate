@@ -30,7 +30,7 @@ import ErrorModal from '../../components/ErrorModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import { exportStyledPdfReport } from '../../utils/pdfReport';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
-import GuestPreRequestScreen from '../shared/GuestPreRequestScreen';
+// GuestPreRequestScreen is navigated to via onNavigate('GUEST_PRE_REQUEST') — not rendered inline
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 
@@ -322,7 +322,6 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
       {/* Header */}
-      {bottomTab !== 'GUEST' && (
       <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
@@ -346,7 +345,6 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           </TouchableOpacity>
         </View>
       </View>
-      )}
 
       {bottomTab === 'HOME' && (
       <>
@@ -510,18 +508,6 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       </>
       )}
 
-      {bottomTab === 'GUEST' && (
-        <View style={{ flex: 1 }}>
-          <GuestPreRequestScreen
-            creatorRole="HR"
-            creatorStaffCode={hr.hrCode}
-            creatorName={hr.hrName || hr.name}
-            creatorDepartment={hr.department}
-            onBack={() => setBottomTab('HOME')}
-          />
-        </View>
-      )}
-
       {bottomTab === 'EXITS' && (
         <ScreenContentContainer>
         <VerticalScrollView
@@ -605,7 +591,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
           {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('GUEST')}>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('GUEST'); onNavigate('GUEST_PRE_REQUEST'); }}>
           <Ionicons name={bottomTab === 'GUEST' ? 'person-add' : 'person-add-outline'} size={22} color={bottomTab === 'GUEST' ? theme.primary : theme.textTertiary} />
           <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'GUEST' && { color: theme.primary }]}>Guest</ThemedText>
           {bottomTab === 'GUEST' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
