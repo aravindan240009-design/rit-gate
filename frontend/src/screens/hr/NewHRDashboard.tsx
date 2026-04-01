@@ -31,6 +31,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import { exportStyledPdfReport } from '../../utils/pdfReport';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import GuestPreRequestScreen from '../shared/GuestPreRequestScreen';
+import HRBottomNav from './HRBottomNav';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 
@@ -39,12 +40,16 @@ interface NewHRDashboardProps {
   hr: HR;
   onLogout: () => void;
   onNavigate: (screen: ScreenName) => void;
+  activeTab?: string;
+  onTabChange?: (tab: any) => void;
 }
 
 const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   hr,
   onLogout,
   onNavigate,
+  activeTab: externalTab = 'HOME',
+  onTabChange,
 }) => {
   const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
@@ -530,20 +535,31 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           contentContainerStyle={{ paddingBottom: 100 }}
           showsVerticalScrollIndicator={false} decelerationRate="normal"
         >
-          <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
-            <Ionicons name="calendar-outline" size={20} color={theme.textTertiary} />
-            <ThemedText style={[styles.searchInput, { color: theme.text }]}>Today&apos;s exits ({exitLogs.length})</ThemedText>
+          {/* Exits header card */}
+          <View style={[styles.exitsHeaderCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <View style={styles.exitsHeaderLeft}>
+              <View style={[styles.exitsIconWrap, { backgroundColor: theme.error + '15' }]}>
+                <Ionicons name="log-out-outline" size={22} color={theme.error} />
+              </View>
+              <View>
+                <ThemedText ignoreGradient style={[styles.exitsTitle, { color: theme.text }]}>Exit Records</ThemedText>
+                <ThemedText ignoreGradient style={[styles.exitsCount, { color: theme.textSecondary }]}>{exitLogs.length} record{exitLogs.length !== 1 ? 's' : ''}</ThemedText>
+              </View>
+            </View>
           </View>
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={[styles.approveButton, { backgroundColor: theme.primary }]} onPress={() => setRangeModalVisible(true)}>
-              <Ionicons name="funnel-outline" size={16} color="#fff" />
-              <ThemedText style={styles.approveButtonText}>From / To</ThemedText>
+
+          {/* Action buttons — equal width, full row */}
+          <View style={styles.exitsActions}>
+            <TouchableOpacity style={[styles.exitsBtn, { backgroundColor: theme.primary }]} onPress={() => setRangeModalVisible(true)}>
+              <Ionicons name="calendar-outline" size={16} color="#fff" />
+              <ThemedText ignoreGradient style={styles.exitsBtnText}>Date Range</ThemedText>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.rejectButton, { backgroundColor: theme.success }]} onPress={() => exportExitsPdf(exitLogs)}>
+            <TouchableOpacity style={[styles.exitsBtn, { backgroundColor: theme.success }]} onPress={() => exportExitsPdf(exitLogs)}>
               <Ionicons name="download-outline" size={16} color="#fff" />
-              <ThemedText style={styles.rejectButtonText}>Download PDF</ThemedText>
+              <ThemedText ignoreGradient style={styles.exitsBtnText}>Download PDF</ThemedText>
             </TouchableOpacity>
           </View>
+
           <View style={styles.scrollContent}>
             {exitLogs.length === 0 ? (
               <View style={styles.emptyState}>
@@ -588,28 +604,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       )}
 
       {/* Bottom Navigation */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
-        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('HOME')}>
-          <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
-          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('GUEST')}>
-          <Ionicons name={bottomTab === 'GUEST' ? 'person-add' : 'person-add-outline'} size={22} color={bottomTab === 'GUEST' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'GUEST' && { color: theme.primary }]}>Guest</ThemedText>
-          {bottomTab === 'GUEST' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('EXITS'); loadExitLogs(); }}>
-          <Ionicons name={bottomTab === 'EXITS' ? 'log-out' : 'log-out-outline'} size={22} color={bottomTab === 'EXITS' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'EXITS' && { color: theme.primary }]}>Exits</ThemedText>
-          {bottomTab === 'EXITS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
-          <Ionicons name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'} size={22} color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</ThemedText>
-          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-      </View>
+      <HRBottomNav activeTab={externalTab as any} onTabChange={onTabChange || (() => {})} />
 
       {/* Notification Dropdown */}
       <NotificationDropdown
@@ -905,6 +900,15 @@ const styles = StyleSheet.create({
   exitDetails: { paddingHorizontal: 14, paddingVertical: 10, gap: 6 },
   exitDetailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   exitDetailText: { fontSize: 13, flex: 1 },
+  // Exits section header + actions
+  exitsHeaderCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginHorizontal: 20, marginTop: 16, marginBottom: 12, padding: 16, borderRadius: 14, borderWidth: 1 },
+  exitsHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  exitsIconWrap: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  exitsTitle: { fontSize: 16, fontWeight: '700' },
+  exitsCount: { fontSize: 13, marginTop: 2 },
+  exitsActions: { flexDirection: 'row', gap: 10, marginHorizontal: 20, marginBottom: 16 },
+  exitsBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 13, borderRadius: 12 },
+  exitsBtnText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
 });
 
 export default NewHRDashboard;

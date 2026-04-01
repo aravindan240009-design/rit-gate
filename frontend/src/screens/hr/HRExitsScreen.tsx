@@ -1,0 +1,298 @@
+import React, { useState, useEffect } from 'react';
+import {
+  View, StyleSheet, TouchableOpacity, RefreshControl, Modal, ActivityIndicator, StatusBar,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Calendar } from 'react-native-calendars';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { HR } from '../../types';
+import { apiService } from '../../services/api';
+import { useTheme } from '../../context/ThemeContext';
+import { notificationService } from '../../services/NotificationService';
+import { exportStyledPdfReport } from '../../utils/pdfReport';
+import { formatDateShort } from '../../utils/dateUtils';
+import ThemedText from '../../components/ThemedText';
+import ScreenContentContainer from '../../components/ScreenContentContainer';
+import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import SuccessModal from '../../components/SuccessModal';
+import ErrorModal from '../../components/ErrorModal';
+import HRBottomNav from './HRBottomNav';
+
+interface HRExitsScreenProps {
+  hr: HR;
+  onBack: () => void;
+  activeTab: string;
+  onTabChange: (tab: any) => void;
+}
+
+const getInitials = (name: string) =>
+  name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
+const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, onTabChange }) => {
+  const { theme } = useTheme();
+  const [exitLogs, setExitLogs] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [rangeModalVisible, setRangeModalVisible] = useState(false);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [selectingDateType, setSelectingDateType] = useState<'FROM' | 'TO'>('FROM');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [modalMsg, setModalMsg] = useState('');
+
+  useEffect(() => { loadExitLogs(); }, []);
+
+  const loadExitLogs = async (rangeFrom?: string, rangeTo?: string) => {
+    try {
+      const response = await apiService.getHRExits(rangeFrom, rangeTo);
+      if (response.success) setExitLogs(response.exits || []);
+    } catch (e) {
+      console.error('Error loading HR exits:', e);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => { setRefreshing(true); loadExitLogs(); };
+
+  const exportPdf = async () => {
+    setIsDownloading(true);
+    const filename = `Exit_Report_${new Date().toISOString().slice(0, 10)}`;
+    notificationService.notifyDownloadStarted(filename);
+    try {
+      const savedPath = await exportStyledPdfReport({
+        title: 'Staff & Student Exit Report',
+        subtitle: 'Consolidated exit activity — HR view',
+        sectionHeading: 'Exit records',
+        brandFooterLine: 'RIT Gate Management System',
+        filename,
+        columns: [
+          { key: 'userType', label: 'ROLE' },
+          { key: 'userId', label: 'ID' },
+          { key: 'name', label: 'NAME' },
+          { key: 'department', label: 'DEPARTMENT' },
+          { key: 'purpose', label: 'PURPOSE' },
+          { key: 'exitTime', label: 'EXIT TIME' },
+        ],
+        rows: exitLogs.map((r: any) => ({
+          userType: r.userType || '-',
+          userId: r.userId || '-',
+          name: r.name || '-',
+          department: r.department || '-',
+          purpose: r.purpose || '-',
+          exitTime: formatDateShort(r.exitTime),
+        })),
+      });
+      notificationService.notifyDownloadSuccess(filename, savedPath || undefined);
+      setModalMsg('PDF saved to Downloads.');
+      setShowSuccess(true);
+    } catch (e: any) {
+      setModalMsg(e?.message || 'Failed to generate PDF.');
+      setShowError(true);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
+
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <View style={styles.headerLeft}>
+          <View style={[styles.headerIcon, { backgroundColor: theme.error + '15' }]}>
+            <Ionicons name="log-out-outline" size={20} color={theme.error} />
+          </View>
+          <View>
+            <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Exit Records</ThemedText>
+            <ThemedText ignoreGradient style={[styles.headerSub, { color: theme.textSecondary }]}>
+              {loading ? 'Loading…' : `${exitLogs.length} record${exitLogs.length !== 1 ? 's' : ''}`}
+            </ThemedText>
+          </View>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={[styles.headerBtn, { backgroundColor: theme.primary }]} onPress={() => setRangeModalVisible(true)}>
+            <Ionicons name="calendar-outline" size={15} color="#fff" />
+            <ThemedText ignoreGradient style={styles.headerBtnText}>Filter</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.headerBtn, { backgroundColor: theme.success }]} onPress={exportPdf} disabled={isDownloading}>
+            {isDownloading
+              ? <ActivityIndicator size="small" color="#fff" />
+              : <Ionicons name="download-outline" size={15} color="#fff" />}
+            <ThemedText ignoreGradient style={styles.headerBtnText}>PDF</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScreenContentContainer>
+        <VerticalScrollView
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          decelerationRate="normal"
+        >
+          {loading ? (
+            <View style={styles.centered}>
+              <ActivityIndicator size="large" color={theme.primary} />
+            </View>
+          ) : exitLogs.length === 0 ? (
+            <View style={styles.centered}>
+              <Ionicons name="log-out-outline" size={64} color={theme.border} />
+              <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No exits for selected date</ThemedText>
+              <ThemedText style={[styles.emptySub, { color: theme.textTertiary }]}>Pull to refresh or use Filter to select a date range</ThemedText>
+            </View>
+          ) : (
+            exitLogs.map((item) => (
+              <View key={`exit-${item.id}`} style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+                <View style={styles.cardTop}>
+                  <View style={[styles.avatar, { backgroundColor: theme.error + '18' }]}>
+                    <ThemedText ignoreGradient style={[styles.avatarText, { color: theme.error }]}>{getInitials(item.name || item.userId || 'NA')}</ThemedText>
+                  </View>
+                  <View style={styles.cardInfo}>
+                    <ThemedText ignoreGradient style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{item.name || item.userId || 'Unknown'}</ThemedText>
+                    <ThemedText ignoreGradient style={[styles.cardSub, { color: theme.textSecondary }]} numberOfLines={1}>
+                      {item.userId}{item.department ? ` • ${item.department}` : ''}
+                    </ThemedText>
+                  </View>
+                  <View style={[styles.typeBadge, { backgroundColor: theme.error + '15' }]}>
+                    <ThemedText ignoreGradient style={[styles.typeText, { color: theme.error }]}>{item.userType || 'EXIT'}</ThemedText>
+                  </View>
+                </View>
+                <View style={[styles.cardDetails, { backgroundColor: theme.inputBackground }]}>
+                  {item.purpose ? (
+                    <View style={styles.detailRow}>
+                      <Ionicons name="document-text-outline" size={13} color={theme.textTertiary} />
+                      <ThemedText ignoreGradient style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{item.purpose}</ThemedText>
+                    </View>
+                  ) : null}
+                  <View style={styles.detailRow}>
+                    <Ionicons name="time-outline" size={13} color={theme.error} />
+                    <ThemedText ignoreGradient style={[styles.detailText, { color: theme.error }]}>{formatDateShort(item.exitTime)}</ThemedText>
+                  </View>
+                </View>
+              </View>
+            ))
+          )}
+        </VerticalScrollView>
+      </ScreenContentContainer>
+
+      <HRBottomNav activeTab={activeTab as any} onTabChange={onTabChange} />
+
+      {/* Date Range Modal */}
+      <Modal visible={rangeModalVisible} transparent animationType="slide" onRequestClose={() => setRangeModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: theme.surface }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <ThemedText style={[styles.modalTitle, { color: theme.text }]}>Select Date Range</ThemedText>
+              <TouchableOpacity onPress={() => setRangeModalVisible(false)} style={[styles.closeBtn, { backgroundColor: theme.inputBackground }]}>
+                <Ionicons name="close" size={20} color={theme.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.pillRow}>
+              {(['FROM', 'TO'] as const).map(type => (
+                <TouchableOpacity
+                  key={type}
+                  style={[styles.pill, { backgroundColor: selectingDateType === type ? theme.primary : theme.inputBackground, borderColor: selectingDateType === type ? theme.primary : theme.border }]}
+                  onPress={() => setSelectingDateType(type)}
+                >
+                  <Ionicons name="calendar-outline" size={13} color={selectingDateType === type ? '#fff' : theme.textSecondary} />
+                  <ThemedText ignoreGradient style={[styles.pillLabel, { color: selectingDateType === type ? '#fff' : theme.textSecondary }]}>{type}</ThemedText>
+                  <ThemedText ignoreGradient style={[styles.pillValue, { color: selectingDateType === type ? '#fff' : theme.text }]}>
+                    {type === 'FROM' ? (fromDate || 'Select') : (toDate || 'Select')}
+                  </ThemedText>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={[styles.calWrap, { borderColor: theme.border }]}>
+              <Calendar
+                onDayPress={(day) => {
+                  const d = day.dateString;
+                  if (selectingDateType === 'FROM') {
+                    setFromDate(d);
+                    setSelectingDateType('TO');
+                    if (toDate && toDate < d) setToDate('');
+                  } else {
+                    if (fromDate && d < fromDate) return;
+                    setToDate(d);
+                  }
+                }}
+                minDate={selectingDateType === 'TO' && fromDate ? fromDate : undefined}
+                markedDates={{
+                  ...(fromDate ? { [fromDate]: { selected: true, selectedColor: theme.primary, startingDay: true } } : {}),
+                  ...(toDate ? { [toDate]: { selected: true, selectedColor: theme.primary, endingDay: true } } : {}),
+                }}
+                markingType={fromDate && toDate ? 'period' : 'simple'}
+                theme={{ calendarBackground: theme.surface, selectedDayBackgroundColor: theme.primary, selectedDayTextColor: '#fff', todayTextColor: theme.primary, arrowColor: theme.primary, dayTextColor: theme.text, textDisabledColor: theme.textTertiary, monthTextColor: theme.text }}
+              />
+            </View>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={[styles.clearBtn, { borderColor: theme.border }]} onPress={() => { setFromDate(''); setToDate(''); setSelectingDateType('FROM'); }}>
+                <ThemedText ignoreGradient style={[styles.clearBtnText, { color: theme.textSecondary }]}>Clear</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.applyBtn, { backgroundColor: fromDate && toDate ? theme.primary : theme.border }]}
+                disabled={!fromDate || !toDate}
+                onPress={() => { setRangeModalVisible(false); loadExitLogs(fromDate, toDate); }}
+              >
+                <ThemedText ignoreGradient style={styles.applyBtnText}>Apply</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <SuccessModal visible={showSuccess} title="Done" message={modalMsg} onClose={() => setShowSuccess(false)} autoClose autoCloseDelay={2500} />
+      <ErrorModal visible={showError} type="api" title="Error" message={modalMsg} onClose={() => setShowError(false)} />
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  headerIcon: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '700' },
+  headerSub: { fontSize: 12, marginTop: 1 },
+  headerActions: { flexDirection: 'row', gap: 8 },
+  headerBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  headerBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  listContent: { padding: 16, paddingBottom: 100 },
+  centered: { paddingVertical: 80, alignItems: 'center', gap: 12 },
+  emptyText: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
+  emptySub: { fontSize: 13, textAlign: 'center', paddingHorizontal: 32 },
+  card: { borderRadius: 14, marginBottom: 12, borderWidth: 1, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
+  cardTop: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
+  avatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  avatarText: { fontSize: 15, fontWeight: '800' },
+  cardInfo: { flex: 1, minWidth: 0 },
+  cardName: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  cardSub: { fontSize: 12 },
+  typeBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexShrink: 0 },
+  typeText: { fontSize: 11, fontWeight: '700' },
+  cardDetails: { paddingHorizontal: 14, paddingVertical: 10, gap: 6 },
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  detailText: { fontSize: 13, flex: 1 },
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalCard: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 24 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
+  modalTitle: { fontSize: 17, fontWeight: '700' },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  pillRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingVertical: 14 },
+  pill: { flex: 1, flexDirection: 'column', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1.5, gap: 2 },
+  pillLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8 },
+  pillValue: { fontSize: 13, fontWeight: '700' },
+  calWrap: { marginHorizontal: 12, borderRadius: 12, overflow: 'hidden', borderWidth: 1 },
+  modalActions: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 14 },
+  clearBtn: { flex: 1, paddingVertical: 13, borderRadius: 12, alignItems: 'center', borderWidth: 1 },
+  clearBtnText: { fontSize: 15, fontWeight: '700' },
+  applyBtn: { flex: 2, paddingVertical: 13, borderRadius: 12, alignItems: 'center' },
+  applyBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+});
+
+export default HRExitsScreen;
