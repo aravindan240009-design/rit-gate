@@ -31,7 +31,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import { exportStyledPdfReport } from '../../utils/pdfReport';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 // GuestPreRequestScreen is navigated to via onNavigate('GUEST_PRE_REQUEST') — not rendered inline
-import HRExitsScreen from './HRExitsScreen';
+// HRExitsScreen is navigated to via onNavigate('HR_EXITS') — rendered by HRDashboardContainer
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 
@@ -509,18 +509,9 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       </>
       )}
 
-      {bottomTab === 'EXITS' && (
-        <HRExitsScreen
-          hr={hr}
-          onBack={() => setBottomTab('HOME')}
-          activeTab={bottomTab}
-          onTabChange={(tab) => {
-            setBottomTab(tab);
-            if (tab === 'PROFILE') onNavigate('PROFILE');
-            if (tab === 'GUEST') onNavigate('GUEST_PRE_REQUEST');
-          }}
-        />
-      )}
+      {bottomTab === 'EXITS' && null}
+
+
 
       {/* Bottom Navigation — inline like staff/HOD */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
@@ -534,7 +525,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'GUEST' && { color: theme.primary }]}>Guest</ThemedText>
           {bottomTab === 'GUEST' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('EXITS'); loadExitLogs(); }}>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('EXITS'); onNavigate('HR_EXITS'); }}>
           <Ionicons name={bottomTab === 'EXITS' ? 'log-out' : 'log-out-outline'} size={22} color={bottomTab === 'EXITS' ? theme.primary : theme.textTertiary} />
           <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'EXITS' && { color: theme.primary }]}>Exits</ThemedText>
           {bottomTab === 'EXITS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}

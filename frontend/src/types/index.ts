@@ -320,4 +320,5 @@ export type ScreenName =
   | 'HOD_PASS_TYPE_SELECTION'
   | 'HOD_BULK_GATE_PASS'
   | 'HR_APPROVAL'
+  | 'HR_EXITS'
   | 'GUEST_PRE_REQUEST';

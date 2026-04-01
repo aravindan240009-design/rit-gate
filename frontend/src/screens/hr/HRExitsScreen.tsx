@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, StyleSheet, TouchableOpacity, RefreshControl, Modal, ActivityIndicator, StatusBar,
+  View, StyleSheet, TouchableOpacity, RefreshControl, Modal,
+  ActivityIndicator, StatusBar, BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
@@ -20,14 +21,12 @@ import ErrorModal from '../../components/ErrorModal';
 interface HRExitsScreenProps {
   hr: HR;
   onBack: () => void;
-  activeTab: string;
-  onTabChange: (tab: any) => void;
 }
 
 const getInitials = (name: string) =>
-  name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  (name || 'NA').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
-const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, onTabChange }) => {
+const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
   const { theme } = useTheme();
   const [exitLogs, setExitLogs] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,8 +39,13 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, on
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [modalMsg, setModalMsg] = useState('');
+  const [rangeLabel, setRangeLabel] = useState("Today's exits");
 
-  useEffect(() => { loadExitLogs(); }, []);
+  useEffect(() => {
+    loadExitLogs();
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => { onBack(); return true; });
+    return () => sub.remove();
+  }, []);
 
   const loadExitLogs = async (rangeFrom?: string, rangeTo?: string) => {
     try {
@@ -55,16 +59,21 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, on
     }
   };
 
-  const onRefresh = () => { setRefreshing(true); loadExitLogs(); };
+  const onRefresh = () => { setRefreshing(true); loadExitLogs(fromDate || undefined, toDate || undefined); };
 
   const exportPdf = async () => {
+    if (exitLogs.length === 0) {
+      setModalMsg('No exit records to download. Please select a date range with records first.');
+      setShowError(true);
+      return;
+    }
     setIsDownloading(true);
     const filename = `Exit_Report_${new Date().toISOString().slice(0, 10)}`;
     notificationService.notifyDownloadStarted(filename);
     try {
       const savedPath = await exportStyledPdfReport({
         title: 'Staff & Student Exit Report',
-        subtitle: 'Consolidated exit activity — HR view',
+        subtitle: rangeLabel,
         sectionHeading: 'Exit records',
         brandFooterLine: 'RIT Gate Management System',
         filename,
@@ -97,34 +106,16 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, on
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
-      {/* Header */}
+      {/* Header — same style as GuestPreRequestScreen */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <View style={styles.headerLeft}>
-          <View style={[styles.headerIcon, { backgroundColor: theme.error + '15' }]}>
-            <Ionicons name="log-out-outline" size={20} color={theme.error} />
-          </View>
-          <View>
-            <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Exit Records</ThemedText>
-            <ThemedText ignoreGradient style={[styles.headerSub, { color: theme.textSecondary }]}>
-              {loading ? 'Loading…' : `${exitLogs.length} record${exitLogs.length !== 1 ? 's' : ''}`}
-            </ThemedText>
-          </View>
-        </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={[styles.headerBtn, { backgroundColor: theme.primary }]} onPress={() => setRangeModalVisible(true)}>
-            <Ionicons name="calendar-outline" size={15} color="#fff" />
-            <ThemedText ignoreGradient style={styles.headerBtnText}>Filter</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.headerBtn, { backgroundColor: theme.success }]} onPress={exportPdf} disabled={isDownloading}>
-            {isDownloading
-              ? <ActivityIndicator size="small" color="#fff" />
-              : <Ionicons name="download-outline" size={15} color="#fff" />}
-            <ThemedText ignoreGradient style={styles.headerBtnText}>PDF</ThemedText>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+          <Ionicons name="arrow-back" size={22} color={theme.text} />
+        </TouchableOpacity>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Exit Records</ThemedText>
+        <View style={{ width: 40 }} />
       </View>
 
       <ScreenContentContainer>
@@ -134,22 +125,50 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, on
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
         >
+          {/* Hint */}
+          <ThemedText style={[styles.hint, { color: theme.textSecondary }]}>
+            {rangeLabel} — {loading ? 'Loading…' : `${exitLogs.length} record${exitLogs.length !== 1 ? 's' : ''}`}
+          </ThemedText>
+
+          {/* Action buttons */}
+          <View style={styles.actions}>
+            <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.primary }]} onPress={() => setRangeModalVisible(true)}>
+              <Ionicons name="calendar-outline" size={16} color="#fff" />
+              <ThemedText ignoreGradient style={styles.actionBtnText}>Date Range</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: exitLogs.length > 0 ? theme.success : theme.border }]}
+              onPress={exportPdf}
+              disabled={isDownloading}
+            >
+              {isDownloading
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Ionicons name="download-outline" size={16} color="#fff" />}
+              <ThemedText ignoreGradient style={styles.actionBtnText}>Download PDF</ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          {/* Content */}
           {loading ? (
             <View style={styles.centered}>
               <ActivityIndicator size="large" color={theme.primary} />
             </View>
           ) : exitLogs.length === 0 ? (
-            <View style={styles.centered}>
-              <Ionicons name="log-out-outline" size={64} color={theme.border} />
-              <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No exits for selected date</ThemedText>
-              <ThemedText style={[styles.emptySub, { color: theme.textTertiary }]}>Pull to refresh or use Filter to select a date range</ThemedText>
+            <View style={styles.emptyCard}>
+              <View style={[styles.emptyIconWrap, { backgroundColor: theme.border + '40' }]}>
+                <Ionicons name="log-out-outline" size={40} color={theme.textTertiary} />
+              </View>
+              <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>No exit records</ThemedText>
+              <ThemedText style={[styles.emptySub, { color: theme.textSecondary }]}>
+                No exits found for the selected period.{'\n'}Use Date Range to filter by a specific date.
+              </ThemedText>
             </View>
           ) : (
             exitLogs.map((item) => (
-              <View key={`exit-${item.id}`} style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
+              <View key={`exit-${item.id}`} style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                 <View style={styles.cardTop}>
                   <View style={[styles.avatar, { backgroundColor: theme.error + '18' }]}>
-                    <ThemedText ignoreGradient style={[styles.avatarText, { color: theme.error }]}>{getInitials(item.name || item.userId || 'NA')}</ThemedText>
+                    <ThemedText ignoreGradient style={[styles.avatarText, { color: theme.error }]}>{getInitials(item.name || item.userId)}</ThemedText>
                   </View>
                   <View style={styles.cardInfo}>
                     <ThemedText ignoreGradient style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{item.name || item.userId || 'Unknown'}</ThemedText>
@@ -157,8 +176,8 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, on
                       {item.userId}{item.department ? ` • ${item.department}` : ''}
                     </ThemedText>
                   </View>
-                  <View style={[styles.typeBadge, { backgroundColor: theme.error + '15' }]}>
-                    <ThemedText ignoreGradient style={[styles.typeText, { color: theme.error }]}>{item.userType || 'EXIT'}</ThemedText>
+                  <View style={[styles.badge, { backgroundColor: theme.error + '15' }]}>
+                    <ThemedText ignoreGradient style={[styles.badgeText, { color: theme.error }]}>{item.userType || 'EXIT'}</ThemedText>
                   </View>
                 </View>
                 <View style={[styles.cardDetails, { backgroundColor: theme.inputBackground }]}>
@@ -178,27 +197,6 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, on
           )}
         </VerticalScrollView>
       </ScreenContentContainer>
-
-      {/* Bottom nav — built inline like student/staff screens */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
-          <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
-          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('GUEST')}>
-          <Ionicons name="person-add-outline" size={22} color={theme.textTertiary} />
-          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }]}>Guest</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('EXITS')}>
-          <Ionicons name="log-out" size={22} color={theme.primary} />
-          <ThemedText ignoreGradient style={[styles.navLabelActive, { color: theme.primary }]}>Exits</ThemedText>
-          <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('PROFILE')}>
-          <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
-          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
-        </TouchableOpacity>
-      </View>
 
       {/* Date Range Modal */}
       <Modal visible={rangeModalVisible} transparent animationType="slide" onRequestClose={() => setRangeModalVisible(false)}>
@@ -248,13 +246,17 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, on
               />
             </View>
             <View style={styles.modalActions}>
-              <TouchableOpacity style={[styles.clearBtn, { borderColor: theme.border }]} onPress={() => { setFromDate(''); setToDate(''); setSelectingDateType('FROM'); }}>
-                <ThemedText ignoreGradient style={[styles.clearBtnText, { color: theme.textSecondary }]}>Clear</ThemedText>
+              <TouchableOpacity style={[styles.clearBtn, { borderColor: theme.border }]} onPress={() => { setFromDate(''); setToDate(''); setSelectingDateType('FROM'); setRangeLabel("Today's exits"); loadExitLogs(); setRangeModalVisible(false); }}>
+                <ThemedText ignoreGradient style={[styles.clearBtnText, { color: theme.textSecondary }]}>Reset</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.applyBtn, { backgroundColor: fromDate && toDate ? theme.primary : theme.border }]}
                 disabled={!fromDate || !toDate}
-                onPress={() => { setRangeModalVisible(false); loadExitLogs(fromDate, toDate); }}
+                onPress={() => {
+                  setRangeModalVisible(false);
+                  setRangeLabel(`${fromDate} → ${toDate}`);
+                  loadExitLogs(fromDate, toDate);
+                }}
               >
                 <ThemedText ignoreGradient style={styles.applyBtnText}>Apply</ThemedText>
               </TouchableOpacity>
@@ -264,25 +266,29 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, on
       </Modal>
 
       <SuccessModal visible={showSuccess} title="Done" message={modalMsg} onClose={() => setShowSuccess(false)} autoClose autoCloseDelay={2500} />
-      <ErrorModal visible={showError} type="api" title="Error" message={modalMsg} onClose={() => setShowError(false)} />
+      <ErrorModal visible={showError} type="general" title="Cannot Download" message={modalMsg} onClose={() => setShowError(false)} />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  headerIcon: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  safe: { flex: 1 },
+  // Header — same as GuestPreRequestScreen
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: 17, fontWeight: '700' },
-  headerSub: { fontSize: 12, marginTop: 1 },
-  headerActions: { flexDirection: 'row', gap: 8 },
-  headerBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
-  headerBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
-  listContent: { padding: 16, paddingBottom: 100 },
-  centered: { paddingVertical: 80, alignItems: 'center', gap: 12 },
-  emptyText: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
-  emptySub: { fontSize: 13, textAlign: 'center', paddingHorizontal: 32 },
+  listContent: { padding: 16, paddingBottom: 40 },
+  hint: { fontSize: 14, marginBottom: 16 },
+  actions: { flexDirection: 'row', gap: 12, marginBottom: 20 },
+  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 13, borderRadius: 12 },
+  actionBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  centered: { paddingVertical: 60, alignItems: 'center' },
+  // Empty state card
+  emptyCard: { borderRadius: 16, padding: 32, alignItems: 'center', gap: 12, marginTop: 8 },
+  emptyIconWrap: { width: 72, height: 72, borderRadius: 36, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
+  emptySub: { fontSize: 14, textAlign: 'center', lineHeight: 22 },
+  // Cards
   card: { borderRadius: 14, marginBottom: 12, borderWidth: 1, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 },
   cardTop: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
   avatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
@@ -290,17 +296,11 @@ const styles = StyleSheet.create({
   cardInfo: { flex: 1, minWidth: 0 },
   cardName: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
   cardSub: { fontSize: 12 },
-  typeBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexShrink: 0 },
-  typeText: { fontSize: 11, fontWeight: '700' },
+  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexShrink: 0 },
+  badgeText: { fontSize: 11, fontWeight: '700' },
   cardDetails: { paddingHorizontal: 14, paddingVertical: 10, gap: 6 },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   detailText: { fontSize: 13, flex: 1 },
-  // Bottom nav — same pattern as student/staff
-  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
-  navItem: { flex: 1, alignItems: 'center', paddingVertical: 8, position: 'relative' },
-  navLabel: { fontSize: 12, marginTop: 4, fontWeight: '500' },
-  navLabelActive: { fontSize: 12, marginTop: 4, fontWeight: '700' },
-  activeIndicator: { position: 'absolute', bottom: 0, width: 32, height: 3, borderRadius: 2 },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalCard: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 24 },

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, BackHandler } from 'react-native';
 import { HR, ScreenName } from '../../types';
 import NewHRDashboard from './NewHRDashboard';
+import HRExitsScreen from './HRExitsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 
 interface HRDashboardContainerProps {
@@ -10,7 +11,7 @@ interface HRDashboardContainerProps {
   onNavigate: (screen: ScreenName) => void;
 }
 
-type InternalTab = 'DASHBOARD' | 'PROFILE';
+type InternalTab = 'DASHBOARD' | 'PROFILE' | 'EXITS';
 
 const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
   hr,
@@ -32,11 +33,9 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
   }, [activeTab]);
 
   const handleNavigate = (screen: ScreenName) => {
-    if (screen === 'PROFILE') {
-      setActiveTab('PROFILE');
-    } else {
-      onNavigate(screen);
-    }
+    if (screen === 'PROFILE') setActiveTab('PROFILE');
+    else if (screen === 'HR_EXITS') setActiveTab('EXITS');
+    else onNavigate(screen);
   };
 
   if (activeTab === 'PROFILE') {
@@ -46,6 +45,15 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
         userType="HR"
         onBack={() => setActiveTab('DASHBOARD')}
         onLogout={onLogout}
+      />
+    );
+  }
+
+  if (activeTab === 'EXITS') {
+    return (
+      <HRExitsScreen
+        hr={hr}
+        onBack={() => setActiveTab('DASHBOARD')}
       />
     );
   }
