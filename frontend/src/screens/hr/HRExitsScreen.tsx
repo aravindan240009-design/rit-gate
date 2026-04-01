@@ -16,7 +16,6 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
-import HRBottomNav from './HRBottomNav';
 
 interface HRExitsScreenProps {
   hr: HR;
@@ -180,7 +179,26 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, on
         </VerticalScrollView>
       </ScreenContentContainer>
 
-      <HRBottomNav activeTab={activeTab as any} onTabChange={onTabChange} />
+      {/* Bottom nav — built inline like student/staff screens */}
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
+          <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('GUEST')}>
+          <Ionicons name="person-add-outline" size={22} color={theme.textTertiary} />
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }]}>Guest</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('EXITS')}>
+          <Ionicons name="log-out" size={22} color={theme.primary} />
+          <ThemedText ignoreGradient style={[styles.navLabelActive, { color: theme.primary }]}>Exits</ThemedText>
+          <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('PROFILE')}>
+          <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
+        </TouchableOpacity>
+      </View>
 
       {/* Date Range Modal */}
       <Modal visible={rangeModalVisible} transparent animationType="slide" onRequestClose={() => setRangeModalVisible(false)}>
@@ -225,7 +243,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, activeTab, on
                   ...(fromDate ? { [fromDate]: { selected: true, selectedColor: theme.primary, startingDay: true } } : {}),
                   ...(toDate ? { [toDate]: { selected: true, selectedColor: theme.primary, endingDay: true } } : {}),
                 }}
-                markingType={fromDate && toDate ? 'period' : 'simple'}
+                markingType={(fromDate && toDate ? 'period' : 'dot') as any}
                 theme={{ calendarBackground: theme.surface, selectedDayBackgroundColor: theme.primary, selectedDayTextColor: '#fff', todayTextColor: theme.primary, arrowColor: theme.primary, dayTextColor: theme.text, textDisabledColor: theme.textTertiary, monthTextColor: theme.text }}
               />
             </View>
@@ -277,6 +295,12 @@ const styles = StyleSheet.create({
   cardDetails: { paddingHorizontal: 14, paddingVertical: 10, gap: 6 },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   detailText: { fontSize: 13, flex: 1 },
+  // Bottom nav — same pattern as student/staff
+  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
+  navItem: { flex: 1, alignItems: 'center', paddingVertical: 8, position: 'relative' },
+  navLabel: { fontSize: 12, marginTop: 4, fontWeight: '500' },
+  navLabelActive: { fontSize: 12, marginTop: 4, fontWeight: '700' },
+  activeIndicator: { position: 'absolute', bottom: 0, width: 32, height: 3, borderRadius: 2 },
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalCard: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 24 },

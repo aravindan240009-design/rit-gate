@@ -31,7 +31,6 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import { exportStyledPdfReport } from '../../utils/pdfReport';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import GuestPreRequestScreen from '../shared/GuestPreRequestScreen';
-import HRBottomNav from './HRBottomNav';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 
@@ -40,16 +39,12 @@ interface NewHRDashboardProps {
   hr: HR;
   onLogout: () => void;
   onNavigate: (screen: ScreenName) => void;
-  activeTab?: string;
-  onTabChange?: (tab: any) => void;
 }
 
 const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   hr,
   onLogout,
   onNavigate,
-  activeTab: externalTab = 'HOME',
-  onTabChange,
 }) => {
   const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
@@ -603,8 +598,29 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
         </ScreenContentContainer>
       )}
 
-      {/* Bottom Navigation */}
-      <HRBottomNav activeTab={externalTab as any} onTabChange={onTabChange || (() => {})} />
+      {/* Bottom Navigation — inline like staff/HOD */}
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('HOME')}>
+          <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
+          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('GUEST')}>
+          <Ionicons name={bottomTab === 'GUEST' ? 'person-add' : 'person-add-outline'} size={22} color={bottomTab === 'GUEST' ? theme.primary : theme.textTertiary} />
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'GUEST' && { color: theme.primary }]}>Guest</ThemedText>
+          {bottomTab === 'GUEST' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('EXITS'); loadExitLogs(); }}>
+          <Ionicons name={bottomTab === 'EXITS' ? 'log-out' : 'log-out-outline'} size={22} color={bottomTab === 'EXITS' ? theme.primary : theme.textTertiary} />
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'EXITS' && { color: theme.primary }]}>Exits</ThemedText>
+          {bottomTab === 'EXITS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
+          <Ionicons name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'} size={22} color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary} />
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</ThemedText>
+          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+      </View>
 
       {/* Notification Dropdown */}
       <NotificationDropdown

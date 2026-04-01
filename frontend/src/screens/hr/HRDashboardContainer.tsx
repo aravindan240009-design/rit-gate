@@ -1,10 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, BackHandler } from 'react-native';
 import { HR, ScreenName } from '../../types';
 import NewHRDashboard from './NewHRDashboard';
-import HRExitsScreen from './HRExitsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
-import GuestPreRequestScreen from '../shared/GuestPreRequestScreen';
 
 interface HRDashboardContainerProps {
   hr: HR;
@@ -12,20 +10,19 @@ interface HRDashboardContainerProps {
   onNavigate: (screen: ScreenName) => void;
 }
 
-type InternalTab = 'HOME' | 'GUEST' | 'EXITS' | 'PROFILE';
+type InternalTab = 'DASHBOARD' | 'PROFILE';
 
 const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
   hr,
   onLogout,
   onNavigate,
 }) => {
-  const [activeTab, setActiveTab] = useState<InternalTab>('HOME');
+  const [activeTab, setActiveTab] = useState<InternalTab>('DASHBOARD');
 
-  // Back on non-HOME tab → HOME; HOME → App.tsx handles (exit modal)
   useEffect(() => {
     const onBack = () => {
-      if (activeTab !== 'HOME') {
-        setActiveTab('HOME');
+      if (activeTab !== 'DASHBOARD') {
+        setActiveTab('DASHBOARD');
         return true;
       }
       return false;
@@ -35,64 +32,33 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
   }, [activeTab]);
 
   const handleNavigate = (screen: ScreenName) => {
-    switch (screen) {
-      case 'PROFILE': setActiveTab('PROFILE'); break;
-      default: onNavigate(screen); break;
+    if (screen === 'PROFILE') {
+      setActiveTab('PROFILE');
+    } else {
+      onNavigate(screen);
     }
   };
 
-  const handleTabChange = useCallback((tab: InternalTab) => {
-    setActiveTab(tab);
-  }, []);
-
-  switch (activeTab) {
-    case 'GUEST':
-      return (
-        <View style={{ flex: 1 }}>
-          <GuestPreRequestScreen
-            creatorRole="HR"
-            creatorStaffCode={hr.hrCode}
-            creatorName={hr.hrName || hr.name}
-            creatorDepartment={hr.department}
-            onBack={() => setActiveTab('HOME')}
-          />
-          <HRBottomNav activeTab={activeTab} onTabChange={handleTabChange} />
-        </View>
-      );
-    case 'EXITS':
-      return (
-        <HRExitsScreen
-          hr={hr}
-          onBack={() => setActiveTab('HOME')}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-      );
-    case 'PROFILE':
-      return (
-        <View style={{ flex: 1 }}>
-          <ProfileScreen
-            user={hr}
-            userType="HR"
-            onBack={() => setActiveTab('HOME')}
-            onLogout={onLogout}
-          />
-          <HRBottomNav activeTab={activeTab} onTabChange={handleTabChange} />
-        </View>
-      );
-    default:
-      return (
-        <View style={{ flex: 1 }}>
-          <NewHRDashboard
-            hr={hr}
-            onLogout={onLogout}
-            onNavigate={handleNavigate}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-          />
-        </View>
-      );
+  if (activeTab === 'PROFILE') {
+    return (
+      <ProfileScreen
+        user={hr}
+        userType="HR"
+        onBack={() => setActiveTab('DASHBOARD')}
+        onLogout={onLogout}
+      />
+    );
   }
+
+  return (
+    <View style={{ flex: 1 }}>
+      <NewHRDashboard
+        hr={hr}
+        onLogout={onLogout}
+        onNavigate={handleNavigate}
+      />
+    </View>
+  );
 };
 
 export default HRDashboardContainer;
