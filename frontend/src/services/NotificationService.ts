@@ -1,4 +1,5 @@
-import { Alert, Vibration, Platform } from 'react-native';
+import { Platform } from 'react-native';
+import { downloadWithNotification, saveBase64WithNotification } from './downloadNotification.service';
 
 class NotificationService {
   private listeners: Array<(notification: any) => void> = [];
@@ -6,7 +7,7 @@ class NotificationService {
   subscribe(callback: (notification: any) => void) {
     this.listeners.push(callback);
     return () => {
-      this.listeners = this.listeners.filter(listener => listener !== callback);
+      this.listeners = this.listeners.filter(l => l !== callback);
     };
   }
 
@@ -15,45 +16,38 @@ class NotificationService {
   }
 
   async requestPermissions() {
-    // For now, we use standard Alert which doesn't need permissions, 
-    // but this is a placeholder for native notification permissions.
     return true;
   }
 
-  async scheduleNotification(title: string, body: string, data?: any) {
-    // Since we are in a restricted environment without a native notification library,
-    // we use Alert.alert with Vibration to simulate a device notification experience.
-    // In a real environment, this would call Notifee or Expo Notifications.
-    
-    console.log('Device Notification scheduled:', title, body, data);
-    
-    if (Platform.OS !== 'web') {
-      Vibration.vibrate([0, 100, 50, 100]); // "Ding-ding" pattern
+  /**
+   * Download a file from a URL — shows a real Android system notification
+   * with progress bar (like WhatsApp downloads).
+   */
+  async downloadFile(url: string, filename: string, mimeType?: string) {
+    console.log(`📥 Starting download: ${filename}`);
+    const result = await downloadWithNotification({ url, filename, mimeType, title: filename, description: 'Downloading…' });
+    if (result.success) {
+      console.log(`✅ Download complete: ${result.filePath}`);
+    } else {
+      console.warn(`❌ Download failed: ${result.message}`);
     }
-
-    Alert.alert(
-      title,
-      body,
-      [{ text: 'OK', style: 'default' }],
-      { cancelable: true }
-    );
-
-    // Also notify internal listeners for UI updates
-    this.notify({ title, message: body, timestamp: new Date().toISOString(), ...data });
+    return result;
   }
 
+  /**
+   * Save a base64 string as a file to the Downloads folder.
+   */
+  async saveBase64File(base64Data: string, filename: string, mimeType?: string) {
+    return saveBase64WithNotification(base64Data, filename, mimeType);
+  }
+
+  // Legacy helpers kept for backward compatibility
   notifyDownloadStarted(filename: string) {
-    this.scheduleNotification(
-      'Download Started',
-      `Your report "${filename}" is being generated and will be saved shortly.`
-    );
+    console.log(`📥 Download started: ${filename}`);
   }
 
   notifyDownloadSuccess(filename: string) {
-    this.scheduleNotification(
-      'Download Complete',
-      `The report "${filename}" has been successfully saved to your Downloads folder.`
-    );
+    console.log(`✅ Download complete: ${filename}`);
   }
 }
 

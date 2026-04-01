@@ -8,7 +8,8 @@ import {
   ScrollView,
   StatusBar,
   Modal,
-  Platform
+  Platform,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, CameraView } from '../../shims/expoCamera';
@@ -49,14 +50,23 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
       const { status } = await Camera.requestCameraPermissionsAsync();
       console.log('🎥 [MODERN] Camera permission status:', status);
       setHasPermission(status === 'granted');
-      if (status === 'granted') {
-        console.log('✅ [MODERN] Camera permission GRANTED');
-      } else {
-        console.log('❌ [MODERN] Camera permission DENIED');
-      }
     };
     getCameraPermissions();
   }, []);
+
+  // Hardware back button: if camera is open, close it; otherwise go back
+  useEffect(() => {
+    const onBackPress = () => {
+      if (showCamera) {
+        resetScanner();
+        return true;
+      }
+      onBack();
+      return true;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, [showCamera, onBack]);
 
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
     // CRITICAL: Log immediately to verify camera is detecting
@@ -195,7 +205,8 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
 
   if (hasPermission === null) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top','left','right','bottom']}>
+        <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#00BCD4" />
           <ThemedText style={styles.loadingText}>Requesting camera permission...</ThemedText>
@@ -206,7 +217,8 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
 
   if (hasPermission === false) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top','left','right','bottom']}>
+        <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
         <View style={styles.errorContainer}>
           <Ionicons name="camera-reverse-outline" size={64} color="#EF4444" />
           <ThemedText style={styles.errorTitle}>Camera Access Denied</ThemedText>
@@ -216,20 +228,89 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
     );
   }
 
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
+  // When camera is active, go truly full-screen (no SafeAreaView padding)
+  if (showCamera) {
+    return (
+      <View style={styles.fullScreen}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <CameraView
+          style={StyleSheet.absoluteFill}
+          onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+          barcodeScannerSettings={{
+            barcodeTypes: ['qr','ean13','ean8','code128','code39','code93','upc_e','pdf417','aztec','datamatrix','itf14'],
+          }}
+        >
+          <View style={styles.cameraOverlay}>
+            {/* Scan Type Badge */}
+            <View style={[styles.scanTypeBadge, { marginTop: Platform.OS === 'android' ? 48 : 60 }]}>
+              <Ionicons name={scannerType === 'ENTRY' ? 'log-in' : 'log-out'} size={20} color="#FFF" />
+              <ThemedText style={styles.scanTypeBadgeText}>
+                {scannerType === 'ENTRY' ? 'ENTRY SCAN' : 'EXIT SCAN'}
+              </ThemedText>
+            </View>
 
-      {/* Header - Hidden when camera is active for a "full-screen" feel */}
-      {!showCamera && (
-        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-          <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-            <Ionicons name="arrow-back" size={24} color={theme.text} />
-          </TouchableOpacity>
-          <ThemedText style={[styles.headerTitle, { color: theme.text }]}>QR Scanner</ThemedText>
-          <View style={styles.headerRight} />
-        </View>
-      )}
+            {/* Scan Frame */}
+            <View style={styles.scanFrame}>
+              <View style={[styles.corner, styles.cornerTopLeft]} />
+              <View style={[styles.corner, styles.cornerTopRight]} />
+              <View style={[styles.corner, styles.cornerBottomLeft]} />
+              <View style={[styles.corner, styles.cornerBottomRight]} />
+            </View>
+
+            {/* Instructions */}
+            <View style={styles.scanInstructions}>
+              <ThemedText style={styles.scanInstructionsText}>
+                Position QR code or barcode within frame
+              </ThemedText>
+            </View>
+
+            {/* Cancel Button */}
+            <TouchableOpacity style={styles.cancelButton} onPress={resetScanner}>
+              <Ionicons name="close-circle" size={24} color="#FFF" />
+              <ThemedText style={styles.cancelButtonText}>EXIT SCAN</ThemedText>
+            </TouchableOpacity>
+          </View>
+
+          {isLoading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color="#FFF" />
+              <ThemedText style={styles.loadingOverlayText}>Processing...</ThemedText>
+            </View>
+          )}
+        </CameraView>
+
+        {/* Success Modal */}
+        <SuccessModal
+          visible={showSuccessModal}
+          title={modalTitle}
+          message={modalMessage}
+          onClose={() => { setShowSuccessModal(false); resetScanner(); }}
+          autoClose={true}
+          autoCloseDelay={2500}
+        />
+        <ErrorModal
+          visible={showErrorModal}
+          type="api"
+          title={modalTitle}
+          message={modalMessage}
+          onClose={() => setShowErrorModal(false)}
+        />
+      </View>
+    );
+  }
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top','left','right','bottom']}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
+
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
+        </TouchableOpacity>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>QR Scanner</ThemedText>
+        <View style={styles.headerRight} />
+      </View>
 
       {!showCamera ? (
         <VerticalScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
@@ -296,75 +377,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
             </View>
           </View>
         </VerticalScrollView>
-      ) : (
-        <View style={styles.cameraContainer}>
-          {/* Camera View */}
-          <CameraView
-            style={styles.camera}
-            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-            barcodeScannerSettings={{
-              barcodeTypes: [
-                'qr',
-                'ean13',
-                'ean8',
-                'code128',
-                'code39',
-                'code93',
-                'upc_e',
-                'pdf417',
-                'aztec',
-                'datamatrix',
-                'itf14',
-              ],
-            }}
-          >
-            <View style={styles.cameraOverlay}>
-              {/* Scan Type Badge */}
-              <View style={styles.scanTypeBadge}>
-                <Ionicons
-                  name={scannerType === 'ENTRY' ? 'log-in' : 'log-out'}
-                  size={20}
-                  color="#FFF"
-                />
-                <ThemedText style={styles.scanTypeBadgeText}>
-                  {scannerType === 'ENTRY' ? 'ENTRY SCAN' : 'EXIT SCAN'}
-                </ThemedText>
-              </View>
-
-              {/* Scan Frame */}
-              <View style={styles.scanFrame}>
-                <View style={[styles.corner, styles.cornerTopLeft]} />
-                <View style={[styles.corner, styles.cornerTopRight]} />
-                <View style={[styles.corner, styles.cornerBottomLeft]} />
-                <View style={[styles.corner, styles.cornerBottomRight]} />
-              </View>
-
-              {/* Instructions */}
-              <View style={styles.scanInstructions}>
-                <ThemedText style={styles.scanInstructionsText}>
-                  Position QR code or barcode within frame
-                </ThemedText>
-              </View>
-
-              {/* Cancel Button */}
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={resetScanner}
-              >
-                <Ionicons name="close-circle" size={24} color="#FFF" />
-                <ThemedText style={styles.cancelButtonText}>Cancel</ThemedText>
-              </TouchableOpacity>
-            </View>
-
-            {isLoading && (
-              <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color="#FFF" />
-                <ThemedText style={styles.loadingOverlayText}>Processing...</ThemedText>
-              </View>
-            )}
-          </CameraView>
-        </View>
-      )}
+      ) : null}
 
       {/* Manual Entry Modal */}
       <Modal
@@ -483,6 +496,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
+  fullScreen: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -597,18 +614,12 @@ const styles = StyleSheet.create({
     color: '#075985',
     lineHeight: 20,
   },
-  cameraContainer: {
-    flex: 1,
-  },
-  camera: {
-    flex: 1,
-  },
   cameraOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingBottom: 60,
   },
   scanTypeBadge: {
     flexDirection: 'row',
@@ -618,8 +629,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     gap: 6,
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 20,
   },
   scanTypeBadgeText: {
     fontSize: 16,

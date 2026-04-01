@@ -1,5 +1,5 @@
 import React from 'react';
-import { PermissionsAndroid, Platform, ViewStyle } from 'react-native';
+import { PermissionsAndroid, Platform, ViewStyle, View, StyleSheet } from 'react-native';
 import { Camera } from 'react-native-camera-kit';
 
 type CameraFacing = 'front' | 'back';
@@ -24,9 +24,9 @@ type CameraViewProps = {
 
 export const CameraView: React.FC<CameraViewProps> = ({ style, facing = 'back', onBarcodeScanned, children }) => {
   return (
-    <>
+    <View style={[{ flex: 1, overflow: 'hidden' }, style]}>
       <Camera
-        style={style}
+        style={StyleSheet.absoluteFill}
         cameraType={facing as any}
         scanBarcode
         showFrame={false}
@@ -38,7 +38,7 @@ export const CameraView: React.FC<CameraViewProps> = ({ style, facing = 'back', 
         }}
       />
       {children}
-    </>
+    </View>
   );
 };
 

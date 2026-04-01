@@ -118,11 +118,11 @@ android {
         }
     }
     // Redirect CMake staging dir to short path to avoid Windows 260-char MAX_PATH limit
-    externalNativeBuild {
-        cmake {
-            buildStagingDirectory "C:/rb/cxx"
-        }
-    }
+    // externalNativeBuild {
+    //     cmake {
+    //         buildStagingDirectory "C:/rb/cxx"
+    //     }
+    // }
     packagingOptions {
         jniLibs {
             def enableLegacyPackaging = findProperty('android.useLegacyPackaging') ?: 'false'
