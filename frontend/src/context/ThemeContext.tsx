@@ -37,7 +37,6 @@ export interface Theme {
   };
 }
 
-export type TextStyleMode = 'solid'; // gradient removed
 
 export type ThemePresetId = 'ocean' | 'neon' | 'sunset' | 'minimal';
 
@@ -296,11 +295,9 @@ interface ThemeContextType {
   theme: Theme;
   isDark: boolean;
   activePreset: ThemePresetId;
-  textStyleMode: TextStyleMode; // always 'solid' now
   transitioning: boolean;
   toggleTheme: () => void;
   applyPreset: (presetId: ThemePresetId) => void;
-  setTextStyleMode: (mode: TextStyleMode) => void; // no-op
   resetTheme: () => void;
   /** Animated opacity value (0→1) that fires on every theme change — use for fade transitions */
   transitionOpacity: Animated.Value;
@@ -367,9 +364,6 @@ export const ThemeProvider: React.FC<{ children: ReactNode; userId?: string }> =
     });
   }, [userId, runTransition]);
 
-  const setTextStyleMode = useCallback((_mode: TextStyleMode) => {
-    // no-op — gradient mode removed
-  }, []);
 
   // ── Reset ─────────────────────────────────────────────────────────────────
   const resetTheme = useCallback(() => {
@@ -403,11 +397,9 @@ export const ThemeProvider: React.FC<{ children: ReactNode; userId?: string }> =
         theme,
         isDark,
         activePreset,
-        textStyleMode: 'solid' as TextStyleMode,
         transitioning,
         toggleTheme,
         applyPreset,
-        setTextStyleMode,
         resetTheme,
         transitionOpacity,
       }}

@@ -140,7 +140,6 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
                     size={220}
                     color="#000000"
                     backgroundColor="#FFFFFF"
-                    quietZone={20}
                     getRef={(c: any) => { qrRef.current = c; }}
                   />
                 ) : (
