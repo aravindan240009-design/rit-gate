@@ -83,6 +83,12 @@ const AppNavigator: React.FC<{
   );
 };
 
+// Screens that show exit confirmation on back press
+const EXIT_SCREENS: ScreenName[] = [
+  'HOME', 'DASHBOARD', 'STAFF_DASHBOARD', 'HOD_DASHBOARD',
+  'HR_DASHBOARD', 'SECURITY_DASHBOARD', 'UNIFIED_LOGIN',
+];
+
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [student, setStudent] = React.useState<Student | null>(null);
@@ -454,10 +460,6 @@ const App: React.FC = () => {
   // ── Hardware back button / gesture back ──────────────────────────────────
   // HOME + all dashboard screens → show exit confirmation
   // Any other screen → go back to the role's dashboard
-  const EXIT_SCREENS: ScreenName[] = [
-    'HOME', 'DASHBOARD', 'STAFF_DASHBOARD', 'HOD_DASHBOARD',
-    'HR_DASHBOARD', 'SECURITY_DASHBOARD', 'UNIFIED_LOGIN',
-  ];
 
   const handleSwipeBack = React.useCallback(() => {
     if (isLoading) return;
