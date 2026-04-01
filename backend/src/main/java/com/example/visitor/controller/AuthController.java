@@ -1243,6 +1243,11 @@ public class AuthController {
                 return ResponseEntity.ok(Map.of("success", true, "role", "STUDENT"));
             }
 
+            // Check HOD table directly first — most reliable
+            if (hodRepository.findByHodCode(code).isPresent()) {
+                return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
+            }
+
             // Check staff table
             Optional<Staff> staffOpt = staffRepository.findByStaffCode(code);
             if (staffOpt.isEmpty()) {
@@ -1256,6 +1261,11 @@ public class AuthController {
             // Check if HR
             if (role.toUpperCase().contains("HR")) {
                 return ResponseEntity.ok(Map.of("success", true, "role", "HR"));
+            }
+
+            // Check if HOD by role field
+            if (role.toUpperCase().contains("HOD")) {
+                return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
             }
 
             // Check if HOD — name appears in students.hod column

@@ -190,15 +190,23 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   const getName = () => {
     if ('firstName' in user) return `${user.firstName} ${user.lastName}`;
-    if ('staffName' in user) return user.staffName;
     if ('hodName' in user) return user.hodName;
     if ('hrName' in user) return user.hrName;
+    if ('staffName' in user) return user.staffName;
     if ('securityName' in user) return user.securityName;
     if ('name' in user) return user.name;
     return 'User';
   };
 
-  const getRole = () => userType;
+  const getRole = () => {
+    const t = userType.toUpperCase();
+    if (t === 'HOD') return 'HOD';
+    if (t === 'HR') return 'HR';
+    if (t === 'STAFF') return 'STAFF';
+    if (t === 'STUDENT') return 'STUDENT';
+    if (t === 'SECURITY') return 'SECURITY';
+    return userType;
+  };
   const getDept = () => {
     if (userType.toUpperCase() === 'SECURITY') return user.gateAssignment || user.gateAssigned || user.shift || 'Main Gate';
     return user.department || 'General';
