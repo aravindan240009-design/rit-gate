@@ -281,9 +281,9 @@ const LoadingScreen: React.FC = () => {
 
         {/* Pulse rings behind logo */}
         <View style={styles.ringsWrap}>
-          <PulseRing delay={0}    size={180} color={#1D4ED880} />
-          <PulseRing delay={600}  size={240} color={#1D4ED84D} />
-          <PulseRing delay={1200} size={300} color={#1D4ED826} />
+          <PulseRing delay={0}    size={180} color={"#1D4ED880"} />
+          <PulseRing delay={600}  size={240} color={"#1D4ED84D"} />
+          <PulseRing delay={1200} size={300} color={"#1D4ED826"} />
         </View>
 
         {/* Glow halo */}
