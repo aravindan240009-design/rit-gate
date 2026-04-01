@@ -249,13 +249,13 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
               <Image source={{ uri: profileImage }} style={styles.avatarImage} />
             ) : (
               <View style={[styles.avatar, { backgroundColor: theme.warning }]}>
-                <ThemedText style={styles.avatarText}>{getInitials(hod.hodName || 'HOD')}</ThemedText>
+                <ThemedText ignoreGradient style={styles.avatarText}>{getInitials(hod.hodName || 'HOD')}</ThemedText>
               </View>
             )}
           </TouchableOpacity>
           <View style={styles.headerInfo}>
-            <ThemedText style={[styles.greeting, { color: theme.textSecondary }]}>GOOD MORNING,</ThemedText>
-            <ThemedText style={[styles.userName, { color: theme.text }]} numberOfLines={1}>{(hod.hodName || 'HOD').toUpperCase()}</ThemedText>
+            <ThemedText ignoreGradient style={[styles.greeting, { color: theme.textSecondary }]}>GOOD MORNING,</ThemedText>
+            <ThemedText ignoreGradient style={[styles.userName, { color: theme.text }]} numberOfLines={1}>{(hod.hodName || 'HOD').toUpperCase()}</ThemedText>
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -288,16 +288,16 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       {/* Stats Tabs */}
       <View style={[styles.statsContainer, { backgroundColor: theme.surface }]}>
         <TouchableOpacity style={[styles.statTab, activeTab === 'PENDING' && { borderBottomColor: theme.warning }]} onPress={() => setActiveTab('PENDING')}>
-          <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'PENDING' && { color: theme.warning }]}>PENDING</ThemedText>
-          <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: theme.text }]}>{stats.pending}</ThemedText>
+          <ThemedText ignoreGradient style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'PENDING' && { color: theme.warning }]}>PENDING</ThemedText>
+          <ThemedText ignoreGradient style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: theme.text }]}>{stats.pending}</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.statTab, activeTab === 'APPROVED' && { borderBottomColor: theme.success }]} onPress={() => setActiveTab('APPROVED')}>
-          <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'APPROVED' && { color: theme.success }]}>APPROVED</ThemedText>
-          <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: theme.text }]}>{stats.approved}</ThemedText>
+          <ThemedText ignoreGradient style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'APPROVED' && { color: theme.success }]}>APPROVED</ThemedText>
+          <ThemedText ignoreGradient style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: theme.text }]}>{stats.approved}</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.statTab, activeTab === 'REJECTED' && { borderBottomColor: theme.error }]} onPress={() => setActiveTab('REJECTED')}>
-          <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'REJECTED' && { color: theme.error }]}>REJECTED</ThemedText>
-          <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: theme.text }]}>{stats.rejected}</ThemedText>
+          <ThemedText ignoreGradient style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'REJECTED' && { color: theme.error }]}>REJECTED</ThemedText>
+          <ThemedText ignoreGradient style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: theme.text }]}>{stats.rejected}</ThemedText>
         </TouchableOpacity>
       </View>
 
@@ -306,7 +306,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         {filteredRequests.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="checkmark-done-circle-outline" size={64} color={theme.border} />
-            <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No {activeTab.toLowerCase()} requests</ThemedText>
+            <ThemedText ignoreGradient style={[styles.emptyText, { color: theme.textSecondary }]}>No {activeTab.toLowerCase()} requests</ThemedText>
           </View>
         ) : (
           filteredRequests.map((request) => (
@@ -332,7 +332,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
               }}            >
               <View style={styles.cardTopRow}>
                 <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                  <ThemedText style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
+                  <ThemedText ignoreGradient style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
                     {getInitials(request.passType === 'BULK' ? (request.requestedByStaffName || 'BR') : request.passType === 'VISITOR' ? (request.visitorName || request.studentName || 'VR') : (request.studentName || 'ST'))}
                   </ThemedText>
                 </View>
@@ -418,21 +418,21 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('HOME')}>
           <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
           {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('NEW_PASS'); setShowPassTypeModal(true); }}>
           <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('MY_REQUESTS'); onNavigate('HOD_MY_REQUESTS'); }}>
           <Ionicons name={bottomTab === 'MY_REQUESTS' ? 'list' : 'list-outline'} size={22} color={bottomTab === 'MY_REQUESTS' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_REQUESTS' && { color: theme.primary }]}>My Requests</ThemedText>
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_REQUESTS' && { color: theme.primary }]}>My Requests</ThemedText>
           {bottomTab === 'MY_REQUESTS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
           <Ionicons name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'} size={22} color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</ThemedText>
+          <ThemedText ignoreGradient style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</ThemedText>
           {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
       </View>
@@ -549,7 +549,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         <View style={styles.processingOverlay} pointerEvents="box-only">
           <View style={styles.processingBox}>
             <ActivityIndicator size="large" color={theme.primary} />
-            <ThemedText style={[styles.processingText, { color: theme.text }]}>Processing...</ThemedText>
+            <ThemedText ignoreGradient style={[styles.processingText, { color: theme.text }]}>Processing...</ThemedText>
           </View>
         </View>
       )}
