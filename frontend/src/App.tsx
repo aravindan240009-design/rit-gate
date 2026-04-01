@@ -1,4 +1,3 @@
-import ThemedText from './components/ThemedText';
 // CLEAN VERSION OF APP.TSX - Only SmartGate Screens
 // This is the corrected version that should replace the current App.tsx
 
@@ -13,6 +12,7 @@ import {
   ToastAndroid,
   Platform
 } from 'react-native';
+import ThemedText from './components/ThemedText';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Student, Staff, HOD, HR, SecurityPersonnel, UserType, UserRole, ScreenName } from './types';
