@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
   },
   infoBoxText: {
     fontSize: 13,
-    flex: 1,
+    flexShrink: 1,
   },
   cardBottomRow: {
     flexDirection: 'row',

@@ -1097,15 +1097,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   rejectButton: {
-    backgroundColor: '#EF4444', // Reverted because `theme` is not in scope here
+    // bgColor set dynamically
   },
   approveButton: {
-    backgroundColor: '#10B981', // Reverted because `theme` is not in scope here
+    // bgColor set dynamically
   },
   actionButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
   },
   requestTypeContainer: {
     flexDirection: 'row',

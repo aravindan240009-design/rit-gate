@@ -350,7 +350,6 @@ const HRApprovalScreen: React.FC<HRApprovalScreenProps> = ({ user, request, onBa
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
   },
   header: {
     flexDirection: 'row',
@@ -358,22 +357,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: THEME.colors.text,
   },
   scrollView: {
     flex: 1,
@@ -382,7 +377,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -398,7 +392,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
     gap: 8,
   },
   cardTitle: {
@@ -435,18 +428,14 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   approveButton: {
-    backgroundColor: '#10B981',
   },
   rejectButton: {
-    backgroundColor: '#EF4444',
   },
   actionButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFF',
   },
   statusCard: {
-    backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 32,
     alignItems: 'center',
@@ -459,7 +448,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 16,
     fontWeight: '600',
-    color: THEME.colors.text,
     marginTop: 12,
     textAlign: 'center',
   },
@@ -470,7 +458,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: THEME.colors.textSecondary,
     marginTop: 12,
   },
   modalOverlay: {
@@ -481,7 +468,6 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalContent: {
-    backgroundColor: '#FFF',
     borderRadius: 20,
     width: '100%',
     maxWidth: 400,
@@ -492,12 +478,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: THEME.colors.text,
   },
   modalBody: {
     padding: 20,
@@ -505,28 +489,22 @@ const styles = StyleSheet.create({
   modalLabel: {
     fontSize: 14,
     fontWeight: '700',
-    color: THEME.colors.text,
     marginBottom: 8,
   },
   modalInput: {
-    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 16,
     fontSize: 15,
-    color: THEME.colors.text,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     height: 120,
   },
   charCount: {
     fontSize: 12,
-    color: THEME.colors.textSecondary,
     textAlign: 'right',
     marginTop: 4,
     marginBottom: 16,
   },
   modalButton: {
-    backgroundColor: '#EF4444',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
@@ -539,7 +517,6 @@ const styles = StyleSheet.create({
   vAttachmentCard: {
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: '#E5E7EB',
     height: 300,
     position: 'relative',
     marginTop: 8,
@@ -566,7 +543,6 @@ const styles = StyleSheet.create({
   vPreviewText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#1F2937',
   },
   attachmentPreviewOverlay: {
     flex: 1,

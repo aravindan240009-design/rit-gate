@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   cardTimeAgo: { fontSize: 12, flexShrink: 0 },
   infoBox: { borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 10, gap: 5 },
   infoBoxRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  infoBoxText: { fontSize: 13, flex: 1 },
+  infoBoxText: { fontSize: 13, flexShrink: 1 },
   cardBottomRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   statusPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20, gap: 5 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
