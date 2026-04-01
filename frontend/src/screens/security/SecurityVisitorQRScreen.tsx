@@ -10,7 +10,7 @@ import {
   Clipboard
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import QRCode from 'react-native-qrcode-svg';
 import { SecurityPersonnel, ScreenName } from '../../types';
 import { API_CONFIG } from '../../config/api.config';

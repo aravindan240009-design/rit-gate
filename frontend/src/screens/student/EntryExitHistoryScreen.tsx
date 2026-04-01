@@ -8,7 +8,7 @@ import {
   RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Student } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import { formatDateTime } from '../../utils/dateUtils';

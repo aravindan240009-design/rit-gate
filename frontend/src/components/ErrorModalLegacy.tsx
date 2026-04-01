@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import ThemedText from './ThemedText';
 
 export type ErrorType = 'network' | 'api' | 'validation' | 'auth' | 'timeout' | 'general';

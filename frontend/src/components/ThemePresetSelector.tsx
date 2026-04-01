@@ -6,7 +6,7 @@ import {
   ScrollView,
   Switch
 } from 'react-native';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme, THEME_PRESETS, ThemePresetId, TextStyleMode } from '../context/ThemeContext';
 import GradientText from './GradientText';
 import ThemedText from './ThemedText';

@@ -8,7 +8,7 @@ import {
   Modal,
   Pressable
 } from 'react-native';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { API_CONFIG } from '../config/api.config';
 import { useNotifications } from '../context/NotificationContext';
 import { getRelativeTime, formatDateShort } from '../utils/dateUtils';

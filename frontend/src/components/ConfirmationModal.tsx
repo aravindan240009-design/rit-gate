@@ -7,7 +7,7 @@ import {
   Animated,
   Easing
 } from 'react-native';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import ThemedText from './ThemedText';
 

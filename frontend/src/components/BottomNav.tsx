@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import ThemedText from './ThemedText';
 
 type TabType = 'HOME' | 'HISTORY' | 'REQUESTS' | 'MY_REQUESTS' | 'NEW_PASS' | 'NEW_PASS_REQUEST' | 'PROFILE' | 'ACCOUNT' | 'ENTRY_EXIT' | 'NOTIFICATIONS' | 'LOGOUT' | 'BACK';

@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Image
 } from 'react-native';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import QRCode from 'react-native-qrcode-svg';
 import RequestTimeline from './RequestTimeline';
 import ThemedText from './ThemedText';

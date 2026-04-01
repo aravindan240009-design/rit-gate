@@ -8,7 +8,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import Ionicons from '@react-native-vector-icons/ionicons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { API_CONFIG } from '../../config/api.config';
 import { useTheme } from '../../context/ThemeContext';
 import ThemedText from '../../components/ThemedText';
