@@ -31,6 +31,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import { exportStyledPdfReport } from '../../utils/pdfReport';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 // GuestPreRequestScreen is navigated to via onNavigate('GUEST_PRE_REQUEST') — not rendered inline
+import HRExitsScreen from './HRExitsScreen';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 
@@ -509,79 +510,16 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       )}
 
       {bottomTab === 'EXITS' && (
-        <ScreenContentContainer>
-        <VerticalScrollView
-          style={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          showsVerticalScrollIndicator={false} decelerationRate="normal"
-        >
-          {/* Exits header card */}
-          <View style={[styles.exitsHeaderCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            <View style={styles.exitsHeaderLeft}>
-              <View style={[styles.exitsIconWrap, { backgroundColor: theme.error + '15' }]}>
-                <Ionicons name="log-out-outline" size={22} color={theme.error} />
-              </View>
-              <View>
-                <ThemedText ignoreGradient style={[styles.exitsTitle, { color: theme.text }]}>Exit Records</ThemedText>
-                <ThemedText ignoreGradient style={[styles.exitsCount, { color: theme.textSecondary }]}>{exitLogs.length} record{exitLogs.length !== 1 ? 's' : ''}</ThemedText>
-              </View>
-            </View>
-          </View>
-
-          {/* Action buttons — equal width, full row */}
-          <View style={styles.exitsActions}>
-            <TouchableOpacity style={[styles.exitsBtn, { backgroundColor: theme.primary }]} onPress={() => setRangeModalVisible(true)}>
-              <Ionicons name="calendar-outline" size={16} color="#fff" />
-              <ThemedText ignoreGradient style={styles.exitsBtnText}>Date Range</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.exitsBtn, { backgroundColor: theme.success }]} onPress={() => exportExitsPdf(exitLogs)}>
-              <Ionicons name="download-outline" size={16} color="#fff" />
-              <ThemedText ignoreGradient style={styles.exitsBtnText}>Download PDF</ThemedText>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.scrollContent}>
-            {exitLogs.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Ionicons name="log-out-outline" size={64} color={theme.border} />
-                <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No exits for selected date</ThemedText>
-              </View>
-            ) : (
-              exitLogs.map((item) => (
-                <View key={`exit-${item.id}`} style={[styles.exitCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
-                  {/* Top row: avatar + name + type badge */}
-                  <View style={styles.exitTopRow}>
-                    <View style={[styles.exitAvatar, { backgroundColor: theme.error + '18' }]}>
-                      <ThemedText ignoreGradient style={[styles.exitAvatarText, { color: theme.error }]}>{getInitials(item.name || item.userId || 'NA')}</ThemedText>
-                    </View>
-                    <View style={styles.exitInfo}>
-                      <ThemedText ignoreGradient style={[styles.exitName, { color: theme.text }]} numberOfLines={1}>{item.name || item.userId || 'Unknown'}</ThemedText>
-                      <ThemedText ignoreGradient style={[styles.exitSub, { color: theme.textSecondary }]} numberOfLines={1}>{item.userId}{item.department ? ` • ${item.department}` : ''}</ThemedText>
-                    </View>
-                    <View style={[styles.exitTypeBadge, { backgroundColor: theme.error + '15' }]}>
-                      <ThemedText ignoreGradient style={[styles.exitTypeText, { color: theme.error }]}>{item.userType || 'EXIT'}</ThemedText>
-                    </View>
-                  </View>
-                  {/* Details row */}
-                  <View style={[styles.exitDetails, { backgroundColor: theme.inputBackground }]}>
-                    {item.purpose ? (
-                      <View style={styles.exitDetailRow}>
-                        <Ionicons name="document-text-outline" size={13} color={theme.textTertiary} />
-                        <ThemedText ignoreGradient style={[styles.exitDetailText, { color: theme.text }]} numberOfLines={1}>{item.purpose}</ThemedText>
-                      </View>
-                    ) : null}
-                    <View style={styles.exitDetailRow}>
-                      <Ionicons name="time-outline" size={13} color={theme.error} />
-                      <ThemedText ignoreGradient style={[styles.exitDetailText, { color: theme.error }]}>{formatDateShort(item.exitTime)}</ThemedText>
-                    </View>
-                  </View>
-                </View>
-              ))
-            )}
-          </View>
-        </VerticalScrollView>
-        </ScreenContentContainer>
+        <HRExitsScreen
+          hr={hr}
+          onBack={() => setBottomTab('HOME')}
+          activeTab={bottomTab}
+          onTabChange={(tab) => {
+            setBottomTab(tab);
+            if (tab === 'PROFILE') onNavigate('PROFILE');
+            if (tab === 'GUEST') onNavigate('GUEST_PRE_REQUEST');
+          }}
+        />
       )}
 
       {/* Bottom Navigation — inline like staff/HOD */}
