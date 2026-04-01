@@ -3350,13 +3350,9 @@ public class SecurityController {
     }
     
     private String generateManualCode() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder code = new StringBuilder("VIS-");
-        java.util.Random random = new java.util.Random();
-        for (int i = 0; i < 6; i++) {
-            code.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return code.toString();
+        // 6-digit numeric code matching the format used by students/staff/HOD
+        int code = 100000 + new java.util.Random().nextInt(900000);
+        return String.valueOf(code);
     }
 
     private boolean isBlank(String s) {
