@@ -296,9 +296,18 @@ const App: React.FC = () => {
     }, 50);
   };
 
+  const clearAllSessionsExcept = async (roleToKeep: UserType) => {
+    if (roleToKeep !== 'STUDENT') await offlineStorage.clearCurrentStudent();
+    if (roleToKeep !== 'STAFF') await offlineStorage.clearCurrentStaff();
+    if (roleToKeep !== 'HOD') await offlineStorage.clearCurrentHOD();
+    if (roleToKeep !== 'HR') await offlineStorage.clearCurrentHR();
+    if (roleToKeep !== 'SECURITY') await offlineStorage.clearCurrentSecurity();
+  };
+
   const handleStudentLogin = async (studentData: Student) => {
     console.log('🎓 Student login successful:', studentData.regNo);
     try {
+      await clearAllSessionsExcept('STUDENT');
       await offlineStorage.saveCurrentStudent(studentData);
       console.log('✅ Student data saved to storage');
     } catch (error) {
@@ -317,6 +326,7 @@ const App: React.FC = () => {
   const handleStaffLogin = async (staffData: Staff) => {
     console.log('👨‍💼 Staff login successful:', staffData.staffCode);
     try {
+      await clearAllSessionsExcept('STAFF');
       await offlineStorage.storeStaffData(staffData);
       console.log('✅ Staff data saved to storage');
     } catch (error) {
@@ -335,6 +345,7 @@ const App: React.FC = () => {
   const handleHODLogin = async (hodData: HOD) => {
     console.log('🏛️ HOD login successful:', hodData.hodCode);
     try {
+      await clearAllSessionsExcept('HOD');
       await offlineStorage.saveCurrentHOD(hodData);
       console.log('✅ HOD data saved to storage');
     } catch (error) {
@@ -353,6 +364,7 @@ const App: React.FC = () => {
   const handleHRLogin = async (hrData: HR) => {
     console.log('👥 HR login successful:', hrData.hrCode);
     try {
+      await clearAllSessionsExcept('HR');
       await offlineStorage.saveCurrentHR(hrData);
       console.log('✅ HR data saved to storage');
     } catch (error) {
@@ -371,6 +383,7 @@ const App: React.FC = () => {
   const handleSecurityLogin = async (securityData: SecurityPersonnel) => {
     console.log('🛡️ Security login successful:', securityData.securityId);
     try {
+      await clearAllSessionsExcept('SECURITY');
       await offlineStorage.saveCurrentSecurity(securityData);
       console.log('✅ Security data saved to storage');
     } catch (error) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TextProps } from 'react-native';
+import { Text, TextProps, StyleSheet, TextStyle } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import GradientText from './GradientText';
 
@@ -23,9 +23,22 @@ const ThemedText: React.FC<Props> = ({ variant = 'default', children, style, ign
 
   const childText = typeof children === 'string' ? children : null;
 
+  // Flatten styles to inspect explicit color overrides
+  const flattenedStyle = (StyleSheet.flatten(style) as TextStyle) || {};
+  const explicitColor = flattenedStyle.color?.toString().toLowerCase() || '';
+  
+  // High-contrast colors like pure white or pure black that are typically used 
+  // on active badges, buttons, and avatars. These should not be transformed into gradients.
+  const isContrastColor = explicitColor === '#fff' || 
+                          explicitColor === '#ffffff' || 
+                          explicitColor === 'white' ||
+                          explicitColor === '#000' ||
+                          explicitColor === '#000000' ||
+                          explicitColor === 'black';
+
   // Apply gradient broadly when enabled, but only for plain string nodes.
   // If this Text contains nested nodes, fall back to normal Text to preserve layout.
-  const shouldGradient = textStyleMode === 'gradient' && childText !== null && !ignoreGradient;
+  const shouldGradient = textStyleMode === 'gradient' && childText !== null && !ignoreGradient && !isContrastColor;
 
   if (shouldGradient) {
     return <GradientText text={childText} colors={colors} style={style as any} />;
