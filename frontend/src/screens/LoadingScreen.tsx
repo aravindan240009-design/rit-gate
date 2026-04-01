@@ -260,13 +260,13 @@ const LoadingScreen: React.FC = () => {
   });
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
+    <View style={[styles.container, { backgroundColor: #F8FAFC }]}>
+      <StatusBar barStyle={'dark-content'} backgroundColor="transparent" translucent />
 
       {/* Background gradient layers */}
-      <View style={[styles.bgLayer1, { backgroundColor: isDark ? '#0A1628' : theme.surfaceHighlight }]} />
-      <View style={[styles.bgLayer2, { backgroundColor: isDark ? '#071020' : theme.surface }]} />
-      <View style={[styles.bgLayer3, { backgroundColor: theme.primary + '18' }]} />
+      <View style={[styles.bgLayer1, { backgroundColor: #EFF6FF }]} />
+      <View style={[styles.bgLayer2, { backgroundColor: #FFFFFF }]} />
+      <View style={[styles.bgLayer3, { backgroundColor: #1D4ED818 }]} />
 
       {/* Floating ambient dots */}
       <FloatingDot x={W * 0.08} y={H * 0.12} delay={0}    size={6} />
@@ -281,13 +281,13 @@ const LoadingScreen: React.FC = () => {
 
         {/* Pulse rings behind logo */}
         <View style={styles.ringsWrap}>
-          <PulseRing delay={0}    size={180} color={theme.primary + '80'} />
-          <PulseRing delay={600}  size={240} color={theme.primary + '4D'} />
-          <PulseRing delay={1200} size={300} color={theme.primary + '26'} />
+          <PulseRing delay={0}    size={180} color={#1D4ED880} />
+          <PulseRing delay={600}  size={240} color={#1D4ED84D} />
+          <PulseRing delay={1200} size={300} color={#1D4ED826} />
         </View>
 
         {/* Glow halo */}
-        <Animated.View style={[styles.glowHalo, { opacity: glowOpacity, backgroundColor: theme.primary + '38' }]} />
+        <Animated.View style={[styles.glowHalo, { opacity: glowOpacity, backgroundColor: #1D4ED838 }]} />
 
         {/* Logo container with scan line */}
         <Animated.View
@@ -296,8 +296,8 @@ const LoadingScreen: React.FC = () => {
             {
               opacity: logoOpacity,
               transform: [{ scale: logoScale }],
-              borderColor: theme.primary + '59',
-              backgroundColor: theme.primary + '0F',
+              borderColor: #1D4ED859,
+              backgroundColor: #1D4ED80F,
             },
           ]}
         >
@@ -310,7 +310,7 @@ const LoadingScreen: React.FC = () => {
           <Animated.View
             style={[
               styles.scanLine,
-              { transform: [{ translateY: scanY }], backgroundColor: theme.accent + '8C' },
+              { transform: [{ translateY: scanY }], backgroundColor: #0EA5E98C },
             ]}
           />
         </Animated.View>
@@ -322,7 +322,7 @@ const LoadingScreen: React.FC = () => {
             {
               opacity: titleOpacity,
               transform: [{ translateY: titleTranslateY }],
-              color: theme.text,
+              color: '#0F172A',
             },
           ]}
         >
@@ -336,7 +336,7 @@ const LoadingScreen: React.FC = () => {
             {
               opacity: subOpacity,
               transform: [{ translateY: subTranslateY }],
-              color: theme.primary,
+              color: '#1D4ED8',
             },
           ]}
         >
@@ -346,7 +346,7 @@ const LoadingScreen: React.FC = () => {
         {/* Divider dots */}
         <Animated.View style={[styles.dotRow, { opacity: subOpacity }]}>
           {[0, 1, 2].map(i => (
-            <View key={i} style={[styles.dividerDot, { backgroundColor: theme.primary + '80' }]} />
+            <View key={i} style={[styles.dividerDot, { backgroundColor: #1D4ED880 }]} />
           ))}
         </Animated.View>
       </View>
@@ -354,17 +354,17 @@ const LoadingScreen: React.FC = () => {
       {/* Bottom section */}
       <View style={styles.bottom}>
         {/* Progress bar */}
-        <View style={[styles.progressTrack, { backgroundColor: theme.border }]}>
-          <Animated.View style={[styles.progressFill, { width: progressWidth, backgroundColor: theme.primary }]}>
+        <View style={[styles.progressTrack, { backgroundColor: #E2E8F0 }]}>
+          <Animated.View style={[styles.progressFill, { width: progressWidth, backgroundColor: "#1D4ED8" }]}>
             {/* Shimmer on progress bar */}
             <View style={styles.progressShimmer} />
           </Animated.View>
         </View>
 
         <Animated.View style={[styles.badge, { opacity: badgeOpacity }]}>
-          <View style={[styles.badgeDot, { backgroundColor: theme.primary }]} />
-          <ThemedText style={[styles.badgeText, { color: theme.primary + 'B3' }]}>SECURE CONNECTION</ThemedText>
-          <View style={[styles.badgeDot, { backgroundColor: theme.primary }]} />
+          <View style={[styles.badgeDot, { backgroundColor: "#1D4ED8" }]} />
+          <ThemedText style={[styles.badgeText, { color: #1D4ED8B3 }]}>SECURE CONNECTION</ThemedText>
+          <View style={[styles.badgeDot, { backgroundColor: "#1D4ED8" }]} />
         </Animated.View>
       </View>
     </View>
