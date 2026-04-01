@@ -53,7 +53,8 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
   const exportQrPng = async (): Promise<string | null> => {
     if (!qrRef.current?.toDataURL) return null;
     const base64 = await new Promise<string | null>((resolve) => {
-      qrRef.current.toDataURL((data: string) => resolve(data || null), { width: 720, height: 720 });
+      // Export at 800px with quiet zone padding built in
+      qrRef.current.toDataURL((data: string) => resolve(data || null), { width: 800, height: 800 });
     });
     if (!base64) return null;
     const path = `${RNFS.CachesDirectoryPath}/guest-qr-${Date.now()}.png`;
@@ -61,7 +62,7 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
     return `file://${path}`;
   };
 
-  const shareMessage = `RIT Gate — Guest pass\nName: ${visitorName || personName}\nManual code: ${manualCode || ''}\nShow this QR at the security gate.`;
+  const shareMessage = `🏛️ RIT Gate — Guest Pass\n\n👤 Name: ${visitorName || personName}\n🔢 Manual Code: ${manualCode || ''}\n\n📱 Show the QR code image at the security gate for entry.`;
 
   const handleShare = async () => {
     try {
@@ -80,16 +81,26 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
   const handleWhatsApp = async () => {
     try {
       const url = await exportQrPng();
-      // Try WhatsApp-specific share first
-      await Share.shareSingle({
-        title: 'Guest Gate Pass',
-        message: shareMessage,
-        url: url || undefined,
-        social: Share.Social.WHATSAPP as any,
-        type: url ? 'image/png' : 'text/plain',
-      });
+      if (url) {
+        // Share image + message via WhatsApp
+        await Share.shareSingle({
+          title: 'Guest Gate Pass',
+          message: shareMessage,
+          url,
+          type: 'image/png',
+          social: Share.Social.WHATSAPP as any,
+          filename: 'guest-pass-qr.png',
+        });
+      } else {
+        // No image — share text only
+        await Share.shareSingle({
+          title: 'Guest Gate Pass',
+          message: shareMessage,
+          social: Share.Social.WHATSAPP as any,
+        });
+      }
     } catch {
-      // Fallback to generic share if WhatsApp not available
+      // Fallback to generic share
       await handleShare();
     }
   };
@@ -129,6 +140,7 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
                     size={220}
                     color="#000000"
                     backgroundColor="#FFFFFF"
+                    quietZone={20}
                     getRef={(c: any) => { qrRef.current = c; }}
                   />
                 ) : (
