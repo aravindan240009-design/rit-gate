@@ -21,6 +21,7 @@ import { exportStyledPdfReport } from '../../utils/pdfReport';
 import { Calendar } from 'react-native-calendars';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
+import { notificationService } from '../../services/NotificationService';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import { useTheme } from '../../context/ThemeContext';
@@ -197,6 +198,9 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
   const exportScanPdf = async () => {
     setIsDownloading(true);
+    const filename = `Scan_History_${rangeMode ? 'Range' : 'Today'}_${new Date().toISOString().slice(0, 10)}`;
+    notificationService.notifyDownloadStarted(filename);
+
     try {
       const savedPath = await exportStyledPdfReport({
         title: 'Security Scan History Report',
@@ -205,6 +209,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           : 'Today',
         sectionHeading: 'Scan records',
         brandFooterLine: 'RIT Gate Management System',
+        filename,
         columns: [
           { key: 'name', label: 'NAME' },
           { key: 'type', label: 'TYPE' },
@@ -220,6 +225,8 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           time: formatTime(scan.outTime || scan.inTime),
         })),
       });
+      
+      notificationService.notifyDownloadSuccess(filename);
       setDownloadMessage('PDF report has been saved to your Downloads folder.');
       setShowDownloadSuccess(true);
     } catch (e: any) {

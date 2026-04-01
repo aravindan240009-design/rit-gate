@@ -21,6 +21,7 @@ import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useActionLock } from '../../context/ActionLockContext';
 import { formatDateShort } from '../../utils/dateUtils';
+import { notificationService } from '../../services/NotificationService';
 import NotificationDropdown from '../../components/NotificationDropdown';
 import BulkDetailsModal from '../../components/BulkDetailsModal';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
@@ -173,12 +174,16 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
   const exportExitsPdf = async (rows: any[]) => {
     setIsDownloading(true);
+    const filename = `Exit_Report_${new Date().toISOString().slice(0, 10)}`;
+    notificationService.notifyDownloadStarted(filename);
+
     try {
       const savedPath = await exportStyledPdfReport({
         title: 'Staff & Student Exit Report',
         subtitle: 'Consolidated exit activity — Registrar / HR view',
         sectionHeading: 'Exit records',
         brandFooterLine: 'RIT Gate Management System',
+        filename,
         columns: [
           { key: 'userType', label: 'ROLE' },
           { key: 'userId', label: 'ID' },
@@ -196,6 +201,8 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           exitTime: formatDateShort(r.exitTime),
         })),
       });
+      
+      notificationService.notifyDownloadSuccess(filename);
       setModalTitle('Download Complete');
       setModalMessage('PDF report has been saved to your Downloads folder.');
       setShowSuccessModal(true);
