@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { Picker } from '@react-native-picker/picker';
 import { SecurityPersonnel, ScreenName, Department, StaffMember } from '../../types';
 import { apiService } from '../../services/api';
 import SecurityBottomNav from '../../components/SecurityBottomNav';
@@ -18,6 +17,7 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import SearchableDropdown from '../../components/SearchableDropdown';
 import { useTheme } from '../../context/ThemeContext';
 
 
@@ -288,58 +288,33 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
           
           <View style={styles.inputGroup}>
             <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Role *</ThemedText>
-            <View style={[styles.pickerContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Ionicons name="person-outline" size={20} color={theme.textTertiary} style={styles.pickerIcon} />
-              <Picker
-                selectedValue={role}
-                onValueChange={(value) => setRole(value)}
-                style={styles.picker}
-                dropdownIconColor={theme.primary}
-                mode="dropdown"
-              >
-                <Picker.Item label="Visitor" value="VISITOR" color="#1F2937" style={{ backgroundColor: '#FFFFFF', fontSize: 16 }} />
-                <Picker.Item label="Vendor" value="VENDOR" color="#1F2937" style={{ backgroundColor: '#FFFFFF', fontSize: 16 }} />
-              </Picker>
-            </View>
+            <SearchableDropdown
+              items={[{ label: 'Visitor', value: 'VISITOR' }, { label: 'Vendor', value: 'VENDOR' }]}
+              selectedValue={role}
+              onSelect={(value) => setRole(value as 'VISITOR' | 'VENDOR')}
+              placeholder="Select role"
+            />
           </View>
 
           <View style={styles.inputGroup}>
             <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Department *</ThemedText>
-            <View style={[styles.pickerContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Ionicons name="business-outline" size={20} color={theme.textTertiary} style={styles.pickerIcon} />
-              <Picker
-                selectedValue={selectedDepartment}
-                onValueChange={setSelectedDepartment}
-                style={styles.picker}
-                dropdownIconColor={theme.primary}
-                mode="dropdown"
-              >
-                <Picker.Item label="Select Department" value="" color="#94A3B8" style={{ backgroundColor: '#FFFFFF', fontSize: 16 }} />
-                {departments.map(dept => (
-                  <Picker.Item key={dept.id} label={dept.name} value={dept.id.toString()} color="#1F2937" style={{ backgroundColor: '#FFFFFF', fontSize: 16 }} />
-                ))}
-              </Picker>
-            </View>
+            <SearchableDropdown
+              items={departments.map(d => ({ label: d.name, value: d.id.toString() }))}
+              selectedValue={selectedDepartment}
+              onSelect={(value) => setSelectedDepartment(value)}
+              placeholder="Select or type department name"
+            />
           </View>
 
           <View style={styles.inputGroup}>
             <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Staff to Meet *</ThemedText>
-            <View style={[styles.pickerContainer, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Ionicons name="person-circle-outline" size={20} color={theme.textTertiary} style={styles.pickerIcon} />
-              <Picker
-                selectedValue={selectedStaff}
-                onValueChange={setSelectedStaff}
-                style={styles.picker}
-                enabled={!!selectedDepartment}
-                dropdownIconColor={theme.primary}
-                mode="dropdown"
-              >
-                <Picker.Item label="Select Staff" value="" color="#94A3B8" style={{ backgroundColor: '#FFFFFF', fontSize: 16 }} />
-                {staffMembers.map(staff => (
-                  <Picker.Item key={staff.id} label={staff.name} value={staff.id.toString()} color="#1F2937" style={{ backgroundColor: '#FFFFFF', fontSize: 16 }} />
-                ))}
-              </Picker>
-            </View>
+            <SearchableDropdown
+              items={staffMembers.map(s => ({ label: s.name, value: s.id.toString() }))}
+              selectedValue={selectedStaff}
+              onSelect={(value) => setSelectedStaff(value)}
+              placeholder={selectedDepartment ? 'Select or type staff name' : 'Select department first'}
+              disabled={!selectedDepartment}
+            />
           </View>
 
           <View style={styles.inputGroup}>
