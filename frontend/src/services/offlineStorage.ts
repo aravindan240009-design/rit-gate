@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Student, Staff, HOD, HR, SecurityPersonnel, EntryLog } from '../types';
+import { Student, Staff, HOD, HR, SecurityPersonnel, NonTeachingFaculty, EntryLog } from '../types';
 
 const STORAGE_KEYS = {
   CURRENT_STUDENT: 'current_student',
@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   CURRENT_HOD: 'current_hod',
   CURRENT_HR: 'current_hr',
   CURRENT_SECURITY: 'current_security',
+  CURRENT_NTF: 'current_ntf',
   ENTRY_LOGS: 'entry_logs_',
   APP_SETTINGS: 'app_settings',
 };
@@ -186,6 +187,35 @@ class OfflineStorageService {
       await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_SECURITY);
     } catch (error) {
       console.error('Error clearing current Security:', error);
+      throw error;
+    }
+  }
+
+  // NTF Management
+  async saveCurrentNTF(ntf: NonTeachingFaculty): Promise<void> {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_NTF, JSON.stringify(ntf));
+    } catch (error) {
+      console.error('Error storing NTF data:', error);
+      throw error;
+    }
+  }
+
+  async getCurrentNTF(): Promise<NonTeachingFaculty | null> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_NTF);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('Error getting current NTF:', error);
+      return null;
+    }
+  }
+
+  async clearCurrentNTF(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_NTF);
+    } catch (error) {
+      console.error('Error clearing current NTF:', error);
       throw error;
     }
   }

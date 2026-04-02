@@ -32,9 +32,10 @@ interface GatePassRequestScreenProps {
   user: Student | Staff | HOD;
   navigation?: any;
   onBack?: () => void;
+  isNTF?: boolean;
 }
 
-const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, navigation, onBack }) => {
+const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, navigation, onBack, isNTF = false }) => {
   const { theme, isDark } = useTheme();
   const { withLock, isLocked } = useActionLock();
   const [purpose, setPurpose] = useState('');
@@ -161,7 +162,13 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
       : { regNo: identifier, purpose: purpose.trim(), reason: reason.trim(), requestDate: requestDate.toISOString(), attachmentUri: attachment?.base64Uri || undefined };
     await withLock(async () => {
       try {
-        const response = (isStaff || isHOD) ? await apiService.submitStaffGatePassRequest(payload as any) : await apiService.submitGatePassRequest(payload as any);
+        let response;
+        if (isNTF) {
+          // NTF: submit directly to HR (skip HOD)
+          response = await apiService.submitNTFGatePassRequest(payload as any);
+        } else {
+          response = (isStaff || isHOD) ? await apiService.submitStaffGatePassRequest(payload as any) : await apiService.submitGatePassRequest(payload as any);
+        }
         if (response.success) setShowSuccessModal(true);
         else { setErrorMessage(response.message || 'Failed to submit.'); setShowErrorModal(true); }
       } catch (error: any) { setErrorMessage(error.message || 'Error occurred.'); setShowErrorModal(true); }

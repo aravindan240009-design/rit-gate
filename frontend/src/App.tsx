@@ -15,7 +15,7 @@ import {
 import ThemedText from './components/ThemedText';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Student, Staff, HOD, HR, SecurityPersonnel, UserType, UserRole, ScreenName } from './types';
+import { Student, Staff, HOD, HR, SecurityPersonnel, NonTeachingFaculty, UserType, UserRole, ScreenName } from './types';
 import { offlineStorage } from './services/offlineStorage';
 import { professionalTheme } from './styles/professionalTheme';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -47,6 +47,9 @@ import HODBulkGatePassScreen from './screens/hod/HODBulkGatePassScreen';
 // ✅ NEW Modern Staff Screens
 import ModernBulkGatePassScreen from './screens/staff/ModernBulkGatePassScreen';
 import MyRequestsScreen from './screens/staff/MyRequestsScreen';
+// ✅ Non-Teaching Faculty Screens
+import NTFDashboardContainer from './screens/ntf/NTFDashboardContainer';
+import NTFMyRequestsScreen from './screens/ntf/NTFMyRequestsScreen';
 import NotificationsScreen from './screens/shared/NotificationsScreen';
 import SwipeBackWrapper from './components/SwipeBackWrapper';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -87,7 +90,7 @@ const AppNavigator: React.FC<{
 // Screens that show exit confirmation on back press
 const EXIT_SCREENS: ScreenName[] = [
   'HOME', 'DASHBOARD', 'STAFF_DASHBOARD', 'HOD_DASHBOARD',
-  'HR_DASHBOARD', 'SECURITY_DASHBOARD', 'UNIFIED_LOGIN',
+  'HR_DASHBOARD', 'SECURITY_DASHBOARD', 'UNIFIED_LOGIN', 'NTF_DASHBOARD',
 ];
 
 const App: React.FC = () => {
@@ -96,6 +99,7 @@ const App: React.FC = () => {
   const [staff, setStaff] = React.useState<Staff | null>(null);
   const [hod, setHod] = React.useState<HOD | null>(null);
   const [hr, setHr] = React.useState<HR | null>(null);
+  const [ntf, setNtf] = React.useState<NonTeachingFaculty | null>(null);
   const [selectedRequest, setSelectedRequest] = React.useState<any>(null);
   const [security, setSecurity] = React.useState<SecurityPersonnel | null>(null);
   const [currentScreen, setCurrentScreen] = React.useState<ScreenName>('HOME');
@@ -131,6 +135,7 @@ const App: React.FC = () => {
       if (ut === 'STUDENT') setCurrentScreen('REQUESTS');
       else if (ut === 'STAFF') setCurrentScreen('MY_REQUESTS');
       else if (ut === 'HOD') setCurrentScreen('HOD_MY_REQUESTS');
+      else if (ut === 'NON_TEACHING') setCurrentScreen('NTF_MY_REQUESTS');
     } else if (r.includes('pending-approvals') || r.includes('pending_approvals')) {
       if (ut === 'STAFF') setCurrentScreen('REQUESTS');
       else if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
@@ -301,8 +306,7 @@ const App: React.FC = () => {
       }
 
       // Check for saved Security session
-      const savedSecurity = await offlineStorage.getCurrentSecurity();
-      if (savedSecurity) {
+      const savedSecurity = await offlineStorage.getCurrentSecurity();      if (savedSecurity) {
         console.log('✅ Found saved Security session:', savedSecurity.securityId);
         setSecurity(savedSecurity);
         setUserType('SECURITY');
@@ -312,6 +316,21 @@ const App: React.FC = () => {
         setBiometricVerified(!hasFlag);
         setIsLoading(false);
         initPushNotifications(savedSecurity.securityId, 'security');
+        return;
+      }
+
+      // Check for saved NTF session
+      const savedNTF = await offlineStorage.getCurrentNTF();
+      if (savedNTF) {
+        console.log('✅ Found saved NTF session:', savedNTF.staffCode);
+        setNtf(savedNTF);
+        setUserType('NON_TEACHING');
+        setCurrentScreen('NTF_DASHBOARD');
+        const hasFlag = await biometricAuthService.hasSessionFlag();
+        setRequiresBiometricGate(hasFlag);
+        setBiometricVerified(!hasFlag);
+        setIsLoading(false);
+        initPushNotifications(savedNTF.staffCode, 'staff');
         return;
       }
 
@@ -347,6 +366,7 @@ const App: React.FC = () => {
     if (roleToKeep !== 'HOD') await offlineStorage.clearCurrentHOD();
     if (roleToKeep !== 'HR') await offlineStorage.clearCurrentHR();
     if (roleToKeep !== 'SECURITY') await offlineStorage.clearCurrentSecurity();
+    if (roleToKeep !== 'NON_TEACHING') await offlineStorage.clearCurrentNTF();
   };
 
   const handleStudentLogin = async (studentData: Student) => {
@@ -444,6 +464,24 @@ const App: React.FC = () => {
     initPushNotifications(securityData.securityId, 'security');
   };
 
+  const handleNTFLogin = async (ntfData: NonTeachingFaculty) => {
+    console.log('🏫 NTF login successful:', ntfData.staffCode);
+    try {
+      await clearAllSessionsExcept('NON_TEACHING');
+      await offlineStorage.saveCurrentNTF(ntfData);
+    } catch (error) {
+      console.error('❌ Failed to save NTF data:', error);
+    }
+    setNtf(ntfData);
+    setUserType('NON_TEACHING');
+    setCurrentScreen('NTF_DASHBOARD');
+    setRequiresBiometricGate(false);
+    setBiometricVerified(true);
+    setBiometricPrompted(false);
+    await biometricAuthService.markSessionActive();
+    initPushNotifications(ntfData.staffCode, 'staff');
+  };
+
   const handleLogout = async () => {
     try {
       console.log('🚪 Logging out user...');
@@ -462,6 +500,7 @@ const App: React.FC = () => {
       setHod(null);
       setHr(null);
       setSecurity(null);
+      setNtf(null);
       setUserType(null);
       setCurrentScreen('HOME');
       setRequiresBiometricGate(false);
@@ -480,19 +519,13 @@ const App: React.FC = () => {
   };
 
   const navigateBack = () => {
-    if (userType === 'STUDENT') {
-      setCurrentScreen('DASHBOARD');
-    } else if (userType === 'STAFF') {
-      setCurrentScreen('STAFF_DASHBOARD');
-    } else if (userType === 'HOD') {
-      setCurrentScreen('HOD_DASHBOARD');
-    } else if (userType === 'HR') {
-      setCurrentScreen('HR_DASHBOARD');
-    } else if (userType === 'SECURITY') {
-      setCurrentScreen('SECURITY_DASHBOARD');
-    } else {
-      setCurrentScreen('HOME');
-    }
+    if (userType === 'STUDENT') setCurrentScreen('DASHBOARD');
+    else if (userType === 'STAFF') setCurrentScreen('STAFF_DASHBOARD');
+    else if (userType === 'HOD') setCurrentScreen('HOD_DASHBOARD');
+    else if (userType === 'HR') setCurrentScreen('HR_DASHBOARD');
+    else if (userType === 'SECURITY') setCurrentScreen('SECURITY_DASHBOARD');
+    else if (userType === 'NON_TEACHING') setCurrentScreen('NTF_DASHBOARD');
+    else setCurrentScreen('HOME');
   };
 
   const goBackToHome = React.useCallback(() => {
@@ -580,6 +613,7 @@ const App: React.FC = () => {
               else if (role === 'HOD') handleHODLogin(user);
               else if (role === 'HR') handleHRLogin(user);
               else if (role === 'SECURITY') handleSecurityLogin(user);
+              else if (role === 'NON_TEACHING') handleNTFLogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -668,6 +702,7 @@ const App: React.FC = () => {
               else if (role === 'HOD') handleHODLogin(user);
               else if (role === 'HR') handleHRLogin(user);
               else if (role === 'SECURITY') handleSecurityLogin(user);
+              else if (role === 'NON_TEACHING') handleNTFLogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -770,6 +805,7 @@ const App: React.FC = () => {
               else if (role === 'HOD') handleHODLogin(user);
               else if (role === 'HR') handleHRLogin(user);
               else if (role === 'SECURITY') handleSecurityLogin(user);
+              else if (role === 'NON_TEACHING') handleNTFLogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -912,6 +948,7 @@ const App: React.FC = () => {
               else if (role === 'HOD') handleHODLogin(user);
               else if (role === 'HR') handleHRLogin(user);
               else if (role === 'SECURITY') handleSecurityLogin(user);
+              else if (role === 'NON_TEACHING') handleNTFLogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -940,6 +977,75 @@ const App: React.FC = () => {
               else if (role === 'HOD') handleHODLogin(user);
               else if (role === 'HR') handleHRLogin(user);
               else if (role === 'SECURITY') handleSecurityLogin(user);
+              else if (role === 'NON_TEACHING') handleNTFLogin(user);
+              else if (role === 'NON_TEACHING') handleNTFLogin(user);
+            }}
+            onBack={goBackToHome}
+          />
+        );
+      }
+
+      // Handle authenticated NTF screens
+      if (userType === 'NON_TEACHING' && ntf) {
+        switch (currentScreen) {
+          case 'NTF_DASHBOARD':
+            return (
+              <NTFDashboardContainer
+                ntf={ntf}
+                onLogout={handleLogout}
+                onNavigate={navigateToScreen}
+              />
+            );
+          case 'NEW_PASS_REQUEST':
+            return (
+              <GatePassRequestScreen
+                user={ntf as any}
+                onBack={() => setCurrentScreen('NTF_DASHBOARD')}
+                isNTF={true}
+              />
+            );
+          case 'NTF_MY_REQUESTS':
+            return (
+              <NTFMyRequestsScreen
+                user={ntf}
+                onBack={() => setCurrentScreen('NTF_DASHBOARD')}
+              />
+            );
+          case 'NOTIFICATIONS':
+            return (
+              <NotificationsScreen
+                userId={ntf.staffCode}
+                userType="staff"
+                onBack={navigateBack}
+              />
+            );
+          case 'GUEST_PRE_REQUEST':
+            return (
+              <GuestPreRequestScreen
+                creatorRole="STAFF"
+                creatorStaffCode={ntf.staffCode}
+                creatorName={ntf.staffName || ntf.name || ''}
+                creatorDepartment={ntf.department || ''}
+                onBack={() => setCurrentScreen('NTF_DASHBOARD')}
+              />
+            );
+          default:
+            return (
+              <NTFDashboardContainer
+                ntf={ntf}
+                onLogout={handleLogout}
+                onNavigate={navigateToScreen}
+              />
+            );
+        }
+      }
+
+      // Handle unauthenticated NTF
+      if (userType === 'NON_TEACHING' && !ntf) {
+        return (
+          <ModernUnifiedLoginScreen
+            onLoginSuccess={(user: any, role: UserRole) => {
+              if (role === 'NON_TEACHING') handleNTFLogin(user);
             }}
             onBack={goBackToHome}
           />

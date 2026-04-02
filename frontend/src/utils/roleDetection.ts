@@ -1,40 +1,16 @@
 import { UserRole } from '../types';
 import { ROLE_PATTERNS } from '../config/api.config';
 
-/**
- * Detect user role based on ID pattern
- * @param userId - User ID to analyze
- * @returns Detected user role
- */
 export function detectUserRole(userId: string): UserRole {
   const trimmedId = userId.trim().toUpperCase();
 
-  // Check for HOD (contains "HOD")
-  if (ROLE_PATTERNS.HOD.test(trimmedId)) {
-    return 'HOD';
-  }
-
-  // Check for HR (starts with HR followed by numbers)
-  if (ROLE_PATTERNS.HR.test(trimmedId)) {
-    return 'HR';
-  }
-
-  // Check for Security (starts with SEC followed by numbers)
-  if (ROLE_PATTERNS.SECURITY.test(trimmedId)) {
-    return 'SECURITY';
-  }
-
-  // Check for Staff (2-3 letters followed by numbers, e.g., AD121, CS101)
-  if (ROLE_PATTERNS.STAFF.test(trimmedId)) {
-    return 'STAFF';
-  }
-
-  // Check for Student (only numbers, e.g., 2117240030007)
-  if (ROLE_PATTERNS.STUDENT.test(trimmedId)) {
-    return 'STUDENT';
-  }
-
-  // Default to STUDENT if no pattern matches
+  if (ROLE_PATTERNS.HOD.test(trimmedId)) return 'HOD';
+  if (ROLE_PATTERNS.HR.test(trimmedId)) return 'HR';
+  if (ROLE_PATTERNS.SECURITY.test(trimmedId)) return 'SECURITY';
+  // NTF IDs start with NTF (e.g. NTF001)
+  if (/^NTF\d+$/i.test(trimmedId)) return 'NON_TEACHING';
+  if (ROLE_PATTERNS.STAFF.test(trimmedId)) return 'STAFF';
+  if (ROLE_PATTERNS.STUDENT.test(trimmedId)) return 'STUDENT';
   return 'STUDENT';
 }
 
@@ -50,6 +26,7 @@ export function getRoleDisplayName(role: UserRole): string {
     HOD: 'Head of Department',
     HR: 'Human Resources',
     SECURITY: 'Security Personnel',
+    NON_TEACHING: 'Non-Teaching Faculty',
   };
 
   return roleNames[role];
@@ -67,6 +44,7 @@ export function getRoleIcon(role: UserRole): string {
     HOD: 'shield-checkmark',
     HR: 'people',
     SECURITY: 'shield',
+    NON_TEACHING: 'person-circle',
   };
 
   return roleIcons[role];
@@ -84,6 +62,7 @@ export function getRoleColor(role: UserRole): string {
     HOD: '#F59E0B',
     HR: '#10B981',
     SECURITY: '#EF4444',
+    NON_TEACHING: '#3B82F6',
   };
 
   return roleColors[role];
@@ -128,6 +107,7 @@ export function getUserIdPlaceholder(userId: string): string {
     HOD: 'HOD Code',
     HR: 'HR Code',
     SECURITY: 'Security ID',
+    NON_TEACHING: 'NTF Code (e.g. NTF001)',
   };
 
   return placeholders[role];

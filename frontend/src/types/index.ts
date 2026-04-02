@@ -1,6 +1,18 @@
 // User Types
-export type UserRole = 'STUDENT' | 'STAFF' | 'HOD' | 'HR' | 'SECURITY';
+export type UserRole = 'STUDENT' | 'STAFF' | 'HOD' | 'HR' | 'SECURITY' | 'NON_TEACHING';
 export type UserType = UserRole; // Alias for UserRole
+
+export interface NonTeachingFaculty {
+  id?: number;
+  staffCode: string;
+  staffName: string;
+  name?: string;
+  email: string;
+  phone: string;
+  department: string;
+  designation?: string;
+  isActive?: boolean;
+}
 
 export interface Student {
   id?: number;
@@ -321,4 +333,6 @@ export type ScreenName =
   | 'HOD_BULK_GATE_PASS'
   | 'HR_APPROVAL'
   | 'HR_EXITS'
-  | 'GUEST_PRE_REQUEST';
+  | 'GUEST_PRE_REQUEST'
+  | 'NTF_DASHBOARD'
+  | 'NTF_MY_REQUESTS';

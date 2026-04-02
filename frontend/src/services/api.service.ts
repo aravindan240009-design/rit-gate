@@ -118,6 +118,7 @@ class ApiService {
     switch (role) {
       case 'STUDENT': { const r = await this.sendStudentOTP(userId); return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
       case 'STAFF':   { const r = await this.sendStaffOTP(userId);   return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
+      case 'NON_TEACHING': { const r = await this.sendStaffOTP(userId); return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
       case 'HOD':     { const r = await this.sendHODOTP(userId);     return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
       case 'HR':      { const r = await this.sendHROTP(userId);      return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
       case 'SECURITY':{ const r = await this.sendSecurityOTP(userId);return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
@@ -129,6 +130,7 @@ class ApiService {
     switch (role) {
       case 'STUDENT': { const r = await this.verifyStudentOTP(userId, otp); return { success: r.success, message: r.message, user: r.user }; }
       case 'STAFF':   { const r = await this.verifyStaffOTP(userId, otp);   return { success: r.success, message: r.message, user: r.user }; }
+      case 'NON_TEACHING': { const r = await this.verifyStaffOTP(userId, otp); return { success: r.success, message: r.message, user: r.user }; }
       case 'HOD':     { const r = await this.verifyHODOTP(userId, otp);     return { success: r.success, message: r.message, user: r.user }; }
       case 'HR':      { const r = await this.verifyHROTP(userId, otp);      return { success: r.success, message: r.message, user: r.user }; }
       case 'SECURITY':{ const r = await this.verifySecurityOTP(userId, otp);return { success: r.success, message: r.message, user: r.user }; }
@@ -229,6 +231,11 @@ class ApiService {
     catch (e: any) { return { success: false, message: e.message || 'Failed to submit gate pass request' }; }
   }
 
+  async submitNTFGatePassRequest(d: { staffCode: string; purpose: string; reason: string; requestDate: string; attachmentUri?: string }): Promise<ApiResponse> {
+    try { return await this.makeRequest(`${this.baseURL}/gate-pass/ntf/submit`, { method: 'POST', body: JSON.stringify(d) }); }
+    catch (e: any) { return { success: false, message: e.message || 'Failed to submit gate pass request' }; }
+  }
+
   async getStudentGatePassRequests(regNo: string): Promise<{ success: boolean; requests?: any[]; message?: string; data?: any[] }> {
     try {
       const data = await this.makeRequest(`${this.baseURL}/gate-pass/student/${regNo}`, { method: 'GET' });
@@ -268,7 +275,13 @@ class ApiService {
     catch (e: any) { return { success: false, message: e.message || 'Failed to reject visitor' }; }
   }
 
-  async getStaffOwnGatePassRequests(staffCode: string): Promise<ApiResponse<GatePassRequest[]>> {
+  async getStaffOwnGatePassRequests(staffCode: string): Promise<ApiResponse<GatePassRequest[]>> {    try {
+      const data = await this.makeRequest(`${this.baseURL}/gate-pass/staff/${staffCode}/own`, { method: 'GET' });
+      return { success: data.success || true, message: data.message || 'OK', data: data.requests || [], requests: data.requests || [] } as any;
+    } catch (e: any) { return { success: false, message: e.message || 'Failed', data: [], requests: [] } as any; }
+  }
+
+  async getNTFOwnGatePassRequests(staffCode: string): Promise<ApiResponse<GatePassRequest[]>> {
     try {
       const data = await this.makeRequest(`${this.baseURL}/gate-pass/staff/${staffCode}/own`, { method: 'GET' });
       return { success: data.success || true, message: data.message || 'OK', data: data.requests || [], requests: data.requests || [] } as any;

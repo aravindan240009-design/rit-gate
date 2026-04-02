@@ -13,8 +13,9 @@ interface PassTypeBottomSheetProps {
   visible: boolean;
   onClose: () => void;
   onSelectSingle: () => void;
-  onSelectBulk: () => void;
-  /** Pre-register guest (instant QR) — Staff / HOD flows */
+  /** Bulk student pass — omit to hide this option */
+  onSelectBulk?: () => void;
+  /** Pre-register guest (instant QR) — Staff / HOD / NTF flows */
   onSelectGuest?: () => void;
 }
 
@@ -83,7 +84,8 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
             </View>
           </TouchableOpacity>
 
-          {/* Bulk Pass Card */}
+          {/* Bulk Pass Card — only shown when onSelectBulk is provided */}
+          {onSelectBulk ? (
           <TouchableOpacity
             style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
             onPress={onSelectBulk}
@@ -109,6 +111,7 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
               <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
             </View>
           </TouchableOpacity>
+          ) : null}
 
           {onSelectGuest ? (
             <TouchableOpacity

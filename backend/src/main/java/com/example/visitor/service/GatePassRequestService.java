@@ -101,8 +101,7 @@ public class GatePassRequestService {
     // Submit staff gate pass request (staff submits for themselves)
     @Transactional
     public GatePassRequest submitStaffRequest(String staffCode, String purpose, String reason,
-                                             LocalDateTime requestDate, String attachmentUri) {
-        log.info("Submitting gate pass request for staff: {}", staffCode);
+                                             LocalDateTime requestDate, String attachmentUri) {        log.info("Submitting gate pass request for staff: {}", staffCode);
         
         // Find staff
         Optional<Staff> staffOpt = staffRepository.findByStaffCode(staffCode);
@@ -152,7 +151,57 @@ public class GatePassRequestService {
         
         return saved;
     }
-    
+
+    // Submit NTF gate pass request (non-teaching faculty — goes directly to HR, skips HOD)
+    @Transactional
+    public GatePassRequest submitNTFRequest(String staffCode, String purpose, String reason,
+                                            LocalDateTime requestDate, String attachmentUri) {
+        log.info("Submitting NTF gate pass request for: {}", staffCode);
+
+        Optional<Staff> staffOpt = staffRepository.findByStaffCode(staffCode);
+        if (staffOpt.isEmpty()) {
+            throw new RuntimeException("Staff not found with code: " + staffCode);
+        }
+        Staff staff = staffOpt.get();
+        String department = staff.getDepartment();
+        String assignedHrCode = departmentLookupService.findActiveHR();
+
+        GatePassRequest request = new GatePassRequest();
+        request.setRegNo(staffCode);
+        request.setStudentName(staff.getStaffName());
+        request.setDepartment(department);
+        request.setPurpose(purpose);
+        request.setReason(reason);
+        request.setRequestDate(requestDate != null ? requestDate : LocalDateTime.now());
+        // Skip HOD — go directly to HR
+        request.setStatus(GatePassRequest.RequestStatus.PENDING_HR);
+        request.setStaffApproval(GatePassRequest.ApprovalStatus.APPROVED);
+        request.setHodApproval(GatePassRequest.ApprovalStatus.APPROVED); // Auto-bypass HOD
+        request.setHrApproval(GatePassRequest.ApprovalStatus.PENDING);
+        request.setAssignedStaffCode(staffCode);
+        request.setAssignedHodCode(null);
+        request.setAssignedHrCode(assignedHrCode);
+        request.setStaffApprovedBy(staffCode);
+        request.setStaffApprovalDate(java.time.LocalDateTime.now());
+        request.setHodApprovedBy("AUTO");
+        request.setHodApprovalDate(java.time.LocalDateTime.now());
+        request.setAttachmentUri(attachmentUri);
+        request.setUserType("STAFF");
+        request.setPassType("SINGLE");
+
+        GatePassRequest saved = gatePassRequestRepository.save(request);
+        log.info("NTF gate pass request created with ID: {}", saved.getId());
+
+        // Notify HR directly
+        try {
+            notificationService.notifyHROfNewHODRequest(saved);
+        } catch (Exception e) {
+            log.error("Failed to notify HR of NTF request {}", saved.getId(), e);
+        }
+
+        return saved;
+    }
+
     // Approve by staff
     @Transactional
     public GatePassRequest approveByStaff(Long requestId, String staffCode, String staffRemark) {
