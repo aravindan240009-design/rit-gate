@@ -356,10 +356,10 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           data={filteredRequests}
           keyExtractor={(request) => request.id.toString()}
           ListHeaderComponent={
-            <>
-              {/* Search Input */}
-              <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
-                <Ionicons name="search" size={20} color={theme.textTertiary} />
+            <View style={[styles.controlCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+               {/* Search Input Integrated */}
+              <View style={[styles.searchRow, { backgroundColor: theme.inputBackground }]}>
+                <Ionicons name="search-outline" size={18} color={theme.textTertiary} />
                 <TextInput
                   style={[styles.searchInput, { color: theme.text }]}
                   placeholder="Search requests..."
@@ -367,47 +367,103 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Ionicons name="close-circle" size={18} color={theme.textTertiary} />
+                  </TouchableOpacity>
+                )}
               </View>
 
-              {/* Stats Tabs */}
-              <View style={[styles.statsContainer, { backgroundColor: theme.surface }]}>
+              {/* Segmented Control Tabs */}
+              <View style={styles.segmentedTabs}>
                 <TouchableOpacity
-                  style={[styles.statTab, activeTab === 'PENDING' && { borderBottomColor: theme.warning }]}
+                  style={[
+                    styles.segmentTab,
+                    activeTab === 'PENDING' && { backgroundColor: theme.warning + '15' }
+                  ]}
                   onPress={() => setActiveTab('PENDING')}
                 >
-                  <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'PENDING' && { color: theme.warning }]}>
+                  <ThemedText style={[
+                    styles.segmentLabel,
+                    { color: theme.textSecondary },
+                    activeTab === 'PENDING' && { color: theme.warning, fontWeight: '800' }
+                  ]}>
                     PENDING
                   </ThemedText>
-                  <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: theme.text }]}>
-                    {stats.pending}
-                  </ThemedText>
+                  <View style={[
+                    styles.segmentCountBadge,
+                    { backgroundColor: theme.warning + '20' },
+                    activeTab === 'PENDING' && { backgroundColor: theme.warning }
+                  ]}>
+                    <ThemedText style={[
+                      styles.segmentCount,
+                      { color: theme.textSecondary },
+                      activeTab === 'PENDING' && { color: '#FFF' }
+                    ]}>
+                      {stats.pending}
+                    </ThemedText>
+                  </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.statTab, activeTab === 'APPROVED' && { borderBottomColor: theme.success }]}
+                  style={[
+                    styles.segmentTab,
+                    activeTab === 'APPROVED' && { backgroundColor: theme.success + '15' }
+                  ]}
                   onPress={() => setActiveTab('APPROVED')}
                 >
-                  <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'APPROVED' && { color: theme.success }]}>
+                  <ThemedText style={[
+                    styles.segmentLabel,
+                    { color: theme.textSecondary },
+                    activeTab === 'APPROVED' && { color: theme.success, fontWeight: '800' }
+                  ]}>
                     APPROVED
                   </ThemedText>
-                  <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: theme.text }]}>
-                    {stats.approved}
-                  </ThemedText>
+                  <View style={[
+                    styles.segmentCountBadge,
+                    { backgroundColor: theme.success + '20' },
+                    activeTab === 'APPROVED' && { backgroundColor: theme.success }
+                  ]}>
+                    <ThemedText style={[
+                      styles.segmentCount,
+                      { color: theme.textSecondary },
+                      activeTab === 'APPROVED' && { color: '#FFF' }
+                    ]}>
+                      {stats.approved}
+                    </ThemedText>
+                  </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.statTab, activeTab === 'REJECTED' && { borderBottomColor: theme.error }]}
+                  style={[
+                    styles.segmentTab,
+                    activeTab === 'REJECTED' && { backgroundColor: theme.error + '15' }
+                  ]}
                   onPress={() => setActiveTab('REJECTED')}
                 >
-                  <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'REJECTED' && { color: theme.error }]}>
+                  <ThemedText style={[
+                    styles.segmentLabel,
+                    { color: theme.textSecondary },
+                    activeTab === 'REJECTED' && { color: theme.error, fontWeight: '800' }
+                  ]}>
                     REJECTED
                   </ThemedText>
-                  <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: theme.text }]}>
-                    {stats.rejected}
-                  </ThemedText>
+                  <View style={[
+                    styles.segmentCountBadge,
+                    { backgroundColor: theme.error + '20' },
+                    activeTab === 'REJECTED' && { backgroundColor: theme.error }
+                  ]}>
+                    <ThemedText style={[
+                      styles.segmentCount,
+                      { color: theme.textSecondary },
+                      activeTab === 'REJECTED' && { color: '#FFF' }
+                    ]}>
+                      {stats.rejected}
+                    </ThemedText>
+                  </View>
                 </TouchableOpacity>
               </View>
-            </>
+            </View>
           }
           renderItem={({ item: request }) => (
             <TouchableOpacity
@@ -822,49 +878,61 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 2,
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  controlCard: {
     marginHorizontal: 20,
     marginTop: 16,
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 12,
+    marginBottom: 20,
+    borderRadius: 24,
+    padding: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
+    gap: 10,
+    marginBottom: 12,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: '500',
+    padding: 0,
   },
-  statsContainer: {
+  segmentedTabs: {
     flexDirection: 'row',
-    marginHorizontal: 20,
-    marginBottom: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    gap: 8,
   },
-  statTab: {
+  segmentTab: {
     flex: 1,
-    paddingVertical: 16,
+    flexDirection: 'column',
     alignItems: 'center',
-    borderBottomWidth: 3,
-    borderBottomColor: 'transparent',
+    paddingVertical: 10,
+    borderRadius: 16,
+    gap: 4,
   },
-  statLabel: {
-    fontSize: 11,
+  segmentLabel: {
+    fontSize: 10,
     fontWeight: '700',
-    marginBottom: 4,
     letterSpacing: 0.5,
   },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '700',
+  segmentCountBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    minWidth: 24,
+    alignItems: 'center',
+  },
+  segmentCount: {
+    fontSize: 13,
+    fontWeight: '800',
   },
   content: {
     flex: 1,

@@ -201,15 +201,22 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
             />
           }
           ListHeaderComponent={
-            <View style={[styles.searchWrap, { backgroundColor: theme.surface }]}>
-              <Ionicons name="search" size={20} color={theme.textTertiary} />
-              <TextInput
-                style={[styles.searchInput, { color: theme.text }]}
-                placeholder="Search requests..."
-                placeholderTextColor={theme.textTertiary}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
+            <View style={[styles.controlCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <View style={[styles.searchRow, { backgroundColor: theme.inputBackground }]}>
+                <Ionicons name="search-outline" size={18} color={theme.textTertiary} />
+                <TextInput
+                  style={[styles.searchInput, { color: theme.text }]}
+                  placeholder="Search requests..."
+                  placeholderTextColor={theme.textTertiary}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Ionicons name="close-circle" size={18} color={theme.textTertiary} />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           }
           renderItem={({ item }) => renderCard(item)}
@@ -290,8 +297,33 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   headerTitle: { fontSize: 24, fontWeight: '700' },
-  searchWrap: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginTop: 16, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, gap: 10 },
-  searchInput: { flex: 1, fontSize: 16 },
+  controlCard: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 8,
+    borderRadius: 24,
+    padding: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    padding: 0,
+  },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 },
   empty: { paddingVertical: 80, alignItems: 'center' },

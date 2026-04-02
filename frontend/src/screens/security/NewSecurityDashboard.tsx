@@ -332,27 +332,35 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
           keyExtractor={(person, index) => `${person.id}-${index}`}
           ListHeaderComponent={
             <>
-              <View style={styles.statsContainer}>
-                <View style={[styles.statCard, { backgroundColor: theme.surface }]}>
-                  <View style={[styles.statIcon, { backgroundColor: theme.success }]}>
-                    <Ionicons name="enter-outline" size={20} color="#FFFFFF" />
+              <View style={[styles.controlCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                <View style={styles.statsGrid}>
+                  <View style={styles.statBox}>
+                    <View style={[styles.statIcon, { backgroundColor: theme.success + '20' }]}>
+                      <Ionicons name="enter-outline" size={18} color={theme.success} />
+                    </View>
+                    <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.active}</ThemedText>
+                    <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ACTIVE</ThemedText>
                   </View>
-                  <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.active}</ThemedText>
-                  <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Active</ThemedText>
-                </View>
-                <View style={[styles.statCard, { backgroundColor: theme.surface }]}>
-                  <View style={[styles.statIcon, { backgroundColor: theme.error }]}>
-                    <Ionicons name="exit-outline" size={20} color="#FFFFFF" />
+                  
+                  <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+                  
+                  <View style={styles.statBox}>
+                    <View style={[styles.statIcon, { backgroundColor: theme.error + '20' }]}>
+                      <Ionicons name="exit-outline" size={18} color={theme.error} />
+                    </View>
+                    <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.exited}</ThemedText>
+                    <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITED</ThemedText>
                   </View>
-                  <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.exited}</ThemedText>
-                  <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Exited</ThemedText>
-                </View>
-                <View style={[styles.statCard, { backgroundColor: theme.primary }]}>
-                  <View style={[styles.statIcon, { backgroundColor: theme.primary }]}>
-                    <Ionicons name="people-outline" size={20} color="#FFFFFF" />
+
+                  <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+
+                  <View style={styles.statBox}>
+                    <View style={[styles.statIcon, { backgroundColor: theme.primary + '20' }]}>
+                      <Ionicons name="people-outline" size={18} color={theme.primary} />
+                    </View>
+                    <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.total}</ThemedText>
+                    <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>TOTAL</ThemedText>
                   </View>
-                  <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.total}</ThemedText>
-                  <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Total</ThemedText>
                 </View>
               </View>
 
@@ -794,11 +802,38 @@ const styles = StyleSheet.create({
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', position: 'relative' },
   notificationIndicator: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4 },
-  statsContainer: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 20, gap: 12 },
-  statCard: { flex: 1, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2, minHeight: 80 },
-  statIcon: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginBottom: 6 },
-  statValue: { fontSize: 24, fontWeight: '700', marginBottom: 2 },
-  statLabel: { fontSize: 14, fontWeight: '600' },
+  controlCard: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 20,
+    borderRadius: 24,
+    padding: 16,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statBox: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statIcon: { 
+    width: 36, 
+    height: 36, 
+    borderRadius: 18, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginBottom: 8 
+  },
+  statValue: { fontSize: 24, fontWeight: '800', marginBottom: 2 },
+  statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
+  statDivider: { width: 1, height: 40, marginHorizontal: 4 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 4 },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   sectionTitle: { fontSize: 16, fontWeight: '700' },
