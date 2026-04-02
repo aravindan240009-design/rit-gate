@@ -1,0 +1,23 @@
+// ============================================================
+// IMPORTANT: Replace this file with your real google-services.json
+// ============================================================
+//
+// Steps to get google-services.json:
+//
+// 1. Go to https://console.firebase.google.com
+// 2. Create a new project (or use existing) named "RIT Gate"
+// 3. Click "Add app" → Android
+// 4. Package name: com.mygate.app
+// 5. App nickname: RIT Gate
+// 6. Click "Register app"
+// 7. Download google-services.json
+// 8. Place it at: frontend/android/app/google-services.json
+//    (rename this file or delete it)
+//
+// Then get the FCM Server Key:
+// 1. Firebase Console → Project Settings → Cloud Messaging tab
+// 2. Copy "Server key" (Legacy)
+// 3. Set it as environment variable on Render:
+//    FCM_SERVER_KEY=<your-server-key>
+//
+// ============================================================

@@ -51,7 +51,7 @@ import NotificationsScreen from './screens/shared/NotificationsScreen';
 import SwipeBackWrapper from './components/SwipeBackWrapper';
 import ErrorBoundary from './components/ErrorBoundary';
 import ExitConfirmModal from './components/navigation/ExitConfirmModal';
-import { initPushNotifications, unregisterPushToken, setupNotificationTapHandler, handleInitialNotification } from './services/pushNotification.service';
+import { initPushNotifications, unregisterPushToken, setupNotificationTapHandler, handleInitialNotification, setupFCMForegroundHandler } from './services/pushNotification.service';
 import { biometricAuthService } from './services/biometricAuth.service';
 
 // Inner component that can access ThemeContext for transition animation
@@ -136,6 +136,12 @@ const App: React.FC = () => {
   // Set up notification tap listener (foreground + background tap)
   React.useEffect(() => {
     const cleanup = setupNotificationTapHandler(handleNotificationRoute);
+    return cleanup;
+  }, [handleNotificationRoute]);
+
+  // Set up FCM foreground message handler (shows notifee notification when app is open)
+  React.useEffect(() => {
+    const cleanup = setupFCMForegroundHandler(handleNotificationRoute);
     return cleanup;
   }, [handleNotificationRoute]);
 

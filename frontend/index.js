@@ -4,16 +4,15 @@ import App from './App';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { ThemeProvider } from './src/context/ThemeContext';
 import notifee, { EventType } from '@notifee/react-native';
+import { registerBackgroundHandler } from './src/services/pushNotification.service';
 
-// Background event handler — required by notifee for background/quit state
+// ── FCM background handler (must be registered before AppRegistry) ──────────
+registerBackgroundHandler();
+
+// ── Notifee background handler ───────────────────────────────────────────────
 notifee.onBackgroundEvent(async ({ type, detail }) => {
   if (type === EventType.PRESS) {
-    // Notification was tapped while app was in background/quit
-    // The app will open and getInitialNotificationData() will handle navigation
     console.log('Notification tapped in background:', detail.notification?.id);
-  }
-  if (type === EventType.DISMISSED) {
-    // User dismissed the notification — nothing to do
   }
 });
 
