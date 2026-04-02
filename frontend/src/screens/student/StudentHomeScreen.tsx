@@ -172,8 +172,6 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
     }
   };
 
-  const [searchQuery, setSearchQuery] = useState('');
-
   const handleRequestClick = (request: any) => {
     setSelectedRequest(request);
     if (request.status === 'APPROVED') {
@@ -227,40 +225,20 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          data={recentRequests.filter(r => r.purpose?.toLowerCase().includes(searchQuery.toLowerCase()))}
+          data={recentRequests}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.scrollContent}
           ListHeaderComponent={
             <>
-              {/* Modern Control Card for Stats & Quick Search */}
-              <View style={[styles.controlCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                <View style={styles.statsGrid}>
-                  <View style={styles.statBox}>
-                    <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.entries}</ThemedText>
-                    <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ENTRIES</ThemedText>
-                  </View>
-                  <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
-                  <View style={styles.statBox}>
-                    <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.exits}</ThemedText>
-                    <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITS</ThemedText>
-                  </View>
+              <View style={[styles.statsCard, { backgroundColor: theme.cardBackground }]}>
+                <View style={styles.statItem}>
+                  <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.entries}</ThemedText>
+                  <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ENTRIES</ThemedText>
                 </View>
-
-                {/* Integrated Search for Recent Requests */}
-                <View style={[styles.searchRow, { backgroundColor: theme.inputBackground }]}>
-                  <Ionicons name="search-outline" size={18} color={theme.textTertiary} />
-                  <TextInput
-                    style={[styles.searchInput, { color: theme.text }]}
-                    placeholder="Search recent requests..."
-                    placeholderTextColor={theme.textTertiary}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
-                  {searchQuery.length > 0 && (
-                    <TouchableOpacity onPress={() => setSearchQuery('')}>
-                      <Ionicons name="close-circle" size={18} color={theme.textTertiary} />
-                    </TouchableOpacity>
-                  )}
+                <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+                <View style={styles.statItem}>
+                  <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.exits}</ThemedText>
+                  <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITS</ThemedText>
                 </View>
               </View>
 
@@ -393,57 +371,24 @@ const styles = StyleSheet.create({
   notificationBadge: { position: 'absolute', top: 4, right: 4, borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
   notificationBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   content: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
-  controlCard: {
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 24,
-    padding: 16,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  statBox: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 16,
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
-    padding: 0,
-  },
-  statValue: { fontSize: 32, fontWeight: '800', marginBottom: 2 },
-  statLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  statDivider: { width: 1, height: 40, marginHorizontal: 10 },
-  requestCard: { marginHorizontal: 20, marginTop: 20, borderRadius: 20, overflow: 'hidden', elevation: 4 },
+  scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
+  statsCard: { flexDirection: 'row', marginTop: 20, borderRadius: 16, padding: 16, elevation: 2 },
+  statItem: { flex: 1, alignItems: 'center', paddingVertical: 8 },
+  statValue: { fontSize: 36, fontWeight: '700', marginBottom: 4 },
+  statLabel: { fontSize: 13, fontWeight: '600', letterSpacing: 0.5 },
+  statDivider: { width: 1, marginHorizontal: 20 },
+  requestCard: { marginTop: 20, borderRadius: 20, overflow: 'hidden', elevation: 4 },
   requestCardTop: { paddingVertical: 52, alignItems: 'center', justifyContent: 'center' },
   requestCardBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 18 },
   requestCardContent: { flex: 1 },
   requestCardTitle: { fontSize: 18, fontWeight: '800', marginBottom: 4 },
   applyButton: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, marginLeft: 12 },
   applyButtonText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
-  sectionHeader: { paddingHorizontal: 20, paddingTop: 32, paddingBottom: 16 },
+  sectionHeader: { paddingTop: 32, paddingBottom: 16 },
   sectionTitle: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
   emptyState: { paddingVertical: 60, alignItems: 'center' },
   emptyText: { fontSize: 16, fontWeight: '600', marginTop: 12 },
-  requestItem: { marginHorizontal: 20, marginBottom: 12, padding: 16, borderRadius: 12, elevation: 2 },
+  requestItem: { marginBottom: 12, padding: 16, borderRadius: 12, elevation: 2 },
   requestItemTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   viewQRButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 10, paddingVertical: 8, paddingHorizontal: 14, marginTop: 12, gap: 6, alignSelf: 'flex-start' },
   viewQRButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '700' },

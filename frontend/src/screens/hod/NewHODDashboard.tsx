@@ -274,71 +274,35 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
           decelerationRate="normal"
           data={filteredRequests}
           keyExtractor={(request) => request.id.toString()}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={styles.scrollContent}
           ListHeaderComponent={
             <>
-              <View style={[styles.controlCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                {/* Integrated Search */}
-                <View style={[styles.searchRow, { backgroundColor: theme.inputBackground }]}>
-                  <Ionicons name="search-outline" size={18} color={theme.textTertiary} />
-                  <TextInput
-                    style={[styles.searchInput, { color: theme.text }]}
-                    placeholder="Search requests..."
-                    placeholderTextColor={theme.textTertiary}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                  />
-                  {searchQuery.length > 0 && (
-                    <TouchableOpacity onPress={() => setSearchQuery('')}>
-                      <Ionicons name="close-circle" size={18} color={theme.textTertiary} />
-                    </TouchableOpacity>
-                  )}
-                </View>
+              {/* Search Bar */}
+              <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
+                <Ionicons name="search" size={20} color={theme.textTertiary} />
+                <TextInput
+                  style={[styles.searchInput, { color: theme.text }]}
+                  placeholder="Search requests..."
+                  placeholderTextColor={theme.textTertiary}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
 
-                {/* Segmented Tabs */}
-                <View style={styles.segmentedTabs}>
-                  <TouchableOpacity 
-                    style={[styles.segmentTab, activeTab === 'PENDING' && { backgroundColor: theme.warning + '15' }]} 
-                    onPress={() => setActiveTab('PENDING')}
-                  >
-                    <ThemedText style={[styles.segmentLabel, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: theme.warning, fontWeight: '800' }]}>
-                      PENDING
-                    </ThemedText>
-                    <View style={[styles.segmentCountBadge, { backgroundColor: theme.warning + '20' }, activeTab === 'PENDING' && { backgroundColor: theme.warning }]}>
-                      <ThemedText style={[styles.segmentCount, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: '#FFF' }]}>
-                        {stats.pending}
-                      </ThemedText>
-                    </View>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity 
-                    style={[styles.segmentTab, activeTab === 'APPROVED' && { backgroundColor: theme.success + '15' }]} 
-                    onPress={() => setActiveTab('APPROVED')}
-                  >
-                    <ThemedText style={[styles.segmentLabel, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: theme.success, fontWeight: '800' }]}>
-                      APPROVED
-                    </ThemedText>
-                    <View style={[styles.segmentCountBadge, { backgroundColor: theme.success + '20' }, activeTab === 'APPROVED' && { backgroundColor: theme.success }]}>
-                      <ThemedText style={[styles.segmentCount, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: '#FFF' }]}>
-                        {stats.approved}
-                      </ThemedText>
-                    </View>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity 
-                    style={[styles.segmentTab, activeTab === 'REJECTED' && { backgroundColor: theme.error + '15' }]} 
-                    onPress={() => setActiveTab('REJECTED')}
-                  >
-                    <ThemedText style={[styles.segmentLabel, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: theme.error, fontWeight: '800' }]}>
-                      REJECTED
-                    </ThemedText>
-                    <View style={[styles.segmentCountBadge, { backgroundColor: theme.error + '20' }, activeTab === 'REJECTED' && { backgroundColor: theme.error }]}>
-                      <ThemedText style={[styles.segmentCount, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: '#FFF' }]}>
-                        {stats.rejected}
-                      </ThemedText>
-                    </View>
-                  </TouchableOpacity>
-                </View>
+              {/* Stats Tabs */}
+              <View style={[styles.statsContainer, { backgroundColor: theme.surface }]}>
+                <TouchableOpacity style={[styles.statTab, activeTab === 'PENDING' && { borderBottomColor: theme.warning }]} onPress={() => setActiveTab('PENDING')}>
+                  <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'PENDING' && { color: theme.warning }]}>PENDING</ThemedText>
+                  <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: theme.text }]}>{stats.pending}</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.statTab, activeTab === 'APPROVED' && { borderBottomColor: theme.success }]} onPress={() => setActiveTab('APPROVED')}>
+                  <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'APPROVED' && { color: theme.success }]}>APPROVED</ThemedText>
+                  <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: theme.text }]}>{stats.approved}</ThemedText>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.statTab, activeTab === 'REJECTED' && { borderBottomColor: theme.error }]} onPress={() => setActiveTab('REJECTED')}>
+                  <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'REJECTED' && { color: theme.error }]}>REJECTED</ThemedText>
+                  <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: theme.text }]}>{stats.rejected}</ThemedText>
+                </TouchableOpacity>
               </View>
             </>
           }
@@ -608,62 +572,12 @@ const styles = StyleSheet.create({
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', position: 'relative' },
   notificationIndicator: { position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: 5, borderWidth: 2 },
-  controlCard: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 20,
-    borderRadius: 24,
-    padding: 12,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 16,
-    gap: 10,
-    marginBottom: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
-    padding: 0,
-  },
-  segmentedTabs: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  segmentTab: {
-    flex: 1,
-    flexDirection: 'column',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderRadius: 16,
-    gap: 4,
-  },
-  segmentLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  segmentCountBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  segmentCount: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
+  searchContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
+  searchInput: { flex: 1, fontSize: 16 },
+  statsContainer: { flexDirection: 'row', marginBottom: 16, borderRadius: 12, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
+  statTab: { flex: 1, paddingVertical: 16, alignItems: 'center', borderBottomWidth: 3, borderBottomColor: 'transparent' },
+  statLabel: { fontSize: 11, fontWeight: '700', marginBottom: 4, letterSpacing: 0.5 },
+  statValue: { fontSize: 24, fontWeight: '700' },
   content: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
   emptyState: { paddingVertical: 80, alignItems: 'center' },

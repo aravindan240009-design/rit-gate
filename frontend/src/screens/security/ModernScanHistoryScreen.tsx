@@ -289,7 +289,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             style={styles.content}
             data={filteredScans}
             keyExtractor={(scan, index) => `${scan.id}-${index}`}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
             ListHeaderComponent={
@@ -304,7 +304,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               </View>
             }
             renderItem={({ item: scan }) => (
-              <View style={[styles.scanCard, { backgroundColor: theme.surface, borderColor: theme.border, marginHorizontal: 20 }]}>
+              <View style={[styles.scanCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                 <View style={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}>
                   <ThemedText style={[styles.scanAvatarText, { color: theme.primary }]}>{scan.isBulkPass ? 'GP' : getInitials(scan.name)}</ThemedText>
                 </View>
@@ -465,7 +465,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           decelerationRate="normal"
           data={activeTab === 'SCANS' ? filteredScans : filteredVehicles}
           keyExtractor={(item, index) => `${item.id}-${index}`}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={styles.scrollContent}
           ListHeaderComponent={
             <>
               {/* Main Tab Switcher */}
@@ -561,7 +561,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               const scan = item as ScanRecord;
               return (
                 <TouchableOpacity
-                  style={[styles.scanCard, { marginHorizontal: 20 }]}
+                  style={[styles.scanCard]}
                   onPress={() => {
                     setSelectedScan(scan);
                     setShowDetailModal(true);
@@ -618,7 +618,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               const vehicle = item as any;
               return (
                 <TouchableOpacity
-                  style={[styles.scanCard, { marginHorizontal: 20 }]}
+                  style={[styles.scanCard]}
                   onPress={() => {
                     setSelectedVehicle(vehicle);
                     setShowVehicleModal(true);
@@ -1014,7 +1014,6 @@ const styles = StyleSheet.create({
   },
   mainTabContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
     marginTop: 16,
     marginBottom: 12,
     gap: 12,
@@ -1048,7 +1047,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    marginHorizontal: 20,
     marginTop: 16,
     marginBottom: 12,
     paddingHorizontal: 16,
@@ -1068,7 +1066,6 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
     marginBottom: 16,
     gap: 8,
   },
@@ -1234,7 +1231,6 @@ const styles = StyleSheet.create({
   },
   rangeActionsRow: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
     gap: 10,
     marginBottom: 12,
   },
