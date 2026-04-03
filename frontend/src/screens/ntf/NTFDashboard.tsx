@@ -131,27 +131,29 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
             {profileImage ? (
               <Image source={{ uri: profileImage }} style={styles.avatarImage} />
             ) : (
-              <View style={[styles.avatar, { backgroundColor: '#3B82F6' }]}>
+              <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
                 <ThemedText style={styles.avatarText}>{getInitials(ntf.staffName || 'NF')}</ThemedText>
               </View>
             )}
           </TouchableOpacity>
           <View style={styles.headerInfo}>
-            <ThemedText style={[styles.greeting, { color: theme.textSecondary }]}>NON-TEACHING FACULTY</ThemedText>
+            <ThemedText style={[styles.greeting, { color: theme.textSecondary }]}>GOOD MORNING,</ThemedText>
             <ThemedText style={[styles.userName, { color: theme.text }]} numberOfLines={1}>
-              {(ntf.staffName || '').toUpperCase()}
+              {(ntf.staffName || 'Non-Teaching Faculty').toUpperCase()}
             </ThemedText>
           </View>
         </View>
-        <TouchableOpacity
-          style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
-          onPress={() => onNavigate('NOTIFICATIONS')}
-        >
-          <Ionicons name="notifications-outline" size={24} color={theme.text} />
-          {unreadCount > 0 && (
-            <View style={[styles.notifDot, { backgroundColor: theme.success, borderColor: theme.surface }]} />
-          )}
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
+            onPress={() => onNavigate('NOTIFICATIONS')}
+          >
+            <Ionicons name="notifications-outline" size={24} color={theme.text} />
+            {unreadCount > 0 && (
+              <View style={[styles.notificationIndicator, { backgroundColor: theme.success, borderColor: theme.surface }]} />
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScreenContentContainer>
@@ -161,21 +163,16 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
           </View>
         ) : (
           <VerticalFlatList
-            style={styles.list}
+            style={styles.content}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-            contentContainerStyle={styles.listContent}
+            contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
             data={requests}
             keyExtractor={(item) => item.id?.toString()}
-            ListHeaderComponent={
-              <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>
-                MY REQUESTS
-              </ThemedText>
-            }
             renderItem={({ item: req }) => (
               <TouchableOpacity
-                style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                style={[styles.requestCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
                 onPress={() => {
                   if (req.status === 'APPROVED') {
                     handleViewQR(req);
@@ -185,24 +182,64 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                   }
                 }}
               >
-                <View style={styles.cardRow}>
-                  <View style={[styles.cardAvatar, { backgroundColor: theme.surfaceHighlight }]}>
-                    <ThemedText style={[styles.cardAvatarText, { color: theme.textSecondary }]}>
+                <View style={styles.cardTopRow}>
+                  <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
+                    <ThemedText style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
                       {getInitials(ntf.staffName)}
                     </ThemedText>
                   </View>
-                  <View style={styles.cardInfo}>
-                    <ThemedText style={[styles.cardPurpose, { color: theme.text }]} numberOfLines={1}>
-                      {req.purpose || 'Gate Pass'}
+
+                  <View style={styles.headerMainInfo}>
+                    <View style={styles.nameRow}>
+                      <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
+                        {req.purpose || 'Gate Pass'}
+                      </ThemedText>
+                      <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+                        <ThemedText style={[styles.passTypePillText, { color: theme.text }]}>Single Pass</ThemedText>
+                      </View>
+                    </View>
+                    <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
+                      {ntf.staffCode} • {ntf.department || 'Department'}
                     </ThemedText>
-                    <ThemedText style={[styles.cardDate, { color: theme.textSecondary }]}>
+                  </View>
+
+                  <View style={styles.timeAgoContainer}>
+                    <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>
+                      {getRelativeTime(req.requestDate || req.createdAt)}
+                    </ThemedText>
+                  </View>
+                </View>
+
+                <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
+                  <View style={styles.detailItem}>
+                    <Ionicons name="document-text-outline" size={16} color={theme.textSecondary} />
+                    <ThemedText style={[styles.detailText, { color: theme.text }]}>{req.reason || 'General Exit'}</ThemedText>
+                  </View>
+                  <View style={styles.detailItem}>
+                    <Ionicons name="calendar-outline" size={16} color={theme.textSecondary} />
+                    <ThemedText style={[styles.detailText, { color: theme.text }]}>
                       {formatDateShort(req.requestDate || req.createdAt)}
                     </ThemedText>
                   </View>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(req.status) }]}>
-                    <ThemedText style={styles.statusText}>{getStatusLabel(req.status)}</ThemedText>
+                </View>
+
+                <View style={styles.cardFooter}>
+                  <View style={[
+                    styles.statusBadge,
+                    req.status === 'PENDING' && { backgroundColor: theme.warning },
+                    req.status === 'PENDING_HR' && { backgroundColor: theme.warning },
+                    req.status === 'APPROVED' && { backgroundColor: theme.success },
+                    req.status === 'REJECTED' && { backgroundColor: theme.error },
+                  ]}>
+                    <ThemedText style={[
+                      styles.statusText,
+                      { color: '#FFFFFF' }
+                    ]}>
+                      {getStatusLabel(req.status)}
+                    </ThemedText>
                   </View>
                 </View>
+
                 {req.status === 'APPROVED' && (
                   <View style={[styles.qrHint, { borderTopColor: theme.border }]}>
                     <Ionicons name="qr-code-outline" size={14} color={theme.primary} />
@@ -310,38 +347,215 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, elevation: 2 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  avatarImage: { width: 40, height: 40, borderRadius: 20 },
-  avatarText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
-  headerInfo: { flex: 1 },
-  greeting: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5 },
-  userName: { fontSize: 14, fontWeight: '800' },
-  iconButton: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  notifDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4, borderWidth: 1.5 },
-  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  list: { flex: 1 },
-  listContent: { padding: 16, paddingBottom: 20 },
-  sectionTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 0.8, marginBottom: 12 },
-  card: { borderRadius: 14, borderWidth: 1, marginBottom: 10, overflow: 'hidden' },
-  cardRow: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
-  cardAvatar: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
-  cardAvatarText: { fontSize: 13, fontWeight: '700' },
-  cardInfo: { flex: 1 },
-  cardPurpose: { fontSize: 14, fontWeight: '700' },
-  cardDate: { fontSize: 12, marginTop: 2 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  statusText: { color: '#FFF', fontSize: 11, fontWeight: '700' },
-  qrHint: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderTopWidth: 1 },
-  qrHintText: { fontSize: 12, fontWeight: '600' },
-  emptyState: { alignItems: 'center', paddingTop: 60, gap: 8 },
-  emptyText: { fontSize: 16, fontWeight: '700' },
-  emptySubText: { fontSize: 13 },
-  bottomNav: { flexDirection: 'row', borderTopWidth: 1, paddingBottom: 8, paddingTop: 6 },
-  navItem: { flex: 1, alignItems: 'center', gap: 2, position: 'relative', paddingVertical: 4 },
-  navLabel: { fontSize: 10, fontWeight: '600' },
-  activeIndicator: { position: 'absolute', bottom: 0, width: 20, height: 3, borderRadius: 2 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  headerInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  greeting: {
+    fontSize: 12,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  notificationIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1.5,
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  requestCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  cardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 16,
+    gap: 12,
+  },
+  avatarContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  requestAvatarText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  headerMainInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  requestStudentName: {
+    fontSize: 15,
+    fontWeight: '700',
+    flex: 1,
+  },
+  passTypePill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  passTypePillText: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  studentIdSub: {
+    fontSize: 12,
+  },
+  timeAgoContainer: {
+    alignItems: 'flex-end',
+  },
+  timeAgoText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  detailsBlock: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  detailText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  qrHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+  },
+  qrHintText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingTop: 60,
+    gap: 8,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  emptySubText: {
+    fontSize: 13,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    paddingBottom: 8,
+    paddingTop: 6,
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+    position: 'relative',
+    paddingVertical: 4,
+  },
+  navLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  activeIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    width: 20,
+    height: 3,
+    borderRadius: 2,
+  },
 });
 
 export default NTFDashboard;
