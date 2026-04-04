@@ -158,7 +158,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
               style={styles.gatePassBanner}
               start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             >
-              <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.3)" />
+              <Ionicons name="shield-checkmark" size={56} color="rgba(255,255,255,0.3)" />
             </LinearGradient>
             <View style={styles.gatePassBottom}>
               <View>
@@ -283,12 +283,12 @@ const styles = StyleSheet.create({
   notifDot: { position: 'absolute', top: 8, right: 8, width: 8, height: 8, borderRadius: 4, borderWidth: 1.5 },
   scrollContent: { padding: 16, paddingBottom: 24, gap: 14 },
   gatePassCard: { borderRadius: 16, overflow: 'hidden', elevation: 2 },
-  gatePassBanner: { height: 100, alignItems: 'center', justifyContent: 'center' },
-  gatePassBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 },
-  gatePassTitle: { fontSize: 16, fontWeight: '800' },
-  gatePassSub: { fontSize: 12, marginTop: 2 },
-  applyBtn: { backgroundColor: '#0F172A', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 },
-  applyBtnText: { color: '#FFF', fontSize: 14, fontWeight: '700' },
+  gatePassBanner: { height: 160, alignItems: 'center', justifyContent: 'center' },
+  gatePassBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20 },
+  gatePassTitle: { fontSize: 20, fontWeight: '800' },
+  gatePassSub: { fontSize: 13, marginTop: 3 },
+  applyBtn: { backgroundColor: '#0F172A', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
+  applyBtnText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
   guestCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, padding: 14, borderWidth: 1, gap: 12 },
   guestIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   guestInfo: { flex: 1 },
