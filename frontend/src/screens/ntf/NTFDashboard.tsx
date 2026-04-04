@@ -165,7 +165,9 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
               <Ionicons name="shield-checkmark" size={56} color="rgba(255,255,255,0.3)" />
             </LinearGradient>
             <View style={styles.gatePassBottom}>
-              <ThemedText style={[styles.gatePassTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
+              <View style={styles.gatePassTextWrap}>
+                <ThemedText style={[styles.gatePassTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
+              </View>
               <TouchableOpacity
                 style={styles.applyBtn}
                 onPress={() => onNavigate('NEW_PASS_REQUEST')}
@@ -286,6 +288,7 @@ const styles = StyleSheet.create({
   gatePassCard: { borderRadius: 16, overflow: 'hidden', elevation: 2 },
   gatePassBanner: { height: 160, alignItems: 'center', justifyContent: 'center' },
   gatePassBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 18 },
+  gatePassTextWrap: { flex: 1, marginRight: 12 },
   gatePassTitle: { fontSize: 20, fontWeight: '800' },
   applyBtn: { backgroundColor: '#0F172A', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
   applyBtnText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
