@@ -412,7 +412,6 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
         <VerticalFlatList
           style={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
