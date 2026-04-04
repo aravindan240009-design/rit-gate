@@ -442,6 +442,23 @@ public class SecurityController {
                     exitLog.setQrCode(qrCode);
                     exitLog.setScanLocation(scanLocation);
                     exitLog.setAccessGranted(true);
+                    // Populate department and purpose from gate pass request
+                    if (qrTable.getPassRequestId() != null) {
+                        gatePassRequestRepository.findById(qrTable.getPassRequestId()).ifPresent(gpr -> {
+                            exitLog.setPurpose(gpr.getPurpose() != null ? gpr.getPurpose() : gpr.getReason());
+                            exitLog.setDepartment(gpr.getDepartment());
+                        });
+                    }
+                    // Fallback: resolve department from user table if still null
+                    if (exitLog.getDepartment() == null) {
+                        if ("ST".equals(userType)) {
+                            studentRepository.findByRegNo(userId).ifPresent(s -> exitLog.setDepartment(s.getDepartment()));
+                        } else if ("SF".equals(userType)) {
+                            staffRepository.findByStaffCode(userId).ifPresent(s -> exitLog.setDepartment(s.getDepartment()));
+                        } else if ("HD".equals(userType)) {
+                            hodRepository.findByHodCode(userId).ifPresent(h -> exitLog.setDepartment(h.getDepartment()));
+                        }
+                    }
                     railwayExitLogRepository.save(exitLog);
                     
                     // Delete the entire row from qr_table
@@ -550,6 +567,13 @@ public class SecurityController {
                         exitLog.setQrCode(qrCode);
                         exitLog.setScanLocation(scanLocation);
                         exitLog.setAccessGranted(true);
+                        // Populate purpose/department from gate pass request
+                        if (qrTable.getPassRequestId() != null) {
+                            gatePassRequestRepository.findById(qrTable.getPassRequestId()).ifPresent(gpr -> {
+                                exitLog.setPurpose(gpr.getPurpose() != null ? gpr.getPurpose() : gpr.getReason());
+                                exitLog.setDepartment(gpr.getDepartment());
+                            });
+                        }
                         railwayExitLogRepository.save(exitLog);
                         
                         System.out.println("✅ VG EXIT record created in Exit_logs table");
@@ -910,6 +934,12 @@ public class SecurityController {
                 exitLog.setQrCode(qrCode);
                 exitLog.setScanLocation("Exit Gate");
                 exitLog.setAccessGranted(true);
+                // Populate purpose from gate pass request
+                if (qrTable.getPassRequestId() != null) {
+                    gatePassRequestRepository.findById(qrTable.getPassRequestId()).ifPresent(gpr -> {
+                        exitLog.setPurpose(gpr.getPurpose() != null ? gpr.getPurpose() : gpr.getReason());
+                    });
+                }
                 railwayExitLogRepository.save(exitLog);
                 
                 // Fetch participant details
@@ -1840,11 +1870,30 @@ public class SecurityController {
                 rec.put("exitTime",    exitTimeStr);
                 rec.put("status",      "EXITED");
                 rec.put("isBulkPass",  false);
-                rec.put("purpose",     exitLog.getPurpose() != null ? exitLog.getPurpose() : "Gate Pass Exit");
+                // Resolve purpose — prefer stored, fallback to gate pass request via qrId
+                String resolvedPurpose = exitLog.getPurpose();
+                if ((resolvedPurpose == null || resolvedPurpose.isBlank()) && exitLog.getQrId() != null) {
+                    try {
+                        Optional<QRTable> qrOpt = qrTableRepository.findById(exitLog.getQrId());
+                        if (qrOpt.isPresent() && qrOpt.get().getPassRequestId() != null) {
+                            Optional<GatePassRequest> gprOpt = gatePassRequestRepository.findById(qrOpt.get().getPassRequestId());
+                            if (gprOpt.isPresent()) {
+                                GatePassRequest gpr = gprOpt.get();
+                                resolvedPurpose = gpr.getPurpose() != null ? gpr.getPurpose() : gpr.getReason();
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+                rec.put("purpose", resolvedPurpose != null ? resolvedPurpose : "Gate Pass Exit");
                 rec.put("reason",      "");
-                if (exitLog.getDepartment() != null) rec.put("department", exitLog.getDepartment());
-                if (exitLog.getEmail()      != null) rec.put("email",      exitLog.getEmail());
-                if (exitLog.getPhone()      != null) rec.put("phone",      exitLog.getPhone());
+                // Resolve department — prefer stored, fallback to user table
+                String resolvedDept = exitLog.getDepartment();
+                if (resolvedDept == null || resolvedDept.isBlank()) {
+                    resolvedDept = resolveDepartment(uid, utype);
+                }
+                if (resolvedDept != null) rec.put("department", resolvedDept);
+                if (exitLog.getEmail() != null) rec.put("email", exitLog.getEmail());
+                if (exitLog.getPhone() != null) rec.put("phone", exitLog.getPhone());
                 scanHistory.add(rec);
             }
 
@@ -1915,6 +1964,22 @@ public class SecurityController {
             case "VG": case "VISITOR": return "VISITOR";
             default: return userType;
         }
+    }
+
+    /** Resolve department from user tables when not stored in exit log */
+    private String resolveDepartment(String userId, String userType) {
+        if (userId == null || userId.isBlank()) return null;
+        try {
+            String utype = userType != null ? userType.toUpperCase() : "";
+            if ("ST".equals(utype) || "STUDENT".equals(utype)) {
+                return studentRepository.findByRegNo(userId).map(s -> s.getDepartment()).orElse(null);
+            } else if ("SF".equals(utype) || "STAFF".equals(utype)) {
+                return staffRepository.findByStaffCode(userId).map(s -> s.getDepartment()).orElse(null);
+            } else if ("HD".equals(utype) || "HOD".equals(utype)) {
+                return hodRepository.findByHodCode(userId).map(h -> h.getDepartment()).orElse(null);
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
     
     // Helper method to parse group pass purpose field

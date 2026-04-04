@@ -35,6 +35,8 @@ public class HRController {
     private final com.example.visitor.repository.StudentRepository studentRepository;
     private final com.example.visitor.repository.StaffRepository staffRepository;
     private final com.example.visitor.repository.HODRepository hodRepository;
+    private final com.example.visitor.repository.QRTableRepository qrTableRepository;
+    private final com.example.visitor.repository.GatePassRequestRepository gatePassRequestRepository;
     
     // ==================== HR APPROVAL ENDPOINTS ====================
     
@@ -461,8 +463,42 @@ public class HRController {
                 }
 
                 map.put("name", resolvedName != null ? resolvedName : e.getUserId());
-                map.put("department", e.getDepartment());
-                map.put("purpose", e.getPurpose());
+
+                // Resolve department — prefer stored value, fallback to user table
+                String dept = e.getDepartment();
+                if (dept == null || dept.isBlank()) {
+                    String uid = e.getUserId();
+                    String utype = e.getUserType() != null ? e.getUserType().toUpperCase() : "";
+                    if (uid != null && !uid.isBlank()) {
+                        try {
+                            if ("STUDENT".equals(utype)) {
+                                dept = studentRepository.findByRegNo(uid).map(s -> s.getDepartment()).orElse(null);
+                            } else if ("STAFF".equals(utype)) {
+                                dept = staffRepository.findByStaffCode(uid).map(s -> s.getDepartment()).orElse(null);
+                            } else if ("HOD".equals(utype)) {
+                                dept = hodRepository.findByHodCode(uid).map(h -> h.getDepartment()).orElse(null);
+                            }
+                        } catch (Exception ex) { /* ignore */ }
+                    }
+                }
+
+                // Resolve purpose — prefer stored value, fallback to gate pass request
+                String purpose = e.getPurpose();
+                if ((purpose == null || purpose.isBlank()) && e.getQrId() != null) {
+                    try {
+                        com.example.visitor.entity.QRTable qr = qrTableRepository.findById(e.getQrId()).orElse(null);
+                        if (qr != null && qr.getPassRequestId() != null) {
+                            var gprOpt = gatePassRequestRepository.findById(qr.getPassRequestId());
+                            if (gprOpt.isPresent()) {
+                                var gpr = gprOpt.get();
+                                purpose = gpr.getPurpose() != null ? gpr.getPurpose() : gpr.getReason();
+                            }
+                        }
+                    } catch (Exception ex) { /* ignore */ }
+                }
+
+                map.put("department", dept != null ? dept : "-");
+                map.put("purpose", purpose != null ? purpose : "-");
                 map.put("exitTime", e.getExitTime());
                 map.put("location", e.getLocation() != null ? e.getLocation() : e.getScanLocation());
                 map.put("verifiedBy", e.getVerifiedBy());
