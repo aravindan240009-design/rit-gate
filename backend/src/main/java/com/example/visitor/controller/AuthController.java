@@ -1388,7 +1388,7 @@ public class AuthController {
             String role      = staff.getRole()      != null ? staff.getRole().trim().toUpperCase() : "";
             String department = staff.getDepartment() != null ? staff.getDepartment().trim() : "";
 
-            // ── HR check first (highest priority) ────────────────────────────
+            // HR / HOD explicit role check first
             if (role.contains("HR")) {
                 return ResponseEntity.ok(Map.of("success", true, "role", "HR"));
             }
@@ -1396,34 +1396,32 @@ public class AuthController {
                 return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
             }
 
-            // ── Non-Teaching detection ────────────────────────────────────────
-            // 1. Department starts with "Non-Teaching" (any variant)
+            // Non-Teaching detection:
+            // Department starts with "Non-Teaching" OR role is clearly non-teaching
+            // (not a Professor/Lecturer/Faculty)
             boolean isNonTeachingDept = department.toLowerCase().startsWith("non-teaching") ||
                                         department.toLowerCase().startsWith("non teaching");
-
-            // 2. Role indicates non-teaching staff (web dev, lab, admin, accounts, library, etc.)
-            //    Teaching staff have roles like "Assistant Professor", "Professor", "Lecturer"
             boolean isTeachingRole = role.contains("PROFESSOR") || role.contains("LECTURER") ||
                                      role.contains("FACULTY") || role.contains("ASSOCIATE PROF") ||
-                                     role.contains("ASST PROF") || role.contains("ASST. PROF");
+                                     role.contains("ASST. PROF") || role.contains("ASST PROF");
 
-            if (isNonTeachingDept || (!isTeachingRole && !role.isEmpty() && !isHodByNameMatch(staffName))) {
-                // Extra guard: if name matches HOD, still route to HOD
+            if (isNonTeachingDept || (!isTeachingRole && !role.isEmpty())) {
                 if (!staffName.isEmpty() && isHodByNameMatch(staffName)) {
                     return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
                 }
                 return ResponseEntity.ok(Map.of("success", true, "role", "NON_TEACHING"));
             }
 
-        } catch (Exception e) {
-            log.error("Error detecting role for {}: {}", staffCode, e.getMessage());
-            // ── Teaching staff fallback ──────────────────────────────────────
-            // Name-based HOD match against students table
+            // Teaching staff — check HOD name match
             if (!staffName.isEmpty() && isHodByNameMatch(staffName)) {
                 return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
             }
 
-            return ResponseEntity.ok(Map.of("success", true, "role", "STAFF")); // safe fallback
+            return ResponseEntity.ok(Map.of("success", true, "role", "STAFF"));
+
+        } catch (Exception e) {
+            log.error("Error detecting role for {}: {}", staffCode, e.getMessage());
+            return ResponseEntity.ok(Map.of("success", true, "role", "STAFF"));
         }
     }
 }

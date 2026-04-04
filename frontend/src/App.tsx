@@ -1012,6 +1012,13 @@ const App: React.FC = () => {
                 onBack={() => setCurrentScreen('NTF_DASHBOARD')}
               />
             );
+          case 'HISTORY':
+            return (
+              <EntryExitHistoryScreen
+                user={ntf as any}
+                onBack={() => setCurrentScreen('NTF_DASHBOARD')}
+              />
+            );
           case 'NOTIFICATIONS':
             return (
               <NotificationsScreen
