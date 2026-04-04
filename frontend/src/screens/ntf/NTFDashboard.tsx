@@ -139,11 +139,44 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const getInitials = (name: string) =>
     name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'APPROVED': return theme.success;
+      case 'APPROVED_BY_HOD': return theme.success;
+      case 'USED': return theme.textTertiary;
+      case 'REJECTED': return theme.error;
+      case 'PENDING_HOD': return theme.primary;
+      case 'PENDING_STAFF': return theme.warning;
+      default: return theme.warning;
+    }
+  };
+
   const getStatusLabel = (status: string) => {
-    if (status === 'APPROVED') return 'ACTIVE';
-    if (status === 'REJECTED') return 'REJECTED';
-    if (status === 'PENDING_HR') return 'PENDING';
-    return 'PENDING';
+    switch (status) {
+      case 'PENDING_STAFF': return 'AWAITING STAFF';
+      case 'PENDING_HOD': return 'AWAITING HOD';
+      case 'APPROVED': return 'APPROVED';
+      case 'APPROVED_BY_HOD': return 'APPROVED';
+      case 'USED': return 'USED';
+      case 'REJECTED': return 'REJECTED';
+      default: return status || 'PENDING';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    });
+  };
+
+  const handleRequestClick = (request: any) => {
+    if (!request.id) return;
+    if (request.status !== 'APPROVED') {
+      setSelectedRequest(request);
+      setShowDetailModal(true);
+      return;
+    }
+    handleViewQR(request);
   };
 
   const getTimeAgo = (dateString: string) => {
@@ -196,123 +229,58 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
       </View>
 
       <ScreenContentContainer>
-        <View style={[styles.requestsHeader, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-          <ThemedText style={[styles.requestsTitle, { color: theme.text }]}>My Requests</ThemedText>
-        </View>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.primary} />
-            <ThemedText style={[styles.loadingText, { color: theme.textSecondary }]}>Loading requests...</ThemedText>
-          </View>
-        ) : (
-          <View style={{ paddingHorizontal: 20 }}>
-            <View style={[styles.searchWrap, { backgroundColor: theme.surface }]}>
-              <Ionicons name="search" size={20} color={theme.textTertiary} />
-              <TextInput
-                style={[styles.searchInput, { color: theme.text }]}
-                placeholder="Search requests..."
-                placeholderTextColor={theme.textTertiary}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
+        {/* Request Gate Pass Section */}
+        <View style={[styles.staticHeaderContainer, { backgroundColor: theme.cardBackground, marginTop: 0 }]}>
+          <TouchableOpacity style={[styles.requestCard, { backgroundColor: theme.cardBackground }]} onPress={() => onNavigate('NEW_PASS_REQUEST')}>
+            <View style={[styles.requestCardTop, { backgroundColor: theme.primary }]}>
+              <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.7)" />
             </View>
-          </View>
-        )}
+            <View style={[styles.requestCardBottom, { backgroundColor: theme.cardBackground }]}>
+              <View style={styles.requestCardContent}>
+                <ThemedText style={[styles.requestCardTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
+              </View>
+              <TouchableOpacity style={[styles.applyButton, { backgroundColor: theme.primary }]} onPress={() => onNavigate('NEW_PASS_REQUEST')}>
+                <ThemedText style={styles.applyButtonText}>Apply Now</ThemedText>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Recent Requests Section */}
+        <View style={styles.sectionHeader}>
+          <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>RECENT REQUESTS</ThemedText>
+        </View>
         <VerticalFlatList
           style={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
-          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           data={filteredRequests}
-          keyExtractor={(item) => item.id?.toString()}
-          renderItem={({ item: req }) => (
-            <TouchableOpacity
-              style={[styles.requestCard, { backgroundColor: theme.surface }]}
-              onPress={() => {
-                if (req.status === 'APPROVED' && isQRAvailable(req)) {
-                  handleViewQR(req);
-                } else {
-                  setSelectedRequest(req);
-                  setShowDetailModal(true);
-                }
-              }}
-              activeOpacity={0.85}
-            >
-              <View style={styles.cardTopRow}>
-                <View style={[styles.avatarCircle, { backgroundColor: theme.warning + '22' }]}>
-                  <ThemedText style={[styles.avatarText, { color: theme.warning }]}>{getInitials(ntf.staffName)}</ThemedText>
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.scrollContent}
+          renderItem={({ item: request }) => (
+            <TouchableOpacity style={[styles.requestItem, { backgroundColor: theme.cardBackground }]} onPress={() => handleRequestClick(request)}>
+              <View style={styles.requestItemTop}>
+                <View style={{ flex: 1 }}>
+                  <ThemedText style={[styles.requestId, { color: theme.text }]}>{request.purpose || 'Gate Pass Request'}</ThemedText>
+                  <ThemedText style={[styles.requestReason, { color: theme.textSecondary }]}>{formatDate(request.requestDate)}</ThemedText>
                 </View>
-                <View style={styles.cardNameBlock}>
-                  <View style={styles.cardNameRow}>
-                    <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{ntf.staffName || 'Non-Teaching Faculty'}</ThemedText>
-                    <View style={[styles.typePillInline, { backgroundColor: theme.inputBackground }]}>
-                      <ThemedText style={[styles.typePillInlineText, { color: theme.textSecondary }]}>Single Pass</ThemedText>
-                    </View>
-                  </View>
-                  <ThemedText style={[styles.cardSubtitle, { color: theme.textSecondary }]}>Non-Teaching Faculty • {ntf.department || 'Department'}</ThemedText>
-                </View>
-                <ThemedText style={[styles.cardTimeAgo, { color: theme.textTertiary }]}>{getTimeAgo(req.requestDate || req.createdAt)}</ThemedText>
-              </View>
-
-              <View style={[styles.infoBox, { backgroundColor: theme.inputBackground }]}>
-                <View style={styles.infoBoxRow}>
-                  <Ionicons name="document-text-outline" size={16} color={theme.textSecondary} />
-                  <ThemedText style={[styles.infoBoxText, { color: theme.text }]} numberOfLines={1}>{req.purpose || req.reason || 'Gate Pass Request'}</ThemedText>
-                </View>
-                <View style={styles.infoBoxRow}>
-                  <Ionicons name="calendar-outline" size={16} color={theme.textSecondary} />
-                  <ThemedText style={[styles.infoBoxText, { color: theme.text }]}>{formatDateShort(req.requestDate || req.createdAt)}</ThemedText>
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(request.status) }]}>
+                  <ThemedText style={styles.statusText}>{getStatusLabel(request.status)}</ThemedText>
                 </View>
               </View>
-
-              <View style={styles.cardBottomRow}>
-                <View style={[
-                  styles.statusTag,
-                  req.status === 'PENDING' && { backgroundColor: theme.warning + '22' },
-                  req.status === 'PENDING_HR' && { backgroundColor: theme.warning + '22' },
-                  req.status === 'APPROVED' && { backgroundColor: theme.success + '22' },
-                  req.status === 'REJECTED' && { backgroundColor: theme.error + '22' },
-                ]}>
-                  <View style={[
-                    styles.statusDot,
-                    req.status === 'PENDING' && { backgroundColor: theme.warning },
-                    req.status === 'PENDING_HR' && { backgroundColor: theme.warning },
-                    req.status === 'APPROVED' && { backgroundColor: theme.success },
-                    req.status === 'REJECTED' && { backgroundColor: theme.error },
-                  ]} />
-                  <ThemedText style={[
-                    styles.statusTagText,
-                    req.status === 'PENDING' && { color: theme.warning },
-                    req.status === 'PENDING_HR' && { color: theme.warning },
-                    req.status === 'APPROVED' && { color: theme.success },
-                    req.status === 'REJECTED' && { color: theme.error },
-                  ]}>{getStatusLabel(req.status)}</ThemedText>
-                </View>
-              </View>
-
-              {req.status === 'APPROVED' && (
-                <View style={[styles.qrHint, { borderTopColor: theme.border }]}>
-                  {isQRAvailable(req) ? (
-                    <>
-                      <Ionicons name="qr-code-outline" size={14} color={theme.primary} />
-                      <ThemedText style={[styles.qrHintText, { color: theme.primary }]}>Tap to view QR</ThemedText>
-                    </>
-                  ) : (
-                    <>
-                      <Ionicons name="time-outline" size={14} color={theme.textTertiary} />
-                      <ThemedText style={[styles.qrHintText, { color: theme.textTertiary }]}>QR available 1 day after approval</ThemedText>
-                    </>
-                  )}
-                </View>
+              {request.status === 'APPROVED' && (
+                <TouchableOpacity style={[styles.viewQRButton, { backgroundColor: theme.primary }]} onPress={() => handleViewQR(request)}>
+                  <Ionicons name="qr-code-outline" size={16} color="#FFFFFF" />
+                  <ThemedText style={styles.viewQRButtonText}>View QR</ThemedText>
+                </TouchableOpacity>
               )}
             </TouchableOpacity>
           )}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Ionicons name="document-text-outline" size={64} color={theme.textTertiary} />
-              <ThemedText style={[styles.emptyStateText, { color: theme.text }]}>No requests found</ThemedText>
-              <ThemedText style={[styles.emptyStateSubtext, { color: theme.textSecondary }]}>Your requests will appear here</ThemedText>
+              <Ionicons name="document-text-outline" size={48} color={theme.border} />
+              <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No recent requests</ThemedText>
             </View>
           }
         />
@@ -466,28 +434,49 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1.5,
   },
-  requestsHeader: {
-    backgroundColor: 'transparent',
+  staticHeaderContainer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
   },
-  requestsTitle: {
-    fontSize: 17,
+  requestCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  requestCardTop: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  requestCardBottom: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  requestCardContent: {
+    alignItems: 'center',
+  },
+  requestCardTitle: {
+    fontSize: 18,
     fontWeight: '700',
   },
-  searchWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
+  applyButton: {
+    borderRadius: 8,
+    paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 12,
-    marginBottom: 16,
-    gap: 12,
+    alignItems: 'center',
   },
-  searchInput: {
-    flex: 1,
+  applyButtonText: {
     fontSize: 16,
+    fontWeight: '600',
+  },
+  sectionHeader: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   content: {
     flex: 1,
@@ -496,130 +485,58 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
-  requestCard: {
-    borderRadius: 14,
+  requestItem: {
+    borderRadius: 12,
     borderWidth: 1,
     marginBottom: 12,
-    overflow: 'hidden',
-  },
-  cardTopRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
     padding: 16,
-    gap: 12,
   },
-  avatarCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  requestItemTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  requestId: {
+    fontSize: 16,
+    fontWeight: '600',
+    flex: 1,
+  },
+  requestReason: {
+    fontSize: 14,
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  cardNameBlock: {
-    flex: 1,
-    gap: 4,
-  },
-  cardNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  cardName: {
-    fontSize: 15,
-    fontWeight: '700',
-    flex: 1,
-  },
-  typePillInline: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  typePillInlineText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  cardSubtitle: {
+  statusText: {
     fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
-  cardTimeAgo: {
-    fontSize: 11,
-    fontWeight: '500',
-    textAlign: 'right',
-  },
-  infoBox: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  infoBoxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  infoBoxText: {
-    fontSize: 13,
-    fontWeight: '500',
-    flex: 1,
-  },
-  cardBottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  statusTag: {
+  viewQRButton: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statusTagText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  qrHint: {
+    paddingVertical: 8,
+    borderRadius: 6,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderTopWidth: 1,
   },
-  qrHintText: {
+  viewQRButtonText: {
     fontSize: 12,
     fontWeight: '600',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 40,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 13,
-    fontWeight: '600',
+    color: '#FFFFFF',
   },
   emptyState: {
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: 40,
     gap: 8,
   },
-  emptyStateText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  emptyStateSubtext: {
-    fontSize: 13,
+  emptyText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   bottomNav: {
     flexDirection: 'row',
@@ -635,6 +552,10 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   navLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  navLabelActive: {
     fontSize: 10,
     fontWeight: '600',
   },
