@@ -220,11 +220,6 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
         </View>
       </View>
 
-      <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
       <ScreenContentContainer>
           <View style={styles.staticHeaderContainer}>
             <View style={[styles.statsCard, { backgroundColor: theme.cardBackground, marginTop: 0 }]}>
@@ -258,6 +253,11 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
             </View>
           </View>
 
+          <ScrollView
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ flexGrow: 1 }}
+          >
           <VerticalFlatList
             style={styles.content}
             scrollEnabled={false}
@@ -292,8 +292,8 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
             </View>
           }
         />
+          </ScrollView>
       </ScreenContentContainer>
-      </ScrollView>
 
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>

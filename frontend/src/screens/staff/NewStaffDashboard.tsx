@@ -347,11 +347,6 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         </View>
       </View>
 
-      <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
       <View style={{ paddingHorizontal: 20 }}>
         {/* Search Input */}
         <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
@@ -381,6 +376,11 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         </View>
       </View>
 
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
       <ScreenContentContainer>
         <VerticalFlatList
           style={styles.content}

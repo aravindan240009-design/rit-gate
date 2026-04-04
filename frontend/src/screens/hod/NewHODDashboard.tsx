@@ -267,11 +267,6 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         </View>
       </View>
 
-      <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
       <View style={{ paddingHorizontal: 20 }}>
         {/* Search Bar */}
         <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
@@ -301,6 +296,11 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         </View>
       </View>
 
+      <ScrollView
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
       <ScreenContentContainer>
         <VerticalFlatList
           style={styles.content}
