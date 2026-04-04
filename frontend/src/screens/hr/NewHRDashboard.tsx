@@ -75,7 +75,6 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   const { profileImage } = useProfile();
   const { lock, unlock } = useActionLock();
   const [isDownloading, setIsDownloading] = useState(false);
-  const scrollViewRef = useRef<FlatList>(null);
 
   const [stats, setStats] = useState({
     pending: 0,
@@ -160,8 +159,6 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
   const onRefresh = () => {
     setRefreshing(true);
-    // Scroll to top before refreshing
-    scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
     if (bottomTab === 'EXITS') loadExitLogs();
     else loadRequests();
   };
@@ -385,7 +382,6 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
           <ScreenContentContainer style={{ flex: 1 }}>
             <VerticalFlatList
-              ref={scrollViewRef}
               style={styles.content}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
               data={filteredRequests}
