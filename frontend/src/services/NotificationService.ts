@@ -1,7 +1,6 @@
 import { Platform } from 'react-native';
 import RNFS from 'react-native-fs';
 import notifee, { AndroidImportance, AndroidVisibility } from '@notifee/react-native';
-import { exportStyledPdfReport } from '../utils/pdfReport';
 
 const DOWNLOAD_CHANNEL_ID = 'ritgate_downloads';
 let downloadChannelCreated = false;
@@ -42,7 +41,7 @@ class NotificationService {
    * Generate a PDF report with a progress notification.
    * Shows indeterminate progress while generating, then a tappable complete notification.
    */
-  async generatePdfReport(params: Parameters<typeof exportStyledPdfReport>[0]): Promise<{ success: boolean; filePath?: string; message?: string }> {
+  async generatePdfReport(params: Parameters<typeof import('../utils/pdfReport').exportStyledPdfReport>[0]): Promise<{ success: boolean; filePath?: string; message?: string }> {
     await ensureDownloadChannel();
     const notifId = `dl-${Date.now()}`;
     const filename = (params.filename || params.title || 'report').replace(/[^a-z0-9-_]/gi, '_') + '.pdf';
@@ -63,6 +62,7 @@ class NotificationService {
     });
 
     try {
+      const { exportStyledPdfReport } = require('../utils/pdfReport');
       const filePath = await exportStyledPdfReport(params);
 
       if (!filePath) {
