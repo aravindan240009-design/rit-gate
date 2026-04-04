@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   RefreshControl,
   TextInput,
@@ -67,7 +66,6 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
   const { profileImage } = useProfile();
-  const scrollViewRef = useRef<ScrollView>(null);
   const { lock, unlock } = useActionLock();
 
   const [stats, setStats] = useState({
@@ -129,8 +127,6 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
 
   const onRefresh = () => {
     setRefreshing(true);
-    // Scroll to top before refreshing
-    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     loadRequests();
   };
 
@@ -270,45 +266,40 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         </View>
       </View>
 
-      <ScrollView
-        ref={scrollViewRef}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <ScreenContentContainer>
-        <View style={{ paddingHorizontal: 20 }}>
-          {/* Search Bar */}
-          <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
-            <Ionicons name="search" size={20} color={theme.textTertiary} />
-            <TextInput
-              style={[styles.searchInput, { color: theme.text }]}
-              placeholder="Search requests..."
-              placeholderTextColor={theme.textTertiary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-
-          {/* Stats Tabs */}
-          <View style={[styles.statsContainer, { backgroundColor: theme.surface }]}>
-            <TouchableOpacity style={[styles.statTab, activeTab === 'PENDING' && { borderBottomColor: theme.warning }]} onPress={() => setActiveTab('PENDING')}>
-              <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'PENDING' && { color: theme.warning }]}>PENDING</ThemedText>
-              <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: theme.text }]}>{stats.pending}</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.statTab, activeTab === 'APPROVED' && { borderBottomColor: theme.success }]} onPress={() => setActiveTab('APPROVED')}>
-              <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'APPROVED' && { color: theme.success }]}>APPROVED</ThemedText>
-              <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: theme.text }]}>{stats.approved}</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.statTab, activeTab === 'REJECTED' && { borderBottomColor: theme.error }]} onPress={() => setActiveTab('REJECTED')}>
-              <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'REJECTED' && { color: theme.error }]}>REJECTED</ThemedText>
-              <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: theme.text }]}>{stats.rejected}</ThemedText>
-            </TouchableOpacity>
-          </View>
+      <View style={{ paddingHorizontal: 20 }}>
+        {/* Search Bar */}
+        <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
+          <Ionicons name="search" size={20} color={theme.textTertiary} />
+          <TextInput
+            style={[styles.searchInput, { color: theme.text }]}
+            placeholder="Search requests..."
+            placeholderTextColor={theme.textTertiary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
         </View>
 
+        {/* Stats Tabs */}
+        <View style={[styles.statsContainer, { backgroundColor: theme.surface }]}>
+          <TouchableOpacity style={[styles.statTab, activeTab === 'PENDING' && { borderBottomColor: theme.warning }]} onPress={() => setActiveTab('PENDING')}>
+            <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'PENDING' && { color: theme.warning }]}>PENDING</ThemedText>
+            <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: theme.text }]}>{stats.pending}</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.statTab, activeTab === 'APPROVED' && { borderBottomColor: theme.success }]} onPress={() => setActiveTab('APPROVED')}>
+            <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'APPROVED' && { color: theme.success }]}>APPROVED</ThemedText>
+            <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: theme.text }]}>{stats.approved}</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.statTab, activeTab === 'REJECTED' && { borderBottomColor: theme.error }]} onPress={() => setActiveTab('REJECTED')}>
+            <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'REJECTED' && { color: theme.error }]}>REJECTED</ThemedText>
+            <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: theme.text }]}>{stats.rejected}</ThemedText>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScreenContentContainer>
         <VerticalFlatList
           style={styles.content}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
           data={filteredRequests}
@@ -423,7 +414,6 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
           }
         />
       </ScreenContentContainer>
-      </ScrollView>
 
       {/* Bottom Navigation */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
