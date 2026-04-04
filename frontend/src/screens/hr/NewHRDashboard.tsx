@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  FlatList
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -74,6 +75,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   const { profileImage } = useProfile();
   const { lock, unlock } = useActionLock();
   const [isDownloading, setIsDownloading] = useState(false);
+  const scrollViewRef = useRef<FlatList>(null);
 
   const [stats, setStats] = useState({
     pending: 0,
@@ -158,6 +160,8 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
   const onRefresh = () => {
     setRefreshing(true);
+    // Scroll to top before refreshing
+    scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
     if (bottomTab === 'EXITS') loadExitLogs();
     else loadRequests();
   };
@@ -381,6 +385,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
           <ScreenContentContainer style={{ flex: 1 }}>
             <VerticalFlatList
+              ref={scrollViewRef}
               style={styles.content}
               refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
               data={filteredRequests}

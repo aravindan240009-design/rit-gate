@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,7 +8,8 @@ import {
   StatusBar,
   Image,
   Modal,
-  TextInput
+  TextInput,
+  FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -64,6 +65,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { errorInfo, showError, hideError, handleRetry, isVisible: isErrorVisible } = useErrorModal();
   const { successInfo, showSuccess, hideSuccess, isVisible: isSuccessVisible } = useSuccessModal();
+  const scrollViewRef = useRef<FlatList>(null);
 
   useEffect(() => {
     loadData();
@@ -94,6 +96,8 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
   const onRefresh = () => {
     setRefreshing(true);
+    // Scroll to top before refreshing
+    scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
     loadData();
   };
 
@@ -253,6 +257,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
         </View>
 
         <VerticalFlatList
+          ref={scrollViewRef}
           style={styles.content}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"

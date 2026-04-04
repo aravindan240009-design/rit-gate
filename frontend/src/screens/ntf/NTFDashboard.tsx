@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, StyleSheet, TouchableOpacity, RefreshControl,
   StatusBar, Image, ActivityIndicator, ScrollView,
@@ -39,6 +39,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
   const { profileImage } = useProfile();
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -78,7 +79,12 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
     }
   };
 
-  const onRefresh = () => { setRefreshing(true); loadData(); };
+  const onRefresh = () => { 
+    setRefreshing(true); 
+    // Scroll to top before refreshing
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    loadData(); 
+  };
 
   const handleViewQR = async (req: any) => {
     setSelectedRequest(req);
@@ -147,6 +153,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
       <ScreenContentContainer>
         <ScrollView
+          ref={scrollViewRef}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}

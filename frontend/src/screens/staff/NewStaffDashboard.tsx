@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,7 +9,8 @@ import {
   StatusBar,
   Modal,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -64,6 +65,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   const [processing, setProcessing] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
   const { profileImage } = useProfile();
+  const scrollViewRef = useRef<FlatList>(null);
   const { lock, unlock } = useActionLock();
 
   const [stats, setStats] = useState({
@@ -169,6 +171,8 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
   const onRefresh = () => {
     setRefreshing(true);
+    // Scroll to top before refreshing
+    scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
     loadRequests();
   };
 
@@ -401,6 +405,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         </View>
 
         <VerticalFlatList
+          ref={scrollViewRef}
           style={styles.content}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={styles.scrollContent}
