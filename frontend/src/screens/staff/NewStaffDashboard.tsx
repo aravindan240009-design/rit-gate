@@ -65,7 +65,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   const [processing, setProcessing] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
   const { profileImage } = useProfile();
-  const scrollViewRef = useRef<FlatList>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
   const { lock, unlock } = useActionLock();
 
   const [stats, setStats] = useState({
@@ -172,7 +172,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   const onRefresh = () => {
     setRefreshing(true);
     // Scroll to top before refreshing
-    scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     loadRequests();
   };
 
@@ -350,23 +350,29 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         </View>
       </View>
 
-      <ScreenContentContainer>
-        <View style={{ paddingHorizontal: 20 }}>
-          {/* Search Input */}
-          <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
-            <Ionicons name="search" size={20} color={theme.textTertiary} />
-            <TextInput
-              style={[styles.searchInput, { color: theme.text }]}
-              placeholder="Search requests..."
-              placeholderTextColor={theme.textTertiary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
+      <ScrollView
+        ref={scrollViewRef}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <ScreenContentContainer>
+          <View style={{ paddingHorizontal: 20 }}>
+            {/* Search Input */}
+            <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
+              <Ionicons name="search" size={20} color={theme.textTertiary} />
+              <TextInput
+                style={[styles.searchInput, { color: theme.text }]}
+                placeholder="Search requests..."
+                placeholderTextColor={theme.textTertiary}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
 
-          {/* Stats Tabs */}
-          <View style={[styles.statsContainer, { backgroundColor: theme.surface }]}>
-            <TouchableOpacity
+            {/* Stats Tabs */}
+            <View style={[styles.statsContainer, { backgroundColor: theme.surface }]}>
+              <TouchableOpacity
               style={[styles.statTab, activeTab === 'PENDING' && { borderBottomColor: theme.warning }]}
               onPress={() => setActiveTab('PENDING')}
             >
@@ -405,7 +411,6 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         </View>
 
         <VerticalFlatList
-          ref={scrollViewRef}
           style={styles.content}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={styles.scrollContent}

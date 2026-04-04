@@ -88,11 +88,44 @@ export function onNotificationTap(
   handler: (data: Record<string, string>) => void
 ): () => void {
   const unsub = notifee.onForegroundEvent(({ type, detail }) => {
-    if (type === EventType.PRESS && detail.notification?.data) {
-      handler(detail.notification.data as Record<string, string>);
+    if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
+      const data = (detail.notification?.data || {}) as Record<string, string>;
+
+      // Download notification — open the file
+      if (data.type === 'download' && data.filePath) {
+        openFile(data.filePath, data.mimeType || 'application/pdf');
+        return;
+      }
+
+      // App notification — navigate
+      if (data.actionRoute) {
+        handler(data);
+      }
     }
   });
   return unsub;
+}
+
+/** Open a file using Android's file viewer intent */
+async function openFile(filePath: string, mimeType: string): Promise<void> {
+  try {
+    const { Linking, NativeModules, Platform } = require('react-native');
+    if (Platform.OS === 'android') {
+      // Use FileProvider URI via react-native-fs
+      const RNFS = require('react-native-fs').default || require('react-native-fs');
+      // Try opening via Linking with content:// URI
+      const uri = `file://${filePath}`;
+      const canOpen = await Linking.canOpenURL(uri);
+      if (canOpen) {
+        await Linking.openURL(uri);
+      } else {
+        // Fallback: open Downloads folder
+        await Linking.openURL('content://com.android.externalstorage.documents/root/primary');
+      }
+    }
+  } catch (e) {
+    console.warn('Could not open file:', e);
+  }
 }
 
 /**

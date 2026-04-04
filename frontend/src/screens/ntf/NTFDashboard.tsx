@@ -151,13 +151,13 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
         </TouchableOpacity>
       </View>
 
-      <ScreenContentContainer>
-        <ScrollView
-          ref={scrollViewRef}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
+      <ScrollView
+        ref={scrollViewRef}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <ScreenContentContainer>
           {/* Request Gate Pass Card */}
           <TouchableOpacity
             style={[styles.gatePassCard, { backgroundColor: theme.surface }]}
@@ -222,8 +222,8 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
               </View>
             ))
           )}
-        </ScrollView>
-      </ScreenContentContainer>
+        </ScreenContentContainer>
+      </ScrollView>
 
       {/* Bottom Navigation */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>

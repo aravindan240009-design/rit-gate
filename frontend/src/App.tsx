@@ -192,6 +192,15 @@ const App: React.FC = () => {
     getInitialNotificationData().then((data) => {
       if (data?.actionRoute) apply(data.actionRoute);
     });
+    // Also check for route stored by notifee background handler (background tap)
+    import('@react-native-async-storage/async-storage').then(({ default: AsyncStorage }) => {
+      AsyncStorage.getItem('@pending_notification_route').then((route) => {
+        if (route) {
+          AsyncStorage.removeItem('@pending_notification_route');
+          apply(route);
+        }
+      });
+    });
   }, []); // run once on mount
 
   React.useEffect(() => {

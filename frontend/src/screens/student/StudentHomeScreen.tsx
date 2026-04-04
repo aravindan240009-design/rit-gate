@@ -65,7 +65,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { errorInfo, showError, hideError, handleRetry, isVisible: isErrorVisible } = useErrorModal();
   const { successInfo, showSuccess, hideSuccess, isVisible: isSuccessVisible } = useSuccessModal();
-  const scrollViewRef = useRef<FlatList>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     loadData();
@@ -97,7 +97,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   const onRefresh = () => {
     setRefreshing(true);
     // Scroll to top before refreshing
-    scrollViewRef.current?.scrollToOffset({ offset: 0, animated: true });
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     loadData();
   };
 
@@ -223,49 +223,53 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
         </View>
       </View>
 
-      <ScreenContentContainer>
-        <View style={styles.staticHeaderContainer}>
-          <View style={[styles.statsCard, { backgroundColor: theme.cardBackground, marginTop: 0 }]}>
-            <View style={styles.statItem}>
-              <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.entries}</ThemedText>
-              <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ENTRIES</ThemedText>
-            </View>
-            <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
-            <View style={styles.statItem}>
-              <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.exits}</ThemedText>
-              <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITS</ThemedText>
-            </View>
-          </View>
-
-          <TouchableOpacity style={[styles.requestCard, { backgroundColor: theme.cardBackground }]} onPress={onRequestGatePass}>
-            <View style={[styles.requestCardTop, { backgroundColor: theme.primary }]}>
-              <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.7)" />
-            </View>
-            <View style={[styles.requestCardBottom, { backgroundColor: theme.cardBackground }]}>
-              <View style={styles.requestCardContent}>
-                <ThemedText style={[styles.requestCardTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
+      <ScrollView
+        ref={scrollViewRef}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <ScreenContentContainer>
+          <View style={styles.staticHeaderContainer}>
+            <View style={[styles.statsCard, { backgroundColor: theme.cardBackground, marginTop: 0 }]}>
+              <View style={styles.statItem}>
+                <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.entries}</ThemedText>
+                <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ENTRIES</ThemedText>
               </View>
-              <TouchableOpacity style={[styles.applyButton, { backgroundColor: theme.primary }]} onPress={onRequestGatePass}>
-                <ThemedText style={styles.applyButtonText}>Apply Now</ThemedText>
-              </TouchableOpacity>
+              <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+              <View style={styles.statItem}>
+                <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.exits}</ThemedText>
+                <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITS</ThemedText>
+              </View>
             </View>
-          </TouchableOpacity>
 
-          <View style={styles.sectionHeader}>
-            <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>RECENT REQUESTS</ThemedText>
+            <TouchableOpacity style={[styles.requestCard, { backgroundColor: theme.cardBackground }]} onPress={onRequestGatePass}>
+              <View style={[styles.requestCardTop, { backgroundColor: theme.primary }]}>
+                <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.7)" />
+              </View>
+              <View style={[styles.requestCardBottom, { backgroundColor: theme.cardBackground }]}>
+                <View style={styles.requestCardContent}>
+                  <ThemedText style={[styles.requestCardTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
+                </View>
+                <TouchableOpacity style={[styles.applyButton, { backgroundColor: theme.primary }]} onPress={onRequestGatePass}>
+                  <ThemedText style={styles.applyButtonText}>Apply Now</ThemedText>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.sectionHeader}>
+              <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>RECENT REQUESTS</ThemedText>
+            </View>
           </View>
-        </View>
 
-        <VerticalFlatList
-          ref={scrollViewRef}
-          style={styles.content}
-          showsVerticalScrollIndicator={false}
-          decelerationRate="normal"
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-          data={recentRequests}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.scrollContent}
-          renderItem={({ item: request }) => (
+          <VerticalFlatList
+            style={styles.content}
+            showsVerticalScrollIndicator={false}
+            decelerationRate="normal"
+            data={recentRequests}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.scrollContent}
+            renderItem={({ item: request }) => (
             <TouchableOpacity style={[styles.requestItem, { backgroundColor: theme.cardBackground }]} onPress={() => handleRequestClick(request)}>
               <View style={styles.requestItemTop}>
                 <View style={{ flex: 1 }}>
@@ -292,6 +296,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           }
         />
       </ScreenContentContainer>
+      </ScrollView>
 
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
