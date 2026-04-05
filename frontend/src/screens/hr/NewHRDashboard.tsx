@@ -76,7 +76,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   const { profileImage } = useProfile();
   const { lock, unlock } = useActionLock();
   const [isDownloading, setIsDownloading] = useState(false);
-  const { translateY: rangeSheetY, panHandlers: rangePanHandlers } = useBottomSheetSwipe(() => setRangeModalVisible(false));
+  const { translateY: rangeSheetY, panHandlers: rangePanHandlers, openSheet: openRangeSheet } = useBottomSheetSwipe(() => setRangeModalVisible(false));
 
   const [stats, setStats] = useState({
     pending: 0,
@@ -623,7 +623,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
         </View>
       )}
 
-      <Modal visible={rangeModalVisible} transparent animationType="slide" onRequestClose={() => setRangeModalVisible(false)}>
+      <Modal visible={rangeModalVisible} transparent animationType="none" onShow={openRangeSheet} onRequestClose={() => setRangeModalVisible(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setRangeModalVisible(false)}>
           <Animated.View
             style={[styles.rangeModalCard, { backgroundColor: theme.surface, transform: [{ translateY: rangeSheetY }] }]}

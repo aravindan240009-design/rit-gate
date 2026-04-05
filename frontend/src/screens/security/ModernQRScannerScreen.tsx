@@ -42,7 +42,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
   const [manualCode, setManualCode] = useState('');
   const [showManualModal, setShowManualModal] = useState(false);
 
-  const { translateY: sheetTranslateY, panHandlers: sheetPanHandlers } = useBottomSheetSwipe(() => setShowManualModal(false));
+  const { translateY: sheetTranslateY, panHandlers: sheetPanHandlers, openSheet: openManualSheet } = useBottomSheetSwipe(() => setShowManualModal(false));
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
@@ -386,8 +386,9 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
       {/* Manual Entry Modal */}
       <Modal
         visible={showManualModal}
-        animationType="slide"
+        animationType="none"
         transparent={true}
+        onShow={openManualSheet}
         onRequestClose={() => setShowManualModal(false)}
       >
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowManualModal(false)}>

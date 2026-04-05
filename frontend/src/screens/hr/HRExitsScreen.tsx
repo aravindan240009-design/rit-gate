@@ -33,7 +33,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
   const [loading, setLoading] = useState(true);
   const [rangeModalVisible, setRangeModalVisible] = useState(false);
 
-  const { translateY: rangeSheetY, panHandlers: rangePanHandlers } = useBottomSheetSwipe(() => setRangeModalVisible(false));
+  const { translateY: rangeSheetY, panHandlers: rangePanHandlers, openSheet: openRangeSheet } = useBottomSheetSwipe(() => setRangeModalVisible(false));
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [selectingDateType, setSelectingDateType] = useState<'FROM' | 'TO'>('FROM');
@@ -208,7 +208,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
       </ScreenContentContainer>
 
       {/* Date Range Modal */}
-      <Modal visible={rangeModalVisible} transparent animationType="slide" onRequestClose={() => setRangeModalVisible(false)}>
+      <Modal visible={rangeModalVisible} transparent animationType="none" onShow={openRangeSheet} onRequestClose={() => setRangeModalVisible(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setRangeModalVisible(false)}>
           <Animated.View
             style={[styles.modalCard, { backgroundColor: theme.surface, transform: [{ translateY: rangeSheetY }] }]}

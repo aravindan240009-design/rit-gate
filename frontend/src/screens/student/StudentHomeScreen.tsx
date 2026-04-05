@@ -52,7 +52,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
-  const { translateY: detailSheetY, panHandlers: detailPanHandlers } = useBottomSheetSwipe(() => setShowDetailModal(false));
+  const { translateY: detailSheetY, panHandlers: detailPanHandlers, openSheet: openDetailSheet } = useBottomSheetSwipe(() => setShowDetailModal(false));
   const { unreadCount } = useNotifications();
   const { profileImage } = useProfile();
   const [recentRequests, setRecentRequests] = useState<any[]>([]);
@@ -320,7 +320,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
       <NotificationDropdown visible={showNotificationDropdown} onClose={() => setShowNotificationDropdown(false)} userId={student.regNo} userType="student" />
 
-      <Modal visible={showDetailModal} animationType="slide" transparent={true} onRequestClose={() => setShowDetailModal(false)}>
+      <Modal visible={showDetailModal} animationType="none" transparent={true} onShow={openDetailSheet} onRequestClose={() => setShowDetailModal(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowDetailModal(false)}>
           <Animated.View
             style={[styles.detailModalContainer, { backgroundColor: theme.surface, transform: [{ translateY: detailSheetY }] }]}
