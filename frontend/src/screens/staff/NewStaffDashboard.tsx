@@ -2,15 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  RefreshControl,
   TextInput,
   StatusBar,
   Modal,
   Image,
   ActivityIndicator,
-  FlatList
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -19,6 +17,7 @@ import { apiService } from '../../services/api';
 import { useNotifications } from '../../context/NotificationContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
+import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { useActionLock } from '../../context/ActionLockContext';
 import { getRelativeTime, formatDateShort } from '../../utils/dateUtils';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
@@ -314,9 +313,9 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.surface }]}>
-        <View style={styles.headerLeft}>
+      <View style={[styles.header, { backgroundColor: theme.surface }]}>        <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => {
             setBottomTab('PROFILE');
             onNavigate('PROFILE');
@@ -376,15 +375,9 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         </View>
       </View>
 
-      <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1 }}
-      >
-      <ScreenContentContainer>
+      <ScreenContentContainer style={{ flex: 1 }}>
         <VerticalFlatList
           style={styles.content}
-          scrollEnabled={false}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
@@ -482,6 +475,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                   </ThemedText>
                 </View>
               </View>
+              <RefreshBlurOverlay cardBg={theme.cardBackground} />
             </TouchableOpacity>
           )}
           ListEmptyComponent={
@@ -492,7 +486,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           }
         />
       </ScreenContentContainer>
-      </ScrollView>
+      </TopRefreshControl>
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity
           style={styles.navItem}

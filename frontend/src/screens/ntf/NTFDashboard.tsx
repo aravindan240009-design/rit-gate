@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, StyleSheet, TouchableOpacity, RefreshControl,
-  StatusBar, Image, ActivityIndicator, ScrollView,
+  View, StyleSheet, TouchableOpacity,
+  StatusBar, Image, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -17,6 +17,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import ErrorModal from '../../components/ErrorModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 interface NTFDashboardProps {
   ntf: NonTeachingFaculty;
@@ -39,7 +40,6 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
   const { profileImage } = useProfile();
-  const scrollViewRef = useRef<ScrollView>(null);
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -81,8 +81,6 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
   const onRefresh = () => { 
     setRefreshing(true); 
-    // Scroll to top before refreshing
-    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     loadData(); 
   };
 
@@ -151,12 +149,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        ref={scrollViewRef}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
         <ScreenContentContainer>
           {/* Request Gate Pass Card */}
           <TouchableOpacity
@@ -223,7 +216,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
             ))
           )}
         </ScreenContentContainer>
-      </ScrollView>
+      </TopRefreshControl>
 
       {/* Bottom Navigation */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>

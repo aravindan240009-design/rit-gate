@@ -4,9 +4,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
   StatusBar,
-  BackHandler
+  BackHandler,
+  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -16,6 +16,7 @@ import { useTheme } from '../../context/ThemeContext';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface StudentHistoryScreenProps {
@@ -148,6 +149,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>History</ThemedText>
       </View>
@@ -156,8 +158,8 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
           style={styles.content}
           data={historyData}
           keyExtractor={(item) => item.id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
           contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           renderItem={({ item }) => (
             <View key={item.id} style={[styles.historyCard, { backgroundColor: theme.cardBackground }]}>
               <View style={[styles.iconContainer, { backgroundColor: getIconColor(item.type) + '20' }]}>
@@ -207,6 +209,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
         </TouchableOpacity>
       </View>
+      </TopRefreshControl>
     </SafeAreaView>
   );
 };

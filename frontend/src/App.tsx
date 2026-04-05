@@ -241,7 +241,24 @@ const App: React.FC = () => {
     setBiometricLoading(true);
     setBiometricMessage('');
     try {
-      const result = await biometricAuthService.authenticate();
+      const result = await biometricAuthService.authenticateBiometric();
+      if (result.success) {
+        setBiometricVerified(true);
+      } else {
+        setBiometricMessage(result.error || 'Authentication failed');
+      }
+    } catch {
+      setBiometricMessage('Unable to authenticate. Please try again.');
+    } finally {
+      setBiometricLoading(false);
+    }
+  }, []);
+
+  const runDeviceCredentialAuth = React.useCallback(async () => {
+    setBiometricLoading(true);
+    setBiometricMessage('');
+    try {
+      const result = await biometricAuthService.authenticateDeviceCredential();
       if (result.success) {
         setBiometricVerified(true);
       } else {
@@ -257,7 +274,7 @@ const App: React.FC = () => {
   React.useEffect(() => {
     if (requiresBiometricGate && !biometricVerified && !biometricPrompted && !isLoading) {
       setBiometricPrompted(true);
-      runBiometricAuth();
+      // Don't auto-trigger — user picks biometric or PIN from the screen
     }
   }, [requiresBiometricGate, biometricVerified, biometricPrompted, isLoading, runBiometricAuth]);
 
@@ -616,8 +633,8 @@ const App: React.FC = () => {
           <BiometricGateScreen
             loading={biometricLoading}
             message={biometricMessage}
-            onRetry={runBiometricAuth}
-            onUseLogin={handleLogout}
+            onBiometric={runBiometricAuth}
+            onDeviceCredential={runDeviceCredentialAuth}
           />
         );
       }

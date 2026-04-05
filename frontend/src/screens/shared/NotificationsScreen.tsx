@@ -4,9 +4,9 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
   BackHandler,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -15,6 +15,7 @@ import { useTheme } from '../../context/ThemeContext';
 import ThemedText from '../../components/ThemedText';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface Notification {
@@ -198,7 +199,7 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
           </View>
         </View>
       </View>
-
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
       <ScreenContentContainer>
         {notifications.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -246,16 +247,11 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={[theme.primary]}
-              />
-            }
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           />
         )}
       </ScreenContentContainer>
+      </TopRefreshControl>
     </SafeAreaView>
   );
 }

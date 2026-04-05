@@ -9,8 +9,8 @@ import {
   Platform,
   Linking,
   ActivityIndicator,
-  RefreshControl,
-  Dimensions
+  Dimensions,
+  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -21,6 +21,7 @@ import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import { useTheme } from '../../context/ThemeContext';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 interface HODContactsScreenProps {
   security: SecurityPersonnel;
@@ -151,7 +152,6 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
-
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
@@ -160,7 +160,7 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>HOD Contacts</ThemedText>
         <View style={styles.headerRight} />
       </View>
-
+      <TopRefreshControl refreshing={refreshing} onRefresh={handleRefresh} color={theme.primary} pullEnabled={false}>
       <View style={{ paddingHorizontal: 20 }}>
         {/* Search Bar */}
         <View style={[styles.searchContainer, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
@@ -218,14 +218,7 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
         keyExtractor={(item: HODContact) => (item.id ?? Math.random()).toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={[theme.primary]}
-            tintColor={theme.primary}
-          />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[theme.primary]} />}
         ListHeaderComponent={
           <>
             {isLoading && (
@@ -307,6 +300,7 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
 
       {/* Bottom Navigation */}
       <SecurityBottomNav activeTab="contacts" onNavigate={onNavigate} />
+      </TopRefreshControl>
 
       <ErrorModal
         visible={showErrorModal}

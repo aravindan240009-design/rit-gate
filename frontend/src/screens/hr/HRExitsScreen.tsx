@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, StyleSheet, TouchableOpacity, RefreshControl, Modal,
-  ActivityIndicator, StatusBar, BackHandler, Animated,
+  View, StyleSheet, TouchableOpacity, Modal,
+  ActivityIndicator, StatusBar, BackHandler, Animated, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
@@ -17,6 +17,7 @@ import { VerticalFlatList, VerticalScrollView } from '../../components/navigatio
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 interface HRExitsScreenProps {
   hr: HR;
@@ -113,7 +114,6 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
-
       {/* Header — same style as GuestPreRequestScreen */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
@@ -122,6 +122,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Exit Records</ThemedText>
         <View style={{ width: 40 }} />
       </View>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
 
       <ScreenContentContainer style={{ flex: 1 }}>
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
@@ -150,13 +151,13 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
         </View>
 
         <VerticalFlatList
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           data={exitLogs}
           keyExtractor={(item) => `exit-${item.id}`}
           contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
           ListHeaderComponent={null}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           renderItem={({ item }) => (
             <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border, marginHorizontal: 4 }]}>
               <View style={styles.cardTop}>
@@ -206,7 +207,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
           }
         />
       </ScreenContentContainer>
-
+      </TopRefreshControl>
       {/* Date Range Modal */}
       <Modal visible={rangeModalVisible} transparent animationType="none" onShow={openRangeSheet} onRequestClose={() => setRangeModalVisible(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setRangeModalVisible(false)}>

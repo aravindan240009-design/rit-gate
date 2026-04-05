@@ -4,12 +4,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
   TextInput,
   StatusBar,
   Modal,
   ActivityIndicator,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -25,6 +25,7 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import { useTheme } from '../../context/ThemeContext';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface ModernScanHistoryScreenProps {
@@ -457,6 +458,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
         <View style={styles.headerRight} />
       </View>
 
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
       <ScreenContentContainer style={{ flex: 1 }}>
         <View style={{ paddingHorizontal: 16 }}>
           {/* Main Tab Switcher */}
@@ -549,12 +551,12 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
         <VerticalFlatList
           style={styles.content}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
           data={activeTab === 'SCANS' ? filteredScans : filteredVehicles}
           keyExtractor={(item, index) => `${item.id}-${index}`}
           contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           renderItem={({ item }) => {
             if (activeTab === 'SCANS') {
               const scan = item as ScanRecord;
@@ -658,6 +660,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           }
         />
       </ScreenContentContainer>
+      </TopRefreshControl>
 
       {/* Scan Detail — full-screen modal */}
       <Modal

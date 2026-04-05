@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { NonTeachingFaculty } from '../../types';
@@ -11,6 +11,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import { getRelativeTime, formatDateShort } from '../../utils/dateUtils';
+import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 
 interface NTFMyRequestsScreenProps {
   user: NonTeachingFaculty;
@@ -87,6 +88,7 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack 
         <View style={{ width: 40 }} />
       </View>
 
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
       <ScreenContentContainer>
         {loading ? (
           <View style={styles.loadingContainer}>
@@ -95,12 +97,12 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack 
         ) : (
           <VerticalFlatList
             style={styles.list}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
             data={requests}
             keyExtractor={(item) => item.id?.toString()}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
             renderItem={({ item: req }) => {
               const st = getStatusStyle(req.status);
               return (
@@ -157,6 +159,7 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack 
                       <ThemedText style={styles.tapHint}>Tap to view QR</ThemedText>
                     )}
                   </View>
+                  <RefreshBlurOverlay cardBg="#FFFFFF" />
                 </TouchableOpacity>
               );
             }}
@@ -169,6 +172,7 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack 
           />
         )}
       </ScreenContentContainer>
+      </TopRefreshControl>
 
       <SinglePassDetailsModal
         visible={showDetailModal}

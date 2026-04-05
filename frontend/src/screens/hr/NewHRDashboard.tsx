@@ -4,7 +4,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
   TextInput,
   StatusBar,
   ActivityIndicator,
@@ -36,6 +35,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface NewHRDashboardProps {
@@ -326,7 +326,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
-
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <View style={styles.headerLeft}>
@@ -387,7 +387,6 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           <ScreenContentContainer style={{ flex: 1 }}>
             <VerticalFlatList
               style={styles.content}
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
               data={filteredRequests}
               keyExtractor={(request) => `${request.requestType}-${request.id}`}
               contentContainerStyle={styles.scrollContent}
@@ -540,6 +539,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
       </View>
+      </TopRefreshControl>
 
       {/* Notification Dropdown */}
       <NotificationDropdown

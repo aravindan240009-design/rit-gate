@@ -5,7 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -14,6 +14,7 @@ import { Student } from '../../types';
 import { THEME } from '../../config/api.config';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface MyQRCodesScreenProps {
@@ -75,12 +76,10 @@ const MyQRCodesScreen: React.FC<MyQRCodesScreenProps> = ({ user, navigation, onB
         <ThemedText style={styles.headerTitle}>My QR Codes</ThemedText>
         <View style={{ width: 40 }} />
       </View>
-
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color="#F59E0B" pullEnabled={false}>
       <VerticalScrollView
         style={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#F59E0B']} />}
       >
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -126,6 +125,7 @@ const MyQRCodesScreen: React.FC<MyQRCodesScreenProps> = ({ user, navigation, onB
           ))
         )}
       </VerticalScrollView>
+      </TopRefreshControl>
     </SafeAreaView>
   );
 };

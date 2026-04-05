@@ -4,8 +4,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -18,6 +18,7 @@ import GatePassQRModal from '../../components/GatePassQRModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 
 
 interface MyRequestsScreenProps {
@@ -191,6 +192,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
             <ThemedText style={[styles.statusTagText, { color: badge.bgColor }]}>{badge.text}</ThemedText>
           </View>
         </View>
+        <RefreshBlurOverlay cardBg={theme.surface} />
       </TouchableOpacity>
     );
   };
@@ -215,6 +217,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      {/* Header stays outside TopRefreshControl so back button always works */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => onBack && onBack()} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
@@ -223,15 +226,16 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
         <View style={{ width: 40 }} />
       </View>
 
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
       <ScreenContentContainer>
         <VerticalFlatList
           style={[styles.content, { backgroundColor: theme.background }]}
           data={allRequests}
           keyExtractor={(request, index) => `${request.passType === 'BULK' ? 'bulk' : 'single'}-${request.id}-${index}`}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
           contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           renderItem={({ item: request }) => (
             <View>
               {renderRequestCard(request)}
@@ -246,6 +250,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
           }
         />
       </ScreenContentContainer>
+      </TopRefreshControl>
 
       <SinglePassDetailsModal
         visible={showDetailModal}

@@ -4,7 +4,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
   StatusBar,
   Image,
   Modal,
@@ -32,6 +31,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface StudentHomeScreenProps {
@@ -188,6 +188,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => onTabChange('PROFILE')}>
@@ -257,7 +258,6 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           </View>
 
           <ScrollView
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ flexGrow: 1 }}
           >
@@ -317,6 +317,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
         </TouchableOpacity>
       </View>
+      </TopRefreshControl>
 
       <NotificationDropdown visible={showNotificationDropdown} onClose={() => setShowNotificationDropdown(false)} userId={student.regNo} userType="student" />
 

@@ -5,7 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -15,6 +15,7 @@ import { formatDateTime } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface EntryExitHistoryScreenProps {
@@ -91,14 +92,14 @@ const EntryExitHistoryScreen: React.FC<EntryExitHistoryScreenProps> = ({ user, n
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Entry / Exit History</ThemedText>
         <View style={{ width: 40 }} />
       </View>
-
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
       <ScreenContentContainer>
         <VerticalFlatList
           style={styles.content}
           data={history}
           keyExtractor={(item) => item.id.toString()}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
           contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           renderItem={({ item: entry }) => (
             <View key={entry.id} style={[styles.card, { backgroundColor: theme.surface }]}>
               <View style={[
@@ -159,6 +160,7 @@ const EntryExitHistoryScreen: React.FC<EntryExitHistoryScreenProps> = ({ user, n
           }
         />
       </ScreenContentContainer>
+      </TopRefreshControl>
     </SafeAreaView>
   );
 };

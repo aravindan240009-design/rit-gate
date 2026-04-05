@@ -4,7 +4,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
   StatusBar,
   Modal,
   Image,
@@ -30,6 +29,7 @@ import { formatTime as fmtTime, getRelativeTimeShort } from '../../utils/dateUti
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface NewSecurityDashboardProps {
@@ -325,9 +325,9 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
 
       {/* Stats Cards */}
       <ScreenContentContainer style={{ flex: 1 }}>
+        <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
         <VerticalFlatList
           style={styles.outerScroll}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={styles.outerScrollContent}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
@@ -497,6 +497,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
             </View>
           }
         />
+        </TopRefreshControl>
       </ScreenContentContainer>
 
       {/* Bottom Navigation */}

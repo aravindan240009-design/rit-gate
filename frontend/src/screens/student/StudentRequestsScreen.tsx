@@ -4,10 +4,10 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
   StatusBar,
   TextInput,
-  BackHandler
+  BackHandler,
+  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -22,6 +22,7 @@ import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface StudentRequestsScreenProps {
@@ -181,7 +182,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.surface} />
-
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
       </View>
@@ -206,15 +207,8 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
           keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
-              onRefresh={onRefresh} 
-              tintColor={theme.primary} 
-            />
-          }
-          renderItem={({ item }) => renderCard(item)}
-          ListEmptyComponent={
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
+          renderItem={({ item }) => renderCard(item)}          ListEmptyComponent={
             !refreshing ? (
               <View style={styles.empty}>
                 <Ionicons name="document-text-outline" size={64} color={theme.border} />
@@ -247,6 +241,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
           );
         })}
       </View>
+      </TopRefreshControl>
 
       {/* Single pass details */}
       <SinglePassDetailsModal

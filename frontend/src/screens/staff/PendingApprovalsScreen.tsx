@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  RefreshControl,
   TextInput,
   Modal,
   Image
@@ -22,6 +21,7 @@ import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface PendingApprovalsScreenProps {
@@ -166,13 +166,12 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Pending Approvals</ThemedText>
         <View style={{ width: 40 }} />
       </View>
-
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
       <ScreenContentContainer>
         <VerticalFlatList
           style={styles.content}
           data={pendingRequests}
           keyExtractor={(request) => request.id.toString()}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           contentContainerStyle={styles.scrollContent}
           renderItem={({ item: request }) => (
             <TouchableOpacity
@@ -307,6 +306,7 @@ const PendingApprovalsScreen: React.FC<PendingApprovalsScreenProps> = ({ user, n
           }
         />
       </ScreenContentContainer>
+      </TopRefreshControl>
 
       <BulkDetailsModal
         visible={showBulkModal}

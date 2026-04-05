@@ -4,9 +4,9 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
   StatusBar,
-  Animated
+  Animated,
+  RefreshControl
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -19,6 +19,7 @@ import Modal from 'react-native-modal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 const TypedModal = Modal as any;
@@ -269,7 +270,6 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
           barStyle={isDark ? 'light-content' : 'dark-content'} 
           backgroundColor={theme.background} 
         />
-        
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: theme.border }]}>
           <TouchableOpacity 
@@ -283,7 +283,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
           </ThemedText>
           <View style={{ width: 40 }} />
         </View>
-
+        <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
         <Animated.View 
           style={{ 
             flex: 1,
@@ -297,13 +297,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
             keyExtractor={(request, index) => request.id?.toString() || index.toString()}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 120 }} // Extra padding for student navbar
-            refreshControl={
-              <RefreshControl 
-                refreshing={refreshing} 
-                onRefresh={onRefresh} 
-                tintColor={theme.primary} 
-              />
-            }
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
             renderItem={({ item: request, index }) => (
               <TouchableOpacity
                 key={request.id || index}
@@ -387,6 +381,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
             }
           />
         </Animated.View>
+        </TopRefreshControl>
 
         {/* QR Code Modal */}
         <QRCodeModal

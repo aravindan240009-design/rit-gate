@@ -8,10 +8,10 @@ import {
   StatusBar,
   ActivityIndicator,
   TextInput,
-  RefreshControl,
   Image,
   BackHandler,
-  Alert
+  Alert,
+  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -27,6 +27,7 @@ import ThemedText from '../../components/ThemedText';
 
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface ProfileScreenProps {
@@ -238,8 +239,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
       </View>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
       <ScreenContentContainer>
-      <VerticalScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} nestedScrollEnabled scrollEnabled={outerScrollEnabled} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}>
+      <VerticalScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} nestedScrollEnabled scrollEnabled={outerScrollEnabled} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}>
         <View style={styles.headerSection}>
           <View style={styles.avatarContainer}>
             <View style={[styles.avatarRing, { borderColor: theme.accent }]}>
@@ -333,6 +335,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('PROFILE')}><Ionicons name="person" size={24} color={theme.primary} /><ThemedText style={[styles.navLabelActive, { color: theme.primary }]}>Profile</ThemedText><View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} /></TouchableOpacity>
         </View>
       )}
+      </TopRefreshControl>
       <ConfirmationModal visible={showLogoutModal} title="Logout" message="Are you sure you want to log out?" confirmText="Logout" onConfirm={onLogout} onCancel={() => setShowLogoutModal(false)} icon="log-out-outline" confirmColor={theme.error}/>
       <SuccessModal
         visible={showSuccessModal}
