@@ -219,7 +219,6 @@ public class NotificationController {
 
     // Register push token
     @PostMapping("/push-token")
-    @Transactional
     public ResponseEntity<?> registerPushToken(@RequestBody Map<String, String> body) {
         try {
             String userId = body.get("userId");
@@ -230,14 +229,11 @@ public class NotificationController {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "userId and pushToken required"));
             }
 
-            // 1. Wipe any old ghost identities attached to this specific physical device token
-            pushTokenRepository.deleteByPushToken(pushToken);
+            // Delete in separate try blocks so a "not found" doesn't roll back the whole transaction
+            try { pushTokenRepository.deleteByPushToken(pushToken); } catch (Exception ignored) {}
+            try { pushTokenRepository.deleteByUserId(userId); } catch (Exception ignored) {}
 
-            // 2. Wipe any old devices this user was logged into (strictly enforce 1 device per user)
-            pushTokenRepository.deleteByUserId(userId);
-
-            // 3. Save the clean 1-to-1 mapping
-            pushTokenRepository.save(new UserPushToken(userId, pushToken, deviceType));
+            pushTokenRepository.saveAndFlush(new UserPushToken(userId, pushToken, deviceType));
 
             return ResponseEntity.ok(Map.of("success", true, "message", "Push token registered cleanly"));
         } catch (Exception e) {
