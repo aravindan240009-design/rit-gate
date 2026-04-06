@@ -12,7 +12,7 @@ import { Platform } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../config/api.config';
-import { showLocalNotification } from './localNotification.service';
+import { showLocalNotification, ensureChannel } from './localNotification.service';
 
 const PUSH_TOKEN_KEY = '@mygate_push_token';
 const SHOWN_IDS_KEY = '@ritgate_shown_notif_ids';
@@ -65,6 +65,10 @@ export async function getFCMToken(): Promise<string | null> {
  */
 export async function initPushNotifications(userId: string, userType: string): Promise<void> {
   try {
+    // Eagerly create the native Android Notification Channel 
+    // This is required so Play Services can display killed-state FCM messages.
+    await ensureChannel();
+    
     await requestFCMPermission();
     const token = await getFCMToken();
     if (!token) return;

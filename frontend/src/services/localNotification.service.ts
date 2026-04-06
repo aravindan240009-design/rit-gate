@@ -16,7 +16,7 @@ const CHANNEL_NAME = 'RIT Gate Notifications';
 let channelCreated = false;
 
 /** Create the notification channel once (Android 8+). */
-async function ensureChannel() {
+export async function ensureChannel() {
   if (channelCreated) return;
   await notifee.createChannel({
     id: CHANNEL_ID,
