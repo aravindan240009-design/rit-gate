@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -214,6 +215,7 @@ public class NotificationController {
 
     // Register push token
     @PostMapping("/push-token")
+    @Transactional
     public ResponseEntity<?> registerPushToken(@RequestBody Map<String, String> body) {
         try {
             String userId = body.get("userId");
@@ -224,16 +226,16 @@ public class NotificationController {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "userId and pushToken required"));
             }
 
-            pushTokenRepository.findByPushToken(pushToken).ifPresentOrElse(
-                existing -> {
-                    existing.setUserId(userId);
-                    existing.setDeviceType(deviceType);
-                    pushTokenRepository.save(existing);
-                },
-                () -> pushTokenRepository.save(new UserPushToken(userId, pushToken, deviceType))
-            );
+            // 1. Wipe any old ghost identities attached to this specific physical device token
+            pushTokenRepository.deleteByPushToken(pushToken);
 
-            return ResponseEntity.ok(Map.of("success", true, "message", "Push token registered"));
+            // 2. Wipe any old devices this user was logged into (strictly enforce 1 device per user)
+            pushTokenRepository.deleteByUserId(userId);
+
+            // 3. Save the clean 1-to-1 mapping
+            pushTokenRepository.save(new UserPushToken(userId, pushToken, deviceType));
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "Push token registered cleanly"));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("success", false, "message", e.getMessage()));
         }
