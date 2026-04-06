@@ -5,6 +5,7 @@ import com.example.visitor.entity.UserPushToken;
 import com.example.visitor.repository.NotificationRepository;
 import com.example.visitor.repository.UserPushTokenRepository;
 import com.example.visitor.repository.GatePassRequestRepository;
+import com.example.visitor.service.PushNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,9 @@ public class NotificationController {
 
     @Autowired
     private GatePassRequestRepository gatePassRequestRepository;
+
+    @Autowired
+    private PushNotificationService pushNotificationService;
     
     // Get notifications for student
     @GetMapping("/student/{regNo}")
@@ -281,6 +285,20 @@ public class NotificationController {
             return ResponseEntity.ok(debugInfo);
         } catch(Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Test push notification endpoint
+    @PostMapping("/test-push")
+    public ResponseEntity<?> testPush(@RequestBody Map<String, String> body) {
+        try {
+            String userId = body.getOrDefault("userId", "CS195");
+            String title  = body.getOrDefault("title", "🔔 Test Notification");
+            String msg    = body.getOrDefault("body", "Firebase push is working!");
+            pushNotificationService.sendToUser(userId, title, msg, null);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Push sent to " + userId));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
 
