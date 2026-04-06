@@ -10,7 +10,8 @@ import {
   BackHandler,
   Animated,
   ToastAndroid,
-  Platform
+  Platform,
+  AppState,
 } from 'react-native';
 import ThemedText from './components/ThemedText';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -177,6 +178,20 @@ const App: React.FC = () => {
   React.useEffect(() => {
     const cleanup = setupFCMForegroundHandler();
     return cleanup;
+  }, []);
+
+  // Arm biometric gate when app goes to background (so next open requires auth).
+  // We do NOT arm it on login — only after the user has left the app at least once.
+  React.useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'background' || nextState === 'inactive') {
+        // Only arm if a user is actually logged in
+        if (userTypeRef.current) {
+          biometricAuthService.markSessionActive();
+        }
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   // Handle app opened from a notification while it was KILLED
@@ -424,7 +439,6 @@ const App: React.FC = () => {
     setRequiresBiometricGate(false);
     setBiometricVerified(true);
     setBiometricPrompted(false);
-    await biometricAuthService.markSessionActive();
     initPushNotifications(studentData.regNo, 'student');
   };
 
@@ -443,7 +457,6 @@ const App: React.FC = () => {
     setRequiresBiometricGate(false);
     setBiometricVerified(true);
     setBiometricPrompted(false);
-    await biometricAuthService.markSessionActive();
     initPushNotifications(staffData.staffCode, 'staff');
   };
 
@@ -462,7 +475,6 @@ const App: React.FC = () => {
     setRequiresBiometricGate(false);
     setBiometricVerified(true);
     setBiometricPrompted(false);
-    await biometricAuthService.markSessionActive();
     initPushNotifications(hodData.hodCode, 'hod');
   };
 
@@ -481,7 +493,6 @@ const App: React.FC = () => {
     setRequiresBiometricGate(false);
     setBiometricVerified(true);
     setBiometricPrompted(false);
-    await biometricAuthService.markSessionActive();
     initPushNotifications(hrData.hrCode, 'hr');
   };
 
@@ -500,7 +511,6 @@ const App: React.FC = () => {
     setRequiresBiometricGate(false);
     setBiometricVerified(true);
     setBiometricPrompted(false);
-    await biometricAuthService.markSessionActive();
     initPushNotifications(securityData.securityId, 'security');
   };
 
@@ -518,7 +528,6 @@ const App: React.FC = () => {
     setRequiresBiometricGate(false);
     setBiometricVerified(true);
     setBiometricPrompted(false);
-    await biometricAuthService.markSessionActive();
     initPushNotifications(ntfData.staffCode, 'staff');
   };
 
