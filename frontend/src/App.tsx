@@ -56,6 +56,7 @@ import ExitConfirmModal from './components/navigation/ExitConfirmModal';
 import { initPushNotifications, unregisterPushToken, setupNotificationTapHandler, handleInitialNotification, setupFCMForegroundHandler } from './services/pushNotification.service';
 import { getInitialNotificationData } from './services/localNotification.service';
 import { biometricAuthService } from './services/biometricAuth.service';
+import { requestBatteryOptimizationExemption } from './utils/batteryOptimization';
 
 // Inner component that can access ThemeContext for transition animation
 const ThemedApp: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -216,6 +217,8 @@ const App: React.FC = () => {
 
   React.useEffect(() => {
     console.log('🚀 App mounted - starting initialization');
+    // Request battery optimization exemption so FCM works when app is killed
+    requestBatteryOptimizationExemption();
 
     const minLoadingTime = setTimeout(() => {
       console.log('⏱️ Minimum loading time reached');

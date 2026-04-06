@@ -186,8 +186,22 @@ public class PushNotificationService {
             }
 
             String accessToken = extractJsonString(resp.body(), "access_token");
-            String expiresInStr = extractJsonString(resp.body(), "expires_in");
-            long expiresIn = expiresInStr != null ? Long.parseLong(expiresInStr) : 3600;
+            // expires_in is a number in the JSON, not a string — extract it differently
+            long expiresIn = 3600;
+            try {
+                String body = resp.body();
+                int idx = body.indexOf("\"expires_in\"");
+                if (idx >= 0) {
+                    int colon = body.indexOf(':', idx);
+                    if (colon >= 0) {
+                        int start = colon + 1;
+                        while (start < body.length() && (body.charAt(start) == ' ' || body.charAt(start) == '"')) start++;
+                        int end = start;
+                        while (end < body.length() && Character.isDigit(body.charAt(end))) end++;
+                        if (end > start) expiresIn = Long.parseLong(body.substring(start, end));
+                    }
+                }
+            } catch (Exception ignored) {}
 
             cachedAccessToken = accessToken;
             tokenExpiry = Instant.now().plusSeconds(expiresIn);

@@ -295,8 +295,22 @@ public class NotificationController {
             String userId = body.getOrDefault("userId", "CS195");
             String title  = body.getOrDefault("title", "🔔 Test Notification");
             String msg    = body.getOrDefault("body", "Firebase push is working!");
+
+            var tokens = pushTokenRepository.findByUserId(userId);
+            if (tokens.isEmpty()) {
+                return ResponseEntity.ok(Map.of("success", false, "message", "No FCM token found for " + userId));
+            }
+
+            // Call sendToUser which logs the FCM response
             pushNotificationService.sendToUser(userId, title, msg, null);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Push sent to " + userId));
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Push sent to " + userId,
+                "tokenCount", tokens.size(),
+                "tokenPreview", tokens.get(0).getPushToken().substring(0, 30) + "...",
+                "note", "Check Render logs for FCM HTTP response code"
+            ));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("success", false, "error", e.getMessage()));
         }
