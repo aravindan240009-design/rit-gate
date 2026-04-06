@@ -40,7 +40,6 @@ import GatePassRequestScreen from './screens/student/GatePassRequestScreen';
 import MyQRCodesScreen from './screens/student/MyQRCodesScreen';
 import RequestsScreen from './screens/student/RequestsScreen';
 import GuestPreRequestScreen from './screens/shared/GuestPreRequestScreen';
-import PendingApprovalsScreen from './screens/staff/PendingApprovalsScreen';
 import HODGatePassRequestScreen from './screens/hod/HODGatePassRequestScreen';
 import HODMyRequestsScreen from './screens/hod/HODMyRequestsScreen';
 import HODBulkGatePassScreen from './screens/hod/HODBulkGatePassScreen';
@@ -138,9 +137,10 @@ const App: React.FC = () => {
       else if (ut === 'HOD') setCurrentScreen('HOD_MY_REQUESTS');
       else if (ut === 'NON_TEACHING') setCurrentScreen('NTF_MY_REQUESTS');
     } else if (r.includes('pending-approvals') || r.includes('pending_approvals')) {
-      if (ut === 'STAFF') setCurrentScreen('REQUESTS');
+      if (ut === 'STAFF') setCurrentScreen('STAFF_DASHBOARD');
       else if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
       else if (ut === 'HR') setCurrentScreen('HR_DASHBOARD');
+      else if (ut === 'SECURITY') setCurrentScreen('SECURITY_DASHBOARD');
     } else if (r.includes('hod/pending') || r.includes('hr/pending')) {
       if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
       else if (ut === 'HR') setCurrentScreen('HR_DASHBOARD');
@@ -778,13 +778,6 @@ const App: React.FC = () => {
             return (
               <EntryExitHistoryScreen 
                 user={staff as any} 
-                onBack={() => setCurrentScreen('STAFF_DASHBOARD')}
-              />
-            );
-          case 'REQUESTS':
-            return (
-              <PendingApprovalsScreen 
-                user={staff} 
                 onBack={() => setCurrentScreen('STAFF_DASHBOARD')}
               />
             );
