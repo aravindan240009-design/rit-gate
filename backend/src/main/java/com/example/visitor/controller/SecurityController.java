@@ -791,6 +791,8 @@ public class SecurityController {
                 System.out.println("✅ ACCESS GRANTED - Scan completed for EXIT (not mirrored to ScanLog to prevent history duplication): " + personName);
             }
             
+            detailedInfo.put("scanLocation", scanLocation);
+            detailedInfo.put("message", (scanLocation != null ? scanLocation : "Scan") + " Recorded successfully");
             return ResponseEntity.ok(detailedInfo);
             
         } catch (Exception e) {
@@ -1009,11 +1011,8 @@ public class SecurityController {
             response.put("incharge", incharge);
             response.put("participantCount", participants.size());
             response.put("participants", participantDetails);
-            response.put("exitTime", exitTime.toString());
             response.put("message", "Bulk pass exit approved - " + participants.size() + " participants");
-            
-            System.out.println("🎉 BULK PASS EXIT APPROVED - " + participants.size() + " participants");
-            
+            response.put("scanLocation", "Exit Gate");
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
