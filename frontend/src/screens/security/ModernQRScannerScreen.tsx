@@ -11,6 +11,7 @@ import {
   Platform,
   BackHandler,
   Animated,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, CameraView } from '../../shims/expoCamera';
@@ -387,12 +388,17 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         transparent={true}
         onShow={openManualSheet}
         onRequestClose={() => setShowManualModal(false)}
+        statusBarTranslucent={true}
       >
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowManualModal(false)}>
-          <Animated.View
-            style={[styles.modalContainer, { backgroundColor: theme.surface, transform: [{ translateY: sheetTranslateY }] }]}
-            {...sheetPanHandlers}
-          >
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowManualModal(false)}>
+            <Animated.View
+              style={[styles.modalContainer, { backgroundColor: theme.surface, transform: [{ translateY: sheetTranslateY }] }]}
+              {...sheetPanHandlers}
+            >
             {/* Drag handle */}
             <View style={styles.dragHandle}><View style={[styles.dragHandleBar, { backgroundColor: theme.textTertiary + '60' }]} /></View>
             <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
@@ -437,9 +443,10 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
                 )}
               </TouchableOpacity>
             </View>
+            </TouchableOpacity>
+            </Animated.View>
           </TouchableOpacity>
-          </Animated.View>
-        </TouchableOpacity>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Bottom Navigation */}
