@@ -184,16 +184,23 @@ const App: React.FC = () => {
   // - App killed while logged in → reopen → ask for auth (flag persists in storage)
   // - App backgrounded → resumed → NO auth (flag is cleared on 'active')
   // - First login → NO auth (flag never set during login)
+  const hasBeenBackgroundedRef = React.useRef(false);
   React.useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'background' || nextState === 'inactive') {
-        // Arm the flag when leaving — if app is killed, this persists
+        // Arm the flag when leaving — if app is killed, this persists in storage
         if (userTypeRef.current) {
+          hasBeenBackgroundedRef.current = true;
           biometricAuthService.markSessionActive();
         }
       } else if (nextState === 'active') {
-        // App came back to foreground (not killed) — clear the flag so no auth prompt
-        biometricAuthService.clearSession();
+        // Only clear if the app was backgrounded in THIS process lifetime (not a fresh launch).
+        // On a fresh launch after kill, hasBeenBackgroundedRef is false so we leave the
+        // stored flag intact for checkAuthStatus to read.
+        if (hasBeenBackgroundedRef.current) {
+          hasBeenBackgroundedRef.current = false;
+          biometricAuthService.clearSession();
+        }
       }
     });
     return () => sub.remove();
