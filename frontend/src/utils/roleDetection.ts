@@ -110,6 +110,7 @@ export function getUserIdPlaceholder(userId: string): string {
     HR: 'HR Code',
     SECURITY: 'Security ID',
     NON_TEACHING: 'NTF Code (e.g. NTF001)',
+    NON_CLASS_INCHARGE: 'Staff Code',
   };
 
   return placeholders[role];

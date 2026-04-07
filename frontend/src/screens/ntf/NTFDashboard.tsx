@@ -12,7 +12,6 @@ import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
 import { getRelativeTime, formatDateShort } from '../../utils/dateUtils';
-import ConfirmationModal from '../../components/ConfirmationModal';
 import ErrorModal from '../../components/ErrorModal';
 import SuccessModal from '../../components/SuccessModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
@@ -39,6 +38,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const [activeTab, setActiveTab] = useState<TabType>('PENDING');
   const [bottomTab, setBottomTab] = useState<'HOME' | 'NEW_PASS' | 'MY_PASSES' | 'PROFILE'>('HOME');
   const [showPassSheet, setShowPassSheet] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [processing, setProcessing] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
@@ -83,9 +83,15 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const onRefresh = () => { setRefreshing(true); loadData(); };
 
   const filtered = allRequests.filter(r => {
-    if (activeTab === 'PENDING') return r.status === 'PENDING';
-    if (activeTab === 'APPROVED') return r.status === 'APPROVED';
-    return r.status === 'REJECTED';
+    const matchesTab = activeTab === 'PENDING' ? r.status === 'PENDING'
+      : activeTab === 'APPROVED' ? r.status === 'APPROVED'
+      : r.status === 'REJECTED';
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || (r.requesterName || r.name || '').toLowerCase().includes(q)
+      || (r.purpose || '').toLowerCase().includes(q)
+      || (r.visitorEmail || '').toLowerCase().includes(q)
+      || (r.visitorPhone || '').toLowerCase().includes(q);
+    return matchesTab && matchesSearch;
   }).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
 
   const stats = {
@@ -122,46 +128,73 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.surface }]}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
-            {profileImage
-              ? <Image source={{ uri: profileImage }} style={styles.avatarImage} />
-              : <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-                  <ThemedText style={[styles.avatarText, { color: '#FFF' }]}>{getInitials(ntf.staffName)}</ThemedText>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
+        {/* Header */}
+        <View style={[styles.header, { backgroundColor: theme.surface }]}>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
+              {profileImage ? (
+                <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+              ) : (
+                <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
+                  <ThemedText style={styles.avatarText}>{getInitials(ntf.staffName || 'NF')}</ThemedText>
                 </View>
-            }
-          </TouchableOpacity>
-          <View style={styles.headerInfo}>
-            <ThemedText style={[styles.greeting, { color: theme.textSecondary }]}>{getGreeting()}</ThemedText>
-            <ThemedText style={[styles.userName, { color: theme.text }]} numberOfLines={1}>{(ntf.staffName || '').toUpperCase()}</ThemedText>
+              )}
+            </TouchableOpacity>
+            <View style={styles.headerInfo}>
+              <ThemedText style={[styles.greeting, { color: theme.textSecondary }]}>{getGreeting()}</ThemedText>
+              <ThemedText style={[styles.userName, { color: theme.text }]} numberOfLines={1}>{(ntf.staffName || '').toUpperCase()}</ThemedText>
+            </View>
+          </View>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
+              onPress={() => onNavigate('NOTIFICATIONS')}
+            >
+              <Ionicons name="notifications-outline" size={24} color={theme.text} />
+              {unreadCount > 0 && (
+                <View style={[styles.notificationIndicator, { backgroundColor: theme.error, borderColor: theme.surface }]} />
+              )}
+            </TouchableOpacity>
           </View>
         </View>
-        <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
-          <Ionicons name="notifications-outline" size={24} color={theme.text} />
-          {unreadCount > 0 && <View style={[styles.notifBadge, { backgroundColor: theme.error }]}><ThemedText style={styles.notifBadgeText}>{unreadCount}</ThemedText></View>}
-        </TouchableOpacity>
-      </View>
 
-      {/* Stats Tabs */}
-      <View style={[styles.statsRow, { backgroundColor: theme.surface }]}>
-        {([['PENDING', stats.pending, theme.warning], ['APPROVED', stats.approved, theme.success], ['REJECTED', stats.rejected, theme.error]] as [TabType, number, string][]).map(([tab, count, color]) => (
-          <TouchableOpacity key={tab} style={[styles.statTab, activeTab === tab && { borderBottomColor: color, borderBottomWidth: 2 }]} onPress={() => setActiveTab(tab)}>
-            <ThemedText style={[styles.statLabel, { color: activeTab === tab ? color : theme.textTertiary }]}>{tab}</ThemedText>
-            <ThemedText style={[styles.statCount, { color: activeTab === tab ? theme.text : theme.textSecondary }]}>{count}</ThemedText>
-          </TouchableOpacity>
-        ))}
-      </View>
+        <View style={{ paddingHorizontal: 20 }}>
+          {/* Search Input */}
+          <View style={[styles.searchContainer, { backgroundColor: theme.surface }]}>
+            <Ionicons name="search" size={20} color={theme.textTertiary} />
+            <TextInput
+              style={[styles.searchInput, { color: theme.text }]}
+              placeholder="Search requests..."
+              placeholderTextColor={theme.textTertiary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+          {/* Stats Tabs */}
+          <View style={[styles.statsContainer, { backgroundColor: theme.surface }]}>
+            <TouchableOpacity style={[styles.statTab, activeTab === 'PENDING' && { borderBottomColor: theme.warning }]} onPress={() => setActiveTab('PENDING')}>
+              <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'PENDING' && { color: theme.warning }]}>PENDING</ThemedText>
+              <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'PENDING' && { color: theme.text }]}>{stats.pending}</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.statTab, activeTab === 'APPROVED' && { borderBottomColor: theme.success }]} onPress={() => setActiveTab('APPROVED')}>
+              <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'APPROVED' && { color: theme.success }]}>APPROVED</ThemedText>
+              <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'APPROVED' && { color: theme.text }]}>{stats.approved}</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.statTab, activeTab === 'REJECTED' && { borderBottomColor: theme.error }]} onPress={() => setActiveTab('REJECTED')}>
+              <ThemedText style={[styles.statLabel, { color: theme.textTertiary }, activeTab === 'REJECTED' && { color: theme.error }]}>REJECTED</ThemedText>
+              <ThemedText style={[styles.statValue, { color: theme.textSecondary }, activeTab === 'REJECTED' && { color: theme.text }]}>{stats.rejected}</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
 
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
         <ScreenContentContainer style={{ flex: 1 }}>
           {(loading || refreshing) ? (
             <SkeletonList count={5} />
           ) : (
             <VerticalFlatList
-              style={styles.list}
-              contentContainerStyle={styles.listContent}
+              style={styles.content}
+              contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
               decelerationRate="normal"
               data={filtered}
@@ -172,56 +205,72 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                 const isProcessing = processing === id;
                 return (
                   <TouchableOpacity
-                    style={[styles.card, { backgroundColor: theme.cardBackground || theme.surface, borderColor: theme.border }]}
+                    style={[styles.requestCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
                     onPress={() => { setSelectedVisitor(req); setShowDetailModal(true); }}
-                    activeOpacity={0.85}
                   >
-                    <View style={styles.cardTop}>
-                      <View style={[styles.cardAvatar, { backgroundColor: theme.surfaceHighlight }]}>
-                        <ThemedText style={[styles.cardAvatarText, { color: theme.textSecondary }]}>{getInitials(req.requesterName || req.name || 'VR')}</ThemedText>
+                    <View style={styles.cardTopRow}>
+                      <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
+                        <ThemedText style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
+                          {getInitials(req.requesterName || req.name || 'VR')}
+                        </ThemedText>
                       </View>
-                      <View style={styles.cardMeta}>
+
+                      <View style={styles.headerMainInfo}>
                         <View style={styles.nameRow}>
-                          <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{req.requesterName || req.name || 'Visitor'}</ThemedText>
-                          <View style={[styles.typePill, { backgroundColor: theme.surfaceHighlight }]}>
-                            <ThemedText style={[styles.typePillText, { color: theme.textSecondary }]}>Visitor</ThemedText>
+                          <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
+                            {req.requesterName || req.name || 'Visitor'}
+                          </ThemedText>
+                          <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
+                            <ThemedText style={[styles.passTypePillText, { color: theme.text }]}>Visitor</ThemedText>
                           </View>
                         </View>
-                        <ThemedText style={[styles.cardSub, { color: theme.textSecondary }]} numberOfLines={1}>
+                        <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
                           {req.visitorEmail || req.email || ''}{req.visitorPhone ? ` • ${req.visitorPhone}` : ''}
                         </ThemedText>
                       </View>
-                      <ThemedText style={[styles.timeAgo, { color: theme.textTertiary }]}>{getRelativeTime(req.createdAt)}</ThemedText>
-                    </View>
 
-                    <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground || theme.background }]}>
-                      {req.purpose && <View style={styles.detailRow}><Ionicons name="document-text-outline" size={14} color={theme.textTertiary} /><ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{req.purpose}</ThemedText></View>}
-                      {req.visitDate && <View style={styles.detailRow}><Ionicons name="calendar-outline" size={14} color={theme.textTertiary} /><ThemedText style={[styles.detailText, { color: theme.text }]}>{req.visitDate}{req.visitTime ? ` at ${req.visitTime}` : ''}</ThemedText></View>}
-                    </View>
-
-                    {isPending ? (
-                      <View style={styles.actionRow}>
-                        <TouchableOpacity style={[styles.rejectBtn, { borderColor: theme.error }]} onPress={() => handleReject(req)} disabled={isProcessing} activeOpacity={0.8}>
-                          {isProcessing ? <ActivityIndicator size="small" color={theme.error} /> : <><Ionicons name="close-outline" size={16} color={theme.error} /><ThemedText style={[styles.rejectBtnText, { color: theme.error }]}>Reject</ThemedText></>}
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.approveBtn, { backgroundColor: theme.success }]} onPress={() => handleApprove(req)} disabled={isProcessing} activeOpacity={0.8}>
-                          {isProcessing ? <ActivityIndicator size="small" color="#FFF" /> : <><Ionicons name="checkmark-outline" size={16} color="#FFF" /><ThemedText style={styles.approveBtnText}>Approve</ThemedText></>}
-                        </TouchableOpacity>
+                      <View style={styles.timeAgoContainer}>
+                        <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>
+                          {getRelativeTime(req.createdAt)}
+                        </ThemedText>
                       </View>
-                    ) : (
-                      <View style={styles.statusRow}>
-                        <View style={[styles.statusBadge, { backgroundColor: req.status === 'APPROVED' ? theme.success + '20' : theme.error + '20' }]}>
-                          <View style={[styles.statusDot, { backgroundColor: req.status === 'APPROVED' ? theme.success : theme.error }]} />
-                          <ThemedText style={[styles.statusText, { color: req.status === 'APPROVED' ? theme.success : theme.error }]}>{req.status}</ThemedText>
+                    </View>
+
+                    <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground }]}>
+                      {req.purpose && (
+                        <View style={styles.detailItem}>
+                          <Ionicons name="document-text-outline" size={16} color={theme.textSecondary} />
+                          <ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{req.purpose}</ThemedText>
                         </View>
+                      )}
+                      {req.visitDate && (
+                        <View style={styles.detailItem}>
+                          <Ionicons name="calendar-outline" size={16} color={theme.textSecondary} />
+                          <ThemedText style={[styles.detailText, { color: theme.text }]}>
+                            {req.visitDate}{req.visitTime ? ` at ${req.visitTime}` : ''}
+                          </ThemedText>
+                        </View>
+                      )}
+                    </View>
+
+                    <View style={styles.cardFooter}>
+                      <View style={[
+                        styles.statusBadge,
+                        req.status === 'PENDING' && { backgroundColor: theme.warning },
+                        req.status === 'APPROVED' && { backgroundColor: theme.success },
+                        req.status === 'REJECTED' && { backgroundColor: theme.error },
+                      ]}>
+                        <ThemedText style={[styles.statusText, { color: '#FFFFFF' }]}>
+                          {req.status}
+                        </ThemedText>
                       </View>
-                    )}
+                    </View>
                   </TouchableOpacity>
                 );
               }}
               ListEmptyComponent={
                 <View style={styles.emptyState}>
-                  <Ionicons name="people-outline" size={56} color={theme.border} />
+                  <Ionicons name="people-outline" size={64} color={theme.border} />
                   <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No {activeTab.toLowerCase()} visitor requests</ThemedText>
                 </View>
               }
@@ -232,22 +281,67 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
       {/* Bottom Nav */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
-        {[
-          { key: 'HOME',      icon: 'home',           label: 'Home',      action: () => setBottomTab('HOME') },
-          { key: 'NEW_PASS',  icon: 'add-circle',     label: 'New Pass',  action: () => { setBottomTab('NEW_PASS'); setShowPassSheet(true); } },
-          { key: 'MY_PASSES', icon: 'document-text',  label: 'My Passes', action: () => { setBottomTab('MY_PASSES'); onNavigate('NTF_MY_REQUESTS'); } },
-          { key: 'PROFILE',   icon: 'person',         label: 'Profile',   action: () => { setBottomTab('PROFILE'); onNavigate('PROFILE'); } },
-        ].map(({ key, icon, label, action }) => {
-          const active = bottomTab === key;
-          const isAdd = key === 'NEW_PASS';
-          return (
-            <TouchableOpacity key={key} style={styles.navItem} onPress={action}>
-              <Ionicons name={isAdd ? icon : (active ? icon : `${icon}-outline`)} size={isAdd ? 32 : 24} color={active ? theme.primary : theme.textTertiary} />
-              <ThemedText style={[styles.navLabel, { color: active ? theme.primary : theme.textTertiary, fontWeight: active ? '700' : '500' }]}>{label}</ThemedText>
-              {active && !isAdd && <View style={[styles.activeBar, { backgroundColor: theme.primary }]} />}
-            </TouchableOpacity>
-          );
-        })}
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => setBottomTab('HOME')}
+        >
+          <Ionicons
+            name={bottomTab === 'HOME' ? 'home' : 'home-outline'}
+            size={22}
+            color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary}
+          />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>
+            Home
+          </ThemedText>
+          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => {
+            setBottomTab('NEW_PASS');
+            setShowPassSheet(true);
+          }}
+        >
+          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => {
+            setBottomTab('MY_PASSES');
+            onNavigate('NTF_MY_REQUESTS');
+          }}
+        >
+          <Ionicons
+            name={bottomTab === 'MY_PASSES' ? 'list' : 'list-outline'}
+            size={22}
+            color={bottomTab === 'MY_PASSES' ? theme.primary : theme.textTertiary}
+          />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_PASSES' && { color: theme.primary }]}>
+            My Requests
+          </ThemedText>
+          {bottomTab === 'MY_PASSES' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => {
+            setBottomTab('PROFILE');
+            onNavigate('PROFILE');
+          }}
+        >
+          <Ionicons
+            name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'}
+            size={22}
+            color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary}
+          />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>
+            Profile
+          </ThemedText>
+          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
       </View>
 
       <PassTypeBottomSheet
@@ -327,52 +421,256 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  avatar: { width: 52, height: 52, borderRadius: 26, justifyContent: 'center', alignItems: 'center' },
-  avatarImage: { width: 52, height: 52, borderRadius: 26 },
-  avatarText: { fontSize: 20, fontWeight: '700' },
-  headerInfo: { gap: 2, flex: 1 },
-  greeting: { fontSize: 12, fontWeight: '500', letterSpacing: 0.5 },
-  userName: { fontSize: 20, fontWeight: '700' },
-  iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  notifBadge: { position: 'absolute', top: 4, right: 4, borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
-  notifBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
-  statsRow: { flexDirection: 'row', paddingHorizontal: 20, paddingBottom: 0 },
-  statTab: { flex: 1, alignItems: 'center', paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  statLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  statCount: { fontSize: 22, fontWeight: '800', marginTop: 2 },
-  list: { flex: 1 },
-  listContent: { padding: 16, paddingBottom: 100, gap: 12 },
-  card: { borderRadius: 16, padding: 14, borderWidth: 1, elevation: 1, gap: 10 },
-  cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  cardAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  cardAvatarText: { fontSize: 14, fontWeight: '800' },
-  cardMeta: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  cardName: { fontSize: 14, fontWeight: '700' },
-  typePill: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
-  typePillText: { fontSize: 11, fontWeight: '600' },
-  cardSub: { fontSize: 12, marginTop: 2 },
-  timeAgo: { fontSize: 12 },
-  detailsBlock: { borderRadius: 10, padding: 10, gap: 6 },
-  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  detailText: { fontSize: 13, flex: 1 },
-  actionRow: { flexDirection: 'row', gap: 10 },
-  rejectBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5 },
-  rejectBtnText: { fontSize: 13, fontWeight: '700' },
-  approveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 10, borderRadius: 10 },
-  approveBtnText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
-  statusRow: { flexDirection: 'row' },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
-  statusDot: { width: 7, height: 7, borderRadius: 4 },
-  statusText: { fontSize: 12, fontWeight: '700' },
-  emptyState: { alignItems: 'center', paddingTop: 60, gap: 8 },
-  emptyText: { fontSize: 15, fontWeight: '600' },
-  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
-  navItem: { flex: 1, alignItems: 'center', paddingVertical: 4, position: 'relative' },
-  navLabel: { fontSize: 11, marginTop: 4 },
-  activeBar: { position: 'absolute', bottom: 0, width: 32, height: 3, borderRadius: 2 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  headerInfo: {
+    flex: 1,
+  },
+  greeting: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  notificationIndicator: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  statTab: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomWidth: 3,
+    borderBottomColor: 'transparent',
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 4,
+    letterSpacing: 0.5,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 120,
+  },
+  emptyState: {
+    paddingVertical: 80,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  requestCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  cardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatarContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  requestAvatarText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  headerMainInfo: {
+    flex: 1,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 1,
+  },
+  requestStudentName: {
+    fontSize: 17,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  studentIdSub: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  timeAgoContainer: {
+    alignSelf: 'flex-start',
+    paddingTop: 4,
+  },
+  timeAgoText: {
+    fontSize: 12,
+  },
+  detailsBlock: {
+    borderRadius: 12,
+    padding: 12,
+    gap: 8,
+    marginBottom: 16,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  detailText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  passTypePill: {
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1,
+  },
+  passTypePillText: {
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    paddingBottom: 4,
+    paddingTop: 4,
+    height: 60,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+    position: 'relative',
+  },
+  navLabel: {
+    fontSize: 10,
+    marginTop: 2,
+  },
+  activeIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: '25%',
+    right: '25%',
+    height: 3,
+    borderRadius: 2,
+  },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   detailSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%' },
   dragHandle: { alignItems: 'center', paddingTop: 10, paddingBottom: 4 },
@@ -391,6 +689,32 @@ const styles = StyleSheet.create({
   detailRowLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.3, marginBottom: 2 },
   detailRowValue: { fontSize: 14, fontWeight: '500' },
   detailActions: { flexDirection: 'row', gap: 12, marginTop: 20 },
+  rejectBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    gap: 5,
+  },
+  rejectBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  approveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 5,
+  },
+  approveBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#FFF',
+  },
 });
 
 export default NTFDashboard;

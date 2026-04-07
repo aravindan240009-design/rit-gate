@@ -170,12 +170,15 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
     try {
       let role = detectUserRole(effectiveUserId);
 
-      // For staff-pattern IDs (HOD/HR/STAFF/NON_TEACHING all share the same ID format),
-      // always ask the backend to confirm the actual role FIRST.
-      if (role === 'STAFF') {
-        setLoadingMessage('Verifying credentials...');
-        role = await apiService.detectRole(effectiveUserId);
-        console.log(`🔍 Backend detected role for ${effectiveUserId}: ${role}`);
+      // For staff-pattern IDs (HOD/HR/STAFF share the same ID format),
+      // always ask the backend to confirm the actual role FIRST to prevent routing errors.
+      if (role === 'STAFF' || role === 'HOD' || role === 'HR') {
+        setLoadingMessage('Verifying role...');
+        const confirmedRole = await apiService.detectRole(effectiveUserId);
+        console.log(`🔍 Backend detected role for ${effectiveUserId}: ${confirmedRole}`);
+        if (confirmedRole) {
+          role = confirmedRole;
+        }
       }
 
       // Update detected role immediately so UI reflects it
