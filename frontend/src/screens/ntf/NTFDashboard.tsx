@@ -11,10 +11,10 @@ import { useNotifications } from '../../context/NotificationContext';
 import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
-import { formatDateShort } from '../../utils/dateUtils';
-import GatePassQRModal from '../../components/GatePassQRModal';
+import { getRelativeTime } from '../../utils/dateUtils';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import ErrorModal from '../../components/ErrorModal';
+import SuccessModal from '../../components/SuccessModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import TopRefreshControl from '../../components/TopRefreshControl';
@@ -28,15 +28,13 @@ interface NTFDashboardProps {
 const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }) => {
   const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
-  const [requests, setRequests] = useState<any[]>([]);
+  const [visitorRequests, setVisitorRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [bottomTab, setBottomTab] = useState<'HOME' | 'REQUESTS' | 'GUEST' | 'PROFILE'>('HOME');
-  const [showQRModal, setShowQRModal] = useState(false);
-  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
-  const [manualCode, setManualCode] = useState<string | null>(null);
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [processing, setProcessing] = useState<number | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [modalMsg, setModalMsg] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
   const { refreshCount } = useRefresh();
@@ -61,21 +59,16 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
   const loadData = async () => {
     try {
-      const reqRes = await apiService.getNTFOwnGatePassRequests(ntf.staffCode);
-      const all: any[] = (reqRes as any).requests || reqRes.data || [];
-      const isUsed = (r: any) => r.qrUsed === true || r.status === 'USED' || r.status === 'EXITED';
-      const isToday = (v?: string) => {
-        if (!v) return false;
-        const d = new Date(v), n = new Date();
-        return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
-      };
-      const filtered = all
-        .filter(r => !isUsed(r))
-        .filter(r => ['PENDING', 'PENDING_HR', 'REJECTED', 'APPROVED'].includes(r.status) || isToday(r.requestDate || r.createdAt))
-        .sort((a, b) => new Date(b.requestDate || b.createdAt).getTime() - new Date(a.requestDate || a.createdAt).getTime());
-      setRequests(filtered);
+      const res = await apiService.getVisitorRequestsForStaff(ntf.staffCode);
+      const all: any[] = res.requests || [];
+      const sorted = all.sort((a, b) => {
+        if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
+        if (b.status === 'PENDING' && a.status !== 'PENDING') return 1;
+        return new Date(b.createdAt || b.requestDate || 0).getTime() - new Date(a.createdAt || a.requestDate || 0).getTime();
+      });
+      setVisitorRequests(sorted);
     } catch (e) {
-      console.error('NTF load error:', e);
+      console.error('NTF visitor load error:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -84,40 +77,49 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
   const onRefresh = () => { setRefreshing(true); loadData(); };
 
-  const handleViewQR = async (req: any) => {
-    setSelectedRequest(req);
-    setQrCodeData(null);
-    setManualCode(null);
-    setShowQRModal(true);
+  const handleApprove = async (req: any) => {
+    const id = req.requestId || req.id;
+    setProcessing(id);
     try {
-      const res = await apiService.getGatePassQRCode(req.id, ntf.staffCode, true);
-      if (res.success && res.qrCode) {
-        setQrCodeData(res.qrCode);
-        if (res.manualCode) setManualCode(res.manualCode);
+      const res = await apiService.approveVisitorRequest(id, ntf.staffCode);
+      if (res.success) {
+        setModalMsg('Visitor request approved.');
+        setShowSuccess(true);
+        loadData();
       } else {
-        setShowQRModal(false);
-        setErrorMsg(res.message || 'Could not fetch QR code.');
-        setShowErrorModal(true);
+        setModalMsg(res.message || 'Failed to approve.');
+        setShowError(true);
       }
-    } catch {
-      setShowQRModal(false);
-      setErrorMsg('Failed to load QR code.');
-      setShowErrorModal(true);
+    } catch (e: any) {
+      setModalMsg(e.message || 'Error occurred.');
+      setShowError(true);
+    } finally {
+      setProcessing(null);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    if (status === 'APPROVED') return theme.success;
-    if (status === 'REJECTED') return theme.error;
-    return theme.warning;
+  const handleReject = async (req: any) => {
+    const id = req.requestId || req.id;
+    setProcessing(id);
+    try {
+      const res = await apiService.rejectVisitorRequest(id, 'Rejected by staff');
+      if (res.success) {
+        setModalMsg('Visitor request rejected.');
+        setShowSuccess(true);
+        loadData();
+      } else {
+        setModalMsg(res.message || 'Failed to reject.');
+        setShowError(true);
+      }
+    } catch (e: any) {
+      setModalMsg(e.message || 'Error occurred.');
+      setShowError(true);
+    } finally {
+      setProcessing(null);
+    }
   };
 
-  const getStatusLabel = (status: string) => {
-    if (status === 'PENDING_HR') return 'PENDING HR';
-    if (status === 'APPROVED') return 'APPROVED';
-    if (status === 'REJECTED') return 'REJECTED';
-    return status;
-  };
+  const pendingCount = visitorRequests.filter(r => r.status === 'PENDING').length;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -157,8 +159,8 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
         <ScreenContentContainer>
-          {/* Request Gate Pass Card */}
           <View style={styles.staticHeader}>
+            {/* Request Gate Pass Card */}
             <TouchableOpacity
               style={[styles.requestCard, { backgroundColor: theme.cardBackground || theme.surface }]}
               onPress={() => onNavigate('NEW_PASS_REQUEST')}
@@ -169,61 +171,130 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
               </View>
               <View style={[styles.requestCardBottom, { backgroundColor: theme.cardBackground || theme.surface }]}>
                 <ThemedText style={[styles.requestCardTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
-                <TouchableOpacity
-                  style={[styles.applyBtn, { backgroundColor: theme.primary }]}
-                  onPress={() => onNavigate('NEW_PASS_REQUEST')}
-                >
+                <TouchableOpacity style={[styles.applyBtn, { backgroundColor: theme.primary }]} onPress={() => onNavigate('NEW_PASS_REQUEST')}>
                   <ThemedText style={styles.applyBtnText}>Apply Now</ThemedText>
                 </TouchableOpacity>
               </View>
             </TouchableOpacity>
 
-            <View style={styles.sectionHeader}>
-              <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>RECENT REQUESTS</ThemedText>
+            {/* Visitor Requests Header */}
+            <View style={styles.sectionRow}>
+              <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>VISITOR REQUESTS</ThemedText>
+              {pendingCount > 0 && (
+                <View style={[styles.pendingBadge, { backgroundColor: theme.warning }]}>
+                  <ThemedText style={styles.pendingBadgeText}>{pendingCount} pending</ThemedText>
+                </View>
+              )}
             </View>
           </View>
 
-          {/* Recent Requests */}
+          {/* Visitor Requests List */}
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
             {loading ? (
               <ActivityIndicator size="small" color={theme.primary} style={{ marginTop: 20 }} />
-            ) : requests.length === 0 ? (
+            ) : visitorRequests.length === 0 ? (
               <View style={styles.emptyState}>
-                <Ionicons name="document-text-outline" size={48} color={theme.border} />
-                <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No recent requests</ThemedText>
+                <Ionicons name="people-outline" size={48} color={theme.border} />
+                <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No visitor requests</ThemedText>
               </View>
             ) : (
-              requests.slice(0, 10).map((req) => (
-                <TouchableOpacity
-                  key={req.id}
-                  style={[styles.requestItem, { backgroundColor: theme.cardBackground || theme.surface }]}
-                  onPress={() => req.status === 'APPROVED' && handleViewQR(req)}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.requestItemTop}>
-                    <View style={{ flex: 1 }}>
-                      <ThemedText style={[styles.requestPurpose, { color: theme.text }]} numberOfLines={1}>
-                        {req.purpose || 'Gate Pass Request'}
-                      </ThemedText>
-                      <ThemedText style={[styles.requestDate, { color: theme.textSecondary }]}>
-                        {formatDateShort(req.requestDate || req.createdAt)}
+              visitorRequests.map((req) => {
+                const id = req.requestId || req.id;
+                const isPending = req.status === 'PENDING';
+                const isProcessing = processing === id;
+                return (
+                  <View key={id} style={[styles.visitorCard, { backgroundColor: theme.cardBackground || theme.surface }]}>
+                    <View style={styles.cardTop}>
+                      <View style={[styles.visitorAvatar, { backgroundColor: theme.surfaceHighlight }]}>
+                        <ThemedText style={[styles.visitorAvatarText, { color: theme.textSecondary }]}>
+                          {getInitials(req.requesterName || req.visitorName || req.name || 'VR')}
+                        </ThemedText>
+                      </View>
+                      <View style={styles.cardInfo}>
+                        <View style={styles.nameRow}>
+                          <ThemedText style={[styles.visitorName, { color: theme.text }]} numberOfLines={1}>
+                            {req.requesterName || req.visitorName || req.name || 'Visitor'}
+                          </ThemedText>
+                          <View style={[styles.typePill, { backgroundColor: theme.surfaceHighlight }]}>
+                            <ThemedText style={[styles.typePillText, { color: theme.textSecondary }]}>Visitor</ThemedText>
+                          </View>
+                        </View>
+                        <ThemedText style={[styles.visitorSub, { color: theme.textSecondary }]} numberOfLines={1}>
+                          {req.visitorEmail || req.email || ''}{req.visitorPhone || req.phone ? ` • ${req.visitorPhone || req.phone}` : ''}
+                        </ThemedText>
+                      </View>
+                      <ThemedText style={[styles.timeAgo, { color: theme.textTertiary }]}>
+                        {getRelativeTime(req.createdAt || req.requestDate)}
                       </ThemedText>
                     </View>
-                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(req.status) }]}>
-                      <ThemedText style={styles.statusText}>{getStatusLabel(req.status)}</ThemedText>
+
+                    <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground || theme.background }]}>
+                      {(req.purpose || req.reason) && (
+                        <View style={styles.detailRow}>
+                          <Ionicons name="document-text-outline" size={14} color={theme.textTertiary} />
+                          <ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={2}>
+                            {req.purpose || req.reason}
+                          </ThemedText>
+                        </View>
+                      )}
+                      {(req.visitDate || req.visitTime) && (
+                        <View style={styles.detailRow}>
+                          <Ionicons name="calendar-outline" size={14} color={theme.textTertiary} />
+                          <ThemedText style={[styles.detailText, { color: theme.text }]}>
+                            {req.visitDate}{req.visitTime ? ` at ${req.visitTime}` : ''}
+                          </ThemedText>
+                        </View>
+                      )}
+                      {req.numberOfPeople && req.numberOfPeople > 1 && (
+                        <View style={styles.detailRow}>
+                          <Ionicons name="people-outline" size={14} color={theme.textTertiary} />
+                          <ThemedText style={[styles.detailText, { color: theme.text }]}>{req.numberOfPeople} people</ThemedText>
+                        </View>
+                      )}
                     </View>
+
+                    {isPending ? (
+                      <View style={styles.actionRow}>
+                        <TouchableOpacity
+                          style={[styles.rejectBtn, { borderColor: theme.error }]}
+                          onPress={() => handleReject(req)}
+                          disabled={isProcessing}
+                          activeOpacity={0.8}
+                        >
+                          {isProcessing ? <ActivityIndicator size="small" color={theme.error} /> : (
+                            <>
+                              <Ionicons name="close-outline" size={16} color={theme.error} />
+                              <ThemedText style={[styles.rejectBtnText, { color: theme.error }]}>Reject</ThemedText>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.approveBtn, { backgroundColor: theme.success }]}
+                          onPress={() => handleApprove(req)}
+                          disabled={isProcessing}
+                          activeOpacity={0.8}
+                        >
+                          {isProcessing ? <ActivityIndicator size="small" color="#FFF" /> : (
+                            <>
+                              <Ionicons name="checkmark-outline" size={16} color="#FFF" />
+                              <ThemedText style={styles.approveBtnText}>Approve</ThemedText>
+                            </>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    ) : (
+                      <View style={styles.statusRow}>
+                        <View style={[styles.statusBadge, { backgroundColor: req.status === 'APPROVED' ? theme.success + '20' : theme.error + '20' }]}>
+                          <View style={[styles.statusDot, { backgroundColor: req.status === 'APPROVED' ? theme.success : theme.error }]} />
+                          <ThemedText style={[styles.statusText, { color: req.status === 'APPROVED' ? theme.success : theme.error }]}>
+                            {req.status}
+                          </ThemedText>
+                        </View>
+                      </View>
+                    )}
                   </View>
-                  {req.status === 'APPROVED' && (
-                    <TouchableOpacity
-                      style={[styles.viewQRBtn, { backgroundColor: theme.primary }]}
-                      onPress={() => handleViewQR(req)}
-                    >
-                      <Ionicons name="qr-code-outline" size={16} color="#FFF" />
-                      <ThemedText style={styles.viewQRText}>View QR</ThemedText>
-                    </TouchableOpacity>
-                  )}
-                </TouchableOpacity>
-              ))
+                );
+              })
             )}
           </ScrollView>
         </ScreenContentContainer>
@@ -232,26 +303,19 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
       {/* Bottom Navigation */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         {[
-          { key: 'HOME',     icon: 'home',           label: 'Home',     screen: undefined },
-          { key: 'GUEST',    icon: 'person-add',      label: 'Guest',    screen: 'GUEST_PRE_REQUEST' as ScreenName },
-          { key: 'REQUESTS', icon: 'document-text',   label: 'Requests', screen: 'NTF_MY_REQUESTS' as ScreenName },
-          { key: 'PROFILE',  icon: 'person',          label: 'Profile',  screen: 'PROFILE' as ScreenName },
+          { key: 'HOME',     icon: 'home',           label: 'Home',      screen: undefined },
+          { key: 'GUEST',    icon: 'person-add',      label: 'Guest',     screen: 'GUEST_PRE_REQUEST' as ScreenName },
+          { key: 'REQUESTS', icon: 'document-text',   label: 'My Passes', screen: 'NTF_MY_REQUESTS' as ScreenName },
+          { key: 'PROFILE',  icon: 'person',          label: 'Profile',   screen: 'PROFILE' as ScreenName },
         ].map(({ key, icon, label, screen }) => {
           const active = bottomTab === key;
           return (
             <TouchableOpacity
               key={key}
               style={styles.navItem}
-              onPress={() => {
-                setBottomTab(key as any);
-                if (screen) onNavigate(screen);
-              }}
+              onPress={() => { setBottomTab(key as any); if (screen) onNavigate(screen); }}
             >
-              <Ionicons
-                name={active ? icon : `${icon}-outline`}
-                size={24}
-                color={active ? theme.primary : theme.textTertiary}
-              />
+              <Ionicons name={active ? icon : `${icon}-outline`} size={24} color={active ? theme.primary : theme.textTertiary} />
               <ThemedText style={[styles.navLabel, { color: active ? theme.primary : theme.textTertiary, fontWeight: active ? '700' : '500' }]}>
                 {label}
               </ThemedText>
@@ -261,33 +325,16 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
         })}
       </View>
 
-      <GatePassQRModal
-        visible={showQRModal}
-        onClose={() => setShowQRModal(false)}
-        qrCodeData={qrCodeData}
-        manualCode={manualCode}
-        personName={ntf.staffName}
-        personId={ntf.staffCode}
-        reason={selectedRequest?.reason || selectedRequest?.purpose}
-      />
-      <ErrorModal visible={showErrorModal} title="Error" message={errorMsg} onClose={() => setShowErrorModal(false)} type="general" />
-      <ConfirmationModal
-        visible={showLogoutModal}
-        title="Logout"
-        message="Are you sure you want to logout?"
-        onConfirm={onLogout}
-        onCancel={() => setShowLogoutModal(false)}
-      />
+      <SuccessModal visible={showSuccess} title="Done" message={modalMsg} onClose={() => setShowSuccess(false)} autoClose autoCloseDelay={2000} />
+      <ErrorModal visible={showError} type="general" title="Error" message={modalMsg} onClose={() => setShowError(false)} />
+      <ConfirmationModal visible={showLogoutModal} title="Logout" message="Are you sure you want to logout?" onConfirm={onLogout} onCancel={() => setShowLogoutModal(false)} />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1,
-  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   avatar: { width: 52, height: 52, borderRadius: 26, justifyContent: 'center', alignItems: 'center' },
   avatarImage: { width: 52, height: 52, borderRadius: 26 },
@@ -296,45 +343,48 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 12, fontWeight: '500', letterSpacing: 0.5 },
   userName: { fontSize: 20, fontWeight: '700' },
   iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  notifBadge: {
-    position: 'absolute', top: 4, right: 4, borderRadius: 10,
-    minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4,
-  },
+  notifBadge: { position: 'absolute', top: 4, right: 4, borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
   notifBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   staticHeader: { paddingHorizontal: 20, paddingTop: 16 },
   requestCard: { borderRadius: 20, overflow: 'hidden', elevation: 4 },
   requestCardTop: { paddingVertical: 52, alignItems: 'center', justifyContent: 'center' },
-  requestCardBottom: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 18,
-  },
+  requestCardBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 18 },
   requestCardTitle: { fontSize: 18, fontWeight: '800' },
   applyBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, marginLeft: 12 },
   applyBtnText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
-  sectionHeader: { paddingTop: 28, paddingBottom: 12 },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 28, paddingBottom: 12 },
   sectionTitle: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
+  pendingBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 },
+  pendingBadgeText: { fontSize: 11, fontWeight: '700', color: '#FFF' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
   emptyState: { paddingVertical: 60, alignItems: 'center' },
   emptyText: { fontSize: 16, fontWeight: '600', marginTop: 12 },
-  requestItem: { marginBottom: 12, padding: 16, borderRadius: 14, elevation: 2 },
-  requestItemTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  requestPurpose: { fontSize: 16, fontWeight: '700' },
-  requestDate: { fontSize: 13, marginTop: 2 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  statusText: { fontSize: 11, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.5 },
-  viewQRBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    borderRadius: 10, paddingVertical: 8, paddingHorizontal: 14,
-    marginTop: 12, gap: 6, alignSelf: 'flex-start',
-  },
-  viewQRText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
-  bottomNav: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8,
-    borderTopWidth: 1, elevation: 8,
-  },
+  visitorCard: { marginBottom: 12, borderRadius: 16, padding: 14, elevation: 2, gap: 10 },
+  cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  visitorAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  visitorAvatarText: { fontSize: 14, fontWeight: '800' },
+  cardInfo: { flex: 1 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  visitorName: { fontSize: 14, fontWeight: '700' },
+  typePill: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
+  typePillText: { fontSize: 11, fontWeight: '600' },
+  visitorSub: { fontSize: 12, marginTop: 2 },
+  timeAgo: { fontSize: 12 },
+  detailsBlock: { borderRadius: 10, padding: 10, gap: 6 },
+  detailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  detailText: { fontSize: 13, flex: 1, lineHeight: 18 },
+  actionRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  rejectBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5 },
+  rejectBtnText: { fontSize: 13, fontWeight: '700' },
+  approveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 10, borderRadius: 10 },
+  approveBtnText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
+  statusRow: { flexDirection: 'row', marginTop: 4 },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
+  statusDot: { width: 7, height: 7, borderRadius: 4 },
+  statusText: { fontSize: 12, fontWeight: '700' },
+  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 4, position: 'relative' },
-  navLabel: { fontSize: 12, marginTop: 4 },
+  navLabel: { fontSize: 11, marginTop: 4 },
   activeBar: { position: 'absolute', bottom: 0, width: 32, height: 3, borderRadius: 2 },
 });
 
