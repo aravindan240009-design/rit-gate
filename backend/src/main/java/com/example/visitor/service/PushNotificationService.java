@@ -111,11 +111,22 @@ public class PushNotificationService {
             // Include "notification" field so FCM shows it natively in killed/background state.
             // In foreground, FCM suppresses the notification and our foreground handler shows it via notifee.
             // The background handler must NOT call showLocalNotification to avoid duplicates.
+            // notification_priority: MAX + visibility: public wakes the screen on lock screen.
             String json = String.format(
                 "{\"message\":{" +
                 "\"token\":\"%s\"," +
                 "\"notification\":{\"title\":\"%s\",\"body\":\"%s\"}," +
-                "\"android\":{\"priority\":\"high\",\"notification\":{\"channel_id\":\"ritgate_main\",\"sound\":\"default\"}}" +
+                "\"android\":{" +
+                "  \"priority\":\"high\"," +
+                "  \"notification\":{" +
+                "    \"channel_id\":\"ritgate_main\"," +
+                "    \"sound\":\"default\"," +
+                "    \"notification_priority\":\"PRIORITY_MAX\"," +
+                "    \"visibility\":\"PUBLIC\"," +
+                "    \"default_vibrate_timings\":true," +
+                "    \"default_light_settings\":true" +
+                "  }" +
+                "}" +
                 "%s" +
                 "}}",
                 fcmToken,
