@@ -26,6 +26,7 @@ export function getRoleDisplayName(role: UserRole): string {
     HR: 'Human Resources',
     SECURITY: 'Security Personnel',
     NON_TEACHING: 'Non-Teaching Faculty',
+    NON_CLASS_INCHARGE: 'Staff',
   };
 
   return roleNames[role];
@@ -44,6 +45,7 @@ export function getRoleIcon(role: UserRole): string {
     HR: 'people',
     SECURITY: 'shield',
     NON_TEACHING: 'person-circle',
+    NON_CLASS_INCHARGE: 'briefcase',
   };
 
   return roleIcons[role];
@@ -62,6 +64,7 @@ export function getRoleColor(role: UserRole): string {
     HR: '#10B981',
     SECURITY: '#EF4444',
     NON_TEACHING: '#3B82F6',
+    NON_CLASS_INCHARGE: '#8B5CF6',
   };
 
   return roleColors[role];

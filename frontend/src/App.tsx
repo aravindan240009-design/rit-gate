@@ -51,6 +51,9 @@ import MyRequestsScreen from './screens/staff/MyRequestsScreen';
 // ✅ Non-Teaching Faculty Screens
 import NTFDashboardContainer from './screens/ntf/NTFDashboardContainer';
 import NTFMyRequestsScreen from './screens/ntf/NTFMyRequestsScreen';
+import NCIDashboardContainer from './screens/nci/NCIDashboardContainer';
+import NCIMyRequestsScreen from './screens/nci/NCIMyRequestsScreen';
+import NCIExitsScreen from './screens/nci/NCIExitsScreen';
 import NotificationsScreen from './screens/shared/NotificationsScreen';
 import SwipeBackWrapper from './components/SwipeBackWrapper';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -94,7 +97,7 @@ const AppNavigator: React.FC<{
 // Screens that show exit confirmation on back press
 const EXIT_SCREENS: ScreenName[] = [
   'HOME', 'DASHBOARD', 'STAFF_DASHBOARD', 'HOD_DASHBOARD',
-  'HR_DASHBOARD', 'SECURITY_DASHBOARD', 'UNIFIED_LOGIN', 'NTF_DASHBOARD',
+  'HR_DASHBOARD', 'SECURITY_DASHBOARD', 'UNIFIED_LOGIN', 'NTF_DASHBOARD', 'NCI_DASHBOARD',
 ];
 
 const App: React.FC = () => {
@@ -105,6 +108,7 @@ const App: React.FC = () => {
   const [hod, setHod] = React.useState<HOD | null>(null);
   const [hr, setHr] = React.useState<HR | null>(null);
   const [ntf, setNtf] = React.useState<NonTeachingFaculty | null>(null);
+  const [nci, setNci] = React.useState<NonTeachingFaculty | null>(null);
   const [selectedRequest, setSelectedRequest] = React.useState<any>(null);
   const [security, setSecurity] = React.useState<SecurityPersonnel | null>(null);
   const [currentScreen, setCurrentScreen] = React.useState<ScreenName>('HOME');
@@ -146,6 +150,7 @@ const App: React.FC = () => {
       else if (ut === 'STAFF') setCurrentScreen('MY_REQUESTS');
       else if (ut === 'HOD') setCurrentScreen('HOD_MY_REQUESTS');
       else if (ut === 'NON_TEACHING') setCurrentScreen('NTF_MY_REQUESTS');
+      else if (ut === 'NON_CLASS_INCHARGE') setCurrentScreen('NCI_MY_REQUESTS');
     } else if (r.includes('pending-approvals') || r.includes('pending_approvals')) {
       if (ut === 'STAFF') setCurrentScreen('STAFF_DASHBOARD');
       else if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
@@ -425,6 +430,21 @@ const App: React.FC = () => {
         return;
       }
 
+      // Check for saved NCI session
+      const savedNCI = await offlineStorage.getCurrentNCI();
+      if (savedNCI) {
+        console.log('✅ Found saved NCI session:', savedNCI.staffCode);
+        setNci(savedNCI);
+        setUserType('NON_CLASS_INCHARGE');
+        setCurrentScreen('NCI_DASHBOARD');
+        const hasFlag = await biometricAuthService.hasSessionFlag();
+        setRequiresBiometricGate(hasFlag);
+        setBiometricVerified(!hasFlag);
+        setIsLoading(false);
+        initPushNotifications(savedNCI.staffCode, 'staff');
+        return;
+      }
+
       console.log('ℹ️ No saved user session found - showing home screen');
       setIsLoading(false);
       setCurrentScreen('HOME');
@@ -458,6 +478,7 @@ const App: React.FC = () => {
     if (roleToKeep !== 'HR') await offlineStorage.clearCurrentHR();
     if (roleToKeep !== 'SECURITY') await offlineStorage.clearCurrentSecurity();
     if (roleToKeep !== 'NON_TEACHING') await offlineStorage.clearCurrentNTF();
+    if (roleToKeep !== 'NON_CLASS_INCHARGE') await offlineStorage.clearCurrentNCI();
   };
 
   const handleStudentLogin = async (studentData: Student) => {
@@ -567,6 +588,25 @@ const App: React.FC = () => {
     initPushNotifications(ntfData.staffCode, 'staff');
   };
 
+  const handleNCILogin = async (nciData: NonTeachingFaculty) => {
+    console.log('🏛️ NCI login successful:', nciData.staffCode);
+    // Store the staff role in designation field for Principal/Director detection
+    const enriched = { ...nciData, designation: (nciData as any).role || nciData.designation || '' };
+    try {
+      await clearAllSessionsExcept('NON_CLASS_INCHARGE');
+      await offlineStorage.saveCurrentNCI(enriched);
+    } catch (error) {
+      console.error('❌ Failed to save NCI data:', error);
+    }
+    setNci(enriched);
+    setUserType('NON_CLASS_INCHARGE');
+    setCurrentScreen('NCI_DASHBOARD');
+    setRequiresBiometricGate(false);
+    setBiometricVerified(true);
+    setBiometricPrompted(false);
+    initPushNotifications(nciData.staffCode, 'staff');
+  };
+
   const handleLogout = async () => {
     try {
       console.log('🚪 Logging out user...');
@@ -579,6 +619,8 @@ const App: React.FC = () => {
       await offlineStorage.clearCurrentHR();
       await offlineStorage.clearCurrentSecurity();
       await offlineStorage.clearCurrentNTF();
+      await offlineStorage.clearCurrentNCI();
+      await offlineStorage.clearCurrentNTF();
       
       // Reset all state
       setStudent(null);
@@ -587,6 +629,7 @@ const App: React.FC = () => {
       setHr(null);
       setSecurity(null);
       setNtf(null);
+      setNci(null);
       setUserType(null);
       setCurrentScreen('HOME');
       setRequiresBiometricGate(false);
@@ -611,6 +654,7 @@ const App: React.FC = () => {
     else if (userType === 'HR') setCurrentScreen('HR_DASHBOARD');
     else if (userType === 'SECURITY') setCurrentScreen('SECURITY_DASHBOARD');
     else if (userType === 'NON_TEACHING') setCurrentScreen('NTF_DASHBOARD');
+    else if (userType === 'NON_CLASS_INCHARGE') setCurrentScreen('NCI_DASHBOARD');
     else setCurrentScreen('HOME');
   };
 
@@ -725,6 +769,8 @@ const App: React.FC = () => {
               else if (role === 'HR') handleHRLogin(user);
               else if (role === 'SECURITY') handleSecurityLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -814,6 +860,8 @@ const App: React.FC = () => {
               else if (role === 'HR') handleHRLogin(user);
               else if (role === 'SECURITY') handleSecurityLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -910,6 +958,8 @@ const App: React.FC = () => {
               else if (role === 'HR') handleHRLogin(user);
               else if (role === 'SECURITY') handleSecurityLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -1053,6 +1103,8 @@ const App: React.FC = () => {
               else if (role === 'HR') handleHRLogin(user);
               else if (role === 'SECURITY') handleSecurityLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -1082,7 +1134,11 @@ const App: React.FC = () => {
               else if (role === 'HR') handleHRLogin(user);
               else if (role === 'SECURITY') handleSecurityLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -1157,6 +1213,81 @@ const App: React.FC = () => {
           <ModernUnifiedLoginScreen
             onLoginSuccess={(user: any, role: UserRole) => {
               if (role === 'NON_TEACHING') handleNTFLogin(user);
+              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+            }}
+            onBack={goBackToHome}
+          />
+        );
+      }
+
+      // Handle authenticated NCI screens
+      if (userType === 'NON_CLASS_INCHARGE' && nci) {
+        switch (currentScreen) {
+          case 'NCI_DASHBOARD':
+            return (
+              <NCIDashboardContainer
+                nci={nci}
+                onLogout={handleLogout}
+                onNavigate={navigateToScreen}
+              />
+            );
+          case 'NEW_PASS_REQUEST':
+            return (
+              <GatePassRequestScreen
+                user={nci as any}
+                onBack={() => setCurrentScreen('NCI_DASHBOARD')}
+                isNCI={true}
+              />
+            );
+          case 'NCI_MY_REQUESTS':
+            return (
+              <NCIMyRequestsScreen
+                user={nci}
+                onBack={() => setCurrentScreen('NCI_DASHBOARD')}
+              />
+            );
+          case 'NCI_EXITS':
+            return (
+              <NCIExitsScreen
+                nci={nci}
+                onBack={() => setCurrentScreen('NCI_DASHBOARD')}
+              />
+            );
+          case 'GUEST_PRE_REQUEST':
+            return (
+              <GuestPreRequestScreen
+                creatorRole="NTF"
+                creatorStaffCode={nci.staffCode}
+                creatorName={nci.staffName || nci.name || ''}
+                creatorDepartment={nci.department || ''}
+                onBack={() => setCurrentScreen('NCI_DASHBOARD')}
+              />
+            );
+          case 'NOTIFICATIONS':
+            return (
+              <NotificationsScreen
+                userId={nci.staffCode}
+                userType="staff"
+                onBack={navigateBack}
+              />
+            );
+          default:
+            return (
+              <NCIDashboardContainer
+                nci={nci}
+                onLogout={handleLogout}
+                onNavigate={navigateToScreen}
+              />
+            );
+        }
+      }
+
+      // Handle unauthenticated NCI
+      if (userType === 'NON_CLASS_INCHARGE' && !nci) {
+        return (
+          <ModernUnifiedLoginScreen
+            onLoginSuccess={(user: any, role: UserRole) => {
+              if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -1198,6 +1329,7 @@ const App: React.FC = () => {
           hod?.hodCode ||
           hr?.hrCode ||
           security?.securityId ||
+          nci?.staffCode ||
           undefined
         }>
           <RefreshProvider>

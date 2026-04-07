@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   CURRENT_HR: 'current_hr',
   CURRENT_SECURITY: 'current_security',
   CURRENT_NTF: 'current_ntf',
+  CURRENT_NCI: 'current_nci',
   ENTRY_LOGS: 'entry_logs_',
   APP_SETTINGS: 'app_settings',
 };
@@ -270,6 +271,35 @@ class OfflineStorageService {
     } catch (error) {
       console.error('Error getting app settings:', error);
       return {};
+    }
+  }
+
+  // Non-Class-Incharge (NCI) Management
+  async saveCurrentNCI(nci: NonTeachingFaculty): Promise<void> {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_NCI, JSON.stringify(nci));
+    } catch (error) {
+      console.error('Error storing NCI data:', error);
+      throw error;
+    }
+  }
+
+  async getCurrentNCI(): Promise<NonTeachingFaculty | null> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_NCI);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('Error getting current NCI:', error);
+      return null;
+    }
+  }
+
+  async clearCurrentNCI(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_NCI);
+    } catch (error) {
+      console.error('Error clearing current NCI:', error);
+      throw error;
     }
   }
 

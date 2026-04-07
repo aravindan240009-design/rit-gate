@@ -1,5 +1,5 @@
 // User Types
-export type UserRole = 'STUDENT' | 'STAFF' | 'HOD' | 'HR' | 'SECURITY' | 'NON_TEACHING';
+export type UserRole = 'STUDENT' | 'STAFF' | 'HOD' | 'HR' | 'SECURITY' | 'NON_TEACHING' | 'NON_CLASS_INCHARGE';
 export type UserType = UserRole; // Alias for UserRole
 
 export interface NonTeachingFaculty {
@@ -335,4 +335,7 @@ export type ScreenName =
   | 'HR_EXITS'
   | 'GUEST_PRE_REQUEST'
   | 'NTF_DASHBOARD'
-  | 'NTF_MY_REQUESTS';
+  | 'NTF_MY_REQUESTS'
+  | 'NCI_DASHBOARD'
+  | 'NCI_MY_REQUESTS'
+  | 'NCI_EXITS';

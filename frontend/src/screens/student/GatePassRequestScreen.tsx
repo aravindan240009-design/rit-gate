@@ -33,9 +33,10 @@ interface GatePassRequestScreenProps {
   navigation?: any;
   onBack?: () => void;
   isNTF?: boolean;
+  isNCI?: boolean;
 }
 
-const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, navigation, onBack, isNTF = false }) => {
+const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, navigation, onBack, isNTF = false, isNCI = false }) => {
   const { theme, isDark } = useTheme();
   const { withLock, isLocked } = useActionLock();
   const [purpose, setPurpose] = useState('');
@@ -166,6 +167,12 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
         if (isNTF) {
           // NTF: submit directly to HR (skip HOD)
           response = await apiService.submitNTFGatePassRequest(payload as any);
+        } else if (isNCI) {
+          // NCI: submit directly to HR (skip HOD)
+          response = await apiService.submitNonClassInchargeRequest(
+            (payload as any).staffCode, purpose.trim(), reason.trim(),
+            requestDate.toISOString(), attachment?.base64Uri
+          );
         } else {
           response = (isStaff || isHOD) ? await apiService.submitStaffGatePassRequest(payload as any) : await apiService.submitGatePassRequest(payload as any);
         }

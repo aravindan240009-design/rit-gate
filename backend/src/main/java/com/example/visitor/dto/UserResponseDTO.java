@@ -152,6 +152,10 @@ public class UserResponseDTO {
     
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
+
+    private String role;
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
     
     @JsonProperty("isActive")
     public boolean isActive() { return isActive; }

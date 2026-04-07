@@ -92,8 +92,7 @@ public class GatePassRequestController {
     }
     
     // Submit NTF gate pass request (non-teaching faculty — direct to HR)
-    @PostMapping("/ntf/submit")
-    public ResponseEntity<Map<String, Object>> submitNTFRequest(@RequestBody Map<String, Object> requestData) {
+    @PostMapping("/ntf/submit")    public ResponseEntity<Map<String, Object>> submitNTFRequest(@RequestBody Map<String, Object> requestData) {
         Map<String, Object> response = new HashMap<>();
         try {
             String staffCode = (String) requestData.get("staffCode");
@@ -131,6 +130,69 @@ public class GatePassRequestController {
             log.error("Error submitting NTF request", e);
             response.put("success", false);
             response.put("message", "Error submitting request: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // Submit non-class-incharge gate pass request (direct to HR, same flow as NTF)
+    @PostMapping("/non-class-incharge/submit")
+    public ResponseEntity<Map<String, Object>> submitNonClassInchargeRequest(@RequestBody Map<String, Object> requestData) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            String staffCode = (String) requestData.get("staffCode");
+            String purpose = (String) requestData.get("purpose");
+            String reason = (String) requestData.get("reason");
+            String requestDateStr = (String) requestData.get("requestDate");
+            String attachmentUri = (String) requestData.get("attachmentUri");
+
+            if (staffCode == null || staffCode.trim().isEmpty()) {
+                response.put("success", false); response.put("message", "Staff code is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            if (purpose == null || purpose.trim().isEmpty()) {
+                response.put("success", false); response.put("message", "Purpose is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            if (reason == null || reason.trim().isEmpty()) {
+                response.put("success", false); response.put("message", "Reason is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            LocalDateTime requestDate;
+            try { requestDate = LocalDateTime.parse(requestDateStr, DateTimeFormatter.ISO_DATE_TIME); }
+            catch (Exception e) { requestDate = LocalDateTime.now(); }
+
+            // Reuse NTF flow — skips HOD, goes directly to HR
+            GatePassRequest gatePassRequest = gatePassRequestService.submitNTFRequest(
+                staffCode, purpose, reason, requestDate, attachmentUri);
+
+            response.put("success", true);
+            response.put("message", "Gate pass request submitted successfully");
+            response.put("requestId", gatePassRequest.getId());
+            response.put("status", gatePassRequest.getStatus().toString());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error submitting non-class-incharge request", e);
+            response.put("success", false);
+            response.put("message", "Error submitting request: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // Get non-class-incharge own requests (reuses NTF own requests endpoint logic)
+    @GetMapping("/non-class-incharge/{staffCode}/own")
+    public ResponseEntity<Map<String, Object>> getNonClassInchargeOwnRequests(@PathVariable String staffCode) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<GatePassRequest> requests = gatePassRequestService.getStaffOwnRequests(staffCode);
+            response.put("success", true);
+            response.put("requests", requests);
+            response.put("count", requests.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error fetching non-class-incharge own requests", e);
+            response.put("success", false);
+            response.put("message", "Error fetching requests: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }

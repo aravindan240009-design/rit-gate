@@ -50,4 +50,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     // Get all distinct HOD names across all departments
     @Query("SELECT DISTINCT s.hod FROM Student s WHERE s.hod IS NOT NULL AND s.hod <> ''")
     List<String> findAllDistinctHodNames();
+
+    // Check if a staff name appears as a class incharge in any student row
+    @Query("SELECT COUNT(s) FROM Student s WHERE LOWER(s.classIncharge) LIKE LOWER(CONCAT('%', :name, '%'))")
+    long countByClassInchargeContaining(@Param("name") String name);
 }
