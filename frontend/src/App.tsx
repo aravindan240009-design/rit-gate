@@ -149,19 +149,19 @@ const App: React.FC = () => {
       if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
       else if (ut === 'HR') setCurrentScreen('HR_DASHBOARD');
     }
-    // Trigger a data refresh on the destination screen
-    triggerRefresh();
-  }, [triggerRefresh]);
+  }, []);
 
   const handleNotificationRoute = React.useCallback((route: string) => {
-    if (!route) return;
     if (!userTypeRef.current) {
       // App was killed — auth not restored yet; store and apply after login
-      pendingRouteRef.current = route;
+      if (route) pendingRouteRef.current = route;
       return;
     }
-    applyRoute(route);
-  }, [applyRoute]);
+    // Always trigger a data refresh when a notification is tapped
+    triggerRefresh();
+    // Navigate to the specific screen if a route was provided
+    if (route) applyRoute(route);
+  }, [applyRoute, triggerRefresh]);
 
   // Once userType is set (auth restored), flush any pending notification route
   React.useEffect(() => {

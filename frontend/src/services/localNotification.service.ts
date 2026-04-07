@@ -110,10 +110,8 @@ export function onNotificationTap(
         return;
       }
 
-      // App notification — navigate
-      if (data.actionRoute) {
-        handler(data);
-      }
+      // App notification — navigate (or just refresh if no specific route)
+      handler(data);
     }
   });
   return unsub;

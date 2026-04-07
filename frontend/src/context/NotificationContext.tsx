@@ -85,8 +85,10 @@ export const NotificationProvider: React.FC<{ children: ReactNode; onNavigate?: 
 
     // Handle tap on a notifee notification while app is in foreground
     const unsub = onNotificationTap((data) => {
-      if (data.actionRoute && onNavigateRef.current) {
-        onNavigateRef.current(data.actionRoute);
+      // Always call onNavigate on tap — even without actionRoute — so App.tsx
+      // can trigger a data refresh on the current screen
+      if (onNavigateRef.current) {
+        onNavigateRef.current(data.actionRoute || '');
       }
     });
 
