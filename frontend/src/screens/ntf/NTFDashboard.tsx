@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, StyleSheet, TouchableOpacity, StatusBar,
-  Image, ActivityIndicator, ScrollView, Modal, Animated,
+  View, StyleSheet, TouchableOpacity, StatusBar, Image,
+  ActivityIndicator, TextInput, Modal, Animated, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -18,7 +18,10 @@ import SuccessModal from '../../components/SuccessModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import TopRefreshControl from '../../components/TopRefreshControl';
+import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
+import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
+import { SkeletonList } from '../../components/SkeletonCard';
 
 interface NTFDashboardProps {
   ntf: NonTeachingFaculty;
@@ -26,17 +29,20 @@ interface NTFDashboardProps {
   onNavigate: (screen: ScreenName) => void;
 }
 
+type TabType = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }) => {
   const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
-  const [visitorRequests, setVisitorRequests] = useState<any[]>([]);
+  const [allRequests, setAllRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [bottomTab, setBottomTab] = useState<'HOME' | 'REQUESTS' | 'GUEST' | 'PROFILE'>('HOME');
+  const [activeTab, setActiveTab] = useState<TabType>('PENDING');
+  const [bottomTab, setBottomTab] = useState<'HOME' | 'NEW_PASS' | 'MY_PASSES' | 'PROFILE'>('HOME');
+  const [showPassSheet, setShowPassSheet] = useState(false);
   const [processing, setProcessing] = useState<number | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [modalMsg, setModalMsg] = useState('');
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [selectedVisitor, setSelectedVisitor] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const { translateY: detailSheetY, panHandlers: detailPanHandlers, openSheet: openDetailSheet } = useBottomSheetSwipe(() => setShowDetailModal(false));
@@ -52,30 +58,22 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   };
 
   const getInitials = (name: string) =>
-    name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    (name || 'NF').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
-  useEffect(() => {
-    loadData();
-    loadNotifications(ntf.staffCode, 'staff');
-  }, []);
-
+  useEffect(() => { loadData(); loadNotifications(ntf.staffCode, 'staff'); }, []);
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
   const loadData = async () => {
     try {
       const res = await apiService.getVisitorRequestsForStaff(ntf.staffCode);
       const all: any[] = res.requests || [];
-      // Only show visitors from the website (registered_by starts with 'WEB-' or equals 'WEBSITE')
       const websiteOnly = all.filter((r: any) => {
         const rb = (r.registeredBy || r.registered_by || '').toString();
         return rb === 'WEBSITE' || rb.toUpperCase().startsWith('WEB-');
       });
-      const sorted = websiteOnly.sort((a, b) => {
-        if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
-        if (b.status === 'PENDING' && a.status !== 'PENDING') return 1;
-        return new Date(b.createdAt || b.requestDate || 0).getTime() - new Date(a.createdAt || a.requestDate || 0).getTime();
-      });
-      setVisitorRequests(sorted);
+      setAllRequests(websiteOnly);
+    } catch (e) {
+      console.error('NTF visitor load error:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -84,271 +82,185 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
   const onRefresh = () => { setRefreshing(true); loadData(); };
 
+  const filtered = allRequests.filter(r => {
+    if (activeTab === 'PENDING') return r.status === 'PENDING';
+    if (activeTab === 'APPROVED') return r.status === 'APPROVED';
+    return r.status === 'REJECTED';
+  }).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+
+  const stats = {
+    pending: allRequests.filter(r => r.status === 'PENDING').length,
+    approved: allRequests.filter(r => r.status === 'APPROVED').length,
+    rejected: allRequests.filter(r => r.status === 'REJECTED').length,
+  };
+
   const handleApprove = async (req: any) => {
     const id = req.requestId || req.id;
     setProcessing(id);
-    // Remove immediately from list for instant feedback
-    setVisitorRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
+    setAllRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
     try {
       const res = await apiService.approveVisitorRequest(id, ntf.staffCode);
-      if (res.success) {
-        setModalMsg('Visitor request approved.');
-        setShowSuccess(true);
-      } else {
-        // Restore on failure
-        loadData();
-        setModalMsg(res.message || 'Failed to approve.');
-        setShowError(true);
-      }
-    } catch (e: any) {
-      loadData();
-      setModalMsg(e.message || 'Error occurred.');
-      setShowError(true);
-    } finally {
-      setProcessing(null);
-    }
+      if (res.success) { setModalMsg('Visitor approved.'); setShowSuccess(true); }
+      else { loadData(); setModalMsg(res.message || 'Failed to approve.'); setShowError(true); }
+    } catch (e: any) { loadData(); setModalMsg(e.message || 'Error.'); setShowError(true); }
+    finally { setProcessing(null); }
   };
 
   const handleReject = async (req: any) => {
     const id = req.requestId || req.id;
     setProcessing(id);
-    // Remove immediately from list for instant feedback
-    setVisitorRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
+    setAllRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
     try {
       const res = await apiService.rejectVisitorRequest(id, 'Rejected by staff');
-      if (res.success) {
-        setModalMsg('Visitor request rejected.');
-        setShowSuccess(true);
-      } else {
-        loadData();
-        setModalMsg(res.message || 'Failed to reject.');
-        setShowError(true);
-      }
-    } catch (e: any) {
-      loadData();
-      setModalMsg(e.message || 'Error occurred.');
-      setShowError(true);
-    } finally {
-      setProcessing(null);
-    }
+      if (res.success) { setModalMsg('Visitor rejected.'); setShowSuccess(true); }
+      else { loadData(); setModalMsg(res.message || 'Failed to reject.'); setShowError(true); }
+    } catch (e: any) { loadData(); setModalMsg(e.message || 'Error.'); setShowError(true); }
+    finally { setProcessing(null); }
   };
-
-  const pendingCount = visitorRequests.filter(r => r.status === 'PENDING').length;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
-            {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.avatarImage} />
-            ) : (
-              <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-                <ThemedText style={[styles.avatarText, { color: '#FFFFFF' }]}>{getInitials(ntf.staffName || 'NF')}</ThemedText>
-              </View>
-            )}
+            {profileImage
+              ? <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+              : <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
+                  <ThemedText style={[styles.avatarText, { color: '#FFF' }]}>{getInitials(ntf.staffName)}</ThemedText>
+                </View>
+            }
           </TouchableOpacity>
           <View style={styles.headerInfo}>
             <ThemedText style={[styles.greeting, { color: theme.textSecondary }]}>{getGreeting()}</ThemedText>
-            <ThemedText style={[styles.userName, { color: theme.text }]} numberOfLines={1}>
-              {(ntf.staffName || '').toUpperCase()}
-            </ThemedText>
+            <ThemedText style={[styles.userName, { color: theme.text }]} numberOfLines={1}>{(ntf.staffName || '').toUpperCase()}</ThemedText>
           </View>
         </View>
-        <TouchableOpacity
-          style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
-          onPress={() => onNavigate('NOTIFICATIONS')}
-        >
+        <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
           <Ionicons name="notifications-outline" size={24} color={theme.text} />
-          {unreadCount > 0 && (
-            <View style={[styles.notifBadge, { backgroundColor: theme.error }]}>
-              <ThemedText style={styles.notifBadgeText}>{unreadCount}</ThemedText>
-            </View>
-          )}
+          {unreadCount > 0 && <View style={[styles.notifBadge, { backgroundColor: theme.error }]}><ThemedText style={styles.notifBadgeText}>{unreadCount}</ThemedText></View>}
         </TouchableOpacity>
       </View>
 
+      {/* Stats Tabs */}
+      <View style={[styles.statsRow, { backgroundColor: theme.surface }]}>
+        {([['PENDING', stats.pending, theme.warning], ['APPROVED', stats.approved, theme.success], ['REJECTED', stats.rejected, theme.error]] as [TabType, number, string][]).map(([tab, count, color]) => (
+          <TouchableOpacity key={tab} style={[styles.statTab, activeTab === tab && { borderBottomColor: color, borderBottomWidth: 2 }]} onPress={() => setActiveTab(tab)}>
+            <ThemedText style={[styles.statLabel, { color: activeTab === tab ? color : theme.textTertiary }]}>{tab}</ThemedText>
+            <ThemedText style={[styles.statCount, { color: activeTab === tab ? theme.text : theme.textSecondary }]}>{count}</ThemedText>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
-        <ScreenContentContainer>
-          <View style={styles.staticHeader}>
-            {/* Request Gate Pass Card */}
-            <TouchableOpacity
-              style={[styles.requestCard, { backgroundColor: theme.cardBackground || theme.surface }]}
-              onPress={() => onNavigate('NEW_PASS_REQUEST')}
-              activeOpacity={0.9}
-            >
-              <View style={[styles.requestCardTop, { backgroundColor: theme.primary }]}>
-                <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.7)" />
-              </View>
-              <View style={[styles.requestCardBottom, { backgroundColor: theme.cardBackground || theme.surface }]}>
-                <ThemedText style={[styles.requestCardTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
-                <TouchableOpacity style={[styles.applyBtn, { backgroundColor: theme.primary }]} onPress={() => onNavigate('NEW_PASS_REQUEST')}>
-                  <ThemedText style={styles.applyBtnText}>Apply Now</ThemedText>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
-
-            {/* Visitor Requests Header */}
-            <View style={styles.sectionRow}>
-              <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>VISITOR REQUESTS</ThemedText>
-              {pendingCount > 0 && (
-                <View style={[styles.pendingBadge, { backgroundColor: theme.warning }]}>
-                  <ThemedText style={styles.pendingBadgeText}>{pendingCount} pending</ThemedText>
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* Visitor Requests List */}
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-            {loading ? (
-              <ActivityIndicator size="small" color={theme.primary} style={{ marginTop: 20 }} />
-            ) : visitorRequests.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Ionicons name="people-outline" size={48} color={theme.border} />
-                <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No visitor requests</ThemedText>
-              </View>
-            ) : (
-              visitorRequests.map((req) => {
+        <ScreenContentContainer style={{ flex: 1 }}>
+          {(loading || refreshing) ? (
+            <SkeletonList count={5} />
+          ) : (
+            <VerticalFlatList
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              decelerationRate="normal"
+              data={filtered}
+              keyExtractor={(item) => (item.requestId || item.id)?.toString()}
+              renderItem={({ item: req }) => {
                 const id = req.requestId || req.id;
                 const isPending = req.status === 'PENDING';
                 const isProcessing = processing === id;
                 return (
                   <TouchableOpacity
-                    key={id}
-                    style={[styles.visitorCard, { backgroundColor: theme.cardBackground || theme.surface }]}
+                    style={[styles.card, { backgroundColor: theme.cardBackground || theme.surface, borderColor: theme.border }]}
                     onPress={() => { setSelectedVisitor(req); setShowDetailModal(true); }}
                     activeOpacity={0.85}
                   >
                     <View style={styles.cardTop}>
-                      <View style={[styles.visitorAvatar, { backgroundColor: theme.surfaceHighlight }]}>
-                        <ThemedText style={[styles.visitorAvatarText, { color: theme.textSecondary }]}>
-                          {getInitials(req.requesterName || req.visitorName || req.name || 'VR')}
-                        </ThemedText>
+                      <View style={[styles.cardAvatar, { backgroundColor: theme.surfaceHighlight }]}>
+                        <ThemedText style={[styles.cardAvatarText, { color: theme.textSecondary }]}>{getInitials(req.requesterName || req.name || 'VR')}</ThemedText>
                       </View>
-                      <View style={styles.cardInfo}>
+                      <View style={styles.cardMeta}>
                         <View style={styles.nameRow}>
-                          <ThemedText style={[styles.visitorName, { color: theme.text }]} numberOfLines={1}>
-                            {req.requesterName || req.visitorName || req.name || 'Visitor'}
-                          </ThemedText>
+                          <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{req.requesterName || req.name || 'Visitor'}</ThemedText>
                           <View style={[styles.typePill, { backgroundColor: theme.surfaceHighlight }]}>
                             <ThemedText style={[styles.typePillText, { color: theme.textSecondary }]}>Visitor</ThemedText>
                           </View>
                         </View>
-                        <ThemedText style={[styles.visitorSub, { color: theme.textSecondary }]} numberOfLines={1}>
-                          {req.visitorEmail || req.email || ''}{req.visitorPhone || req.phone ? ` • ${req.visitorPhone || req.phone}` : ''}
+                        <ThemedText style={[styles.cardSub, { color: theme.textSecondary }]} numberOfLines={1}>
+                          {req.visitorEmail || req.email || ''}{req.visitorPhone ? ` • ${req.visitorPhone}` : ''}
                         </ThemedText>
                       </View>
-                      <ThemedText style={[styles.timeAgo, { color: theme.textTertiary }]}>
-                        {getRelativeTime(req.createdAt || req.requestDate)}
-                      </ThemedText>
+                      <ThemedText style={[styles.timeAgo, { color: theme.textTertiary }]}>{getRelativeTime(req.createdAt)}</ThemedText>
                     </View>
 
                     <View style={[styles.detailsBlock, { backgroundColor: theme.inputBackground || theme.background }]}>
-                      {(req.purpose || req.reason) && (
-                        <View style={styles.detailRow}>
-                          <Ionicons name="document-text-outline" size={14} color={theme.textTertiary} />
-                          <ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={2}>
-                            {req.purpose || req.reason}
-                          </ThemedText>
-                        </View>
-                      )}
-                      {(req.visitDate || req.visitTime) && (
-                        <View style={styles.detailRow}>
-                          <Ionicons name="calendar-outline" size={14} color={theme.textTertiary} />
-                          <ThemedText style={[styles.detailText, { color: theme.text }]}>
-                            {req.visitDate}{req.visitTime ? ` at ${req.visitTime}` : ''}
-                          </ThemedText>
-                        </View>
-                      )}
-                      {req.numberOfPeople && req.numberOfPeople > 1 && (
-                        <View style={styles.detailRow}>
-                          <Ionicons name="people-outline" size={14} color={theme.textTertiary} />
-                          <ThemedText style={[styles.detailText, { color: theme.text }]}>{req.numberOfPeople} people</ThemedText>
-                        </View>
-                      )}
+                      {req.purpose && <View style={styles.detailRow}><Ionicons name="document-text-outline" size={14} color={theme.textTertiary} /><ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{req.purpose}</ThemedText></View>}
+                      {req.visitDate && <View style={styles.detailRow}><Ionicons name="calendar-outline" size={14} color={theme.textTertiary} /><ThemedText style={[styles.detailText, { color: theme.text }]}>{req.visitDate}{req.visitTime ? ` at ${req.visitTime}` : ''}</ThemedText></View>}
                     </View>
 
                     {isPending ? (
                       <View style={styles.actionRow}>
-                        <TouchableOpacity
-                          style={[styles.rejectBtn, { borderColor: theme.error }]}
-                          onPress={() => handleReject(req)}
-                          disabled={isProcessing}
-                          activeOpacity={0.8}
-                        >
-                          {isProcessing ? <ActivityIndicator size="small" color={theme.error} /> : (
-                            <>
-                              <Ionicons name="close-outline" size={16} color={theme.error} />
-                              <ThemedText style={[styles.rejectBtnText, { color: theme.error }]}>Reject</ThemedText>
-                            </>
-                          )}
+                        <TouchableOpacity style={[styles.rejectBtn, { borderColor: theme.error }]} onPress={() => handleReject(req)} disabled={isProcessing} activeOpacity={0.8}>
+                          {isProcessing ? <ActivityIndicator size="small" color={theme.error} /> : <><Ionicons name="close-outline" size={16} color={theme.error} /><ThemedText style={[styles.rejectBtnText, { color: theme.error }]}>Reject</ThemedText></>}
                         </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.approveBtn, { backgroundColor: theme.success }]}
-                          onPress={() => handleApprove(req)}
-                          disabled={isProcessing}
-                          activeOpacity={0.8}
-                        >
-                          {isProcessing ? <ActivityIndicator size="small" color="#FFF" /> : (
-                            <>
-                              <Ionicons name="checkmark-outline" size={16} color="#FFF" />
-                              <ThemedText style={styles.approveBtnText}>Approve</ThemedText>
-                            </>
-                          )}
+                        <TouchableOpacity style={[styles.approveBtn, { backgroundColor: theme.success }]} onPress={() => handleApprove(req)} disabled={isProcessing} activeOpacity={0.8}>
+                          {isProcessing ? <ActivityIndicator size="small" color="#FFF" /> : <><Ionicons name="checkmark-outline" size={16} color="#FFF" /><ThemedText style={styles.approveBtnText}>Approve</ThemedText></>}
                         </TouchableOpacity>
                       </View>
                     ) : (
                       <View style={styles.statusRow}>
                         <View style={[styles.statusBadge, { backgroundColor: req.status === 'APPROVED' ? theme.success + '20' : theme.error + '20' }]}>
                           <View style={[styles.statusDot, { backgroundColor: req.status === 'APPROVED' ? theme.success : theme.error }]} />
-                          <ThemedText style={[styles.statusText, { color: req.status === 'APPROVED' ? theme.success : theme.error }]}>
-                            {req.status}
-                          </ThemedText>
+                          <ThemedText style={[styles.statusText, { color: req.status === 'APPROVED' ? theme.success : theme.error }]}>{req.status}</ThemedText>
                         </View>
                       </View>
                     )}
                   </TouchableOpacity>
                 );
-              })
-            )}
-          </ScrollView>
+              }}
+              ListEmptyComponent={
+                <View style={styles.emptyState}>
+                  <Ionicons name="people-outline" size={56} color={theme.border} />
+                  <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No {activeTab.toLowerCase()} visitor requests</ThemedText>
+                </View>
+              }
+            />
+          )}
         </ScreenContentContainer>
       </TopRefreshControl>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Nav */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         {[
-          { key: 'HOME',     icon: 'home',           label: 'Home',      screen: undefined },
-          { key: 'GUEST',    icon: 'person-add',      label: 'Guest',     screen: 'GUEST_PRE_REQUEST' as ScreenName },
-          { key: 'REQUESTS', icon: 'document-text',   label: 'My Passes', screen: 'NTF_MY_REQUESTS' as ScreenName },
-          { key: 'PROFILE',  icon: 'person',          label: 'Profile',   screen: 'PROFILE' as ScreenName },
-        ].map(({ key, icon, label, screen }) => {
+          { key: 'HOME',      icon: 'home',           label: 'Home',      action: () => setBottomTab('HOME') },
+          { key: 'NEW_PASS',  icon: 'add-circle',     label: 'New Pass',  action: () => { setBottomTab('NEW_PASS'); setShowPassSheet(true); } },
+          { key: 'MY_PASSES', icon: 'document-text',  label: 'My Passes', action: () => { setBottomTab('MY_PASSES'); onNavigate('NTF_MY_REQUESTS'); } },
+          { key: 'PROFILE',   icon: 'person',         label: 'Profile',   action: () => { setBottomTab('PROFILE'); onNavigate('PROFILE'); } },
+        ].map(({ key, icon, label, action }) => {
           const active = bottomTab === key;
+          const isAdd = key === 'NEW_PASS';
           return (
-            <TouchableOpacity
-              key={key}
-              style={styles.navItem}
-              onPress={() => { setBottomTab(key as any); if (screen) onNavigate(screen); }}
-            >
-              <Ionicons name={active ? icon : `${icon}-outline`} size={24} color={active ? theme.primary : theme.textTertiary} />
-              <ThemedText style={[styles.navLabel, { color: active ? theme.primary : theme.textTertiary, fontWeight: active ? '700' : '500' }]}>
-                {label}
-              </ThemedText>
-              {active && <View style={[styles.activeBar, { backgroundColor: theme.primary }]} />}
+            <TouchableOpacity key={key} style={styles.navItem} onPress={action}>
+              <Ionicons name={isAdd ? icon : (active ? icon : `${icon}-outline`)} size={isAdd ? 32 : 24} color={active ? theme.primary : theme.textTertiary} />
+              <ThemedText style={[styles.navLabel, { color: active ? theme.primary : theme.textTertiary, fontWeight: active ? '700' : '500' }]}>{label}</ThemedText>
+              {active && !isAdd && <View style={[styles.activeBar, { backgroundColor: theme.primary }]} />}
             </TouchableOpacity>
           );
         })}
       </View>
 
+      <PassTypeBottomSheet
+        visible={showPassSheet}
+        onClose={() => { setShowPassSheet(false); setBottomTab('HOME'); }}
+        onSelectSingle={() => { setShowPassSheet(false); onNavigate('NEW_PASS_REQUEST'); }}
+        onSelectGuest={() => { setShowPassSheet(false); onNavigate('GUEST_PRE_REQUEST'); }}
+      />
+
       <SuccessModal visible={showSuccess} title="Done" message={modalMsg} onClose={() => setShowSuccess(false)} autoClose autoCloseDelay={2000} />
       <ErrorModal visible={showError} type="general" title="Error" message={modalMsg} onClose={() => setShowError(false)} />
-      <ConfirmationModal visible={showLogoutModal} title="Logout" message="Are you sure you want to logout?" onConfirm={onLogout} onCancel={() => setShowLogoutModal(false)} />
 
-      {/* Visitor Detail Bottom Sheet */}
+      {/* Detail Bottom Sheet */}
       <Modal visible={showDetailModal} transparent animationType="none" onShow={openDetailSheet} onRequestClose={() => setShowDetailModal(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowDetailModal(false)}>
           <Animated.View style={[styles.detailSheet, { backgroundColor: theme.surface, transform: [{ translateY: detailSheetY }] }]} {...detailPanHandlers}>
@@ -362,8 +274,6 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                       <Ionicons name="close" size={20} color={theme.textSecondary} />
                     </TouchableOpacity>
                   </View>
-
-                  {/* Visitor info */}
                   <View style={[styles.detailCard, { backgroundColor: theme.surfaceHighlight }]}>
                     <View style={[styles.detailAvatar, { backgroundColor: theme.primary }]}>
                       <ThemedText style={styles.detailAvatarText}>{getInitials(selectedVisitor.requesterName || selectedVisitor.name || 'VR')}</ThemedText>
@@ -377,15 +287,13 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                       <ThemedText style={[styles.statusPillText, { color: selectedVisitor.status === 'APPROVED' ? theme.success : selectedVisitor.status === 'REJECTED' ? theme.error : theme.warning }]}>{selectedVisitor.status}</ThemedText>
                     </View>
                   </View>
-
-                  {/* Details */}
                   {[
                     { icon: 'document-text-outline', label: 'Purpose', value: selectedVisitor.purpose },
                     { icon: 'calendar-outline', label: 'Visit Date', value: selectedVisitor.visitDate ? `${selectedVisitor.visitDate}${selectedVisitor.visitTime ? ` at ${selectedVisitor.visitTime}` : ''}` : null },
                     { icon: 'people-outline', label: 'Number of People', value: selectedVisitor.numberOfPeople ? String(selectedVisitor.numberOfPeople) : null },
                     { icon: 'person-outline', label: 'Person to Meet', value: selectedVisitor.personToMeet },
                     { icon: 'business-outline', label: 'Department', value: selectedVisitor.department },
-                    { icon: 'time-outline', label: 'Requested', value: formatDateShort(selectedVisitor.createdAt || selectedVisitor.requestDate) },
+                    { icon: 'time-outline', label: 'Requested', value: formatDateShort(selectedVisitor.createdAt) },
                   ].filter(r => r.value).map((row, i) => (
                     <View key={i} style={[styles.detailRow2, { borderBottomColor: theme.border }]}>
                       <Ionicons name={row.icon as any} size={16} color={theme.textTertiary} />
@@ -395,25 +303,13 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                       </View>
                     </View>
                   ))}
-
-                  {/* Actions for pending */}
                   {selectedVisitor.status === 'PENDING' && (
                     <View style={styles.detailActions}>
-                      <TouchableOpacity
-                        style={[styles.rejectBtn, { borderColor: theme.error, flex: 1 }]}
-                        onPress={() => { setShowDetailModal(false); handleReject(selectedVisitor); }}
-                        disabled={processing === (selectedVisitor.requestId || selectedVisitor.id)}
-                        activeOpacity={0.8}
-                      >
+                      <TouchableOpacity style={[styles.rejectBtn, { borderColor: theme.error, flex: 1 }]} onPress={() => { setShowDetailModal(false); handleReject(selectedVisitor); }} activeOpacity={0.8}>
                         <Ionicons name="close-outline" size={16} color={theme.error} />
                         <ThemedText style={[styles.rejectBtnText, { color: theme.error }]}>Reject</ThemedText>
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.approveBtn, { backgroundColor: theme.success, flex: 1 }]}
-                        onPress={() => { setShowDetailModal(false); handleApprove(selectedVisitor); }}
-                        disabled={processing === (selectedVisitor.requestId || selectedVisitor.id)}
-                        activeOpacity={0.8}
-                      >
+                      <TouchableOpacity style={[styles.approveBtn, { backgroundColor: theme.success, flex: 1 }]} onPress={() => { setShowDetailModal(false); handleApprove(selectedVisitor); }} activeOpacity={0.8}>
                         <Ionicons name="checkmark-outline" size={16} color="#FFF" />
                         <ThemedText style={styles.approveBtnText}>Approve</ThemedText>
                       </TouchableOpacity>
@@ -431,7 +327,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   avatar: { width: 52, height: 52, borderRadius: 26, justifyContent: 'center', alignItems: 'center' },
   avatarImage: { width: 52, height: 52, borderRadius: 26 },
@@ -441,44 +337,38 @@ const styles = StyleSheet.create({
   userName: { fontSize: 20, fontWeight: '700' },
   iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   notifBadge: { position: 'absolute', top: 4, right: 4, borderRadius: 10, minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
-  notifBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
-  staticHeader: { paddingHorizontal: 20, paddingTop: 16 },
-  requestCard: { borderRadius: 20, overflow: 'hidden', elevation: 4 },
-  requestCardTop: { paddingVertical: 52, alignItems: 'center', justifyContent: 'center' },
-  requestCardBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 18 },
-  requestCardTitle: { fontSize: 18, fontWeight: '800' },
-  applyBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, marginLeft: 12 },
-  applyBtnText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
-  sectionRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 28, paddingBottom: 12 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', letterSpacing: 0.5 },
-  pendingBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 12 },
-  pendingBadgeText: { fontSize: 11, fontWeight: '700', color: '#FFF' },
-  scrollContent: { paddingHorizontal: 20, paddingBottom: 100 },
-  emptyState: { paddingVertical: 60, alignItems: 'center' },
-  emptyText: { fontSize: 16, fontWeight: '600', marginTop: 12 },
-  visitorCard: { marginBottom: 12, borderRadius: 16, padding: 14, elevation: 2, gap: 10 },
+  notifBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '700' },
+  statsRow: { flexDirection: 'row', paddingHorizontal: 20, paddingBottom: 0 },
+  statTab: { flex: 1, alignItems: 'center', paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  statLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  statCount: { fontSize: 22, fontWeight: '800', marginTop: 2 },
+  list: { flex: 1 },
+  listContent: { padding: 16, paddingBottom: 100, gap: 12 },
+  card: { borderRadius: 16, padding: 14, borderWidth: 1, elevation: 1, gap: 10 },
   cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  visitorAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  visitorAvatarText: { fontSize: 14, fontWeight: '800' },
-  cardInfo: { flex: 1 },
+  cardAvatar: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  cardAvatarText: { fontSize: 14, fontWeight: '800' },
+  cardMeta: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  visitorName: { fontSize: 14, fontWeight: '700' },
+  cardName: { fontSize: 14, fontWeight: '700' },
   typePill: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
   typePillText: { fontSize: 11, fontWeight: '600' },
-  visitorSub: { fontSize: 12, marginTop: 2 },
+  cardSub: { fontSize: 12, marginTop: 2 },
   timeAgo: { fontSize: 12 },
   detailsBlock: { borderRadius: 10, padding: 10, gap: 6 },
-  detailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
-  detailText: { fontSize: 13, flex: 1, lineHeight: 18 },
-  actionRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  detailText: { fontSize: 13, flex: 1 },
+  actionRow: { flexDirection: 'row', gap: 10 },
   rejectBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5 },
   rejectBtnText: { fontSize: 13, fontWeight: '700' },
   approveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 10, borderRadius: 10 },
   approveBtnText: { fontSize: 13, fontWeight: '700', color: '#FFF' },
-  statusRow: { flexDirection: 'row', marginTop: 4 },
+  statusRow: { flexDirection: 'row' },
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
   statusDot: { width: 7, height: 7, borderRadius: 4 },
   statusText: { fontSize: 12, fontWeight: '700' },
+  emptyState: { alignItems: 'center', paddingTop: 60, gap: 8 },
+  emptyText: { fontSize: 15, fontWeight: '600' },
   bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 4, position: 'relative' },
   navLabel: { fontSize: 11, marginTop: 4 },
