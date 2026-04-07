@@ -272,13 +272,17 @@ class ApiService {
   }
 
   async approveVisitorRequest(visitorId: number, approvedBy: string): Promise<ApiResponse> {
-    try { return await this.makeRequest(`${this.baseURL}/visitors/${visitorId}/approve?approvedBy=${encodeURIComponent(approvedBy)}`, { method: 'POST' }); }
-    catch (e: any) { return { success: false, message: e.message || 'Failed to approve visitor' }; }
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/visitors/${visitorId}/approve?approvedBy=${encodeURIComponent(approvedBy)}`, { method: 'POST' });
+      return { success: data.success !== false, message: data.message || 'Approved' };
+    } catch (e: any) { return { success: false, message: e.message || 'Failed to approve visitor' }; }
   }
 
   async rejectVisitorRequest(visitorId: number, reason: string): Promise<ApiResponse> {
-    try { return await this.makeRequest(`${this.baseURL}/visitors/${visitorId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }); }
-    catch (e: any) { return { success: false, message: e.message || 'Failed to reject visitor' }; }
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/visitors/${visitorId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) });
+      return { success: data.success !== false, message: data.message || 'Rejected' };
+    } catch (e: any) { return { success: false, message: e.message || 'Failed to reject visitor' }; }
   }
 
   async getStaffOwnGatePassRequests(staffCode: string): Promise<ApiResponse<GatePassRequest[]>> {    try {

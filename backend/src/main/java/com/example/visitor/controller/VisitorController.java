@@ -300,7 +300,7 @@ public class VisitorController {
     
     // NEW: Approve visitor request
     @PostMapping("/{id}/approve")
-    public ResponseEntity<VisitorApprovalResponse> approveVisitorRequest(
+    public ResponseEntity<?> approveVisitorRequest(
             @PathVariable Long id,
             @RequestParam(required = false, defaultValue = "STAFF") String approvedBy) {
         try {
@@ -309,12 +309,8 @@ public class VisitorController {
             // Send email with QR code and manual code
             try {
                 emailService.sendVisitorPassEmail(
-                    visitor.getEmail(),
-                    visitor.getName(),
-                    visitor.getQrCode(),
-                    visitor.getManualCode(),
-                    visitor.getPersonToMeet(),
-                    visitor.getDepartment(),
+                    visitor.getEmail(), visitor.getName(), visitor.getQrCode(),
+                    visitor.getManualCode(), visitor.getPersonToMeet(), visitor.getDepartment(),
                     visitor.getVisitDate() != null ? visitor.getVisitDate().toString() : "N/A",
                     visitor.getVisitTime() != null ? visitor.getVisitTime().toString() : "N/A"
                 );
@@ -325,59 +321,60 @@ public class VisitorController {
                 visitor.setEmailStatus("FAILED");
                 visitorRepository.save(visitor);
             }
-            
-            VisitorApprovalResponse response = new VisitorApprovalResponse();
-            response.setId(visitor.getId());
-            response.setStatus("APPROVED");
-            response.setQrCode(visitor.getQrCode());
-            response.setManualCode(visitor.getManualCode());
-            response.setMessage("Visitor request approved successfully");
-            
-            // Notify the security personnel who registered this visitor (if any)
+
             try {
                 String registeredBy = visitor.getRegisteredBy();
                 if (registeredBy != null && !registeredBy.isBlank() && !"WEBSITE".equals(registeredBy)) {
-                    visitorRequestService.notifyRegisteredBy(registeredBy,
-                        "Visitor Approved",
+                    visitorRequestService.notifyRegisteredBy(registeredBy, "Visitor Approved",
                         "Visitor " + visitor.getName() + " has been approved by staff.");
                 }
             } catch (Exception notifEx) {
                 System.err.println("⚠️ Notification to security failed (non-fatal): " + notifEx.getMessage());
             }
-            
-            return ResponseEntity.ok(response);
+
+            java.util.Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("success", true);
+            resp.put("message", "Visitor request approved successfully");
+            resp.put("id", visitor.getId());
+            resp.put("status", "APPROVED");
+            resp.put("qrCode", visitor.getQrCode());
+            resp.put("manualCode", visitor.getManualCode());
+            return ResponseEntity.ok(resp);
         } catch (Exception e) {
             System.err.println("Error approving visitor request: " + e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            java.util.Map<String, Object> err = new java.util.HashMap<>();
+            err.put("success", false);
+            err.put("message", e.getMessage() != null ? e.getMessage() : "Failed to approve visitor request");
+            return ResponseEntity.status(400).body(err);
         }
     }
-    
+
     // NEW: Reject visitor request
     @PostMapping("/{id}/reject")
-    public ResponseEntity<String> rejectVisitorRequest(
+    public ResponseEntity<?> rejectVisitorRequest(
             @PathVariable Long id,
-            @RequestBody RejectionRequest request) {
+            @RequestBody(required = false) RejectionRequest request) {
         try {
-            Visitor visitor = visitorRequestService.rejectVisitorRequest(
-                id, 
-                request.getReason() != null ? request.getReason() : "Rejected by staff"
-            );
-            
-            // Send rejection email
+            String reason = (request != null && request.getReason() != null)
+                ? request.getReason() : "Rejected by staff";
+            Visitor visitor = visitorRequestService.rejectVisitorRequest(id, reason);
+
             try {
-                emailService.sendRejectionEmail(
-                    visitor.getEmail(),
-                    visitor.getName(),
-                    visitor.getPersonToMeet()
-                );
+                emailService.sendRejectionEmail(visitor.getEmail(), visitor.getName(), visitor.getPersonToMeet());
             } catch (Exception emailError) {
                 System.err.println("⚠️ Rejection email failed: " + emailError.getMessage());
             }
-            
-            return ResponseEntity.ok("Visitor request rejected");
+
+            java.util.Map<String, Object> resp = new java.util.HashMap<>();
+            resp.put("success", true);
+            resp.put("message", "Visitor request rejected");
+            return ResponseEntity.ok(resp);
         } catch (Exception e) {
             System.err.println("Error rejecting visitor request: " + e.getMessage());
-            return ResponseEntity.internalServerError().build();
+            java.util.Map<String, Object> err = new java.util.HashMap<>();
+            err.put("success", false);
+            err.put("message", e.getMessage() != null ? e.getMessage() : "Failed to reject visitor request");
+            return ResponseEntity.status(400).body(err);
         }
     }
     

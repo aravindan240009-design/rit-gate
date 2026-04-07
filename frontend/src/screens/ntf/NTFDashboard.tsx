@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, StyleSheet, TouchableOpacity, StatusBar,
-  Image, ActivityIndicator, ScrollView,
+  Image, ActivityIndicator, ScrollView, Modal, Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -11,13 +11,14 @@ import { useNotifications } from '../../context/NotificationContext';
 import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
-import { getRelativeTime } from '../../utils/dateUtils';
+import { getRelativeTime, formatDateShort } from '../../utils/dateUtils';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import ErrorModal from '../../components/ErrorModal';
 import SuccessModal from '../../components/SuccessModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import TopRefreshControl from '../../components/TopRefreshControl';
+import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
 
 interface NTFDashboardProps {
   ntf: NonTeachingFaculty;
@@ -36,6 +37,9 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const [showError, setShowError] = useState(false);
   const [modalMsg, setModalMsg] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [selectedVisitor, setSelectedVisitor] = useState<any>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const { translateY: detailSheetY, panHandlers: detailPanHandlers, openSheet: openDetailSheet } = useBottomSheetSwipe(() => setShowDetailModal(false));
   const { unreadCount, loadNotifications } = useNotifications();
   const { refreshCount } = useRefresh();
   const { profileImage } = useProfile();
@@ -83,17 +87,21 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const handleApprove = async (req: any) => {
     const id = req.requestId || req.id;
     setProcessing(id);
+    // Remove immediately from list for instant feedback
+    setVisitorRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
     try {
       const res = await apiService.approveVisitorRequest(id, ntf.staffCode);
       if (res.success) {
         setModalMsg('Visitor request approved.');
         setShowSuccess(true);
-        loadData();
       } else {
+        // Restore on failure
+        loadData();
         setModalMsg(res.message || 'Failed to approve.');
         setShowError(true);
       }
     } catch (e: any) {
+      loadData();
       setModalMsg(e.message || 'Error occurred.');
       setShowError(true);
     } finally {
@@ -104,17 +112,20 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const handleReject = async (req: any) => {
     const id = req.requestId || req.id;
     setProcessing(id);
+    // Remove immediately from list for instant feedback
+    setVisitorRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
     try {
       const res = await apiService.rejectVisitorRequest(id, 'Rejected by staff');
       if (res.success) {
         setModalMsg('Visitor request rejected.');
         setShowSuccess(true);
-        loadData();
       } else {
+        loadData();
         setModalMsg(res.message || 'Failed to reject.');
         setShowError(true);
       }
     } catch (e: any) {
+      loadData();
       setModalMsg(e.message || 'Error occurred.');
       setShowError(true);
     } finally {
@@ -206,7 +217,12 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                 const isPending = req.status === 'PENDING';
                 const isProcessing = processing === id;
                 return (
-                  <View key={id} style={[styles.visitorCard, { backgroundColor: theme.cardBackground || theme.surface }]}>
+                  <TouchableOpacity
+                    key={id}
+                    style={[styles.visitorCard, { backgroundColor: theme.cardBackground || theme.surface }]}
+                    onPress={() => { setSelectedVisitor(req); setShowDetailModal(true); }}
+                    activeOpacity={0.85}
+                  >
                     <View style={styles.cardTop}>
                       <View style={[styles.visitorAvatar, { backgroundColor: theme.surfaceHighlight }]}>
                         <ThemedText style={[styles.visitorAvatarText, { color: theme.textSecondary }]}>
@@ -295,7 +311,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                         </View>
                       </View>
                     )}
-                  </View>
+                  </TouchableOpacity>
                 );
               })
             )}
@@ -331,6 +347,84 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
       <SuccessModal visible={showSuccess} title="Done" message={modalMsg} onClose={() => setShowSuccess(false)} autoClose autoCloseDelay={2000} />
       <ErrorModal visible={showError} type="general" title="Error" message={modalMsg} onClose={() => setShowError(false)} />
       <ConfirmationModal visible={showLogoutModal} title="Logout" message="Are you sure you want to logout?" onConfirm={onLogout} onCancel={() => setShowLogoutModal(false)} />
+
+      {/* Visitor Detail Bottom Sheet */}
+      <Modal visible={showDetailModal} transparent animationType="none" onShow={openDetailSheet} onRequestClose={() => setShowDetailModal(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowDetailModal(false)}>
+          <Animated.View style={[styles.detailSheet, { backgroundColor: theme.surface, transform: [{ translateY: detailSheetY }] }]} {...detailPanHandlers}>
+            <View style={styles.dragHandle}><View style={[styles.dragBar, { backgroundColor: theme.border }]} /></View>
+            <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
+              {selectedVisitor && (
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32 }}>
+                  <View style={[styles.detailHeader, { borderBottomColor: theme.border }]}>
+                    <ThemedText style={[styles.detailTitle, { color: theme.text }]}>Visitor Request</ThemedText>
+                    <TouchableOpacity onPress={() => setShowDetailModal(false)} style={[styles.closeBtn, { backgroundColor: theme.surfaceHighlight }]}>
+                      <Ionicons name="close" size={20} color={theme.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Visitor info */}
+                  <View style={[styles.detailCard, { backgroundColor: theme.surfaceHighlight }]}>
+                    <View style={[styles.detailAvatar, { backgroundColor: theme.primary }]}>
+                      <ThemedText style={styles.detailAvatarText}>{getInitials(selectedVisitor.requesterName || selectedVisitor.name || 'VR')}</ThemedText>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <ThemedText style={[styles.detailName, { color: theme.text }]}>{selectedVisitor.requesterName || selectedVisitor.name || 'Visitor'}</ThemedText>
+                      {selectedVisitor.visitorEmail && <ThemedText style={[styles.detailSub, { color: theme.textSecondary }]}>{selectedVisitor.visitorEmail}</ThemedText>}
+                      {selectedVisitor.visitorPhone && <ThemedText style={[styles.detailSub, { color: theme.textSecondary }]}>{selectedVisitor.visitorPhone}</ThemedText>}
+                    </View>
+                    <View style={[styles.statusPill, { backgroundColor: selectedVisitor.status === 'APPROVED' ? theme.success + '20' : selectedVisitor.status === 'REJECTED' ? theme.error + '20' : theme.warning + '20' }]}>
+                      <ThemedText style={[styles.statusPillText, { color: selectedVisitor.status === 'APPROVED' ? theme.success : selectedVisitor.status === 'REJECTED' ? theme.error : theme.warning }]}>{selectedVisitor.status}</ThemedText>
+                    </View>
+                  </View>
+
+                  {/* Details */}
+                  {[
+                    { icon: 'document-text-outline', label: 'Purpose', value: selectedVisitor.purpose },
+                    { icon: 'calendar-outline', label: 'Visit Date', value: selectedVisitor.visitDate ? `${selectedVisitor.visitDate}${selectedVisitor.visitTime ? ` at ${selectedVisitor.visitTime}` : ''}` : null },
+                    { icon: 'people-outline', label: 'Number of People', value: selectedVisitor.numberOfPeople ? String(selectedVisitor.numberOfPeople) : null },
+                    { icon: 'person-outline', label: 'Person to Meet', value: selectedVisitor.personToMeet },
+                    { icon: 'business-outline', label: 'Department', value: selectedVisitor.department },
+                    { icon: 'time-outline', label: 'Requested', value: formatDateShort(selectedVisitor.createdAt || selectedVisitor.requestDate) },
+                  ].filter(r => r.value).map((row, i) => (
+                    <View key={i} style={[styles.detailRow2, { borderBottomColor: theme.border }]}>
+                      <Ionicons name={row.icon as any} size={16} color={theme.textTertiary} />
+                      <View style={{ flex: 1 }}>
+                        <ThemedText style={[styles.detailRowLabel, { color: theme.textTertiary }]}>{row.label}</ThemedText>
+                        <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>{row.value}</ThemedText>
+                      </View>
+                    </View>
+                  ))}
+
+                  {/* Actions for pending */}
+                  {selectedVisitor.status === 'PENDING' && (
+                    <View style={styles.detailActions}>
+                      <TouchableOpacity
+                        style={[styles.rejectBtn, { borderColor: theme.error, flex: 1 }]}
+                        onPress={() => { setShowDetailModal(false); handleReject(selectedVisitor); }}
+                        disabled={processing === (selectedVisitor.requestId || selectedVisitor.id)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="close-outline" size={16} color={theme.error} />
+                        <ThemedText style={[styles.rejectBtnText, { color: theme.error }]}>Reject</ThemedText>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.approveBtn, { backgroundColor: theme.success, flex: 1 }]}
+                        onPress={() => { setShowDetailModal(false); handleApprove(selectedVisitor); }}
+                        disabled={processing === (selectedVisitor.requestId || selectedVisitor.id)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="checkmark-outline" size={16} color="#FFF" />
+                        <ThemedText style={styles.approveBtnText}>Approve</ThemedText>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </ScrollView>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -389,6 +483,24 @@ const styles = StyleSheet.create({
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 4, position: 'relative' },
   navLabel: { fontSize: 11, marginTop: 4 },
   activeBar: { position: 'absolute', bottom: 0, width: 32, height: 3, borderRadius: 2 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  detailSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%' },
+  dragHandle: { alignItems: 'center', paddingTop: 10, paddingBottom: 4 },
+  dragBar: { width: 40, height: 4, borderRadius: 2 },
+  detailHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, borderBottomWidth: 1, marginBottom: 16 },
+  detailTitle: { fontSize: 18, fontWeight: '700' },
+  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  detailCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 14, padding: 14, marginBottom: 16 },
+  detailAvatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  detailAvatarText: { fontSize: 18, fontWeight: '800', color: '#FFF' },
+  detailName: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
+  detailSub: { fontSize: 13 },
+  statusPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  statusPillText: { fontSize: 12, fontWeight: '700' },
+  detailRow2: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 12, borderBottomWidth: 1 },
+  detailRowLabel: { fontSize: 11, fontWeight: '600', letterSpacing: 0.3, marginBottom: 2 },
+  detailRowValue: { fontSize: 14, fontWeight: '500' },
+  detailActions: { flexDirection: 'row', gap: 12, marginTop: 20 },
 });
 
 export default NTFDashboard;
