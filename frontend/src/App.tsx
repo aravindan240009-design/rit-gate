@@ -157,6 +157,7 @@ const App: React.FC = () => {
       if (route) pendingRouteRef.current = route;
       return;
     }
+    console.log('🔔 handleNotificationRoute called, route:', route || 'none', '— triggering refresh');
     // Always trigger a data refresh when a notification is tapped
     triggerRefresh();
     // Navigate to the specific screen if a route was provided

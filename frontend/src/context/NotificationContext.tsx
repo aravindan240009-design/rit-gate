@@ -85,6 +85,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode; onNavigate?: 
 
     // Handle tap on a notifee notification while app is in foreground
     const unsub = onNotificationTap((data) => {
+      console.log('🔔 Notification tapped, triggering refresh. route:', data.actionRoute || 'none');
       // Always call onNavigate on tap — even without actionRoute — so App.tsx
       // can trigger a data refresh on the current screen
       if (onNavigateRef.current) {
@@ -230,13 +231,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode; onNavigate?: 
   useEffect(() => {
     const handleAppState = (nextState: AppStateStatus) => {
       if (nextState === 'active') {
-        // Clear OS notification tray — user has opened the app, stale banners should go away
-        cancelAllNotifications();
+        // Delay tray clear slightly so notifee press events fire before notifications are cancelled
+        setTimeout(() => cancelAllNotifications(), 500);
         loadShownIds().then(ids => { shownNotificationIdsRef.current = ids; });
         // Also refresh notifications immediately
         if (currentUserRef.current && initialLoadDoneRef.current) {
           fetchFromBackend(currentUserRef.current.userId, currentUserRef.current.userType, {
-            scheduleBanners: false, // don't re-banner on foreground resume; only new polls should banner
+            scheduleBanners: false,
           });
         }
       }
