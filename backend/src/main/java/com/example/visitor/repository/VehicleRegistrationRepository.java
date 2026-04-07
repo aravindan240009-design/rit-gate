@@ -14,4 +14,6 @@ public interface VehicleRegistrationRepository extends JpaRepository<VehicleRegi
     List<VehicleRegistration> findByOwnerType(PersonType ownerType);
     List<VehicleRegistration> findByOwnerName(String ownerName);
     List<VehicleRegistration> findByOwnerPhone(String ownerPhone);
+    List<VehicleRegistration> findByVisitorIdOrderByCreatedAtDesc(Long visitorId);
+    List<VehicleRegistration> findAllByOrderByCreatedAtDesc();
 }

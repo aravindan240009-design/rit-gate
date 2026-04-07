@@ -517,6 +517,27 @@ public class SecurityController {
                                 visitor.setScanCount(1);
                                 visitorRepository.save(visitor);
                                 System.out.println("✅ Visitor entry time recorded: " + visitor.getName());
+
+                                // Auto-log vehicle if visitor has a vehicle number
+                                if (visitor.getVehicleNumber() != null && !visitor.getVehicleNumber().isBlank()) {
+                                    try {
+                                        VehicleRegistration vReg = new VehicleRegistration();
+                                        vReg.setLicensePlate(visitor.getVehicleNumber().toUpperCase().trim());
+                                        vReg.setOwnerName(visitor.getName());
+                                        vReg.setOwnerPhone(visitor.getPhone() != null ? visitor.getPhone() : "");
+                                        vReg.setOwnerType(PersonType.VISITOR);
+                                        vReg.setLogType("ENTRY");
+                                        vReg.setEntryTime(java.time.LocalDateTime.now());
+                                        vReg.setVisitorId(visitor.getId());
+                                        vReg.setPurpose(visitor.getPurpose());
+                                        vReg.setPersonToMeet(visitor.getPersonToMeet());
+                                        vReg.setRegisteredBy("AUTO-SCAN");
+                                        vehicleRegistrationRepository.save(vReg);
+                                        System.out.println("🚗 Vehicle ENTRY logged: " + visitor.getVehicleNumber());
+                                    } catch (Exception ve) {
+                                        System.err.println("⚠️ Could not log vehicle entry: " + ve.getMessage());
+                                    }
+                                }
                             }
                         } catch (Exception e) {
                             System.err.println("⚠️ Could not update visitor entry time: " + e.getMessage());
@@ -556,6 +577,27 @@ public class SecurityController {
                                 visitor.setStatus("EXITED");
                                 visitorRepository.save(visitor);
                                 System.out.println("✅ Visitor exit time recorded: " + visitor.getName());
+
+                                // Auto-log vehicle EXIT if visitor has a vehicle number
+                                if (visitor.getVehicleNumber() != null && !visitor.getVehicleNumber().isBlank()) {
+                                    try {
+                                        VehicleRegistration vReg = new VehicleRegistration();
+                                        vReg.setLicensePlate(visitor.getVehicleNumber().toUpperCase().trim());
+                                        vReg.setOwnerName(visitor.getName());
+                                        vReg.setOwnerPhone(visitor.getPhone() != null ? visitor.getPhone() : "");
+                                        vReg.setOwnerType(PersonType.VISITOR);
+                                        vReg.setLogType("EXIT");
+                                        vReg.setExitTime(java.time.LocalDateTime.now());
+                                        vReg.setVisitorId(visitor.getId());
+                                        vReg.setPurpose(visitor.getPurpose());
+                                        vReg.setPersonToMeet(visitor.getPersonToMeet());
+                                        vReg.setRegisteredBy("AUTO-SCAN");
+                                        vehicleRegistrationRepository.save(vReg);
+                                        System.out.println("🚗 Vehicle EXIT logged: " + visitor.getVehicleNumber());
+                                    } catch (Exception ve) {
+                                        System.err.println("⚠️ Could not log vehicle exit: " + ve.getMessage());
+                                    }
+                                }
                             }
                         } catch (Exception e) {
                             System.err.println("⚠️ Could not update visitor exit time: " + e.getMessage());
@@ -741,6 +783,9 @@ public class SecurityController {
                             detailedInfo.put("visitDate", v.getVisitDate() != null ? v.getVisitDate().toString() : null);
                             detailedInfo.put("visitTime", v.getVisitTime() != null ? v.getVisitTime().toString() : null);
                             detailedInfo.put("scanCount", v.getScanCount());
+                            if (v.getVehicleNumber() != null && !v.getVehicleNumber().isBlank()) {
+                                detailedInfo.put("vehicleNumber", v.getVehicleNumber().toUpperCase().trim());
+                            }
                             
                             System.out.println("📋 Visitor details: " + personName + " - Purpose: " + v.getPurpose() + " - Meeting: " + v.getPersonToMeet());
                         } else {

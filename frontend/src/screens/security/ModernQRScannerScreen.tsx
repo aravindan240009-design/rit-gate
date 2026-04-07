@@ -47,6 +47,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [modalTitle, setModalTitle] = useState('');
+  const [scanVehicleNumber, setScanVehicleNumber] = useState<string | null>(null);
 
   useEffect(() => {
     const getCameraPermissions = async () => {
@@ -104,6 +105,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         const data_resp = response.data || response;
         const isExit = (data_resp?.scanLocation || '').toLowerCase().includes('exit');
         const scanLabel = isExit ? 'Exit' : 'Entry';
+        setScanVehicleNumber(data_resp?.vehicleNumber || null);
         setModalTitle(`✅ ${scanLabel} Recorded`);
         setModalMessage(response.message || `${scanLabel} recorded successfully`);
         setShowSuccessModal(true);
@@ -175,6 +177,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         const data_resp = response.data || response;
         const isExit = (data_resp?.scanLocation || '').toLowerCase().includes('exit');
         const scanLabel = isExit ? 'Exit' : 'Entry';
+        setScanVehicleNumber(data_resp?.vehicleNumber || null);
         setModalTitle(`✅ ${scanLabel} Recorded`);
         setModalMessage(response.message || `${scanLabel} recorded successfully`);
         setManualCode('');
@@ -300,7 +303,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
           title={modalTitle}
           message={modalMessage}
           onClose={() => { setShowSuccessModal(false); resetScanner(); }}
-          autoClose={true}
+          autoClose={!scanVehicleNumber}
           autoCloseDelay={2500}
         />
         <ErrorModal
@@ -454,16 +457,44 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
 
       {/* Success Modal */}
       <SuccessModal
-        visible={showSuccessModal}
+        visible={showSuccessModal && !scanVehicleNumber}
         title={modalTitle}
         message={modalMessage}
-        onClose={() => {
-          setShowSuccessModal(false);
-          resetScanner();
-        }}
+        onClose={() => { setShowSuccessModal(false); resetScanner(); }}
         autoClose={true}
         autoCloseDelay={2500}
       />
+
+      {/* Vehicle Scan Result Modal */}
+      <Modal visible={showSuccessModal && !!scanVehicleNumber} transparent animationType="fade" onRequestClose={() => { setShowSuccessModal(false); setScanVehicleNumber(null); resetScanner(); }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: theme.surface, borderRadius: 20, padding: 24, width: '100%', maxWidth: 360 }}>
+            <View style={{ alignItems: 'center', marginBottom: 16 }}>
+              <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: theme.success + '20', justifyContent: 'center', alignItems: 'center', marginBottom: 10 }}>
+                <Ionicons name="checkmark-circle" size={36} color={theme.success} />
+              </View>
+              <ThemedText style={{ fontSize: 18, fontWeight: '800', color: theme.text }}>{modalTitle}</ThemedText>
+              <ThemedText style={{ fontSize: 13, color: theme.textSecondary, marginTop: 4, textAlign: 'center' }}>{modalMessage}</ThemedText>
+            </View>
+            <View style={{ backgroundColor: theme.surfaceHighlight, borderRadius: 12, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Ionicons name="car" size={28} color={theme.primary} />
+              <View>
+                <ThemedText style={{ fontSize: 11, color: theme.textTertiary, fontWeight: '600', letterSpacing: 0.5 }}>VEHICLE NUMBER</ThemedText>
+                <ThemedText style={{ fontSize: 20, fontWeight: '800', color: theme.text, letterSpacing: 1 }}>{scanVehicleNumber}</ThemedText>
+                <ThemedText style={{ fontSize: 12, color: theme.textSecondary, marginTop: 2 }}>
+                  {modalTitle.toLowerCase().includes('exit') ? 'Vehicle exit logged' : 'Vehicle entry logged'}
+                </ThemedText>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={{ marginTop: 16, backgroundColor: theme.primary, borderRadius: 12, paddingVertical: 12, alignItems: 'center' }}
+              onPress={() => { setShowSuccessModal(false); setScanVehicleNumber(null); resetScanner(); }}
+            >
+              <ThemedText style={{ color: '#FFF', fontWeight: '700', fontSize: 15 }}>Done</ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Error Modal */}
       <ErrorModal
