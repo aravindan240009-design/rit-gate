@@ -16,15 +16,33 @@ const DELAY_DETECTED_KEY = '@ritgate_notif_delay_detected';
 // ── Device info ──────────────────────────────────────────────────────────────
 
 function getDeviceBrand(): string {
+  // Try multiple sources — NativeModules varies by RN version
+  const constants = NativeModules?.PlatformConstants || {};
+  // Platform.constants is available in RN 0.63+
+  const platformConst = (Platform as any).constants || {};
   return (
-    NativeModules?.PlatformConstants?.Brand ||
-    NativeModules?.PlatformConstants?.Manufacturer ||
+    constants.Brand ||
+    constants.Manufacturer ||
+    constants.brand ||
+    constants.manufacturer ||
+    platformConst.Brand ||
+    platformConst.Manufacturer ||
+    (global as any).__deviceBrand ||
     ''
   ).toLowerCase();
 }
 
 function getDeviceManufacturer(): string {
-  return (NativeModules?.PlatformConstants?.Manufacturer || '').toLowerCase();
+  const constants = NativeModules?.PlatformConstants || {};
+  const platformConst = (Platform as any).constants || {};
+  return (
+    constants.Manufacturer ||
+    constants.manufacturer ||
+    platformConst.Manufacturer ||
+    constants.Brand ||
+    constants.brand ||
+    ''
+  ).toLowerCase();
 }
 
 export function isAggressiveOEM(): boolean {
@@ -160,7 +178,6 @@ export async function runNotificationOnboarding(): Promise<void> {
     const done = await AsyncStorage.getItem(ONBOARDING_DONE_KEY);
     if (done) return;
     await AsyncStorage.setItem(ONBOARDING_DONE_KEY, '1');
-
     // Step 1: Standard Android battery optimization exemption
     await requestIgnoreBatteryOptimizations();
 
