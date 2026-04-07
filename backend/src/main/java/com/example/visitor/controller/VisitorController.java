@@ -432,6 +432,7 @@ public class VisitorController {
         dto.setApprovedAt(visitor.getApprovedAt());
         dto.setQrCode(visitor.getQrCode());
         dto.setManualCode(visitor.getManualCode());
+        dto.setRegisteredBy(visitor.getRegisteredBy());
         return dto;
     }
     
@@ -539,6 +540,7 @@ public class VisitorController {
         private LocalDateTime approvedAt;
         private String qrCode;
         private String manualCode;
+        private String registeredBy;
         
         // Getters and Setters
         public Long getRequestId() { return requestId; }
@@ -588,6 +590,9 @@ public class VisitorController {
         
         public String getManualCode() { return manualCode; }
         public void setManualCode(String manualCode) { this.manualCode = manualCode; }
+
+        public String getRegisteredBy() { return registeredBy; }
+        public void setRegisteredBy(String registeredBy) { this.registeredBy = registeredBy; }
     }
     
     // Response for approval
