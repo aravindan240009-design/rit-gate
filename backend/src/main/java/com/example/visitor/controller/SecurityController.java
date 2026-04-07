@@ -361,6 +361,13 @@ public class SecurityController {
                 if (qrTable.getPassRequestId() != null) {
                     userId = qrTable.getPassRequestId().toString();
                     System.out.println("🔄 Recovered legacy Visitor ID from PassRequest: " + userId);
+                } else {
+                    // Try to find visitor by QR code string directly
+                    Optional<Visitor> vByQr = visitorRepository.findByQrCode(qrCode);
+                    if (vByQr.isPresent()) {
+                        userId = vByQr.get().getId().toString();
+                        System.out.println("🔄 Recovered legacy Visitor ID from QR string: " + userId);
+                    }
                 }
             }
             

@@ -45,7 +45,7 @@ public class VisitorRequestService {
      */
     public String generateVisitorQRCode() {
         String token = generateRandomToken(8);
-        return "VG|null|" + token;
+        return "VG|null|" + token; // visitorId injected at approval time
     }
     
     /**
@@ -78,8 +78,9 @@ public class VisitorRequestService {
             throw new RuntimeException("Visitor request is not pending");
         }
         
-        // Generate QR code with VG|null|TOKEN format
-        String qrCode = generateVisitorQRCode();
+        // Generate QR code with VG|<visitorId>|TOKEN format (visitorId is known here)
+        String token = generateRandomToken(8);
+        String qrCode = "VG|" + visitorId + "|" + token;
         String manualCode = generateManualCode();
         
         // Ensure manual code is unique
@@ -87,30 +88,25 @@ public class VisitorRequestService {
             manualCode = generateManualCode();
         }
         
-        // Extract token from QR code (VG|null|TOKEN)
-        String[] parts = qrCode.split("\\|");
-        String token = parts.length >= 3 ? parts[2] : generateRandomToken(8);
-        
         // Insert into qr_table for two-scan system
-        // VG type: entry column has token, exit is null initially
         QRTable qrTable = new QRTable();
-        qrTable.setQrCode(token);  // Store just the token
+        qrTable.setQrCode(token);
         qrTable.setUserType("VG");
         qrTable.setUserId(String.valueOf(visitorId));
-        qrTable.setEntry(token);  // First scan will match this
-        qrTable.setExit(null);    // Will be populated after first scan
+        qrTable.setPassRequestId(visitorId);
+        qrTable.setEntry(token);
+        qrTable.setExit(null);
         qrTable.setCreatedAt(LocalDateTime.now());
-        
-        // Set required fields for QRTable
-        qrTable.setQrString(qrCode);  // Full QR code: VG|null|TOKEN
-        qrTable.setRequestedByStaffCode(approvedBy);  // Staff who approved
+        qrTable.setQrString(qrCode);
+        qrTable.setManualEntryCode(manualCode);
+        qrTable.setRequestedByStaffCode(approvedBy);
         qrTable.setPassType("VISITOR");
         qrTable.setStudentCount(visitor.getNumberOfPeople());
         qrTable.setStatus("ACTIVE");
         
         qrTableRepository.save(qrTable);
         
-        System.out.println("✅ QR Table entry created for visitor " + visitorId + " - Token: " + token + " (VG|null|" + token + ")");
+        System.out.println("✅ QR Table entry created for visitor " + visitorId + " - QR: " + qrCode);
         
         // Update visitor
         visitor.setStatus("APPROVED");
