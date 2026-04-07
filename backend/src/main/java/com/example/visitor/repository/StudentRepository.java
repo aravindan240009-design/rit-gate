@@ -54,4 +54,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     // Check if a staff name appears as a class incharge in any student row
     @Query("SELECT COUNT(s) FROM Student s WHERE LOWER(s.classIncharge) LIKE LOWER(CONCAT('%', :name, '%'))")
     long countByClassInchargeContaining(@Param("name") String name);
+
+    // Check if a staff name appears in the hod column of any student row
+    @Query("SELECT COUNT(s) FROM Student s WHERE LOWER(s.hod) LIKE LOWER(CONCAT('%', :name, '%')) AND s.hod IS NOT NULL AND s.hod <> ''")
+    long countByHodContaining(@Param("name") String name);
 }

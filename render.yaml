@@ -3,7 +3,8 @@ services:
     name: ritgate-backend
     runtime: docker
     plan: free
-    dockerfilePath: ./backend/Dockerfile
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     envVars:
       - key: PORT

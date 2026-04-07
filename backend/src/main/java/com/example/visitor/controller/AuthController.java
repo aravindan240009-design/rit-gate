@@ -1398,7 +1398,7 @@ public class AuthController {
             String role       = staff.getRole()        != null ? staff.getRole().trim().toUpperCase() : "";
             String department = staff.getDepartment()  != null ? staff.getDepartment().trim() : "";
 
-            // 1. HR / HOD explicit role check
+            // 1. Explicit role field check (HR / HOD)
             if (role.contains("HR")) {
                 return ResponseEntity.ok(Map.of("success", true, "role", "HR"));
             }
@@ -1406,48 +1406,48 @@ public class AuthController {
                 return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
             }
 
-            // 2. Non-Teaching department → NON_TEACHING
-            boolean isNonTeachingDept = department.toLowerCase().startsWith("non-teaching") ||
-                                        department.toLowerCase().startsWith("non teaching");
-            boolean isTeachingRole = role.contains("PROFESSOR") || role.contains("LECTURER") ||
-                                     role.contains("FACULTY")   || role.contains("ASSOCIATE PROF") ||
-                                     role.contains("ASST. PROF") || role.contains("ASST PROF");
-
-            if (isNonTeachingDept || (!isTeachingRole && !role.isEmpty()
-                    && !role.contains("PRINCIPAL") && !role.contains("DIRECTOR"))) {
-                if (!staffName.isEmpty() && isHodByNameMatch(staffName)) {
+            // 2. PRIMARY HOD CHECK: look up staff name directly in students.hod column
+            //    This is the authoritative source — if the name appears there, they ARE a HOD.
+            if (!staffName.isEmpty()) {
+                // Try full name first
+                if (studentRepository.countByHodContaining(staffName) > 0) {
+                    log.info("HOD detected via students.hod column (full name): '{}'", staffName);
                     return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
                 }
-                return ResponseEntity.ok(Map.of("success", true, "role", "NON_TEACHING"));
+                // Try each significant token (handles "KANAGAVALLI N." stored as "KANAGAVALLI N./ASSO P")
+                for (String token : staffName.split("\\s+")) {
+                    if (token.length() >= 4) { // skip short initials like "N."
+                        if (studentRepository.countByHodContaining(token) > 0) {
+                            log.info("HOD detected via students.hod column (token '{}'): '{}'", token, staffName);
+                            return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
+                        }
+                    }
+                }
             }
 
-            // 3. Principal / Director → NON_CLASS_INCHARGE (skip HOD, direct to HR)
+            // 3. Principal / Director → NON_CLASS_INCHARGE (direct-to-HR)
             if (role.contains("PRINCIPAL") || role.contains("DIRECTOR")) {
                 return ResponseEntity.ok(Map.of("success", true, "role", "NON_CLASS_INCHARGE"));
             }
 
-            // 4. HOD name match
-            if (!staffName.isEmpty() && isHodByNameMatch(staffName)) {
-                return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
+            // 4. Non-Teaching department → NON_TEACHING
+            boolean isNonTeachingDept = department.toLowerCase().startsWith("non-teaching") ||
+                                        department.toLowerCase().startsWith("non teaching");
+            if (isNonTeachingDept) {
+                return ResponseEntity.ok(Map.of("success", true, "role", "NON_TEACHING"));
             }
 
-            // 5. Check class_incharge table — by staff_code first, then by name fuzzy match
+            // 5. Check class_incharge table — by staff_code first, then by name
             boolean isClassIncharge = false;
 
-            // 5a. Exact staff_code match
             if (classInchargeRepository.countByStaffCode(code) > 0) {
                 isClassIncharge = true;
             }
 
-            // 5b. Name fuzzy match (handles suffixes like '/AP')
             if (!isClassIncharge && !staffName.isEmpty()) {
-                // Use the first significant word (≥3 chars) for fuzzy match
-                String nameKey = staffName;
-                // Try full name first
-                if (classInchargeRepository.countByNameContaining(nameKey) > 0) {
+                if (classInchargeRepository.countByNameContaining(staffName) > 0) {
                     isClassIncharge = true;
                 }
-                // Try first token if full name didn't match
                 if (!isClassIncharge) {
                     for (String token : staffName.split("\\s+")) {
                         if (token.length() >= 3) {
@@ -1464,7 +1464,15 @@ public class AuthController {
                 return ResponseEntity.ok(Map.of("success", true, "role", "STAFF"));
             }
 
-            // Not a class incharge → NON_CLASS_INCHARGE (NTF-like, direct to HR)
+            // 6. Non-teaching role (no class incharge assignment) → NON_TEACHING or NON_CLASS_INCHARGE
+            boolean isTeachingRole = role.contains("PROFESSOR") || role.contains("LECTURER") ||
+                                     role.contains("FACULTY")   || role.contains("ASSOCIATE PROF") ||
+                                     role.contains("ASST. PROF") || role.contains("ASST PROF");
+            if (!isTeachingRole && !role.isEmpty()) {
+                return ResponseEntity.ok(Map.of("success", true, "role", "NON_TEACHING"));
+            }
+
+            // Default: not a class incharge → NON_CLASS_INCHARGE
             return ResponseEntity.ok(Map.of("success", true, "role", "NON_CLASS_INCHARGE"));
 
         } catch (Exception e) {
