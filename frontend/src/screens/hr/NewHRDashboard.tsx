@@ -18,6 +18,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { HR, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import { useNotifications } from '../../context/NotificationContext';
+import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useActionLock } from '../../context/ActionLockContext';
@@ -74,6 +75,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   const [modalMessage, setModalMessage] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
+  const { refreshCount } = useRefresh();
   const { profileImage } = useProfile();
   const { lock, unlock } = useActionLock();
   const [isDownloading, setIsDownloading] = useState(false);
@@ -90,6 +92,8 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
     loadNotifications(hr.hrCode, 'hr');
     loadExitLogs();
   }, []);
+
+  useEffect(() => { if (refreshCount > 0) { loadRequests(); loadExitLogs(); } }, [refreshCount]);
 
   useEffect(() => {
     const now = new Date();

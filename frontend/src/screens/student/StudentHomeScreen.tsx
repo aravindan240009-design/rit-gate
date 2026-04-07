@@ -17,6 +17,7 @@ import { Student } from '../../types';
 import { apiService } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import NotificationDropdown from '../../components/NotificationDropdown';
 import RequestTimeline from '../../components/RequestTimeline';
@@ -54,6 +55,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
   const { translateY: detailSheetY, panHandlers: detailPanHandlers, openSheet: openDetailSheet } = useBottomSheetSwipe(() => setShowDetailModal(false));
   const { unreadCount } = useNotifications();
+  const { refreshCount } = useRefresh();
   const { profileImage } = useProfile();
   const [recentRequests, setRecentRequests] = useState<any[]>([]);
   const [stats, setStats] = useState({
@@ -72,6 +74,8 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
   const loadData = async () => {
     try {

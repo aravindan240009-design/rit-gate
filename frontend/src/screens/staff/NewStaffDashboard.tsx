@@ -15,6 +15,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Staff, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import { useNotifications } from '../../context/NotificationContext';
+import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
@@ -64,6 +65,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [processing, setProcessing] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
+  const { refreshCount } = useRefresh();
   const { profileImage } = useProfile();
   const { lock, unlock } = useActionLock();
 
@@ -78,6 +80,8 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     loadRequests();
     loadNotifications(staff.staffCode, 'staff');
   }, []);
+
+  useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);
 
   const loadRequests = async () => {
     try {

@@ -23,6 +23,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ProfileProvider, useProfile } from './context/ProfileContext';
 import { ActionLockProvider, useActionLock } from './context/ActionLockContext';
+import { RefreshProvider, useRefresh } from './context/RefreshContext';
 
 // ✅ ONLY SmartGate Screens
 import HomeScreen from './screens/HomeScreen';
@@ -97,6 +98,7 @@ const EXIT_SCREENS: ScreenName[] = [
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [student, setStudent] = React.useState<Student | null>(null);
+  const { triggerRefresh } = useRefresh();
   const [staff, setStaff] = React.useState<Staff | null>(null);
   const [hod, setHod] = React.useState<HOD | null>(null);
   const [hr, setHr] = React.useState<HR | null>(null);
@@ -147,7 +149,9 @@ const App: React.FC = () => {
       if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
       else if (ut === 'HR') setCurrentScreen('HR_DASHBOARD');
     }
-  }, []);
+    // Trigger a data refresh on the destination screen
+    triggerRefresh();
+  }, [triggerRefresh]);
 
   const handleNotificationRoute = React.useCallback((route: string) => {
     if (!route) return;
@@ -1170,6 +1174,7 @@ const App: React.FC = () => {
           security?.securityId ||
           undefined
         }>
+          <RefreshProvider>
           <ActionLockProvider>
             <NotificationProvider onNavigate={handleNotificationRoute}>
               <ProfileProvider>
@@ -1219,6 +1224,7 @@ const App: React.FC = () => {
               </ProfileProvider>
             </NotificationProvider>
           </ActionLockProvider>
+          </RefreshProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

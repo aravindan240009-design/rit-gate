@@ -9,6 +9,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { NonTeachingFaculty, ScreenName } from '../../types';
 import { apiService } from '../../services/api.service';
 import { useNotifications } from '../../context/NotificationContext';
+import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
 import { formatDateShort } from '../../utils/dateUtils';
@@ -39,6 +40,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const [errorMsg, setErrorMsg] = useState('');
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
+  const { refreshCount } = useRefresh();
   const { profileImage } = useProfile();
 
   const getGreeting = () => {
@@ -55,6 +57,8 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
     loadData();
     loadNotifications(ntf.staffCode, 'staff');
   }, []);
+
+  useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
   const loadData = async () => {
     try {

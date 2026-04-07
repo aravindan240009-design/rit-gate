@@ -18,6 +18,7 @@ import { apiService } from '../../services/api';
 import SecurityBottomNav from '../../components/SecurityBottomNav';
 import { useProfile } from '../../context/ProfileContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useRefresh } from '../../context/RefreshContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useActionLock } from '../../context/ActionLockContext';
 import NotificationDropdown from '../../components/NotificationDropdown';
@@ -66,6 +67,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
   const [selectedPerson, setSelectedPerson] = useState<ActivePerson | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
+  const { refreshCount } = useRefresh();
   const [escalatedVisitors, setEscalatedVisitors] = useState<EscalatedVisitor[]>([]);
   const [selectedVisitor, setSelectedVisitor] = useState<EscalatedVisitor | null>(null);
   const [showVisitorModal, setShowVisitorModal] = useState(false);
@@ -98,6 +100,8 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
 
     return () => clearInterval(pollInterval);
   }, []);
+
+  useEffect(() => { if (refreshCount > 0) { loadDashboardData(); loadEscalatedVisitors(); } }, [refreshCount]);
 
   const loadDashboardData = async () => {
     try {
