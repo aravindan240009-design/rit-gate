@@ -1,7 +1,0 @@
--- Add entry/exit tracking columns to Vehicle table
-ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS log_type VARCHAR(10);
-ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS entry_time TIMESTAMP;
-ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS exit_time TIMESTAMP;
-ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS visitor_id BIGINT;
-ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS purpose TEXT;
-ALTER TABLE "Vehicle" ADD COLUMN IF NOT EXISTS person_to_meet VARCHAR(200);
