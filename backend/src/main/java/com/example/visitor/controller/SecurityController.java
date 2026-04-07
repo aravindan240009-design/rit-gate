@@ -518,24 +518,20 @@ public class SecurityController {
                                 visitorRepository.save(visitor);
                                 System.out.println("✅ Visitor entry time recorded: " + visitor.getName());
 
-                                // Auto-log vehicle if visitor has a vehicle number
+                                // Register vehicle entry if vehicle number provided
                                 if (visitor.getVehicleNumber() != null && !visitor.getVehicleNumber().isBlank()) {
                                     try {
-                                        VehicleRegistration vReg = new VehicleRegistration();
-                                        vReg.setLicensePlate(visitor.getVehicleNumber().toUpperCase().trim());
-                                        vReg.setOwnerName(visitor.getName());
-                                        vReg.setOwnerPhone(visitor.getPhone() != null ? visitor.getPhone() : "");
-                                        vReg.setOwnerType(PersonType.VISITOR);
-                                        vReg.setLogType("ENTRY");
-                                        vReg.setEntryTime(java.time.LocalDateTime.now());
-                                        vReg.setVisitorId(visitor.getId());
-                                        vReg.setPurpose(visitor.getPurpose());
-                                        vReg.setPersonToMeet(visitor.getPersonToMeet());
-                                        vReg.setRegisteredBy("AUTO-SCAN");
-                                        vehicleRegistrationRepository.save(vReg);
-                                        System.out.println("🚗 Vehicle ENTRY logged: " + visitor.getVehicleNumber());
+                                        VehicleRegistration vr = new VehicleRegistration();
+                                        vr.setLicensePlate(visitor.getVehicleNumber().toUpperCase().trim());
+                                        vr.setOwnerName(visitor.getName());
+                                        vr.setOwnerPhone(visitor.getPhone());
+                                        vr.setOwnerType(PersonType.VISITOR);
+                                        vr.setVehicleType(visitor.getVehicleType() != null ? visitor.getVehicleType() : "Unknown");
+                                        vr.setRegisteredBy("ENTRY_SCAN");
+                                        vehicleRegistrationRepository.save(vr);
+                                        System.out.println("✅ Vehicle entry registered: " + visitor.getVehicleNumber());
                                     } catch (Exception ve) {
-                                        System.err.println("⚠️ Could not log vehicle entry: " + ve.getMessage());
+                                        System.err.println("⚠️ Could not register vehicle entry: " + ve.getMessage());
                                     }
                                 }
                             }
@@ -578,24 +574,19 @@ public class SecurityController {
                                 visitorRepository.save(visitor);
                                 System.out.println("✅ Visitor exit time recorded: " + visitor.getName());
 
-                                // Auto-log vehicle EXIT if visitor has a vehicle number
+                                // Update vehicle exit time if vehicle was registered on entry
                                 if (visitor.getVehicleNumber() != null && !visitor.getVehicleNumber().isBlank()) {
                                     try {
-                                        VehicleRegistration vReg = new VehicleRegistration();
-                                        vReg.setLicensePlate(visitor.getVehicleNumber().toUpperCase().trim());
-                                        vReg.setOwnerName(visitor.getName());
-                                        vReg.setOwnerPhone(visitor.getPhone() != null ? visitor.getPhone() : "");
-                                        vReg.setOwnerType(PersonType.VISITOR);
-                                        vReg.setLogType("EXIT");
-                                        vReg.setExitTime(java.time.LocalDateTime.now());
-                                        vReg.setVisitorId(visitor.getId());
-                                        vReg.setPurpose(visitor.getPurpose());
-                                        vReg.setPersonToMeet(visitor.getPersonToMeet());
-                                        vReg.setRegisteredBy("AUTO-SCAN");
-                                        vehicleRegistrationRepository.save(vReg);
-                                        System.out.println("🚗 Vehicle EXIT logged: " + visitor.getVehicleNumber());
+                                        String plate = visitor.getVehicleNumber().toUpperCase().trim();
+                                        Optional<VehicleRegistration> vrOpt = vehicleRegistrationRepository.findByLicensePlate(plate);
+                                        if (vrOpt.isPresent()) {
+                                            VehicleRegistration vr = vrOpt.get();
+                                            vr.setUpdatedAt(java.time.LocalDateTime.now());
+                                            vehicleRegistrationRepository.save(vr);
+                                            System.out.println("✅ Vehicle exit recorded: " + plate);
+                                        }
                                     } catch (Exception ve) {
-                                        System.err.println("⚠️ Could not log vehicle exit: " + ve.getMessage());
+                                        System.err.println("⚠️ Could not update vehicle exit: " + ve.getMessage());
                                     }
                                 }
                             }
@@ -783,9 +774,8 @@ public class SecurityController {
                             detailedInfo.put("visitDate", v.getVisitDate() != null ? v.getVisitDate().toString() : null);
                             detailedInfo.put("visitTime", v.getVisitTime() != null ? v.getVisitTime().toString() : null);
                             detailedInfo.put("scanCount", v.getScanCount());
-                            if (v.getVehicleNumber() != null && !v.getVehicleNumber().isBlank()) {
-                                detailedInfo.put("vehicleNumber", v.getVehicleNumber().toUpperCase().trim());
-                            }
+                            detailedInfo.put("vehicleNumber", v.getVehicleNumber());
+                            detailedInfo.put("vehicleType", v.getVehicleType());
                             
                             System.out.println("📋 Visitor details: " + personName + " - Purpose: " + v.getPurpose() + " - Meeting: " + v.getPersonToMeet());
                         } else {

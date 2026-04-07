@@ -42,6 +42,9 @@ public class Visitor {
     
     @Column(nullable = true, name = "vehicle_number")
     private String vehicleNumber;
+
+    @Column(nullable = true, name = "vehicle_type")
+    private String vehicleType;
     
     @Column(nullable = true, name = "staff_code")
     private String staffCode;
@@ -159,6 +162,9 @@ public class Visitor {
     
     public String getVehicleNumber() { return vehicleNumber; }
     public void setVehicleNumber(String vehicleNumber) { this.vehicleNumber = vehicleNumber; }
+
+    public String getVehicleType() { return vehicleType; }
+    public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }
     
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

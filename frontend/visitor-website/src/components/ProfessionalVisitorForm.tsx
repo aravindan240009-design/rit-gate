@@ -53,6 +53,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
   const [purpose, setPurpose] = useState<string>('');
   const [role, setRole] = useState<'VISITOR' | 'VENDOR'>('VISITOR');
   const [vehicleNumber, setVehicleNumber] = useState<string>('');
+  const [vehicleType, setVehicleType] = useState<string>('');
   const [staffMembers, setStaffMembers] = useState<Staff[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<string>('');
   const [selectedStaffId, setSelectedStaffId] = useState<string>('');
@@ -244,6 +245,11 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
       setError('Please enter the purpose of your visit');
       return false;
     }
+
+    if (vehicleNumber.trim() && !vehicleType) {
+      setError('Please select a vehicle type for your vehicle');
+      return false;
+    }
     
     return true;
   };
@@ -278,6 +284,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
           reason: '', // Optional additional reason
           numberOfPeople: numberOfVisitors,
           vehicleNumber: vehicleNumber || undefined,
+          vehicleType: vehicleNumber ? vehicleType : undefined,
         }),
       });
 
@@ -307,6 +314,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
       setPurpose('');
       setRole('VISITOR');
       setVehicleNumber('');
+      setVehicleType('');
       setStaffMembers([]);
       setSelectedStaff('');
     } catch (err) {
@@ -1187,6 +1195,42 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
                 style={styles.input(focusedField === 'vehicle', false)}
               />
             </div>
+
+            {/* Vehicle Type — mandatory when vehicle number is entered */}
+            {vehicleNumber.trim() && (
+              <div style={styles.inputGroup}>
+                <label style={{ ...styles.label, color: '#EF4444' }}>
+                  Vehicle Type <span style={{ color: '#EF4444' }}>*</span>
+                </label>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
+                  {['Two Wheeler', 'Four Wheeler', 'Auto', 'Bus', 'Truck', 'Other'].map((vt) => (
+                    <button
+                      key={vt}
+                      type="button"
+                      onClick={() => setVehicleType(vt)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '20px',
+                        border: `2px solid ${vehicleType === vt ? '#1D4ED8' : '#E2E8F0'}`,
+                        backgroundColor: vehicleType === vt ? '#EFF6FF' : '#F8FAFC',
+                        color: vehicleType === vt ? '#1D4ED8' : '#64748B',
+                        fontWeight: vehicleType === vt ? 700 : 500,
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {vt}
+                    </button>
+                  ))}
+                </div>
+                {!vehicleType && (
+                  <p style={{ fontSize: '12px', color: '#EF4444', marginTop: '6px' }}>
+                    Please select a vehicle type
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Submit Button */}
             <button

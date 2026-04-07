@@ -41,6 +41,7 @@ public class UnifiedVisitorController {
             visitor.setPurpose(request.getPurpose() != null ? request.getPurpose() : request.getReason());
             visitor.setNumberOfPeople(request.getNumberOfPeople() != null ? request.getNumberOfPeople() : 1);
             visitor.setVehicleNumber(request.getVehicleNumber());
+            visitor.setVehicleType(request.getVehicleType());
             String visitorRole = request.getRole() != null && !request.getRole().isBlank() ? request.getRole().toUpperCase() : "VISITOR";
             visitor.setRole(visitorRole);
             visitor.setType(visitorRole);
@@ -125,6 +126,7 @@ public class UnifiedVisitorController {
             visitor.setPurpose(request.getPurpose());
             visitor.setNumberOfPeople(request.getNumberOfPeople() != null ? request.getNumberOfPeople() : 1);
             visitor.setVehicleNumber(request.getVehicleNumber());
+            visitor.setVehicleType(request.getVehicleType());
             String visitorRole = request.getRole() != null && !request.getRole().isBlank() ? request.getRole().toUpperCase() : "VISITOR";
             visitor.setRole(visitorRole);
             visitor.setType(visitorRole);
@@ -351,6 +353,7 @@ public class UnifiedVisitorController {
         private String reason;
         private Integer numberOfPeople;
         private String vehicleNumber;
+        private String vehicleType;
         private String personToMeet;
         private String staffCode;
         private String role;
@@ -380,6 +383,9 @@ public class UnifiedVisitorController {
         
         public String getVehicleNumber() { return vehicleNumber; }
         public void setVehicleNumber(String vehicleNumber) { this.vehicleNumber = vehicleNumber; }
+
+        public String getVehicleType() { return vehicleType; }
+        public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }
         
         public String getPersonToMeet() { return personToMeet; }
         public void setPersonToMeet(String personToMeet) { this.personToMeet = personToMeet; }
@@ -404,6 +410,7 @@ public class UnifiedVisitorController {
         private String purpose;
         private Integer numberOfPeople;
         private String vehicleNumber;
+        private String vehicleType;
         private String role;
         
         // Getters and Setters
@@ -433,6 +440,9 @@ public class UnifiedVisitorController {
         
         public String getVehicleNumber() { return vehicleNumber; }
         public void setVehicleNumber(String vehicleNumber) { this.vehicleNumber = vehicleNumber; }
+
+        public String getVehicleType() { return vehicleType; }
+        public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }
 
         public String getRole() { return role; }
         public void setRole(String role) { this.role = role; }
