@@ -518,19 +518,17 @@ public class SecurityController {
                                 visitorRepository.save(visitor);
                                 System.out.println("✅ Visitor entry time recorded: " + visitor.getName());
 
-                                // Register vehicle entry if vehicle number provided
+                                // Register vehicle entry if vehicle number provided (use JDBC to avoid tainting main transaction)
                                 if (visitor.getVehicleNumber() != null && !visitor.getVehicleNumber().isBlank()) {
                                     try {
-                                        VehicleRegistration vr = new VehicleRegistration();
-                                        vr.setLicensePlate(visitor.getVehicleNumber().toUpperCase().trim());
-                                        vr.setOwnerName(visitor.getName());
-                                        vr.setOwnerPhone(visitor.getPhone());
-                                        vr.setOwnerType(PersonType.VISITOR);
-                                        vr.setVehicleType(visitor.getVehicleType() != null ? visitor.getVehicleType() : "Unknown");
-                                        // Store visitor ID so we can find this exact row on exit
-                                        vr.setRegisteredBy("VISITOR_" + visitor.getId());
-                                        vehicleRegistrationRepository.save(vr);
-                                        System.out.println("✅ Vehicle entry registered: " + visitor.getVehicleNumber());
+                                        String plate = visitor.getVehicleNumber().toUpperCase().trim();
+                                        String vType = visitor.getVehicleType() != null ? visitor.getVehicleType() : "Unknown";
+                                        String tag = "VISITOR_" + visitor.getId();
+                                        jdbcTemplate.update(
+                                            "INSERT INTO Vehicle (license_plate, owner_name, owner_phone, owner_type, vehicle_type, registered_by, created_at, updated_at) VALUES (?,?,?,?,?,?,NOW(),NOW())",
+                                            plate, visitor.getName(), visitor.getPhone(), "VISITOR", vType, tag
+                                        );
+                                        System.out.println("✅ Vehicle entry registered: " + plate);
                                     } catch (Exception ve) {
                                         System.err.println("⚠️ Could not register vehicle entry: " + ve.getMessage());
                                     }
@@ -575,17 +573,15 @@ public class SecurityController {
                                 visitorRepository.save(visitor);
                                 System.out.println("✅ Visitor exit time recorded: " + visitor.getName());
 
-                                // Update vehicle exit time if vehicle was registered on entry
+                                // Update vehicle exit time if vehicle was registered on entry (use JDBC to avoid tainting main transaction)
                                 if (visitor.getVehicleNumber() != null && !visitor.getVehicleNumber().isBlank()) {
                                     try {
-                                        // Find the exact entry row for this visitor using the stored visitor ID
                                         String entryTag = "VISITOR_" + visitor.getId();
-                                        vehicleRegistrationRepository.findFirstByRegisteredBy(entryTag)
-                                            .ifPresent(vr -> {
-                                                vr.setUpdatedAt(java.time.LocalDateTime.now());
-                                                vehicleRegistrationRepository.save(vr);
-                                                System.out.println("✅ Vehicle exit recorded for: " + vr.getLicensePlate());
-                                            });
+                                        jdbcTemplate.update(
+                                            "UPDATE Vehicle SET updated_at = NOW() WHERE registered_by = ?",
+                                            entryTag
+                                        );
+                                        System.out.println("✅ Vehicle exit recorded for visitor: " + visitor.getId());
                                     } catch (Exception ve) {
                                         System.err.println("⚠️ Could not update vehicle exit: " + ve.getMessage());
                                     }
@@ -1908,16 +1904,8 @@ public class SecurityController {
                 // For visitors: find matching entry record to show both entry and exit times
                 String entryTimeStr = null;
                 if ("VISITOR".equals(utype) || "VG".equals(utype)) {
-                    // Look for a matching entry in RailwayEntry by userId or by qrId
-                    for (RailwayEntry entry : allEntries) {
-                        String entryUid = entry.getUserId();
-                        if (uid != null && uid.equals(entryUid)) {
-                            entryTimeStr = entry.getTimestamp().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME);
-                            break;
-                        }
-                    }
-                    // Also try via Visitor entity entryTime
-                    if (entryTimeStr == null && uid != null && !"null".equals(uid)) {
+                    // Primary: use Visitor.entryTime (set during entry scan)
+                    if (uid != null && !"null".equals(uid)) {
                         try {
                             Long visitorId = Long.parseLong(uid);
                             Optional<Visitor> vOpt = visitorRepository.findById(visitorId);
@@ -1925,6 +1913,22 @@ public class SecurityController {
                                 entryTimeStr = vOpt.get().getEntryTime().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME);
                             }
                         } catch (Exception ignored) {}
+                    }
+                    // Fallback: find the RailwayEntry closest in time to this exit
+                    if (entryTimeStr == null) {
+                        java.time.LocalDateTime exitDt = exitLog.getExitTime();
+                        RailwayEntry bestEntry = null;
+                        long bestDiff = Long.MAX_VALUE;
+                        for (RailwayEntry entry : allEntries) {
+                            String entryUid = entry.getUserId();
+                            if (uid != null && uid.equals(entryUid) && entry.getTimestamp() != null) {
+                                long diff = Math.abs(java.time.Duration.between(entry.getTimestamp(), exitDt).toSeconds());
+                                if (diff < bestDiff) { bestDiff = diff; bestEntry = entry; }
+                            }
+                        }
+                        if (bestEntry != null) {
+                            entryTimeStr = bestEntry.getTimestamp().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME);
+                        }
                     }
                 }
 
