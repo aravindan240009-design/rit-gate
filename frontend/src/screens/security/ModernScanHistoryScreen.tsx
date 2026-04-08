@@ -323,14 +323,20 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           { key: 'entryTime', label: 'ENTRY' },
           { key: 'exitTime', label: 'EXIT' },
         ],
-        rows: filteredVehicles.map((v) => ({
-          plate: v.licensePlate || '-',
-          type: v.vehicleType || '-',
-          owner: v.ownerName || '-',
-          status: (v.updatedAt && v.updatedAt !== v.createdAt) ? 'EXITED' : 'ENTERED',
-          entryTime: formatTime(v.createdAt),
-          exitTime: (v.updatedAt && v.updatedAt !== v.createdAt) ? formatTime(v.updatedAt) : '-',
-        })),
+        rows: filteredVehicles.flatMap((v) => {
+          const hasExited = v.updatedAt && v.updatedAt !== v.createdAt;
+          const base = {
+            plate: v.licensePlate || '-',
+            type: v.vehicleType || '-',
+            owner: v.ownerName || '-',
+          };
+          const rows = [];
+          rows.push({ ...base, status: 'ENTRY', entryTime: formatTime(v.createdAt), exitTime: '-' });
+          if (hasExited) {
+            rows.push({ ...base, status: 'EXIT', entryTime: formatTime(v.createdAt), exitTime: formatTime(v.updatedAt) });
+          }
+          return rows;
+        }),
       });
       if (result.success) {
         setDownloadMessage('PDF saved to Downloads.');
