@@ -38,6 +38,7 @@ import { VerticalFlatList, VerticalScrollView } from '../../components/navigatio
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
+import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 
 
 interface NewHRDashboardProps {
@@ -56,7 +57,8 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   const [requests, setRequests] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
-  const [bottomTab, setBottomTab] = useState<'HOME' | 'GUEST' | 'EXITS' | 'PROFILE'>('HOME');
+  const [bottomTab, setBottomTab] = useState<'HOME' | 'NEW_PASS' | 'EXITS' | 'PROFILE'>('HOME');
+  const [showPassSheet, setShowPassSheet] = useState(false);
   const [exitLogs, setExitLogs] = useState<any[]>([]);
   const [rangeModalVisible, setRangeModalVisible] = useState(false);
   const [fromDate, setFromDate] = useState('');
@@ -532,10 +534,10 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
           {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('GUEST'); onNavigate('GUEST_PRE_REQUEST'); }}>
-          <Ionicons name={bottomTab === 'GUEST' ? 'person-add' : 'person-add-outline'} size={22} color={bottomTab === 'GUEST' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'GUEST' && { color: theme.primary }]}>Guest</ThemedText>
-          {bottomTab === 'GUEST' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('NEW_PASS'); setShowPassSheet(true); }}>
+          <Ionicons name={bottomTab === 'NEW_PASS' ? 'add-circle' : 'add-circle-outline'} size={22} color={bottomTab === 'NEW_PASS' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'NEW_PASS' && { color: theme.primary }]}>New Pass</ThemedText>
+          {bottomTab === 'NEW_PASS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('EXITS'); onNavigate('HR_EXITS'); }}>
           <Ionicons name={bottomTab === 'EXITS' ? 'log-out' : 'log-out-outline'} size={22} color={bottomTab === 'EXITS' ? theme.primary : theme.textTertiary} />
@@ -549,6 +551,14 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
         </TouchableOpacity>
       </View>
       </TopRefreshControl>
+
+      {/* Pass Type Bottom Sheet */}
+      <PassTypeBottomSheet
+        visible={showPassSheet}
+        onClose={() => { setShowPassSheet(false); setBottomTab('HOME'); }}
+        onSelectSingle={() => { setShowPassSheet(false); onNavigate('NEW_PASS_REQUEST'); }}
+        onSelectGuest={() => { setShowPassSheet(false); onNavigate('GUEST_PRE_REQUEST'); }}
+      />
 
       {/* Notification Dropdown */}
       <NotificationDropdown
