@@ -806,6 +806,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
                           borderRadius: '16px',
                           border: '4px solid #166534',
                           background: '#ffffff',
+                          padding: '16px',
                           maxWidth: 'min(240px, 85vw)',
                           height: 'auto',
                         }}

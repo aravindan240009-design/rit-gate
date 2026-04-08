@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -89,12 +89,19 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
+    // Load on mount and whenever activeTab changes
     if (activeTab === 'SCANS') {
       loadScanHistory();
     } else {
       loadVehicleHistory();
     }
   }, [activeTab]);
+
+  // Also reload both datasets on initial mount to ensure fresh data
+  useEffect(() => {
+    loadScanHistory();
+    loadVehicleHistory();
+  }, []);
 
   const loadScanHistory = async () => {
     try {
@@ -636,11 +643,15 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     </ThemedText>
                   </View>
                   <View style={styles.scanRight}>
-                    <View style={[styles.scanStatusBadge, { backgroundColor: theme.success + '15' }]}>
-                      <Ionicons name="checkmark-circle" size={12} color={theme.success} />
-                      <ThemedText style={[styles.scanStatusText, { color: theme.success }]}>REGISTERED</ThemedText>
+                    <View style={[styles.scanStatusBadge, { backgroundColor: (vehicle.updatedAt && vehicle.updatedAt !== vehicle.createdAt) ? theme.error + '15' : theme.success + '15' }]}>
+                      <Ionicons name={(vehicle.updatedAt && vehicle.updatedAt !== vehicle.createdAt) ? "exit-outline" : "enter-outline"} size={12} color={(vehicle.updatedAt && vehicle.updatedAt !== vehicle.createdAt) ? theme.error : theme.success} />
+                      <ThemedText style={[styles.scanStatusText, { color: (vehicle.updatedAt && vehicle.updatedAt !== vehicle.createdAt) ? theme.error : theme.success }]}>
+                        {(vehicle.updatedAt && vehicle.updatedAt !== vehicle.createdAt) ? 'EXITED' : 'ENTERED'}
+                      </ThemedText>
                     </View>
-                    <ThemedText style={[styles.scanTime, { color: theme.textTertiary }]}>{formatTime(vehicle.createdAt)}</ThemedText>
+                    <ThemedText style={[styles.scanTime, { color: theme.textTertiary }]}>
+                      {(vehicle.updatedAt && vehicle.updatedAt !== vehicle.createdAt) ? formatTime(vehicle.updatedAt) : formatTime(vehicle.createdAt)}
+                    </ThemedText>
                   </View>
                 </TouchableOpacity>
               );
@@ -890,14 +901,18 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   {/* Info grid */}
                   <View style={styles.fsInfoGrid}>
                     <View style={styles.fsInfoCell}>
-                      <ThemedText style={styles.fsInfoLabel}>OWNER TYPE</ThemedText>
-                      <ThemedText style={styles.fsInfoValue}>{selectedVehicle.ownerType || 'N/A'}</ThemedText>
+                      <ThemedText style={styles.fsInfoLabel}>ENTRY TIME</ThemedText>
+                      <ThemedText style={styles.fsInfoValue} numberOfLines={2}>
+                        {formatTime(selectedVehicle.createdAt || selectedVehicle.registeredAt)}
+                      </ThemedText>
                     </View>
                     <View style={styles.fsInfoDivider} />
                     <View style={styles.fsInfoCell}>
-                      <ThemedText style={styles.fsInfoLabel}>REGISTERED ON</ThemedText>
+                      <ThemedText style={styles.fsInfoLabel}>EXIT TIME</ThemedText>
                       <ThemedText style={styles.fsInfoValue} numberOfLines={2}>
-                        {formatTime(selectedVehicle.createdAt || selectedVehicle.registeredAt)}
+                        {(selectedVehicle.updatedAt && selectedVehicle.updatedAt !== selectedVehicle.createdAt)
+                          ? formatTime(selectedVehicle.updatedAt)
+                          : '—'}
                       </ThemedText>
                     </View>
                   </View>
