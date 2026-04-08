@@ -940,7 +940,6 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                       ['Owner Name', selectedVehicle.ownerName],
                       ['Owner Type', selectedVehicle.ownerType],
                       ['Contact', selectedVehicle.ownerPhone || selectedVehicle.contactNumber],
-                      ['Registered By', selectedVehicle.registeredBy],
                     ].filter(([, v]) => !!v).map(([label, value]) => (
                       <View key={label as string} style={styles.fsRow}>
                         <ThemedText style={styles.fsRowLabel}>{label}</ThemedText>
