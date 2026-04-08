@@ -515,22 +515,13 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     setVehicleToDate(selected);
                   }
                 }}
-                minDate={vehicleSelectingDateType === 'TO' && vehicleFromDate ? vehicleFromDate.toISOString().slice(0, 10) : undefined}
                 markedDates={{
-                  ...(vehicleFromDate ? { [vehicleFromDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary, startingDay: true } } : {}),
-                  ...(vehicleToDate ? { [vehicleToDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary, endingDay: true } } : {}),
-                  ...(vehicleFromDate && vehicleToDate ? (() => {
-                    const marks: Record<string, any> = {};
-                    const cur = new Date(vehicleFromDate);
-                    cur.setDate(cur.getDate() + 1);
-                    while (cur < vehicleToDate) {
-                      marks[cur.toISOString().slice(0, 10)] = { color: theme.primary + '33', textColor: theme.text };
-                      cur.setDate(cur.getDate() + 1);
-                    }
-                    return marks;
-                  })() : {}),
+                  ...(vehicleFromDate ? { [vehicleFromDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary } } : {}),
+                  ...(vehicleToDate && vehicleToDate.toISOString().slice(0, 10) !== vehicleFromDate?.toISOString().slice(0, 10)
+                    ? { [vehicleToDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary } }
+                    : {}),
                 }}
-                markingType={vehicleFromDate && vehicleToDate ? 'period' : 'custom'}
+                markingType="custom"
                 theme={{
                   calendarBackground: theme.surface,
                   textSectionTitleColor: theme.textSecondary,
@@ -698,22 +689,13 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     setToDate(selected);
                   }
                 }}
-                minDate={selectingDateType === 'TO' && fromDate ? fromDate.toISOString().slice(0, 10) : undefined}
                 markedDates={{
-                  ...(fromDate ? { [fromDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary, startingDay: true } } : {}),
-                  ...(toDate ? { [toDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary, endingDay: true } } : {}),
-                  ...(fromDate && toDate ? (() => {
-                    const marks: Record<string, any> = {};
-                    const cur = new Date(fromDate);
-                    cur.setDate(cur.getDate() + 1);
-                    while (cur < toDate) {
-                      marks[cur.toISOString().slice(0, 10)] = { color: theme.primary + '33', textColor: theme.text };
-                      cur.setDate(cur.getDate() + 1);
-                    }
-                    return marks;
-                  })() : {}),
+                  ...(fromDate ? { [fromDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary } } : {}),
+                  ...(toDate && toDate.toISOString().slice(0, 10) !== fromDate?.toISOString().slice(0, 10)
+                    ? { [toDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary } }
+                    : {}),
                 }}
-                markingType={fromDate && toDate ? 'period' : 'custom'}
+                markingType="custom"
                 theme={{
                   calendarBackground: theme.surface,
                   textSectionTitleColor: theme.textSecondary,
