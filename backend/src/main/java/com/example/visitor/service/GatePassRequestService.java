@@ -1158,8 +1158,9 @@ public class GatePassRequestService {
         
         GatePassRequest request = requestOpt.get();
         
-        // Verify authorization
-        if (!hrCode.equals(request.getAssignedHrCode())) {
+        // Verify authorization — allow if: assigned HR, OR the requester is self-approving their own pass
+        boolean isSelfApproval = hrCode.equals(request.getRegNo());
+        if (!hrCode.equals(request.getAssignedHrCode()) && !isSelfApproval) {
             throw new RuntimeException("You are not authorized to approve this request");
         }
         
