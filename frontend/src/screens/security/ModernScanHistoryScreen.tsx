@@ -515,13 +515,29 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     setVehicleToDate(selected);
                   }
                 }}
-                markedDates={{
-                  ...(vehicleFromDate ? { [vehicleFromDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary } } : {}),
-                  ...(vehicleToDate && vehicleToDate.toISOString().slice(0, 10) !== vehicleFromDate?.toISOString().slice(0, 10)
-                    ? { [vehicleToDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary } }
-                    : {}),
-                }}
-                markingType="custom"
+                markedDates={(() => {
+                  const marks: Record<string, any> = {};
+                  if (!vehicleFromDate) return marks;
+                  const fromKey = vehicleFromDate.toISOString().slice(0, 10);
+                  const toKey = vehicleToDate ? vehicleToDate.toISOString().slice(0, 10) : null;
+                  if (!toKey || fromKey === toKey) {
+                    // Single day selected
+                    marks[fromKey] = { startingDay: true, endingDay: true, color: theme.primary, textColor: '#fff' };
+                  } else {
+                    // Range: mark every day between from and to
+                    marks[fromKey] = { startingDay: true, color: theme.primary, textColor: '#fff' };
+                    marks[toKey] = { endingDay: true, color: theme.primary, textColor: '#fff' };
+                    const cur = new Date(vehicleFromDate);
+                    cur.setDate(cur.getDate() + 1);
+                    const end = new Date(vehicleToDate!);
+                    while (cur < end) {
+                      marks[cur.toISOString().slice(0, 10)] = { color: theme.primary + '25', textColor: theme.text };
+                      cur.setDate(cur.getDate() + 1);
+                    }
+                  }
+                  return marks;
+                })()}
+                markingType="period"
                 theme={{
                   calendarBackground: theme.surface,
                   textSectionTitleColor: theme.textSecondary,
@@ -688,13 +704,27 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     setToDate(selected);
                   }
                 }}
-                markedDates={{
-                  ...(fromDate ? { [fromDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary } } : {}),
-                  ...(toDate && toDate.toISOString().slice(0, 10) !== fromDate?.toISOString().slice(0, 10)
-                    ? { [toDate.toISOString().slice(0, 10)]: { selected: true, selectedColor: theme.primary } }
-                    : {}),
-                }}
-                markingType="custom"
+                markedDates={(() => {
+                  const marks: Record<string, any> = {};
+                  if (!fromDate) return marks;
+                  const fromKey = fromDate.toISOString().slice(0, 10);
+                  const toKey = toDate ? toDate.toISOString().slice(0, 10) : null;
+                  if (!toKey || fromKey === toKey) {
+                    marks[fromKey] = { startingDay: true, endingDay: true, color: theme.primary, textColor: '#fff' };
+                  } else {
+                    marks[fromKey] = { startingDay: true, color: theme.primary, textColor: '#fff' };
+                    marks[toKey] = { endingDay: true, color: theme.primary, textColor: '#fff' };
+                    const cur = new Date(fromDate);
+                    cur.setDate(cur.getDate() + 1);
+                    const end = new Date(toDate!);
+                    while (cur < end) {
+                      marks[cur.toISOString().slice(0, 10)] = { color: theme.primary + '25', textColor: theme.text };
+                      cur.setDate(cur.getDate() + 1);
+                    }
+                  }
+                  return marks;
+                })()}
+                markingType="period"
                 theme={{
                   calendarBackground: theme.surface,
                   textSectionTitleColor: theme.textSecondary,
