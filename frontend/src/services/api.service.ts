@@ -418,7 +418,12 @@ class ApiService {
 
   // HR — single gate pass approval (HOD requests)
   async approveRequestAsHR(requestId: number, hrCode: string): Promise<ApiResponse> {
-    try { return await this.makeRequest(`${this.baseURL}/hr/gate-pass/${requestId}/approve`, { method: 'POST', body: JSON.stringify({ hrCode }) }); }
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/hr/gate-pass/${requestId}/approve`, { method: 'POST', body: JSON.stringify({ hrCode }) });
+      // Backend returns { status: "SUCCESS" } not { success: true }
+      const ok = data.success === true || data.status === 'SUCCESS' || data.status === 'success';
+      return { success: ok, message: data.message };
+    }
     catch (e: any) { return { success: false, message: e.message || 'Failed to approve' }; }
   }
 
