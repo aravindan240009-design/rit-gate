@@ -57,7 +57,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   const [requests, setRequests] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
-  const [bottomTab, setBottomTab] = useState<'HOME' | 'NEW_PASS' | 'EXITS' | 'PROFILE'>('HOME');
+  const [bottomTab, setBottomTab] = useState<'HOME' | 'NEW_PASS' | 'MY_REQUESTS' | 'EXITS' | 'PROFILE'>('HOME');
   const [showPassSheet, setShowPassSheet] = useState(false);
   const [exitLogs, setExitLogs] = useState<any[]>([]);
   const [rangeModalVisible, setRangeModalVisible] = useState(false);
@@ -535,9 +535,13 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('NEW_PASS'); setShowPassSheet(true); }}>
-          <Ionicons name={bottomTab === 'NEW_PASS' ? 'add-circle' : 'add-circle-outline'} size={22} color={bottomTab === 'NEW_PASS' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'NEW_PASS' && { color: theme.primary }]}>New Pass</ThemedText>
-          {bottomTab === 'NEW_PASS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('MY_REQUESTS'); onNavigate('MY_REQUESTS'); }}>
+          <Ionicons name={bottomTab === 'MY_REQUESTS' ? 'list' : 'list-outline'} size={22} color={bottomTab === 'MY_REQUESTS' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_REQUESTS' && { color: theme.primary }]}>My Requests</ThemedText>
+          {bottomTab === 'MY_REQUESTS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('EXITS'); onNavigate('HR_EXITS'); }}>
           <Ionicons name={bottomTab === 'EXITS' ? 'log-out' : 'log-out-outline'} size={22} color={bottomTab === 'EXITS' ? theme.primary : theme.textTertiary} />

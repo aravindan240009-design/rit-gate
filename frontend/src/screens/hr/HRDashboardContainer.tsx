@@ -3,8 +3,9 @@ import { View, BackHandler } from 'react-native';
 import { HR, ScreenName } from '../../types';
 import NewHRDashboard from './NewHRDashboard';
 import HRExitsScreen from './HRExitsScreen';
+import HRSinglePassScreen from './HRSinglePassScreen';
+import HRMyRequestsScreen from './HRMyRequestsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
-import GatePassRequestScreen from '../student/GatePassRequestScreen';
 
 interface HRDashboardContainerProps {
   hr: HR;
@@ -12,7 +13,7 @@ interface HRDashboardContainerProps {
   onNavigate: (screen: ScreenName) => void;
 }
 
-type InternalTab = 'DASHBOARD' | 'PROFILE' | 'EXITS' | 'NEW_PASS';
+type InternalTab = 'DASHBOARD' | 'PROFILE' | 'EXITS' | 'NEW_PASS' | 'MY_REQUESTS';
 
 const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
   hr,
@@ -37,6 +38,7 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
     if (screen === 'PROFILE') setActiveTab('PROFILE');
     else if (screen === 'HR_EXITS') setActiveTab('EXITS');
     else if (screen === 'NEW_PASS_REQUEST') setActiveTab('NEW_PASS');
+    else if (screen === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
     else onNavigate(screen);
   };
 
@@ -52,21 +54,15 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
   }
 
   if (activeTab === 'EXITS') {
-    return (
-      <HRExitsScreen
-        hr={hr}
-        onBack={() => setActiveTab('DASHBOARD')}
-      />
-    );
+    return <HRExitsScreen hr={hr} onBack={() => setActiveTab('DASHBOARD')} />;
   }
 
   if (activeTab === 'NEW_PASS') {
-    return (
-      <GatePassRequestScreen
-        user={{ ...(hr as any), staffCode: hr.hrCode, staffName: hr.hrName || hr.name }}
-        onBack={() => setActiveTab('DASHBOARD')}
-      />
-    );
+    return <HRSinglePassScreen hr={hr} onBack={() => setActiveTab('DASHBOARD')} />;
+  }
+
+  if (activeTab === 'MY_REQUESTS') {
+    return <HRMyRequestsScreen hr={hr} onBack={() => setActiveTab('DASHBOARD')} />;
   }
 
   return (
