@@ -729,20 +729,18 @@ public class GatePassRequestService {
         return token;
     }
     
-    // Generate random alphanumeric token
+    // Generate random 6-digit numeric token
     private String generateRandomToken() {
-        StringBuilder sb = new StringBuilder(8);
         SecureRandom random = new SecureRandom();
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        for (int i = 0; i < 8; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
-        }
-        return sb.toString();
+        int code = 100000 + random.nextInt(900000); // 100000–999999
+        return String.valueOf(code);
     }
     
-    // Generate manual entry code
+    // Generate manual entry code (6-digit numeric)
     private String generateManualCode() {
-        return String.format("%06d", new SecureRandom().nextInt(1000000));
+        SecureRandom random = new SecureRandom();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
     }
     
     // Reject by staff

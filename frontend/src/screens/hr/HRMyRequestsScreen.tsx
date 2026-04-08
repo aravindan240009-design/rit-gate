@@ -35,8 +35,23 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack }) =
     try {
       const res = await apiService.getStaffOwnGatePassRequests(hr.hrCode);
       const all: any[] = (res as any).requests || (res as any).data || [];
+      const now = new Date();
       const filtered = all
         .filter(r => r.status !== 'USED' && r.status !== 'EXITED')
+        .filter(r => {
+          // Show only today's requests (same as staff)
+          const d = new Date(r.requestDate || r.createdAt || 0);
+          return (
+            r.status === 'PENDING' ||
+            r.status === 'PENDING_STAFF' ||
+            r.status === 'PENDING_HOD' ||
+            r.status === 'PENDING_HR' ||
+            r.status === 'REJECTED' ||
+            (d.getFullYear() === now.getFullYear() &&
+              d.getMonth() === now.getMonth() &&
+              d.getDate() === now.getDate())
+          );
+        })
         .sort((a, b) => new Date(b.requestDate || b.createdAt || 0).getTime() - new Date(a.requestDate || a.createdAt || 0).getTime());
       setRequests(filtered);
     } catch (e) {
@@ -165,15 +180,6 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack }) =
                         <View style={[styles.statusDot, { backgroundColor: badge.bg }]} />
                         <ThemedText style={[styles.statusText, { color: badge.bg }]}>{badge.text}</ThemedText>
                       </View>
-                      {req.status === 'APPROVED' && (
-                        <TouchableOpacity
-                          style={[styles.qrBtn, { backgroundColor: theme.primary }]}
-                          onPress={() => handleViewQR(req)}
-                        >
-                          <Ionicons name="qr-code-outline" size={14} color="#fff" />
-                          <ThemedText style={styles.qrBtnText}>View QR</ThemedText>
-                        </TouchableOpacity>
-                      )}
                     </View>
                   </TouchableOpacity>
                 );
@@ -196,10 +202,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack }) =
         request={selectedRequest}
         viewerRole="staff"
         onViewQR={(req) => { setShowDetail(false); handleViewQR(req); }}
-        timelineSteps={selectedRequest ? [
-          { label: 'Request Submitted', status: 'done' as const },
-          { label: 'HR Approval', status: selectedRequest.status === 'APPROVED' ? 'done' as const : selectedRequest.status === 'REJECTED' ? 'rejected' as const : 'pending' as const },
-        ] : []}
+        timelineSteps={[]}
       />
 
       <GatePassQRModal
