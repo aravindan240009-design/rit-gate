@@ -431,6 +431,16 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           />
         </ScreenContentContainer>
         <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
+        {isDownloading && (
+          <View style={styles.downloadingOverlay}>
+            <View style={[styles.downloadingBox, { backgroundColor: theme.surface }]}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <ThemedText style={[styles.downloadingText, { color: theme.text }]}>Generating PDF...</ThemedText>
+            </View>
+          </View>
+        )}
+        <SuccessModal visible={showDownloadSuccess} title="Download Complete" message={downloadMessage} onClose={() => setShowDownloadSuccess(false)} autoClose={true} autoCloseDelay={3000} />
+        <ErrorModal visible={showDownloadError} type="general" title="Download Failed" message={downloadErrorMessage} onClose={() => setShowDownloadError(false)} />
       </SafeAreaView>
     );
   }
@@ -600,6 +610,16 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           />
         </ScreenContentContainer>
         <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
+        {isDownloading && (
+          <View style={styles.downloadingOverlay}>
+            <View style={[styles.downloadingBox, { backgroundColor: theme.surface }]}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <ThemedText style={[styles.downloadingText, { color: theme.text }]}>Generating PDF...</ThemedText>
+            </View>
+          </View>
+        )}
+        <SuccessModal visible={showDownloadSuccess} title="Download Complete" message={downloadMessage} onClose={() => setShowDownloadSuccess(false)} autoClose={true} autoCloseDelay={3000} />
+        <ErrorModal visible={showDownloadError} type="general" title="Download Failed" message={downloadErrorMessage} onClose={() => setShowDownloadError(false)} />
       </SafeAreaView>
     );
   }
@@ -713,6 +733,8 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           </VerticalScrollView>
         </ScreenContentContainer>
         <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
+        <SuccessModal visible={showDownloadSuccess} title="Download Complete" message={downloadMessage} onClose={() => setShowDownloadSuccess(false)} autoClose={true} autoCloseDelay={3000} />
+        <ErrorModal visible={showDownloadError} type="general" title="Download Failed" message={downloadErrorMessage} onClose={() => setShowDownloadError(false)} />
       </SafeAreaView>
     );
   }
