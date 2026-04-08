@@ -54,6 +54,7 @@ import NTFMyRequestsScreen from './screens/ntf/NTFMyRequestsScreen';
 import NCIDashboardContainer from './screens/nci/NCIDashboardContainer';
 import NCIMyRequestsScreen from './screens/nci/NCIMyRequestsScreen';
 import NCIExitsScreen from './screens/nci/NCIExitsScreen';
+import AdminDashboardContainer from './screens/admin/AdminDashboardContainer';
 import NotificationsScreen from './screens/shared/NotificationsScreen';
 import SwipeBackWrapper from './components/SwipeBackWrapper';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -98,7 +99,7 @@ const AppNavigator: React.FC<{
 // Screens that show exit confirmation on back press
 const EXIT_SCREENS: ScreenName[] = [
   'HOME', 'DASHBOARD', 'STAFF_DASHBOARD', 'HOD_DASHBOARD',
-  'HR_DASHBOARD', 'SECURITY_DASHBOARD', 'UNIFIED_LOGIN', 'NTF_DASHBOARD', 'NCI_DASHBOARD',
+  'HR_DASHBOARD', 'SECURITY_DASHBOARD', 'UNIFIED_LOGIN', 'NTF_DASHBOARD', 'NCI_DASHBOARD', 'ADMIN_DASHBOARD',
 ];
 
 const App: React.FC = () => {
@@ -110,6 +111,7 @@ const App: React.FC = () => {
   const [hr, setHr] = React.useState<HR | null>(null);
   const [ntf, setNtf] = React.useState<NonTeachingFaculty | null>(null);
   const [nci, setNci] = React.useState<NonTeachingFaculty | null>(null);
+  const [admin, setAdmin] = React.useState<NonTeachingFaculty | null>(null);
   const [selectedRequest, setSelectedRequest] = React.useState<any>(null);
   const [security, setSecurity] = React.useState<SecurityPersonnel | null>(null);
   const [currentScreen, setCurrentScreen] = React.useState<ScreenName>('HOME');
@@ -475,6 +477,21 @@ const App: React.FC = () => {
         return;
       }
 
+      // Check for saved Admin Officer session
+      const savedAdmin = await offlineStorage.getCurrentAdmin();
+      if (savedAdmin) {
+        console.log('✅ Found saved Admin Officer session:', savedAdmin.staffCode);
+        setAdmin(savedAdmin);
+        setUserType('ADMIN_OFFICER');
+        setCurrentScreen('ADMIN_DASHBOARD');
+        const hasFlag = await biometricAuthService.hasSessionFlag();
+        setRequiresBiometricGate(hasFlag);
+        setBiometricVerified(!hasFlag);
+        setIsLoading(false);
+        initPushNotifications(savedAdmin.staffCode, 'staff');
+        return;
+      }
+
       console.log('ℹ️ No saved user session found - showing home screen');
       setIsLoading(false);
       setCurrentScreen('HOME');
@@ -509,6 +526,7 @@ const App: React.FC = () => {
     if (roleToKeep !== 'SECURITY') await offlineStorage.clearCurrentSecurity();
     if (roleToKeep !== 'NON_TEACHING') await offlineStorage.clearCurrentNTF();
     if (roleToKeep !== 'NON_CLASS_INCHARGE') await offlineStorage.clearCurrentNCI();
+    if ((roleToKeep as any) !== 'ADMIN_OFFICER') await offlineStorage.clearCurrentAdmin();
   };
 
   const handleStudentLogin = async (studentData: Student) => {
@@ -637,6 +655,24 @@ const App: React.FC = () => {
     initPushNotifications(nciData.staffCode, 'staff');
   };
 
+  const handleAdminLogin = async (adminData: NonTeachingFaculty) => {
+    console.log('🏢 Admin Officer login successful:', adminData.staffCode);
+    const enriched = { ...adminData, role: 'ADMIN_OFFICER' };
+    try {
+      await clearAllSessionsExcept('ADMIN_OFFICER' as any);
+      await offlineStorage.saveCurrentAdmin(enriched as any);
+    } catch (error) {
+      console.error('❌ Failed to save Admin data:', error);
+    }
+    setAdmin(enriched);
+    setUserType('ADMIN_OFFICER');
+    setCurrentScreen('ADMIN_DASHBOARD');
+    setRequiresBiometricGate(false);
+    setBiometricVerified(true);
+    setBiometricPrompted(false);
+    initPushNotifications(adminData.staffCode, 'staff');
+  };
+
   const handleLogout = async () => {
     try {
       console.log('🚪 Logging out user...');
@@ -650,6 +686,7 @@ const App: React.FC = () => {
       await offlineStorage.clearCurrentSecurity();
       await offlineStorage.clearCurrentNTF();
       await offlineStorage.clearCurrentNCI();
+      await offlineStorage.clearCurrentAdmin();
       await offlineStorage.clearCurrentNTF();
       
       // Reset all state
@@ -660,6 +697,7 @@ const App: React.FC = () => {
       setSecurity(null);
       setNtf(null);
       setNci(null);
+      setAdmin(null);
       setUserType(null);
       setCurrentScreen('HOME');
       setRequiresBiometricGate(false);
@@ -685,6 +723,7 @@ const App: React.FC = () => {
     else if (userType === 'SECURITY') setCurrentScreen('SECURITY_DASHBOARD');
     else if (userType === 'NON_TEACHING') setCurrentScreen('NTF_DASHBOARD');
     else if (userType === 'NON_CLASS_INCHARGE') setCurrentScreen('NCI_DASHBOARD');
+    else if (userType === 'ADMIN_OFFICER') setCurrentScreen('ADMIN_DASHBOARD');
     else setCurrentScreen('HOME');
   };
 
@@ -800,7 +839,7 @@ const App: React.FC = () => {
               else if (role === 'SECURITY') handleSecurityLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
               else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
-              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'ADMIN_OFFICER') handleAdminLogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -891,7 +930,7 @@ const App: React.FC = () => {
               else if (role === 'SECURITY') handleSecurityLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
               else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
-              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'ADMIN_OFFICER') handleAdminLogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -989,7 +1028,7 @@ const App: React.FC = () => {
               else if (role === 'SECURITY') handleSecurityLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
               else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
-              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'ADMIN_OFFICER') handleAdminLogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -1134,7 +1173,7 @@ const App: React.FC = () => {
               else if (role === 'SECURITY') handleSecurityLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
               else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
-              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'ADMIN_OFFICER') handleAdminLogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -1165,10 +1204,10 @@ const App: React.FC = () => {
               else if (role === 'SECURITY') handleSecurityLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
               else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
-              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'ADMIN_OFFICER') handleAdminLogin(user);
               else if (role === 'NON_TEACHING') handleNTFLogin(user);
               else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
-              else if (role === 'NON_CLASS_INCHARGE') handleNCILogin(user);
+              else if (role === 'ADMIN_OFFICER') handleAdminLogin(user);
             }}
             onBack={goBackToHome}
           />
@@ -1324,6 +1363,30 @@ const App: React.FC = () => {
         );
       }
 
+      // Handle authenticated Admin Officer
+      if (userType === 'ADMIN_OFFICER' && admin) {
+        switch (currentScreen) {
+          case 'ADMIN_DASHBOARD':
+            return <AdminDashboardContainer admin={admin} onLogout={handleLogout} onNavigate={navigateToScreen} />;
+          case 'NOTIFICATIONS':
+            return <NotificationsScreen userId={admin.staffCode} userType="staff" onBack={navigateBack} />;
+          default:
+            return <AdminDashboardContainer admin={admin} onLogout={handleLogout} onNavigate={navigateToScreen} />;
+        }
+      }
+
+      // Handle unauthenticated Admin Officer
+      if (userType === 'ADMIN_OFFICER' && !admin) {
+        return (
+          <ModernUnifiedLoginScreen
+            onLoginSuccess={(user: any, role: UserRole) => {
+              if (role === 'ADMIN_OFFICER') handleAdminLogin(user);
+            }}
+            onBack={goBackToHome}
+          />
+        );
+      }
+
       // Handle home screen
       if (currentScreen === 'HOME' || !userType) {
         console.log('🏠 Rendering HomeScreen');
@@ -1360,6 +1423,7 @@ const App: React.FC = () => {
           hr?.hrCode ||
           security?.securityId ||
           nci?.staffCode ||
+          admin?.staffCode ||
           undefined
         }>
           <RefreshProvider>

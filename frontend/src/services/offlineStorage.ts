@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   CURRENT_SECURITY: 'current_security',
   CURRENT_NTF: 'current_ntf',
   CURRENT_NCI: 'current_nci',
+  CURRENT_ADMIN: 'current_admin',
   ENTRY_LOGS: 'entry_logs_',
   APP_SETTINGS: 'app_settings',
 };
@@ -301,6 +302,24 @@ class OfflineStorageService {
       console.error('Error clearing current NCI:', error);
       throw error;
     }
+  }
+
+  // Admin Officer Management
+  async saveCurrentAdmin(admin: NonTeachingFaculty): Promise<void> {
+    try { await AsyncStorage.setItem(STORAGE_KEYS.CURRENT_ADMIN, JSON.stringify(admin)); }
+    catch (error) { console.error('Error storing Admin data:', error); throw error; }
+  }
+
+  async getCurrentAdmin(): Promise<NonTeachingFaculty | null> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.CURRENT_ADMIN);
+      return data ? JSON.parse(data) : null;
+    } catch (error) { console.error('Error getting current Admin:', error); return null; }
+  }
+
+  async clearCurrentAdmin(): Promise<void> {
+    try { await AsyncStorage.removeItem(STORAGE_KEYS.CURRENT_ADMIN); }
+    catch (error) { console.error('Error clearing current Admin:', error); throw error; }
   }
 
   // Clear All Data

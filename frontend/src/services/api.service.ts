@@ -128,6 +128,7 @@ class ApiService {
       case 'STAFF':   { const r = await this.sendStaffOTP(userId);   return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
       case 'NON_TEACHING': { const r = await this.sendStaffOTP(userId); return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
       case 'NON_CLASS_INCHARGE': { const r = await this.sendStaffOTP(userId); return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
+      case 'ADMIN_OFFICER': { const r = await this.sendStaffOTP(userId); return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
       case 'HOD':     { const r = await this.sendHODOTP(userId);     return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
       case 'HR':      { const r = await this.sendHROTP(userId);      return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
       case 'SECURITY':{ const r = await this.sendSecurityOTP(userId);return { success: r.success, message: r.message, maskedEmail: (r as any).email }; }
@@ -141,6 +142,7 @@ class ApiService {
       case 'STAFF':   { const r = await this.verifyStaffOTP(userId, otp);   return { success: r.success, message: r.message, user: r.user }; }
       case 'NON_TEACHING': { const r = await this.verifyStaffOTP(userId, otp); return { success: r.success, message: r.message, user: r.user }; }
       case 'NON_CLASS_INCHARGE': { const r = await this.verifyStaffOTP(userId, otp); return { success: r.success, message: r.message, user: r.user }; }
+      case 'ADMIN_OFFICER': { const r = await this.verifyStaffOTP(userId, otp); return { success: r.success, message: r.message, user: r.user }; }
       case 'HOD':     { const r = await this.verifyHODOTP(userId, otp);     return { success: r.success, message: r.message, user: r.user }; }
       case 'HR':      { const r = await this.verifyHROTP(userId, otp);      return { success: r.success, message: r.message, user: r.user }; }
       case 'SECURITY':{ const r = await this.verifySecurityOTP(userId, otp);return { success: r.success, message: r.message, user: r.user }; }

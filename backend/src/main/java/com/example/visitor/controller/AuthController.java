@@ -1430,6 +1430,11 @@ public class AuthController {
                 return ResponseEntity.ok(Map.of("success", true, "role", "NON_CLASS_INCHARGE"));
             }
 
+            // 3b. Administrative Officer → ADMIN_OFFICER (before non-teaching dept check)
+            if (role.contains("ADMINISTRATIVE") || role.equalsIgnoreCase("ADMINISTRATIVE OFFICER")) {
+                return ResponseEntity.ok(Map.of("success", true, "role", "ADMIN_OFFICER"));
+            }
+
             // 4. Non-Teaching department → NON_TEACHING
             boolean isNonTeachingDept = department.toLowerCase().startsWith("non-teaching") ||
                                         department.toLowerCase().startsWith("non teaching");
