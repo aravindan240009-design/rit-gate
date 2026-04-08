@@ -398,6 +398,7 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
           visitDate: selectedVisitor.visitDate,
           status: selectedVisitor.status,
           requestType: 'VISITOR',
+          role: selectedVisitor.role || selectedVisitor.type || 'VISITOR',
           staffApproval: selectedVisitor.status,
         } : null}
         showActions={selectedVisitor?.status === 'PENDING'}
@@ -615,13 +616,13 @@ const styles = StyleSheet.create({
   },
   passTypePill: {
     borderRadius: 8,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderWidth: 1,
   },
   passTypePillText: {
-    fontSize: 9,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
   },
   statusBadge: {
     paddingHorizontal: 12,

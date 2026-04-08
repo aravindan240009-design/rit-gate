@@ -126,7 +126,9 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
             <View style={styles.profileInfo}>
               {request.requestType === 'VISITOR' && (
                 <View style={[styles.visitorBadge, { backgroundColor: theme.primary }]}>
-                  <ThemedText style={[styles.visitorBadgeText, { color: '#FFFFFF' }]}>VISITOR</ThemedText>
+                  <ThemedText style={[styles.visitorBadgeText, { color: '#FFFFFF' }]}>
+                    {(request.role || 'VISITOR').toUpperCase()}
+                  </ThemedText>
                 </View>
               )}
               <ThemedText style={[styles.profileName, { color: theme.text }]} numberOfLines={1}>
