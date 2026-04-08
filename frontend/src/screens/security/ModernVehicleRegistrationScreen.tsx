@@ -402,25 +402,25 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
         {/* Recent Vehicles */}
         {recentVehicles.length > 0 && (
           <View style={styles.section}>
-            <ThemedText style={styles.sectionTitle}>Recent Registrations</ThemedText>
+            <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Recent Registrations</ThemedText>
             {recentVehicles.map((vehicle) => (
               <TouchableOpacity
                 key={vehicle.id}
-                style={styles.vehicleCard}
+                style={[styles.vehicleCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
                 onPress={() => {
                   setSelectedVehicle(vehicle);
                   setShowDetailModal(true);
                 }}
               >
-                <View style={styles.vehicleIcon}>
-                  <Ionicons name={getVehicleIcon(vehicle.vehicleType) as any} size={24} color="#00BCD4" />
+                <View style={[styles.vehicleIcon, { backgroundColor: theme.primary + '20' }]}>
+                  <Ionicons name={getVehicleIcon(vehicle.vehicleType) as any} size={24} color={theme.primary} />
                 </View>
                 <View style={styles.vehicleInfo}>
-                  <ThemedText style={styles.vehiclePlate}>{vehicle.licensePlate}</ThemedText>
-                  <ThemedText style={styles.vehicleType}>{vehicle.vehicleType}</ThemedText>
-                  <ThemedText style={styles.vehicleDate}>{formatDate(vehicle.registeredAt)}</ThemedText>
+                  <ThemedText style={[styles.vehiclePlate, { color: theme.text }]}>{vehicle.licensePlate}</ThemedText>
+                  <ThemedText style={[styles.vehicleType, { color: theme.primary }]}>{vehicle.vehicleType}</ThemedText>
+                  <ThemedText style={[styles.vehicleDate, { color: theme.textTertiary }]}>{formatDate(vehicle.registeredAt)}</ThemedText>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={20} color={theme.textTertiary} />
               </TouchableOpacity>
             ))}
           </View>
@@ -435,48 +435,48 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
         onRequestClose={() => setShowDetailModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <ThemedText style={styles.modalTitle}>Vehicle Details</ThemedText>
+          <View style={[styles.modalContainer, { backgroundColor: theme.surface }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <ThemedText style={[styles.modalTitle, { color: theme.text }]}>Vehicle Details</ThemedText>
               <TouchableOpacity
                 onPress={() => setShowDetailModal(false)}
-                style={styles.closeButton}
+                style={[styles.closeButton, { backgroundColor: theme.surfaceHighlight }]}
               >
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Ionicons name="close" size={24} color={theme.textSecondary} />
               </TouchableOpacity>
             </View>
 
             {selectedVehicle && (
               <VerticalScrollView style={styles.modalContent} contentContainerStyle={styles.modalScrollContent}>
-                <View style={styles.modalVehicleIcon}>
-                  <Ionicons name={getVehicleIcon(selectedVehicle.vehicleType) as any} size={48} color="#00BCD4" />
+                <View style={[styles.modalVehicleIcon, { backgroundColor: theme.primary + '20' }]}>
+                  <Ionicons name={getVehicleIcon(selectedVehicle.vehicleType) as any} size={48} color={theme.primary} />
                 </View>
 
                 <View style={styles.modalSection}>
-                  <ThemedText style={styles.sectionTitle}>Vehicle Information</ThemedText>
+                  <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Vehicle Information</ThemedText>
                   <View style={styles.modalRow}>
-                    <ThemedText style={styles.modalLabel}>License Plate</ThemedText>
-                    <ThemedText style={styles.modalValue}>{selectedVehicle.licensePlate}</ThemedText>
+                    <ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>License Plate</ThemedText>
+                    <ThemedText style={[styles.modalValue, { color: theme.text }]}>{selectedVehicle.licensePlate}</ThemedText>
                   </View>
                   <View style={styles.modalRow}>
-                    <ThemedText style={styles.modalLabel}>Type</ThemedText>
-                    <ThemedText style={styles.modalValue}>{selectedVehicle.vehicleType}</ThemedText>
+                    <ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>Type</ThemedText>
+                    <ThemedText style={[styles.modalValue, { color: theme.text }]}>{selectedVehicle.vehicleType}</ThemedText>
                   </View>
                 </View>
 
                 <View style={styles.modalSection}>
-                  <ThemedText style={styles.sectionTitle}>Owner Information</ThemedText>
+                  <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Owner Information</ThemedText>
                   <View style={styles.modalRow}>
-                    <ThemedText style={styles.modalLabel}>Name</ThemedText>
-                    <ThemedText style={styles.modalValue}>{selectedVehicle.ownerName}</ThemedText>
+                    <ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>Name</ThemedText>
+                    <ThemedText style={[styles.modalValue, { color: theme.text }]}>{selectedVehicle.ownerName}</ThemedText>
                   </View>
                   <View style={styles.modalRow}>
-                    <ThemedText style={styles.modalLabel}>Phone</ThemedText>
-                    <ThemedText style={styles.modalValue}>{selectedVehicle.ownerPhone}</ThemedText>
+                    <ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>Phone</ThemedText>
+                    <ThemedText style={[styles.modalValue, { color: theme.text }]}>{selectedVehicle.ownerPhone}</ThemedText>
                   </View>
                   <View style={styles.modalRow}>
-                    <ThemedText style={styles.modalLabel}>Registered</ThemedText>
-                    <ThemedText style={styles.modalValue}>{formatDate(selectedVehicle.registeredAt)}</ThemedText>
+                    <ThemedText style={[styles.modalLabel, { color: theme.textSecondary }]}>Registered</ThemedText>
+                    <ThemedText style={[styles.modalValue, { color: theme.text }]}>{formatDate(selectedVehicle.registeredAt)}</ThemedText>
                   </View>
                 </View>
               </VerticalScrollView>
@@ -506,7 +506,7 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -514,22 +514,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: 'transparent',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1F2937',
   },
   headerRight: {
     width: 40,
@@ -547,11 +545,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 12,
   },
   searchCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     shadowColor: '#000',
@@ -563,7 +559,6 @@ const styles = StyleSheet.create({
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -573,10 +568,8 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
   },
   searchButton: {
-    backgroundColor: '#00BCD4',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -592,14 +585,12 @@ const styles = StyleSheet.create({
   resultsHeader: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#6B7280',
     marginBottom: 12,
     paddingHorizontal: 4,
   },
   vehicleCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -613,7 +604,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#E0F2FE',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -624,22 +614,18 @@ const styles = StyleSheet.create({
   vehiclePlate: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 4,
   },
   vehicleType: {
     fontSize: 13,
-    color: '#00BCD4',
     fontWeight: '600',
     marginBottom: 2,
   },
   vehicleOwner: {
     fontSize: 13,
-    color: '#6B7280',
   },
   vehicleDate: {
     fontSize: 12,
-    color: '#9CA3AF',
   },
   inputGroup: {
     marginBottom: 16,
@@ -647,24 +633,20 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     gap: 12,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
   },
   typeChips: {
     flexDirection: 'row',
@@ -675,22 +657,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     gap: 8,
   },
   typeChipActive: {
-    backgroundColor: '#00BCD4',
-    borderColor: '#00BCD4',
   },
   typeChipText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
   },
   typeChipTextActive: {
     color: '#FFF',
@@ -707,22 +684,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     gap: 6,
   },
   ownerTypeChipActive: {
-    backgroundColor: '#00BCD4',
-    borderColor: '#00BCD4',
   },
   ownerTypeChipText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#6B7280',
   },
   ownerTypeChipTextActive: {
     color: '#FFF',
@@ -731,14 +703,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#00BCD4',
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
     marginTop: 8,
   },
   registerButtonDisabled: {
-    backgroundColor: '#D1D5DB',
   },
   registerButtonText: {
     fontSize: 16,
@@ -751,7 +721,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '90%',
@@ -763,18 +732,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   closeButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -790,7 +756,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#E0F2FE',
     justifyContent: 'center',
     alignItems: 'center',
     alignSelf: 'center',
@@ -807,12 +772,10 @@ const styles = StyleSheet.create({
   },
   modalLabel: {
     fontSize: 14,
-    color: '#6B7280',
   },
   modalValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
 });
 

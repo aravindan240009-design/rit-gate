@@ -363,10 +363,10 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
           </View>
 
           {/* Instructions */}
-          <View style={[styles.instructionsCard, { backgroundColor: theme.info + '22' }]}>
-            <Ionicons name="information-circle" size={24} color={theme.info} />
+          <View style={[styles.instructionsCard, { backgroundColor: theme.primary + '20' }]}>
+            <Ionicons name="information-circle" size={24} color={theme.primary} />
             <View style={styles.instructionsContent}>
-              <ThemedText style={[styles.instructionsTitle, { color: theme.info }]}>How to Scan</ThemedText>
+              <ThemedText style={[styles.instructionsTitle, { color: theme.primary }]}>How to Scan</ThemedText>
               <ThemedText style={[styles.instructionsText, { color: theme.textSecondary }]}>
                 The system automatically detects entry or exit:{'\n'}
                 • Visitor first scan → Entry recorded{'\n'}
@@ -480,7 +480,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
   },
   fullScreen: {
     flex: 1,
@@ -492,22 +492,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: 'transparent',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1F2937',
   },
   headerRight: {
     width: 40,
@@ -525,13 +523,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 12,
   },
   scanTypeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -555,33 +551,27 @@ const styles = StyleSheet.create({
   scanTypeTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 4,
   },
   scanTypeDesc: {
     fontSize: 14,
-    color: '#6B7280',
   },
   manualButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     borderWidth: 2,
-    borderColor: '#00BCD4',
     borderStyle: 'dashed',
   },
   manualButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#00BCD4',
     marginLeft: 8,
   },
   instructionsCard: {
     flexDirection: 'row',
-    backgroundColor: '#E0F2FE',
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -592,12 +582,10 @@ const styles = StyleSheet.create({
   instructionsTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0369A1',
     marginBottom: 8,
   },
   instructionsText: {
     fontSize: 13,
-    color: '#075985',
     lineHeight: 20,
   },
   cameraOverlay: {
@@ -610,7 +598,6 @@ const styles = StyleSheet.create({
   scanTypeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 188, 212, 0.9)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -630,7 +617,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 40,
     height: 40,
-    borderColor: '#00BCD4',
   },
   cornerTopLeft: {
     top: 0,
@@ -705,7 +691,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#6B7280',
     marginTop: 16,
   },
   errorContainer: {
@@ -717,13 +702,11 @@ const styles = StyleSheet.create({
   errorTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
     marginTop: 16,
     marginBottom: 8,
   },
   errorText: {
     fontSize: 14,
-    color: '#6B7280',
     textAlign: 'center',
   },
   modalOverlay: {
@@ -734,7 +717,6 @@ const styles = StyleSheet.create({
   dragHandle: { alignItems: 'center', paddingTop: 10, paddingBottom: 4 },
   dragHandleBar: { width: 40, height: 4, borderRadius: 2 },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '70%',
@@ -746,18 +728,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   closeButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -767,7 +746,6 @@ const styles = StyleSheet.create({
   modalLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
     marginBottom: 8,
   },
   typeButtons: {
@@ -779,42 +757,34 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
   },
   typeButtonActive: {
-    backgroundColor: '#00BCD4',
   },
   typeButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6B7280',
   },
   typeButtonTextActive: {
     color: '#FFF',
   },
   manualInput: {
-    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
-    color: '#1F2937',
     marginBottom: 20,
   },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#00BCD4',
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
   },
   submitButtonDisabled: {
-    backgroundColor: '#D1D5DB',
   },
   submitButtonText: {
     fontSize: 16,

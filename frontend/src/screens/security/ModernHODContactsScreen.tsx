@@ -298,7 +298,7 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: 'transparent',
   },
 
   // Header
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 20,
     paddingHorizontal: 20,
     paddingBottom: 18,
@@ -320,14 +320,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
     letterSpacing: 0.5,
     textAlign: 'center',
     lineHeight: 22,
@@ -340,14 +338,12 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     marginTop: 16,
     marginBottom: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   searchIcon: {
     marginRight: 10,
@@ -355,7 +351,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: '#1F2937',
     padding: 0,
   },
 
@@ -374,19 +369,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     marginRight: 10,
   },
   filterChipActive: {
-    backgroundColor: '#00BCD4',
-    borderColor: '#00BCD4',
   },
   filterChipText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
   },
   filterChipTextActive: {
     color: '#FFFFFF',
@@ -411,7 +401,6 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 15,
-    color: '#6B7280',
   },
 
   // Empty State
@@ -424,20 +413,17 @@ const styles = StyleSheet.create({
   emptyStateText: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#1F2937',
     marginTop: 16,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: '#9CA3AF',
     textAlign: 'center',
   },
 
   // HOD Card
   hodCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 14,
@@ -447,7 +433,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#F3F4F6',
   },
   hodHeader: {
     flexDirection: 'row',
@@ -458,7 +443,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#00BCD4',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -474,17 +458,14 @@ const styles = StyleSheet.create({
   hodName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 4,
   },
   hodDepartment: {
     fontSize: 13,
-    color: '#6B7280',
     marginBottom: 6,
   },
   designationBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#F3F4F6',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -492,7 +473,6 @@ const styles = StyleSheet.create({
   designationText: {
     fontSize: 11,
     fontWeight: '500',
-    color: '#6B7280',
   },
   statusIndicator: {
     alignItems: 'center',
@@ -501,18 +481,15 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#10B981',
     marginBottom: 4,
   },
   statusText: {
     fontSize: 11,
-    color: '#10B981',
     fontWeight: '500',
   },
 
   // Contact Section
   contactSection: {
-    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 12,
     marginBottom: 12,
@@ -525,13 +502,11 @@ const styles = StyleSheet.create({
   contactText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1F2937',
     marginLeft: 10,
     flex: 1,
   },
   contactEmail: {
     fontSize: 13,
-    color: '#6B7280',
     marginLeft: 10,
     flex: 1,
   },
@@ -546,7 +521,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#00BCD4',
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 12,
@@ -557,12 +531,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
     gap: 6,
   },
   callButtonText: {
@@ -573,15 +545,12 @@ const styles = StyleSheet.create({
   messageButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#6B7280',
   },
 
   // Bottom Navigation Bar
   bottomTabBar: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
     paddingVertical: 6,
     paddingBottom: Platform.OS === 'ios' ? 20 : 6,
     shadowColor: '#000',
@@ -598,12 +567,10 @@ const styles = StyleSheet.create({
   },
   bottomTabLabel: {
     fontSize: 10,
-    color: '#9CA3AF',
     marginTop: 4,
     fontWeight: '500',
   },
   activeBottomTabLabel: {
-    color: '#00BCD4',
     fontWeight: '600',
   },
 });

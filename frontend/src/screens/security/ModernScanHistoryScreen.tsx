@@ -501,42 +501,42 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       ? vehicleToDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
       : null;
     return (
-      <SafeAreaView style={[skStyles.screen, { backgroundColor: '#ffffff' }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }} edges={['top', 'bottom']}>
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
         {/* Header */}
-        <View style={skStyles.header}>
-          <TouchableOpacity style={skStyles.backBtn} onPress={() => setVehicleRangePickerPage(false)}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#ffffff' }}>
+          <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' }} onPress={() => setVehicleRangePickerPage(false)}>
             <Ionicons name="arrow-back" size={22} color="#1a1a1a" />
           </TouchableOpacity>
-          <ThemedText style={skStyles.headerTitle}>Select dates</ThemedText>
+          <ThemedText style={{ fontSize: 17, fontWeight: '700', color: '#1a1a1a' }}>Select dates</ThemedText>
           <View style={{ width: 36 }} />
         </View>
 
         {/* Selected range summary bar */}
-        <View style={skStyles.summaryBar}>
+        <View style={{ flexDirection: 'row', marginHorizontal: 16, marginBottom: 4, borderRadius: 14, backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB', overflow: 'hidden' }}>
           <TouchableOpacity
-            style={[skStyles.summaryChip, vehicleSelectingDateType === 'FROM' && skStyles.summaryChipActive]}
+            style={[{ flex: 1, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' }, vehicleSelectingDateType === 'FROM' && { backgroundColor: '#EFF6FF' }]}
             onPress={() => setVehicleSelectingDateType('FROM')}
           >
-            <ThemedText style={skStyles.summaryLabel}>FROM</ThemedText>
-            <ThemedText style={[skStyles.summaryValue, vehicleSelectingDateType === 'FROM' && { color: theme.primary }]}>
+            <ThemedText style={{ fontSize: 10, fontWeight: '700', letterSpacing: 1, color: '#9CA3AF', marginBottom: 2 }}>FROM</ThemedText>
+            <ThemedText style={{ fontSize: 14, fontWeight: '700', color: vehicleSelectingDateType === 'FROM' ? theme.primary : '#1a1a1a' }}>
               {vFromLabel ?? '—'}
             </ThemedText>
           </TouchableOpacity>
-          <View style={skStyles.summaryDivider} />
+          <View style={{ width: 1, backgroundColor: '#E5E7EB', marginVertical: 8 }} />
           <TouchableOpacity
-            style={[skStyles.summaryChip, vehicleSelectingDateType === 'TO' && skStyles.summaryChipActive]}
+            style={[{ flex: 1, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' }, vehicleSelectingDateType === 'TO' && { backgroundColor: '#EFF6FF' }]}
             onPress={() => setVehicleSelectingDateType('TO')}
           >
-            <ThemedText style={skStyles.summaryLabel}>TO</ThemedText>
-            <ThemedText style={[skStyles.summaryValue, vehicleSelectingDateType === 'TO' && { color: theme.primary }]}>
+            <ThemedText style={{ fontSize: 10, fontWeight: '700', letterSpacing: 1, color: '#9CA3AF', marginBottom: 2 }}>TO</ThemedText>
+            <ThemedText style={{ fontSize: 14, fontWeight: '700', color: vehicleSelectingDateType === 'TO' ? theme.primary : '#1a1a1a' }}>
               {vToLabel ?? '—'}
             </ThemedText>
           </TouchableOpacity>
         </View>
 
         {/* Instruction */}
-        <ThemedText style={skStyles.instruction}>
+        <ThemedText style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', marginTop: 8, marginBottom: 4 }}>
           {vehicleSelectingDateType === 'FROM' ? 'Tap a start date' : 'Tap an end date'}
         </ThemedText>
 
@@ -578,20 +578,20 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
         </ScreenContentContainer>
 
         {/* Sticky bottom bar */}
-        <View style={skStyles.bottomBar}>
-          <TouchableOpacity style={skStyles.clearBtn} onPress={() => {
+        <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
+          <TouchableOpacity style={{ flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', backgroundColor: '#F3F4F6' }} onPress={() => {
             setVehicleFromDate(null);
             setVehicleToDate(null);
             setVehicleSelectingDateType('FROM');
           }}>
-            <ThemedText style={skStyles.clearBtnText}>Clear</ThemedText>
+            <ThemedText style={{ fontSize: 15, fontWeight: '700', color: '#6B7280' }}>Clear</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[skStyles.applyBtn, { backgroundColor: vehicleFromDate && vehicleToDate ? theme.primary : '#D1D5DB' }]}
+            style={{ flex: 2, paddingVertical: 14, borderRadius: 12, alignItems: 'center', backgroundColor: vehicleFromDate && vehicleToDate ? theme.primary : '#D1D5DB' }}
             disabled={!vehicleFromDate || !vehicleToDate}
             onPress={applyVehicleDateRange}
           >
-            <ThemedText style={skStyles.applyBtnText}>Apply</ThemedText>
+            <ThemedText style={{ fontSize: 15, fontWeight: '700', color: '#ffffff' }}>Apply</ThemedText>
           </TouchableOpacity>
         </View>
         <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
@@ -697,42 +697,42 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       ? toDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
       : null;
     return (
-      <SafeAreaView style={[skStyles.screen, { backgroundColor: '#ffffff' }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }} edges={['top', 'bottom']}>
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
         {/* Header */}
-        <View style={skStyles.header}>
-          <TouchableOpacity style={skStyles.backBtn} onPress={() => setRangePickerPage(false)}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#ffffff' }}>
+          <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' }} onPress={() => setRangePickerPage(false)}>
             <Ionicons name="arrow-back" size={22} color="#1a1a1a" />
           </TouchableOpacity>
-          <ThemedText style={skStyles.headerTitle}>Select dates</ThemedText>
+          <ThemedText style={{ fontSize: 17, fontWeight: '700', color: '#1a1a1a' }}>Select dates</ThemedText>
           <View style={{ width: 36 }} />
         </View>
 
         {/* Selected range summary bar */}
-        <View style={skStyles.summaryBar}>
+        <View style={{ flexDirection: 'row', marginHorizontal: 16, marginBottom: 4, borderRadius: 14, backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB', overflow: 'hidden' }}>
           <TouchableOpacity
-            style={[skStyles.summaryChip, selectingDateType === 'FROM' && skStyles.summaryChipActive]}
+            style={[{ flex: 1, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' }, selectingDateType === 'FROM' && { backgroundColor: '#EFF6FF' }]}
             onPress={() => setSelectingDateType('FROM')}
           >
-            <ThemedText style={skStyles.summaryLabel}>FROM</ThemedText>
-            <ThemedText style={[skStyles.summaryValue, selectingDateType === 'FROM' && { color: theme.primary }]}>
+            <ThemedText style={{ fontSize: 10, fontWeight: '700', letterSpacing: 1, color: '#9CA3AF', marginBottom: 2 }}>FROM</ThemedText>
+            <ThemedText style={{ fontSize: 14, fontWeight: '700', color: selectingDateType === 'FROM' ? theme.primary : '#1a1a1a' }}>
               {fromLabel ?? '—'}
             </ThemedText>
           </TouchableOpacity>
-          <View style={skStyles.summaryDivider} />
+          <View style={{ width: 1, backgroundColor: '#E5E7EB', marginVertical: 8 }} />
           <TouchableOpacity
-            style={[skStyles.summaryChip, selectingDateType === 'TO' && skStyles.summaryChipActive]}
+            style={[{ flex: 1, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' }, selectingDateType === 'TO' && { backgroundColor: '#EFF6FF' }]}
             onPress={() => setSelectingDateType('TO')}
           >
-            <ThemedText style={skStyles.summaryLabel}>TO</ThemedText>
-            <ThemedText style={[skStyles.summaryValue, selectingDateType === 'TO' && { color: theme.primary }]}>
+            <ThemedText style={{ fontSize: 10, fontWeight: '700', letterSpacing: 1, color: '#9CA3AF', marginBottom: 2 }}>TO</ThemedText>
+            <ThemedText style={{ fontSize: 14, fontWeight: '700', color: selectingDateType === 'TO' ? theme.primary : '#1a1a1a' }}>
               {toLabel ?? '—'}
             </ThemedText>
           </TouchableOpacity>
         </View>
 
         {/* Instruction */}
-        <ThemedText style={skStyles.instruction}>
+        <ThemedText style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', marginTop: 8, marginBottom: 4 }}>
           {selectingDateType === 'FROM' ? 'Tap a start date' : 'Tap an end date'}
         </ThemedText>
 
@@ -774,20 +774,20 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
         </ScreenContentContainer>
 
         {/* Sticky bottom bar */}
-        <View style={skStyles.bottomBar}>
-          <TouchableOpacity style={skStyles.clearBtn} onPress={() => {
+        <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
+          <TouchableOpacity style={{ flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', backgroundColor: '#F3F4F6' }} onPress={() => {
             setFromDate(null);
             setToDate(null);
             setSelectingDateType('FROM');
           }}>
-            <ThemedText style={skStyles.clearBtnText}>Clear</ThemedText>
+            <ThemedText style={{ fontSize: 15, fontWeight: '700', color: '#6B7280' }}>Clear</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[skStyles.applyBtn, { backgroundColor: fromDate && toDate ? theme.primary : '#D1D5DB' }]}
+            style={{ flex: 2, paddingVertical: 14, borderRadius: 12, alignItems: 'center', backgroundColor: fromDate && toDate ? theme.primary : '#D1D5DB' }}
             disabled={!fromDate || !toDate}
             onPress={applyDateRange}
           >
-            <ThemedText style={skStyles.applyBtnText}>Apply</ThemedText>
+            <ThemedText style={{ fontSize: 15, fontWeight: '700', color: '#ffffff' }}>Apply</ThemedText>
           </TouchableOpacity>
         </View>
         <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
@@ -816,7 +816,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           {/* Main Tab Switcher */}
           <View style={[styles.mainTabContainer, { backgroundColor: theme.surfaceHighlight, marginTop: 10 }]}>
             <TouchableOpacity
-              style={[styles.mainTab, activeTab === 'SCANS' && [styles.mainTabActive, { backgroundColor: theme.surface }]]}
+              style={[styles.mainTab, { backgroundColor: theme.surface, borderColor: theme.border }, activeTab === 'SCANS' && { backgroundColor: theme.primary + '20', borderColor: theme.primary }]}
               onPress={() => {
                 setActiveTab('SCANS');
                 setSearchQuery('');
@@ -833,7 +833,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               </ThemedText>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.mainTab, activeTab === 'VEHICLES' && [styles.mainTabActive, { backgroundColor: theme.surface }]]}
+              style={[styles.mainTab, { backgroundColor: theme.surface, borderColor: theme.border }, activeTab === 'VEHICLES' && { backgroundColor: theme.primary + '20', borderColor: theme.primary }]}
               onPress={() => {
                 setActiveTab('VEHICLES');
                 setSearchQuery('');
@@ -874,26 +874,26 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             </View>
             <View style={[styles.filterContainer, { marginBottom: 16 }]}>
               <TouchableOpacity
-                style={[styles.filterTab, activeFilter === 'ALL' && styles.filterTabActive]}
+                style={[styles.filterTab, { backgroundColor: theme.surface, borderColor: theme.border }, activeFilter === 'ALL' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
                 onPress={() => setActiveFilter('ALL')}
               >
-                <ThemedText style={[styles.filterText, activeFilter === 'ALL' && styles.filterTextActive]}>
+                <ThemedText style={[styles.filterText, { color: theme.textSecondary }, activeFilter === 'ALL' && { color: '#FFFFFF' }]}>
                   All
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.filterTab, activeFilter === 'ENTRY' && styles.filterTabActive]}
+                style={[styles.filterTab, { backgroundColor: theme.surface, borderColor: theme.border }, activeFilter === 'ENTRY' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
                 onPress={() => setActiveFilter('ENTRY')}
               >
-                <ThemedText style={[styles.filterText, activeFilter === 'ENTRY' && styles.filterTextActive]}>
+                <ThemedText style={[styles.filterText, { color: theme.textSecondary }, activeFilter === 'ENTRY' && { color: '#FFFFFF' }]}>
                   Entry
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.filterTab, activeFilter === 'EXIT' && styles.filterTabActive]}
+                style={[styles.filterTab, { backgroundColor: theme.surface, borderColor: theme.border }, activeFilter === 'EXIT' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
                 onPress={() => setActiveFilter('EXIT')}
               >
-                <ThemedText style={[styles.filterText, activeFilter === 'EXIT' && styles.filterTextActive]}>
+                <ThemedText style={[styles.filterText, { color: theme.textSecondary }, activeFilter === 'EXIT' && { color: '#FFFFFF' }]}>
                   Exit
                 </ThemedText>
               </TouchableOpacity>
@@ -912,26 +912,26 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             </View>
             <View style={[styles.filterContainer, { marginBottom: 16 }]}>
               <TouchableOpacity
-                style={[styles.filterTab, vehicleFilter === 'ALL' && styles.filterTabActive]}
+                style={[styles.filterTab, { backgroundColor: theme.surface, borderColor: theme.border }, vehicleFilter === 'ALL' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
                 onPress={() => setVehicleFilter('ALL')}
               >
-                <ThemedText style={[styles.filterText, vehicleFilter === 'ALL' && styles.filterTextActive]}>
+                <ThemedText style={[styles.filterText, { color: theme.textSecondary }, vehicleFilter === 'ALL' && { color: '#FFFFFF' }]}>
                   All
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.filterTab, vehicleFilter === 'ENTRY' && styles.filterTabActive]}
+                style={[styles.filterTab, { backgroundColor: theme.surface, borderColor: theme.border }, vehicleFilter === 'ENTRY' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
                 onPress={() => setVehicleFilter('ENTRY')}
               >
-                <ThemedText style={[styles.filterText, vehicleFilter === 'ENTRY' && styles.filterTextActive]}>
+                <ThemedText style={[styles.filterText, { color: theme.textSecondary }, vehicleFilter === 'ENTRY' && { color: '#FFFFFF' }]}>
                   Entry
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.filterTab, vehicleFilter === 'EXIT' && styles.filterTabActive]}
+                style={[styles.filterTab, { backgroundColor: theme.surface, borderColor: theme.border }, vehicleFilter === 'EXIT' && { backgroundColor: theme.primary, borderColor: theme.primary }]}
                 onPress={() => setVehicleFilter('EXIT')}
               >
-                <ThemedText style={[styles.filterText, vehicleFilter === 'EXIT' && styles.filterTextActive]}>
+                <ThemedText style={[styles.filterText, { color: theme.textSecondary }, vehicleFilter === 'EXIT' && { color: '#FFFFFF' }]}>
                   Exit
                 </ThemedText>
               </TouchableOpacity>
@@ -953,33 +953,33 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               const scan = item as ScanRecord;
               return (
                 <TouchableOpacity
-                  style={[styles.scanCard]}
+                  style={[styles.scanCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
                   onPress={() => {
                     setSelectedScan(scan);
                     setShowDetailModal(true);
                   }}
                 >
-                  <View style={styles.scanAvatar}>
-                    <ThemedText style={styles.scanAvatarText}>
+                  <View style={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}>
+                    <ThemedText style={[styles.scanAvatarText, { color: theme.primary }]}>
                       {scan.isBulkPass ? 'GP' : getInitials(scan.name)}
                     </ThemedText>
                   </View>
                   <View style={styles.scanInfo}>
                     {scan.isBulkPass ? (
                       <>
-                        <ThemedText style={styles.scanName}>Bulk Pass - {scan.incharge}</ThemedText>
-                        <ThemedText style={styles.scanType}>
+                        <ThemedText style={[styles.scanName, { color: theme.text }]}>Bulk Pass - {scan.incharge}</ThemedText>
+                        <ThemedText style={[styles.scanType, { color: theme.primary }]}>
                           {scan.subtype} • {scan.participantCount} participants
                         </ThemedText>
-                        <ThemedText style={styles.scanPurpose} numberOfLines={1}>
+                        <ThemedText style={[styles.scanPurpose, { color: theme.textSecondary }]} numberOfLines={1}>
                           {scan.purpose || scan.reason}
                         </ThemedText>
                       </>
                     ) : (
                       <>
-                        <ThemedText style={styles.scanName}>{scan.name}</ThemedText>
-                        <ThemedText style={styles.scanType}>{scan.type}</ThemedText>
-                        <ThemedText style={styles.scanPurpose} numberOfLines={1}>
+                        <ThemedText style={[styles.scanName, { color: theme.text }]}>{scan.name}</ThemedText>
+                        <ThemedText style={[styles.scanType, { color: theme.primary }]}>{scan.type}</ThemedText>
+                        <ThemedText style={[styles.scanPurpose, { color: theme.textSecondary }]} numberOfLines={1}>
                           {scan.purpose}
                         </ThemedText>
                       </>
@@ -1010,7 +1010,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               const vehicle = item as any;
               return (
                 <TouchableOpacity
-                  style={[styles.scanCard]}
+                  style={[styles.scanCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
                   onPress={() => {
                     setSelectedVehicle(vehicle);
                     setShowVehicleModal(true);
@@ -1020,9 +1020,9 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     <Ionicons name="car" size={24} color="#FFFFFF" />
                   </View>
                   <View style={styles.scanInfo}>
-                    <ThemedText style={styles.scanName}>{vehicle.licensePlate || 'N/A'}</ThemedText>
-                    <ThemedText style={styles.scanType}>{vehicle.vehicleType || 'Unknown Type'}</ThemedText>
-                    <ThemedText style={styles.scanPurpose} numberOfLines={1}>
+                    <ThemedText style={[styles.scanName, { color: theme.text }]}>{vehicle.licensePlate || 'N/A'}</ThemedText>
+                    <ThemedText style={[styles.scanType, { color: theme.primary }]}>{vehicle.vehicleType || 'Unknown Type'}</ThemedText>
+                    <ThemedText style={[styles.scanPurpose, { color: theme.textSecondary }]} numberOfLines={1}>
                       Owner: {vehicle.ownerName || 'N/A'}
                     </ThemedText>
                   </View>
@@ -1065,8 +1065,8 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
         statusBarTranslucent
         onRequestClose={() => setShowDetailModal(false)}
       >
-        <SafeAreaView style={styles.fsScreen} edges={['top', 'bottom']}>
-          <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <SafeAreaView style={[styles.fsScreen, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+          <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
           {/* Header */}
           {selectedScan && (() => {
@@ -1102,23 +1102,23 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                       </View>
 
                       {/* Info grid */}
-                      <View style={styles.fsInfoGrid}>
+                      <View style={[styles.fsInfoGrid, { backgroundColor: theme.surface }]}>
                         <View style={styles.fsInfoCell}>
-                          <ThemedText style={styles.fsInfoLabel}>PURPOSE</ThemedText>
-                          <ThemedText style={styles.fsInfoValue} numberOfLines={2}>{selectedScan.purpose || 'N/A'}</ThemedText>
+                          <ThemedText style={[styles.fsInfoLabel, { color: theme.textTertiary }]}>PURPOSE</ThemedText>
+                          <ThemedText style={[styles.fsInfoValue, { color: theme.text }]} numberOfLines={2}>{selectedScan.purpose || 'N/A'}</ThemedText>
                         </View>
-                        <View style={styles.fsInfoDivider} />
+                        <View style={[styles.fsInfoDivider, { backgroundColor: theme.border }]} />
                         <View style={styles.fsInfoCell}>
-                          <ThemedText style={styles.fsInfoLabel}>PARTICIPANTS</ThemedText>
-                          <ThemedText style={styles.fsInfoValue}>{selectedScan.participantCount || '—'}</ThemedText>
+                          <ThemedText style={[styles.fsInfoLabel, { color: theme.textTertiary }]}>PARTICIPANTS</ThemedText>
+                          <ThemedText style={[styles.fsInfoValue, { color: theme.text }]}>{selectedScan.participantCount || '—'}</ThemedText>
                         </View>
                       </View>
 
                       {/* Reason */}
                       {!!selectedScan.reason && (
-                        <View style={styles.fsBlock}>
-                          <ThemedText style={styles.fsBlockLabel}>REASON</ThemedText>
-                          <ThemedText style={styles.fsReasonText}>{selectedScan.reason}</ThemedText>
+                        <View style={[styles.fsBlock, { backgroundColor: theme.surface }]}>
+                          <ThemedText style={[styles.fsBlockLabel, { color: theme.textTertiary }]}>REASON</ThemedText>
+                          <ThemedText style={[styles.fsReasonText, { color: theme.textSecondary }]}>{selectedScan.reason}</ThemedText>
                         </View>
                       )}
 
@@ -1138,17 +1138,17 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
                       {/* Participants */}
                       {selectedScan.participants && selectedScan.participants.length > 0 && (
-                        <View style={styles.fsBlock}>
-                          <ThemedText style={styles.fsBlockLabel}>PARTICIPANTS</ThemedText>
+                        <View style={[styles.fsBlock, { backgroundColor: theme.surface }]}>
+                          <ThemedText style={[styles.fsBlockLabel, { color: theme.textTertiary }]}>PARTICIPANTS</ThemedText>
                           {selectedScan.participants.map((p, i) => (
-                            <View key={i} style={styles.participantCard}>
-                              <View style={styles.participantAvatar}>
+                            <View key={i} style={[styles.participantCard, { backgroundColor: theme.surfaceHighlight }]}>
+                              <View style={[styles.participantAvatar, { backgroundColor: theme.primary }]}>
                                 <ThemedText style={styles.participantAvatarText}>{getInitials(p.name)}</ThemedText>
                               </View>
                               <View style={styles.participantInfo}>
-                                <ThemedText style={styles.participantName}>{p.name}</ThemedText>
-                                <ThemedText style={styles.participantDetails}>{p.id} • {p.type}</ThemedText>
-                                {p.department && <ThemedText style={styles.participantDept}>{p.department}</ThemedText>}
+                                <ThemedText style={[styles.participantName, { color: theme.text }]}>{p.name}</ThemedText>
+                                <ThemedText style={[styles.participantDetails, { color: theme.textSecondary }]}>{p.id} • {p.type}</ThemedText>
+                                {p.department && <ThemedText style={[styles.participantDept, { color: theme.primary }]}>{p.department}</ThemedText>}
                               </View>
                             </View>
                           ))}
@@ -1172,56 +1172,56 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                       </View>
 
                       {/* Info grid */}
-                      <View style={styles.fsInfoGrid}>
+                      <View style={[styles.fsInfoGrid, { backgroundColor: theme.surface }]}>
                         <View style={styles.fsInfoCell}>
-                          <ThemedText style={styles.fsInfoLabel}>{selectedScan.type === 'VISITOR' ? 'PURPOSE OF VISIT' : 'PURPOSE'}</ThemedText>
-                          <ThemedText style={styles.fsInfoValue} numberOfLines={2}>{selectedScan.purpose || 'N/A'}</ThemedText>
+                          <ThemedText style={[styles.fsInfoLabel, { color: theme.textTertiary }]}>{selectedScan.type === 'VISITOR' ? 'PURPOSE OF VISIT' : 'PURPOSE'}</ThemedText>
+                          <ThemedText style={[styles.fsInfoValue, { color: theme.text }]} numberOfLines={2}>{selectedScan.purpose || 'N/A'}</ThemedText>
                         </View>
-                        <View style={styles.fsInfoDivider} />
+                        <View style={[styles.fsInfoDivider, { backgroundColor: theme.border }]} />
                         <View style={styles.fsInfoCell}>
-                          <ThemedText style={styles.fsInfoLabel}>TYPE</ThemedText>
-                          <ThemedText style={styles.fsInfoValue}>{selectedScan.type || 'N/A'}</ThemedText>
+                          <ThemedText style={[styles.fsInfoLabel, { color: theme.textTertiary }]}>TYPE</ThemedText>
+                          <ThemedText style={[styles.fsInfoValue, { color: theme.text }]}>{selectedScan.type || 'N/A'}</ThemedText>
                         </View>
                       </View>
 
                       {/* Reason — only for non-visitor types */}
                       {!!selectedScan.reason && selectedScan.type !== 'VISITOR' && (
-                        <View style={styles.fsBlock}>
-                          <ThemedText style={styles.fsBlockLabel}>REASON</ThemedText>
-                          <ThemedText style={styles.fsReasonText}>{selectedScan.reason}</ThemedText>
+                        <View style={[styles.fsBlock, { backgroundColor: theme.surface }]}>
+                          <ThemedText style={[styles.fsBlockLabel, { color: theme.textTertiary }]}>REASON</ThemedText>
+                          <ThemedText style={[styles.fsReasonText, { color: theme.textSecondary }]}>{selectedScan.reason}</ThemedText>
                         </View>
                       )}
 
                       {/* Timeline */}
-                      <View style={styles.fsBlock}>
-                        <ThemedText style={styles.fsBlockLabel}>TIME INFORMATION</ThemedText>
+                      <View style={[styles.fsBlock, { backgroundColor: theme.surface }]}>
+                        <ThemedText style={[styles.fsBlockLabel, { color: theme.textTertiary }]}>TIME INFORMATION</ThemedText>
                         {selectedScan.inTime && (
                           <View style={styles.fsTlItem}>
-                            <View style={[styles.fsTlDot, { backgroundColor: '#10B981' }]}>
+                            <View style={[styles.fsTlDot, { backgroundColor: theme.success }]}>
                               <Ionicons name="log-in" size={14} color="#FFF" />
                             </View>
                             <View style={styles.fsTlBody}>
-                              <ThemedText style={styles.fsTlTitle}>Entry Time</ThemedText>
-                              <ThemedText style={styles.fsTlSub}>{formatTime(selectedScan.inTime)}</ThemedText>
+                              <ThemedText style={[styles.fsTlTitle, { color: theme.text }]}>Entry Time</ThemedText>
+                              <ThemedText style={[styles.fsTlSub, { color: theme.textSecondary }]}>{formatTime(selectedScan.inTime)}</ThemedText>
                             </View>
                           </View>
                         )}
                         {selectedScan.inTime && selectedScan.outTime && (
-                          <View style={styles.fsTlConnector} />
+                          <View style={[styles.fsTlConnector, { backgroundColor: theme.border }]} />
                         )}
                         {selectedScan.outTime && (
                           <View style={styles.fsTlItem}>
-                            <View style={[styles.fsTlDot, { backgroundColor: '#EF4444' }]}>
+                            <View style={[styles.fsTlDot, { backgroundColor: theme.error }]}>
                               <Ionicons name="log-out" size={14} color="#FFF" />
                             </View>
                             <View style={styles.fsTlBody}>
-                              <ThemedText style={styles.fsTlTitle}>Exit Time</ThemedText>
-                              <ThemedText style={styles.fsTlSub}>{formatTime(selectedScan.outTime)}</ThemedText>
+                              <ThemedText style={[styles.fsTlTitle, { color: theme.text }]}>Exit Time</ThemedText>
+                              <ThemedText style={[styles.fsTlSub, { color: theme.textSecondary }]}>{formatTime(selectedScan.outTime)}</ThemedText>
                             </View>
                           </View>
                         )}
                         {!selectedScan.inTime && !selectedScan.outTime && (
-                          <ThemedText style={styles.noDataText}>No time data available</ThemedText>
+                          <ThemedText style={[styles.noDataText, { color: theme.textTertiary }]}>No time data available</ThemedText>
                         )}
                       </View>
                     </>
@@ -1249,18 +1249,18 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
         statusBarTranslucent
         onRequestClose={() => setShowVehicleModal(false)}
       >
-        <SafeAreaView style={styles.fsScreen} edges={['top', 'bottom']}>
-          <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <SafeAreaView style={[styles.fsScreen, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+          <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
           {selectedVehicle && (() => {
-            const statusColor = '#10B981';
+            const statusColor = theme.success;
             return (
               <>
-                <View style={styles.fsHeader}>
-                  <TouchableOpacity style={styles.fsBackBtn} onPress={() => setShowVehicleModal(false)}>
-                    <Ionicons name="arrow-back" size={22} color="#1F2937" />
+                <View style={[styles.fsHeader, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+                  <TouchableOpacity style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => setShowVehicleModal(false)}>
+                    <Ionicons name="arrow-back" size={22} color={theme.text} />
                   </TouchableOpacity>
-                  <ThemedText style={styles.fsHeaderTitle}>Vehicle Details</ThemedText>
+                  <ThemedText style={[styles.fsHeaderTitle, { color: theme.text }]}>Vehicle Details</ThemedText>
                   <View style={[styles.fsStatusPill, { backgroundColor: statusColor + '22' }]}>
                     <ThemedText style={[styles.fsStatusPillText, { color: statusColor }]}>
                       REGISTERED
@@ -1270,30 +1270,30 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
                 <VerticalScrollView style={styles.fsScroll} showsVerticalScrollIndicator={false} decelerationRate="normal" contentContainerStyle={styles.fsScrollContent}>
                   {/* Profile row */}
-                  <View style={styles.fsProfileRow}>
-                    <View style={[styles.fsAvatar, { backgroundColor: '#F59E0B' }]}>
+                  <View style={[styles.fsProfileRow, { backgroundColor: theme.surface }]}>
+                    <View style={[styles.fsAvatar, { backgroundColor: theme.warning }]}>
                       <Ionicons name="car" size={24} color="#FFF" />
                     </View>
                     <View style={styles.fsProfileInfo}>
-                      <ThemedText style={styles.fsProfileName}>{selectedVehicle.licensePlate || 'N/A'}</ThemedText>
-                      <ThemedText style={styles.fsProfileSub}>
+                      <ThemedText style={[styles.fsProfileName, { color: theme.text }]}>{selectedVehicle.licensePlate || 'N/A'}</ThemedText>
+                      <ThemedText style={[styles.fsProfileSub, { color: theme.textSecondary }]}>
                         {selectedVehicle.vehicleType || 'Unknown'} • {selectedVehicle.ownerName || 'N/A'}
                       </ThemedText>
                     </View>
                   </View>
 
                   {/* Info grid */}
-                  <View style={styles.fsInfoGrid}>
+                  <View style={[styles.fsInfoGrid, { backgroundColor: theme.surface }]}>
                     <View style={styles.fsInfoCell}>
-                      <ThemedText style={styles.fsInfoLabel}>ENTRY TIME</ThemedText>
-                      <ThemedText style={styles.fsInfoValue} numberOfLines={2}>
+                      <ThemedText style={[styles.fsInfoLabel, { color: theme.textTertiary }]}>ENTRY TIME</ThemedText>
+                      <ThemedText style={[styles.fsInfoValue, { color: theme.text }]} numberOfLines={2}>
                         {formatTime(selectedVehicle.createdAt || selectedVehicle.registeredAt)}
                       </ThemedText>
                     </View>
-                    <View style={styles.fsInfoDivider} />
+                    <View style={[styles.fsInfoDivider, { backgroundColor: theme.border }]} />
                     <View style={styles.fsInfoCell}>
-                      <ThemedText style={styles.fsInfoLabel}>EXIT TIME</ThemedText>
-                      <ThemedText style={styles.fsInfoValue} numberOfLines={2}>
+                      <ThemedText style={[styles.fsInfoLabel, { color: theme.textTertiary }]}>EXIT TIME</ThemedText>
+                      <ThemedText style={[styles.fsInfoValue, { color: theme.text }]} numberOfLines={2}>
                         {(selectedVehicle.updatedAt && selectedVehicle.updatedAt !== selectedVehicle.createdAt)
                           ? formatTime(selectedVehicle.updatedAt)
                           : '—'}
@@ -1302,32 +1302,32 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   </View>
 
                   {/* Vehicle info */}
-                  <View style={styles.fsBlock}>
-                    <ThemedText style={styles.fsBlockLabel}>VEHICLE INFORMATION</ThemedText>
+                  <View style={[styles.fsBlock, { backgroundColor: theme.surface }]}>
+                    <ThemedText style={[styles.fsBlockLabel, { color: theme.textTertiary }]}>VEHICLE INFORMATION</ThemedText>
                     {[
                       ['License Plate', selectedVehicle.licensePlate],
                       ['Vehicle Type', selectedVehicle.vehicleType],
                       ['Color', selectedVehicle.vehicleColor || selectedVehicle.color],
                       ['Model', selectedVehicle.vehicleModel || selectedVehicle.model],
                     ].filter(([, v]) => !!v).map(([label, value]) => (
-                      <View key={label as string} style={styles.fsRow}>
-                        <ThemedText style={styles.fsRowLabel}>{label}</ThemedText>
-                        <ThemedText style={styles.fsRowValue}>{value}</ThemedText>
+                      <View key={label as string} style={[styles.fsRow, { borderBottomColor: theme.surfaceHighlight }]}>
+                        <ThemedText style={[styles.fsRowLabel, { color: theme.textSecondary }]}>{label}</ThemedText>
+                        <ThemedText style={[styles.fsRowValue, { color: theme.text }]}>{value}</ThemedText>
                       </View>
                     ))}
                   </View>
 
                   {/* Owner info */}
-                  <View style={styles.fsBlock}>
-                    <ThemedText style={styles.fsBlockLabel}>OWNER INFORMATION</ThemedText>
+                  <View style={[styles.fsBlock, { backgroundColor: theme.surface }]}>
+                    <ThemedText style={[styles.fsBlockLabel, { color: theme.textTertiary }]}>OWNER INFORMATION</ThemedText>
                     {[
                       ['Owner Name', selectedVehicle.ownerName],
                       ['Owner Type', selectedVehicle.ownerType],
                       ['Contact', selectedVehicle.ownerPhone || selectedVehicle.contactNumber],
                     ].filter(([, v]) => !!v).map(([label, value]) => (
-                      <View key={label as string} style={styles.fsRow}>
-                        <ThemedText style={styles.fsRowLabel}>{label}</ThemedText>
-                        <ThemedText style={styles.fsRowValue}>{value}</ThemedText>
+                      <View key={label as string} style={[styles.fsRow, { borderBottomColor: theme.surfaceHighlight }]}>
+                        <ThemedText style={[styles.fsRowLabel, { color: theme.textSecondary }]}>{label}</ThemedText>
+                        <ThemedText style={[styles.fsRowValue, { color: theme.text }]}>{value}</ThemedText>
                       </View>
                     ))}
                   </View>
@@ -1335,8 +1335,8 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   <View style={{ height: 16 }} />
                 </VerticalScrollView>
 
-                <View style={styles.fsFooter}>
-                  <TouchableOpacity style={styles.fsCloseBtn} onPress={() => setShowVehicleModal(false)}>
+                <View style={[styles.fsFooter, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+                  <TouchableOpacity style={[styles.fsCloseBtn, { backgroundColor: theme.primary }]} onPress={() => setShowVehicleModal(false)}>
                     <ThemedText style={styles.fsCloseBtnText}>Close</ThemedText>
                   </TouchableOpacity>
                 </View>
@@ -1381,110 +1381,12 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   );
 };
 
-const skStyles = StyleSheet.create({
-  screen: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#ffffff',
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1a1a1a',
-  },
-  summaryBar: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginBottom: 4,
-    borderRadius: 14,
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    overflow: 'hidden',
-  },
-  summaryChip: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  summaryChipActive: {
-    backgroundColor: '#EFF6FF',
-  },
-  summaryLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    color: '#9CA3AF',
-    marginBottom: 2,
-  },
-  summaryValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#1a1a1a',
-  },
-  summaryDivider: {
-    width: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 8,
-  },
-  instruction: {
-    fontSize: 13,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  bottomBar: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#ffffff',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  clearBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-  },
-  clearBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#6B7280',
-  },
-  applyBtn: {
-    flex: 2,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  applyBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-});
+// skStyles removed — date picker pages now use inline styles with theme values
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -1492,22 +1394,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: 'transparent',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1F2937',
   },
   headerRight: {
     width: 40,
@@ -1526,27 +1426,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
     borderWidth: 2,
-    borderColor: '#E5E7EB',
     gap: 8,
   },
   mainTabActive: {
-    backgroundColor: '#E0F7FA',
-    borderColor: '#00BCD4',
   },
   mainTabText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#6B7280',
   },
   mainTabTextActive: {
-    color: '#00BCD4',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     marginTop: 16,
     marginBottom: 12,
     paddingHorizontal: 16,
@@ -1562,7 +1455,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
   },
   filterContainer: {
     flexDirection: 'row',
@@ -1574,19 +1466,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   filterTabActive: {
-    backgroundColor: '#00BCD4',
-    borderColor: '#00BCD4',
   },
   filterText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
   },
   filterTextActive: {
     color: '#FFFFFF',
@@ -1605,7 +1492,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#6B7280',
     marginTop: 16,
   },
   emptyState: {
@@ -1615,13 +1501,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6B7280',
     marginTop: 16,
   },
   scanCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -1635,7 +1519,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#00BCD4',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1651,18 +1534,15 @@ const styles = StyleSheet.create({
   scanName: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 4,
   },
   scanType: {
     fontSize: 13,
-    color: '#00BCD4',
     fontWeight: '600',
     marginBottom: 2,
   },
   scanPurpose: {
     fontSize: 13,
-    color: '#6B7280',
   },
   scanRight: {
     alignItems: 'flex-end',
@@ -1677,24 +1557,19 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   scanStatusEntry: {
-    backgroundColor: '#D1FAE5',
   },
   scanStatusExit: {
-    backgroundColor: '#FEE2E2',
   },
   scanStatusText: {
     fontSize: 11,
     fontWeight: '700',
   },
   scanStatusTextEntry: {
-    color: '#10B981',
   },
   scanStatusTextExit: {
-    color: '#EF4444',
   },
   scanTime: {
     fontSize: 12,
-    color: '#9CA3AF',
   },
   modalOverlay: {
     flex: 1,
@@ -1702,7 +1577,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     height: '80%',
@@ -1714,18 +1588,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   closeButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1740,27 +1611,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#BAE6FD',
     paddingVertical: 10,
   },
   rangeActionText: {
-    color: '#00BCD4',
     fontSize: 13,
     fontWeight: '700',
   },
   rangeModalCard: {
     width: '88%',
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 18,
     alignItems: 'center',
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -1778,10 +1644,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelBtn: {
-    backgroundColor: '#9CA3AF',
   },
   applyBtn: {
-    backgroundColor: '#00BCD4',
   },
   actionBtnText: {
     color: '#FFFFFF',
@@ -1793,7 +1657,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -1802,13 +1665,11 @@ const styles = StyleSheet.create({
   },
   dateInputText: {
     fontSize: 14,
-    color: '#1F2937',
     fontWeight: '600',
     textAlign: 'center',
   },
   dateTypeTabs: {
     flexDirection: 'row',
-    backgroundColor: '#F3F4F6',
     borderRadius: 10,
     padding: 4,
     marginBottom: 10,
@@ -1821,15 +1682,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dateTypeTabActive: {
-    backgroundColor: '#FFFFFF',
   },
   dateTypeTabText: {
-    color: '#6B7280',
     fontWeight: '600',
     fontSize: 12,
   },
   dateTypeTabTextActive: {
-    color: '#00BCD4',
     fontWeight: '700',
   },
   calendarWrap: {
@@ -1838,28 +1696,23 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   rangeResultsTop: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   rangeResultsSub: {
     fontSize: 12,
-    color: '#6B7280',
     fontWeight: '600',
   },
   rangeResultsDownloadBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#00BCD4',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -1883,7 +1736,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#6B7280',
     marginBottom: 12,
     letterSpacing: 0.5,
   },
@@ -1895,17 +1747,14 @@ const styles = StyleSheet.create({
   },
   modalLabel: {
     fontSize: 14,
-    color: '#6B7280',
   },
   modalValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
   participantCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
     borderRadius: 8,
     padding: 12,
     marginBottom: 8,
@@ -1914,7 +1763,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#00BCD4',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -1930,47 +1778,40 @@ const styles = StyleSheet.create({
   participantName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 2,
   },
   participantDetails: {
     fontSize: 12,
-    color: '#6B7280',
     marginBottom: 2,
   },
   participantDept: {
     fontSize: 12,
-    color: '#00BCD4',
     fontWeight: '500',
   },
   noDataText: {
     fontSize: 14,
-    color: '#9CA3AF',
     fontStyle: 'italic',
     textAlign: 'center',
     paddingVertical: 12,
   },
   // ── Full-screen detail styles ──────────────────────────────────────
-  fsScreen: { flex: 1, backgroundColor: '#F9FAFB' },
+  fsScreen: { flex: 1 },
   fsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
     gap: 10,
   },
   fsBackBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fsHeaderTitle: { flex: 1, fontSize: 17, fontWeight: '800', color: '#1F2937' },
+  fsHeaderTitle: { flex: 1, fontSize: 17, fontWeight: '800' },
   fsStatusPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   fsStatusPillText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
   fsScroll: { flex: 1 },
@@ -1983,7 +1824,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 12,
     gap: 12,
-    backgroundColor: '#FFFFFF',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -2000,15 +1840,14 @@ const styles = StyleSheet.create({
   },
   fsAvatarText: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
   fsProfileInfo: { flex: 1 },
-  fsProfileName: { fontSize: 16, fontWeight: '700', color: '#1F2937' },
-  fsProfileSub: { fontSize: 12, marginTop: 2, color: '#6B7280' },
+  fsProfileName: { fontSize: 16, fontWeight: '700' },
+  fsProfileSub: { fontSize: 12, marginTop: 2 },
   fsInfoGrid: {
     flexDirection: 'row',
     marginHorizontal: 16,
     marginTop: 10,
     borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -2016,33 +1855,31 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   fsInfoCell: { flex: 1, padding: 12 },
-  fsInfoDivider: { width: 1, backgroundColor: '#E5E7EB', marginVertical: 8 },
-  fsInfoLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8, marginBottom: 4, color: '#9CA3AF' },
-  fsInfoValue: { fontSize: 13, fontWeight: '600', lineHeight: 18, color: '#1F2937' },
+  fsInfoDivider: { width: 1, marginVertical: 8 },
+  fsInfoLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8, marginBottom: 4 },
+  fsInfoValue: { fontSize: 13, fontWeight: '600', lineHeight: 18 },
   fsBlock: {
     marginHorizontal: 16,
     marginTop: 10,
     borderRadius: 14,
     padding: 12,
-    backgroundColor: '#FFFFFF',
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 4,
   },
-  fsBlockLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8, marginBottom: 8, color: '#9CA3AF' },
-  fsReasonText: { fontSize: 14, lineHeight: 20, fontWeight: '500', color: '#6B7280' },
+  fsBlockLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8, marginBottom: 8 },
+  fsReasonText: { fontSize: 14, lineHeight: 20, fontWeight: '500' },
   fsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
-  fsRowLabel: { fontSize: 13, color: '#6B7280' },
-  fsRowValue: { fontSize: 13, fontWeight: '600', color: '#1F2937' },
+  fsRowLabel: { fontSize: 13 },
+  fsRowValue: { fontSize: 13, fontWeight: '600' },
   // Timeline
   fsTlItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   fsTlDot: {
@@ -2054,23 +1891,20 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   fsTlBody: { flex: 1, paddingTop: 4, paddingBottom: 4 },
-  fsTlTitle: { fontSize: 14, fontWeight: '600', color: '#1F2937', marginBottom: 2 },
-  fsTlSub: { fontSize: 12, color: '#6B7280' },
-  fsTlConnector: { width: 2, height: 20, marginLeft: 15, marginVertical: 2, backgroundColor: '#E5E7EB' },
+  fsTlTitle: { fontSize: 14, fontWeight: '600', marginBottom: 2 },
+  fsTlSub: { fontSize: 12 },
+  fsTlConnector: { width: 2, height: 20, marginLeft: 15, marginVertical: 2 },
   // Footer
   fsFooter: {
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: Platform.OS === 'ios' ? 8 : 14,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
   },
   fsCloseBtn: {
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: 'center',
-    backgroundColor: '#00BCD4',
   },
   fsCloseBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '700' },
   downloadingOverlay: {

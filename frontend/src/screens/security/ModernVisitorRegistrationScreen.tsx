@@ -197,7 +197,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Visitor Registration</ThemedText>
         <TouchableOpacity 
-          style={styles.qrButton} 
+          style={[styles.qrButton, { backgroundColor: theme.primary + '20' }]} 
           onPress={() => onNavigate('VISITOR_QR')}
         >
           <Ionicons name="qr-code-outline" size={20} color={theme.primary} />
@@ -413,7 +413,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -421,28 +421,25 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: 'transparent',
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1F2937',
   },
   qrButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E0F7FA',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -459,7 +456,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 16,
   },
   inputGroup: {
@@ -468,33 +464,27 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     gap: 12,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
   },
   pickerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingLeft: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   pickerIcon: {
     marginRight: 12,
@@ -502,16 +492,13 @@ const styles = StyleSheet.create({
   picker: {
     flex: 1,
     height: 50,
-    color: '#1F2937',
     backgroundColor: 'transparent',
   },
   textAreaContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     gap: 12,
   },
   textAreaIcon: {
@@ -520,21 +507,18 @@ const styles = StyleSheet.create({
   textArea: {
     flex: 1,
     fontSize: 16,
-    color: '#1F2937',
     minHeight: 100,
   },
   submitButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#00BCD4',
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
     marginTop: 8,
   },
   submitButtonDisabled: {
-    backgroundColor: '#D1D5DB',
   },
   submitButtonText: {
     fontSize: 16,
@@ -559,7 +543,6 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   successModal: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 32,
     width: '100%',
@@ -571,19 +554,16 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 12,
   },
   successMessage: {
     fontSize: 15,
-    color: '#6B7280',
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 28,
   },
   successName: {
     fontWeight: '700',
-    color: '#1F2937',
   },
   successActions: {
     flexDirection: 'row',
@@ -598,13 +578,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#00BCD4',
     gap: 6,
   },
   actionButtonSecondaryText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#00BCD4',
   },
   actionButtonPrimary: {
     flex: 1,
@@ -613,7 +591,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#00BCD4',
     gap: 6,
   },
   actionButtonPrimaryText: {
