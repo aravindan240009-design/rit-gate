@@ -251,13 +251,24 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           { key: 'status', label: 'STATUS' },
           { key: 'time', label: 'TIME' },
         ],
-        rows: filteredScans.map((scan) => ({
-          name: scan.name,
-          type: scan.type,
-          purpose: scan.purpose || scan.reason || '-',
-          status: scan.status,
-          time: formatTime(scan.outTime || scan.inTime),
-        })),
+        rows: filteredScans.flatMap((scan) => {
+          const base = {
+            name: scan.name,
+            type: scan.type,
+            purpose: scan.purpose || scan.reason || '-',
+          };
+          const rows = [];
+          if (scan.inTime) {
+            rows.push({ ...base, status: 'ENTRY', time: formatTime(scan.inTime) });
+          }
+          if (scan.outTime) {
+            rows.push({ ...base, status: 'EXIT', time: formatTime(scan.outTime) });
+          }
+          if (rows.length === 0) {
+            rows.push({ ...base, status: scan.status, time: formatTime(scan.outTime || scan.inTime) });
+          }
+          return rows;
+        }),
       });
       if (result.success) {
         setDownloadMessage('PDF saved to Downloads. Tap the notification to open it.');
