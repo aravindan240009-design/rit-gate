@@ -1840,12 +1840,21 @@ public class SecurityController {
                 rec.put("exitTime",    null);
                 rec.put("status",      "ENTERED");
                 rec.put("isBulkPass",  false);
-                // Purpose: Late Entry for staff/students, Gate Pass Entry for visitors
+                // Purpose: Late Entry for staff/students, actual purpose for visitors
                 String entryPurpose = "Gate Pass Entry";
                 if ("ST".equals(utype) || "SF".equals(utype) || "HD".equals(utype) || "STAFF".equals(utype) || "STUDENT".equals(utype)) {
                     entryPurpose = "Late Entry";
                 } else if (entry.getScanLocation() != null && entry.getScanLocation().toLowerCase().contains("late")) {
                     entryPurpose = "Late Entry";
+                } else if ("VISITOR".equals(utype) || "VG".equals(utype)) {
+                    // Look up actual purpose from Visitor table
+                    if (uid != null && !"null".equals(uid)) {
+                        try {
+                            Long visitorId = Long.parseLong(uid);
+                            String vPurpose = visitorRepository.findById(visitorId).map(v -> v.getPurpose()).orElse(null);
+                            if (vPurpose != null && !vPurpose.isBlank()) entryPurpose = vPurpose;
+                        } catch (Exception ignored) {}
+                    }
                 }
                 rec.put("purpose",     entryPurpose);
                 rec.put("reason",      "");
@@ -2851,12 +2860,30 @@ public class SecurityController {
 
             // Also update the Visitor entity exit time if found
             try {
-                List<Visitor> visitors = visitorRepository.findAll().stream()
-                    .filter(v -> v.getName() != null && v.getName().equalsIgnoreCase(personName.trim()))
-                    .filter(v -> v.getExitTime() == null)
-                    .collect(java.util.stream.Collectors.toList());
-                if (!visitors.isEmpty()) {
-                    Visitor v = visitors.get(0);
+                Visitor v = null;
+                // PRIORITY 1: match by userId (visitor ID) — most accurate
+                if (visitorUserId != null && !visitorUserId.isBlank() && !"null".equals(visitorUserId)) {
+                    try {
+                        Long vid = Long.parseLong(visitorUserId);
+                        v = visitorRepository.findById(vid).filter(vv -> vv.getExitTime() == null).orElse(null);
+                    } catch (Exception ignored) {}
+                }
+                // PRIORITY 2: fallback to name match only if userId lookup failed
+                if (v == null && personName != null) {
+                    List<Visitor> visitors = visitorRepository.findAll().stream()
+                        .filter(vv -> vv.getName() != null && vv.getName().equalsIgnoreCase(personName.trim()))
+                        .filter(vv -> vv.getExitTime() == null)
+                        .sorted((a, b) -> {
+                            // prefer the most recently created visitor
+                            if (a.getCreatedAt() == null && b.getCreatedAt() == null) return 0;
+                            if (a.getCreatedAt() == null) return 1;
+                            if (b.getCreatedAt() == null) return -1;
+                            return b.getCreatedAt().compareTo(a.getCreatedAt());
+                        })
+                        .collect(java.util.stream.Collectors.toList());
+                    if (!visitors.isEmpty()) v = visitors.get(0);
+                }
+                if (v != null) {
                     v.setExitTime(exitTime);
                     v.setScanCount(2);
                     v.setQrCode(null);
