@@ -233,7 +233,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout, onNavi
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('SCAN_HISTORY'); onNavigate('ADMIN_SCAN_HISTORY'); }}>
           <Ionicons name={bottomTab === 'SCAN_HISTORY' ? 'time' : 'time-outline'} size={22} color={bottomTab === 'SCAN_HISTORY' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'SCAN_HISTORY' && { color: theme.primary }]}>History</ThemedText>
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'SCAN_HISTORY' && { color: theme.primary }]}>Gate Logs</ThemedText>
           {bottomTab === 'SCAN_HISTORY' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>

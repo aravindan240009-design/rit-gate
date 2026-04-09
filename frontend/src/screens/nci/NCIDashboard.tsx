@@ -331,7 +331,7 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
               color={bottomTab === ('EXITS' as any) ? theme.primary : theme.textTertiary}
             />
             <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === ('EXITS' as any) && { color: theme.primary }]}>
-              Exits
+              Gate Logs
             </ThemedText>
             {bottomTab === ('EXITS' as any) && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
           </TouchableOpacity>

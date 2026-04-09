@@ -447,6 +447,34 @@ class ApiService {
     }
   }
 
+  /** Combined entry + exit gate logs for HR / Principal (students + staff only) */
+  async getGateLogs(fromDate?: string, toDate?: string): Promise<{ success: boolean; logs?: any[]; message?: string }> {
+    try {
+      const qp = new URLSearchParams();
+      if (fromDate) qp.append('fromDate', fromDate);
+      if (toDate) qp.append('toDate', toDate);
+      const suffix = qp.toString() ? `?${qp.toString()}` : '';
+      const data = await this.makeRequest(`${this.baseURL}/hr/gate-logs${suffix}`, { method: 'GET' });
+      return { success: data.success !== false, logs: data.logs || [] };
+    } catch (e: any) {
+      return { success: false, logs: [], message: e.message || 'Failed to load gate logs' };
+    }
+  }
+
+  /** Combined entry + exit gate logs for Admin Officer (ALL user types including visitors) */
+  async getAdminGateLogs(fromDate?: string, toDate?: string): Promise<{ success: boolean; logs?: any[]; message?: string }> {
+    try {
+      const qp = new URLSearchParams();
+      if (fromDate) qp.append('fromDate', fromDate);
+      if (toDate) qp.append('toDate', toDate);
+      const suffix = qp.toString() ? `?${qp.toString()}` : '';
+      const data = await this.makeRequest(`${this.baseURL}/hr/admin/gate-logs${suffix}`, { method: 'GET' });
+      return { success: data.success !== false, logs: data.logs || [] };
+    } catch (e: any) {
+      return { success: false, logs: [], message: e.message || 'Failed to load admin gate logs' };
+    }
+  }
+
   // ── Security / Entry-Exit ─────────────────────────────────────────────────
   async scanQRCode(qrData: string, securityId: string): Promise<ApiResponse> {
     try { return await this.makeRequest(`${this.baseURL}/security/scan`, { method: 'POST', body: JSON.stringify({ qrData, securityId }) }); }

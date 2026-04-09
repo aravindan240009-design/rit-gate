@@ -174,10 +174,10 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
   const loadExitLogs = async (rangeFrom?: string, rangeTo?: string) => {
     try {
-      const response = await apiService.getHRExits(rangeFrom, rangeTo);
-      if (response.success) setExitLogs(response.exits || []);
+      const response = await apiService.getGateLogs(rangeFrom, rangeTo);
+      if (response.success) setExitLogs(response.logs || []);
     } catch (error) {
-      console.error('Error loading HR exits:', error);
+      console.error('Error loading gate logs:', error);
     } finally {
       setRefreshing(false);
     }
@@ -185,29 +185,31 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
   const exportExitsPdf = async (rows: any[]) => {
     setIsDownloading(true);
-    const filename = `Exit_Report_${new Date().toISOString().slice(0, 10)}`;
+    const filename = `Gate_Logs_${new Date().toISOString().slice(0, 10)}`;
     try {
       const result = await notificationService.generatePdfReport({
-        title: 'Staff & Student Exit Report',
-        subtitle: 'Consolidated exit activity — Registrar / HR view',
-        sectionHeading: 'Exit records',
+        title: 'Staff & Student Gate Log Report',
+        subtitle: 'Consolidated entry & exit activity — Registrar / HR view',
+        sectionHeading: 'Entry & Exit records',
         brandFooterLine: 'RIT Gate Management System',
         filename,
         columns: [
+          { key: 'scanType', label: 'TYPE' },
           { key: 'userType', label: 'ROLE' },
           { key: 'userId', label: 'ID' },
           { key: 'name', label: 'NAME' },
           { key: 'department', label: 'DEPARTMENT' },
           { key: 'purpose', label: 'PURPOSE' },
-          { key: 'exitTime', label: 'EXIT TIME' },
+          { key: 'time', label: 'TIME' },
         ],
         rows: rows.map((r: any) => ({
+          scanType: r.scanType || '-',
           userType: r.userType || '-',
           userId: r.userId || '-',
           name: r.name || '-',
           department: r.department || '-',
           purpose: r.purpose || '-',
-          exitTime: formatDateShort(r.exitTime),
+          time: formatDateShort(r.time),
         })),
       });
       if (result.success) {
@@ -544,8 +546,8 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           {bottomTab === 'MY_REQUESTS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('EXITS'); onNavigate('HR_EXITS'); }}>
-          <Ionicons name={bottomTab === 'EXITS' ? 'log-out' : 'log-out-outline'} size={22} color={bottomTab === 'EXITS' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'EXITS' && { color: theme.primary }]}>Exits</ThemedText>
+          <Ionicons name={bottomTab === 'EXITS' ? 'swap-vertical' : 'swap-vertical-outline'} size={22} color={bottomTab === 'EXITS' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'EXITS' && { color: theme.primary }]}>Gate Logs</ThemedText>
           {bottomTab === 'EXITS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>

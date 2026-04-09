@@ -37,6 +37,7 @@ public class HRController {
     private final com.example.visitor.repository.HODRepository hodRepository;
     private final com.example.visitor.repository.QRTableRepository qrTableRepository;
     private final com.example.visitor.repository.GatePassRequestRepository gatePassRequestRepository;
+    private final com.example.visitor.repository.RailwayEntryRepository railwayEntryRepository;
     
     // ==================== HR APPROVAL ENDPOINTS ====================
     
@@ -519,6 +520,246 @@ public class HRController {
                 "message", "Failed to fetch exits: " + e.getMessage()
             ));
         }
+    }
+
+
+    // ==================== COMBINED GATE LOGS (ENTRY + EXIT) ====================
+
+    /**
+     * Gate logs for HR / Principal — students and staff only, both entries and exits.
+     */
+    @GetMapping("/gate-logs")
+    public ResponseEntity<?> getGateLogs(
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate) {
+        try {
+            LocalDate from = (fromDate == null || fromDate.isBlank()) ? LocalDate.now() : LocalDate.parse(fromDate);
+            LocalDate to = (toDate == null || toDate.isBlank()) ? from : LocalDate.parse(toDate);
+            LocalDateTime fromTs = from.atStartOfDay();
+            LocalDateTime toTs = to.plusDays(1).atStartOfDay().minusNanos(1);
+
+            java.util.Set<String> allowedTypes = java.util.Set.of("STUDENT", "STAFF", "HOD");
+
+            // ---- EXIT records from Exit_logs table ----
+            List<Map<String, Object>> exitRecords = railwayExitLogRepository
+                .findByExitTimeBetweenOrderByExitTimeDesc(fromTs, toTs)
+                .stream()
+                .filter(e -> {
+                    String t = e.getUserType();
+                    return t != null && allowedTypes.contains(t.toUpperCase());
+                })
+                .map(e -> buildExitMap(e, "EXIT"))
+                .collect(Collectors.toList());
+
+            // ---- ENTRY records from Entry table ----
+            List<Map<String, Object>> entryRecords = railwayEntryRepository
+                .findByTimestampBetweenOrderByTimestampDesc(fromTs, toTs)
+                .stream()
+                .filter(e -> {
+                    String t = e.getUserType();
+                    return t != null && allowedTypes.contains(t.toUpperCase());
+                })
+                .map(e -> buildEntryMap(e, "ENTRY"))
+                .collect(Collectors.toList());
+
+            // ---- Merge and sort by time descending ----
+            List<Map<String, Object>> combined = new java.util.ArrayList<>();
+            combined.addAll(exitRecords);
+            combined.addAll(entryRecords);
+            combined.sort((a, b) -> {
+                LocalDateTime ta = (LocalDateTime) a.get("time");
+                LocalDateTime tb = (LocalDateTime) b.get("time");
+                if (ta == null && tb == null) return 0;
+                if (ta == null) return 1;
+                if (tb == null) return -1;
+                return tb.compareTo(ta);
+            });
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "fromDate", from.toString(),
+                "toDate", to.toString(),
+                "count", combined.size(),
+                "logs", combined
+            ));
+        } catch (Exception e) {
+            log.error("Error fetching gate logs", e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "Failed to fetch gate logs: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Gate logs for Admin Officer — ALL user types (students, staff, visitors), both entries and exits.
+     */
+    @GetMapping("/admin/gate-logs")
+    public ResponseEntity<?> getAdminGateLogs(
+            @RequestParam(required = false) String fromDate,
+            @RequestParam(required = false) String toDate) {
+        try {
+            LocalDate from = (fromDate == null || fromDate.isBlank()) ? LocalDate.now() : LocalDate.parse(fromDate);
+            LocalDate to = (toDate == null || toDate.isBlank()) ? from : LocalDate.parse(toDate);
+            LocalDateTime fromTs = from.atStartOfDay();
+            LocalDateTime toTs = to.plusDays(1).atStartOfDay().minusNanos(1);
+
+            // ---- EXIT records — no type filter, include everyone ----
+            List<Map<String, Object>> exitRecords = railwayExitLogRepository
+                .findByExitTimeBetweenOrderByExitTimeDesc(fromTs, toTs)
+                .stream()
+                .map(e -> buildExitMap(e, "EXIT"))
+                .collect(Collectors.toList());
+
+            // ---- ENTRY records — no type filter, include everyone ----
+            List<Map<String, Object>> entryRecords = railwayEntryRepository
+                .findByTimestampBetweenOrderByTimestampDesc(fromTs, toTs)
+                .stream()
+                .map(e -> buildEntryMap(e, "ENTRY"))
+                .collect(Collectors.toList());
+
+            // ---- Merge and sort by time descending ----
+            List<Map<String, Object>> combined = new java.util.ArrayList<>();
+            combined.addAll(exitRecords);
+            combined.addAll(entryRecords);
+            combined.sort((a, b) -> {
+                LocalDateTime ta = (LocalDateTime) a.get("time");
+                LocalDateTime tb = (LocalDateTime) b.get("time");
+                if (ta == null && tb == null) return 0;
+                if (ta == null) return 1;
+                if (tb == null) return -1;
+                return tb.compareTo(ta);
+            });
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "fromDate", from.toString(),
+                "toDate", to.toString(),
+                "count", combined.size(),
+                "logs", combined
+            ));
+        } catch (Exception e) {
+            log.error("Error fetching admin gate logs", e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "Failed to fetch admin gate logs: " + e.getMessage()
+            ));
+        }
+    }
+
+    // ==================== HELPER: build unified map from Exit_logs row ====================
+    private Map<String, Object> buildExitMap(com.example.visitor.entity.RailwayExitLog e, String scanType) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", "exit-" + e.getId());
+        map.put("scanType", scanType);
+        map.put("userType", e.getUserType());
+        map.put("userId", e.getUserId());
+        map.put("time", e.getExitTime());
+
+        // Resolve name
+        String resolvedName = e.getPersonName();
+        if (resolvedName == null || resolvedName.isBlank() || resolvedName.startsWith("Visitor-")) {
+            resolvedName = resolvePersonName(e.getUserId(), e.getUserType());
+        }
+        map.put("name", resolvedName != null ? resolvedName : e.getUserId());
+
+        // Resolve department
+        String dept = e.getDepartment();
+        if (dept == null || dept.isBlank()) {
+            dept = resolvePersonDepartment(e.getUserId(), e.getUserType());
+        }
+        map.put("department", dept != null ? dept : "-");
+
+        // Resolve purpose
+        String purpose = e.getPurpose();
+        if ((purpose == null || purpose.isBlank()) && e.getQrId() != null) {
+            purpose = resolvePurposeFromQr(e.getQrId());
+        }
+        map.put("purpose", purpose != null ? purpose : "-");
+        map.put("location", e.getLocation() != null ? e.getLocation() : e.getScanLocation());
+        map.put("verifiedBy", e.getVerifiedBy());
+        return map;
+    }
+
+    // ==================== HELPER: build unified map from Entry row ====================
+    private Map<String, Object> buildEntryMap(com.example.visitor.entity.RailwayEntry e, String scanType) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", "entry-" + e.getId());
+        map.put("scanType", scanType);
+        map.put("userType", e.getUserType());
+        map.put("userId", e.getUserId());
+        map.put("time", e.getTimestamp());
+
+        // Resolve name
+        String resolvedName = e.getPersonName();
+        if (resolvedName == null || resolvedName.isBlank() || resolvedName.startsWith("Visitor-")) {
+            resolvedName = resolvePersonName(e.getUserId(), e.getUserType());
+        }
+        map.put("name", resolvedName != null ? resolvedName : e.getUserId());
+
+        // Resolve department
+        String dept = e.getDepartment();
+        if (dept == null || dept.isBlank()) {
+            dept = resolvePersonDepartment(e.getUserId(), e.getUserType());
+        }
+        map.put("department", dept != null ? dept : "-");
+
+        // Purpose from QR if available
+        String purpose = null;
+        if (e.getQrId() != null) {
+            purpose = resolvePurposeFromQr(e.getQrId());
+        }
+        map.put("purpose", purpose != null ? purpose : "-");
+        map.put("location", e.getScanLocation());
+        map.put("verifiedBy", e.getScannedBy());
+        return map;
+    }
+
+    // ==================== SHARED RESOLVERS ====================
+    private String resolvePersonName(String userId, String userType) {
+        if (userId == null || userId.isBlank()) return null;
+        String utype = userType != null ? userType.toUpperCase() : "";
+        try {
+            if ("STUDENT".equals(utype)) {
+                return studentRepository.findByRegNo(userId).map(s -> s.getFullName()).orElse(userId);
+            } else if ("STAFF".equals(utype) || "HOD".equals(utype)) {
+                String name = staffRepository.findByStaffCode(userId).map(s -> s.getStaffName()).orElse(null);
+                if (name == null) {
+                    name = hodRepository.findByHodCode(userId).map(h -> h.getHodName()).orElse(userId);
+                }
+                return name;
+            }
+        } catch (Exception ex) { /* ignore */ }
+        return userId;
+    }
+
+    private String resolvePersonDepartment(String userId, String userType) {
+        if (userId == null || userId.isBlank()) return null;
+        String utype = userType != null ? userType.toUpperCase() : "";
+        try {
+            if ("STUDENT".equals(utype)) {
+                return studentRepository.findByRegNo(userId).map(s -> s.getDepartment()).orElse(null);
+            } else if ("STAFF".equals(utype)) {
+                return staffRepository.findByStaffCode(userId).map(s -> s.getDepartment()).orElse(null);
+            } else if ("HOD".equals(utype)) {
+                return hodRepository.findByHodCode(userId).map(h -> h.getDepartment()).orElse(null);
+            }
+        } catch (Exception ex) { /* ignore */ }
+        return null;
+    }
+
+    private String resolvePurposeFromQr(Long qrId) {
+        try {
+            com.example.visitor.entity.QRTable qr = qrTableRepository.findById(qrId).orElse(null);
+            if (qr != null && qr.getPassRequestId() != null) {
+                var gprOpt = gatePassRequestRepository.findById(qr.getPassRequestId());
+                if (gprOpt.isPresent()) {
+                    var gpr = gprOpt.get();
+                    return gpr.getPurpose() != null ? gpr.getPurpose() : gpr.getReason();
+                }
+            }
+        } catch (Exception ex) { /* ignore */ }
+        return null;
     }
 
 }

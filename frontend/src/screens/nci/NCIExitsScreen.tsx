@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, StyleSheet, TouchableOpacity, Modal, ScrollView,
-  ActivityIndicator, StatusBar, BackHandler, Animated, RefreshControl,
+  View, StyleSheet, TouchableOpacity, ScrollView,
+  ActivityIndicator, StatusBar, BackHandler, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
@@ -16,7 +16,6 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
-import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
 import TopRefreshControl from '../../components/TopRefreshControl';
 
 interface NCIExitsScreenProps {
@@ -29,11 +28,10 @@ const getInitials = (name: string) =>
 
 const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
   const { theme } = useTheme();
-  const [exitLogs, setExitLogs] = useState<any[]>([]);
+  const [gateLogs, setGateLogs] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [rangeModalVisible, setRangeModalVisible] = useState(false);
-  const { translateY: rangeSheetY, panHandlers: rangePanHandlers, openSheet: openRangeSheet } = useBottomSheetSwipe(() => setRangeModalVisible(false));
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [selectingDateType, setSelectingDateType] = useState<'FROM' | 'TO'>('FROM');
@@ -41,58 +39,60 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [modalMsg, setModalMsg] = useState('');
-  const [rangeLabel, setRangeLabel] = useState("Today's exits");
+  const [rangeLabel, setRangeLabel] = useState("Today's gate logs");
 
   useEffect(() => {
-    loadExitLogs();
+    loadGateLogs();
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { onBack(); return true; });
     return () => sub.remove();
   }, []);
 
-  const loadExitLogs = async (rangeFrom?: string, rangeTo?: string) => {
+  const loadGateLogs = async (rangeFrom?: string, rangeTo?: string) => {
     try {
-      const response = await apiService.getHRExits(rangeFrom, rangeTo);
-      if (response.success) setExitLogs(response.exits || []);
+      const response = await apiService.getGateLogs(rangeFrom, rangeTo);
+      if (response.success) setGateLogs(response.logs || []);
     } catch (e) {
-      console.error('Error loading exits:', e);
+      console.error('Error loading gate logs:', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  const onRefresh = () => { setRefreshing(true); loadExitLogs(fromDate || undefined, toDate || undefined); };
+  const onRefresh = () => { setRefreshing(true); loadGateLogs(fromDate || undefined, toDate || undefined); };
 
   const exportPdf = async () => {
-    if (exitLogs.length === 0) {
-      setModalMsg('No exit records to download.');
+    if (gateLogs.length === 0) {
+      setModalMsg('No records to download.');
       setShowError(true);
       return;
     }
     setIsDownloading(true);
-    const filename = `Exit_Report_${new Date().toISOString().slice(0, 10)}`;
+    const filename = `Gate_Logs_${new Date().toISOString().slice(0, 10)}`;
     try {
       const result = await notificationService.generatePdfReport({
-        title: 'Staff & Student Exit Report',
+        title: 'Staff & Student Gate Log Report',
         subtitle: rangeLabel,
-        sectionHeading: 'Exit records',
+        sectionHeading: 'Entry & Exit records',
         brandFooterLine: 'RIT Gate Management System',
         filename,
         columns: [
+          { key: 'scanType', label: 'TYPE' },
           { key: 'userType', label: 'ROLE' },
           { key: 'userId', label: 'ID' },
           { key: 'name', label: 'NAME' },
           { key: 'department', label: 'DEPARTMENT' },
           { key: 'purpose', label: 'PURPOSE' },
-          { key: 'exitTime', label: 'EXIT TIME' },
+          { key: 'time', label: 'TIME' },
         ],
-        rows: exitLogs.map((r: any) => ({
+        rows: gateLogs.map((r: any) => ({
+          scanType: r.scanType || '-',
           userType: r.userType || '-',
           userId: r.userId || '-',
           name: r.name || '-',
           department: r.department || '-',
           purpose: r.purpose || '-',
-          exitTime: formatDateShort(r.exitTime),
+          time: formatDateShort(r.time),
         })),
       });
       if (result.success) {
@@ -110,6 +110,8 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
     }
   };
 
+  const isEntry = (item: any) => item.scanType === 'ENTRY';
+
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
@@ -117,7 +119,7 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
         <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
           <Ionicons name="arrow-back" size={22} color={theme.text} />
         </TouchableOpacity>
-        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Exit Records</ThemedText>
+        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Gate Logs</ThemedText>
         <View style={{ width: 40 }} />
       </View>
 
@@ -125,7 +127,7 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
         <ScreenContentContainer style={{ flex: 1 }}>
           <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
             <ThemedText style={[styles.hint, { color: theme.textSecondary }]}>
-              {rangeLabel} — {loading ? 'Loading…' : `${exitLogs.length} record${exitLogs.length !== 1 ? 's' : ''}`}
+              {rangeLabel} — {loading ? 'Loading…' : `${gateLogs.length} record${gateLogs.length !== 1 ? 's' : ''}`}
             </ThemedText>
             <View style={styles.actions}>
               <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.primary }]} onPress={() => setRangeModalVisible(true)}>
@@ -133,7 +135,7 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
                 <ThemedText style={[styles.actionBtnText, { color: '#FFF' }]}>Date Range</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: exitLogs.length > 0 ? theme.success : theme.border }]}
+                style={[styles.actionBtn, { backgroundColor: gateLogs.length > 0 ? theme.success : theme.border }]}
                 onPress={exportPdf}
                 disabled={isDownloading}
               >
@@ -146,51 +148,55 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
           </View>
 
           <VerticalFlatList
-            data={exitLogs}
-            keyExtractor={(item) => `exit-${item.id}`}
+            data={gateLogs}
+            keyExtractor={(item) => `log-${item.id}`}
             contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
-            renderItem={({ item }) => (
-              <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border, marginHorizontal: 4 }]}>
-                <View style={styles.cardTop}>
-                  <View style={[styles.avatar, { backgroundColor: theme.error + '18' }]}>
-                    <ThemedText style={[styles.avatarText, { color: theme.error }]}>{getInitials(item.name || item.userId)}</ThemedText>
-                  </View>
-                  <View style={styles.cardInfo}>
-                    <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{item.name || item.userId || 'Unknown'}</ThemedText>
-                    <ThemedText style={[styles.cardSub, { color: theme.textSecondary }]} numberOfLines={1}>
-                      {item.userId}{item.department ? ` • ${item.department}` : ''}
-                    </ThemedText>
-                  </View>
-                  <View style={[styles.badge, { backgroundColor: theme.error + '15' }]}>
-                    <ThemedText style={[styles.badgeText, { color: theme.error }]}>{item.userType || 'EXIT'}</ThemedText>
-                  </View>
-                </View>
-                <View style={[styles.cardDetails, { backgroundColor: theme.inputBackground }]}>
-                  {item.purpose ? (
-                    <View style={styles.detailRow}>
-                      <Ionicons name="document-text-outline" size={13} color={theme.textTertiary} />
-                      <ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{item.purpose}</ThemedText>
+            renderItem={({ item }) => {
+              const entry = isEntry(item);
+              const badgeColor = entry ? theme.success : theme.error;
+              return (
+                <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border, marginHorizontal: 4 }]}>
+                  <View style={styles.cardTop}>
+                    <View style={[styles.avatar, { backgroundColor: badgeColor + '18' }]}>
+                      <ThemedText style={[styles.avatarText, { color: badgeColor }]}>{getInitials(item.name || item.userId)}</ThemedText>
                     </View>
-                  ) : null}
-                  <View style={styles.detailRow}>
-                    <Ionicons name="time-outline" size={13} color={theme.error} />
-                    <ThemedText style={[styles.detailText, { color: theme.error }]}>{formatDateShort(item.exitTime)}</ThemedText>
+                    <View style={styles.cardInfo}>
+                      <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{item.name || item.userId || 'Unknown'}</ThemedText>
+                      <ThemedText style={[styles.cardSub, { color: theme.textSecondary }]} numberOfLines={1}>
+                        {item.userId}{item.department ? ` • ${item.department}` : ''}
+                      </ThemedText>
+                    </View>
+                    <View style={[styles.badge, { backgroundColor: badgeColor + '15' }]}>
+                      <ThemedText style={[styles.badgeText, { color: badgeColor }]}>{item.scanType || '-'}</ThemedText>
+                    </View>
+                  </View>
+                  <View style={[styles.cardDetails, { backgroundColor: theme.inputBackground }]}>
+                    {item.purpose && item.purpose !== '-' ? (
+                      <View style={styles.detailRow}>
+                        <Ionicons name="document-text-outline" size={13} color={theme.textTertiary} />
+                        <ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={1}>{item.purpose}</ThemedText>
+                      </View>
+                    ) : null}
+                    <View style={styles.detailRow}>
+                      <Ionicons name="time-outline" size={13} color={badgeColor} />
+                      <ThemedText style={[styles.detailText, { color: badgeColor }]}>{formatDateShort(item.time)}</ThemedText>
+                    </View>
                   </View>
                 </View>
-              </View>
-            )}
+              );
+            }}
             ListEmptyComponent={
               !loading ? (
                 <View style={styles.emptyCard}>
                   <View style={[styles.emptyIconWrap, { backgroundColor: theme.border + '40' }]}>
-                    <Ionicons name="log-out-outline" size={40} color={theme.textTertiary} />
+                    <Ionicons name="swap-vertical-outline" size={40} color={theme.textTertiary} />
                   </View>
-                  <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>No exit records</ThemedText>
+                  <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>No gate log records</ThemedText>
                   <ThemedText style={[styles.emptySub, { color: theme.textSecondary }]}>
-                    No exits found for the selected period.
+                    No entry or exit records found for the selected period.
                   </ThemedText>
                 </View>
               ) : (
@@ -283,13 +289,13 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
               />
             </ScrollView>
             <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
-              <TouchableOpacity style={{ flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', backgroundColor: '#F3F4F6' }} onPress={() => { setFromDate(''); setToDate(''); setSelectingDateType('FROM'); setRangeLabel("Today's exits"); loadExitLogs(); setRangeModalVisible(false); }}>
+              <TouchableOpacity style={{ flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', backgroundColor: '#F3F4F6' }} onPress={() => { setFromDate(''); setToDate(''); setSelectingDateType('FROM'); setRangeLabel("Today's gate logs"); loadGateLogs(); setRangeModalVisible(false); }}>
                 <ThemedText style={{ fontSize: 15, fontWeight: '700', color: '#6B7280' }}>Clear</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ flex: 2, paddingVertical: 14, borderRadius: 12, alignItems: 'center', backgroundColor: fromDate && toDate ? theme.primary : '#D1D5DB' }}
                 disabled={!fromDate || !toDate}
-                onPress={() => { setRangeModalVisible(false); setRangeLabel(`${fromDate} → ${toDate}`); loadExitLogs(fromDate, toDate); }}
+                onPress={() => { setRangeModalVisible(false); setRangeLabel(`${fromDate} → ${toDate}`); loadGateLogs(fromDate, toDate); }}
               >
                 <ThemedText style={{ fontSize: 15, fontWeight: '700', color: '#ffffff' }}>Apply</ThemedText>
               </TouchableOpacity>
@@ -331,23 +337,6 @@ const styles = StyleSheet.create({
   cardDetails: { paddingHorizontal: 14, paddingVertical: 10, gap: 6 },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   detailText: { fontSize: 13, flex: 1 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  dragHandle: { alignItems: 'center', paddingTop: 10, paddingBottom: 4 },
-  dragHandleBar: { width: 40, height: 4, borderRadius: 2 },
-  modalCard: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 24 },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
-  modalTitle: { fontSize: 17, fontWeight: '700' },
-  closeBtn: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
-  pillRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingVertical: 14 },
-  pill: { flex: 1, flexDirection: 'column', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1.5, gap: 2 },
-  pillLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8 },
-  pillValue: { fontSize: 13, fontWeight: '700' },
-  calWrap: { marginHorizontal: 12, borderRadius: 12, overflow: 'hidden', borderWidth: 1 },
-  modalActions: { flexDirection: 'row', gap: 10, paddingHorizontal: 16, paddingTop: 14 },
-  clearBtn: { flex: 1, paddingVertical: 13, borderRadius: 12, alignItems: 'center', borderWidth: 1 },
-  clearBtnText: { fontSize: 15, fontWeight: '700' },
-  applyBtn: { flex: 2, paddingVertical: 13, borderRadius: 12, alignItems: 'center' },
-  applyBtnText: { fontSize: 15, fontWeight: '700' },
 });
 
 export default NCIExitsScreen;
