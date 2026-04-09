@@ -675,6 +675,13 @@ public class HRController {
         if ((purpose == null || purpose.isBlank()) && e.getQrId() != null) {
             purpose = resolvePurposeFromQr(e.getQrId());
         }
+        // Fallback: resolve from Visitor table for visitor types
+        if ((purpose == null || purpose.isBlank()) && e.getUserType() != null) {
+            String ut = e.getUserType().toUpperCase();
+            if ("VISITOR".equals(ut) || "VG".equals(ut) || "VENDOR".equals(ut)) {
+                purpose = resolveVisitorPurpose(e.getUserId());
+            }
+        }
         map.put("purpose", purpose != null ? purpose : "-");
         map.put("location", e.getLocation() != null ? e.getLocation() : e.getScanLocation());
         map.put("verifiedBy", e.getVerifiedBy());
@@ -709,6 +716,13 @@ public class HRController {
         if (e.getQrId() != null) {
             purpose = resolvePurposeFromQr(e.getQrId());
         }
+        // Fallback: resolve from Visitor table for visitor types
+        if ((purpose == null || purpose.isBlank()) && e.getUserType() != null) {
+            String ut = e.getUserType().toUpperCase();
+            if ("VISITOR".equals(ut) || "VG".equals(ut) || "VENDOR".equals(ut)) {
+                purpose = resolveVisitorPurpose(e.getUserId());
+            }
+        }
         map.put("purpose", purpose != null ? purpose : "-");
         map.put("location", e.getScanLocation());
         map.put("verifiedBy", e.getScannedBy());
@@ -728,6 +742,13 @@ public class HRController {
                     name = hodRepository.findByHodCode(userId).map(h -> h.getHodName()).orElse(userId);
                 }
                 return name;
+            } else if ("VISITOR".equals(utype) || "VG".equals(utype) || "VENDOR".equals(utype)) {
+                try {
+                    Long visitorId = Long.parseLong(userId);
+                    return visitorRepository.findById(visitorId).map(v -> v.getName()).orElse("Visitor-" + userId);
+                } catch (NumberFormatException nfe) {
+                    return "Visitor-" + userId;
+                }
             }
         } catch (Exception ex) { /* ignore */ }
         return userId;
@@ -743,6 +764,13 @@ public class HRController {
                 return staffRepository.findByStaffCode(userId).map(s -> s.getDepartment()).orElse(null);
             } else if ("HOD".equals(utype)) {
                 return hodRepository.findByHodCode(userId).map(h -> h.getDepartment()).orElse(null);
+            } else if ("VISITOR".equals(utype) || "VG".equals(utype) || "VENDOR".equals(utype)) {
+                try {
+                    Long visitorId = Long.parseLong(userId);
+                    return visitorRepository.findById(visitorId).map(v -> v.getDepartment()).orElse(null);
+                } catch (NumberFormatException nfe) {
+                    return null;
+                }
             }
         } catch (Exception ex) { /* ignore */ }
         return null;
@@ -760,6 +788,15 @@ public class HRController {
             }
         } catch (Exception ex) { /* ignore */ }
         return null;
+    }
+    private String resolveVisitorPurpose(String userId) {
+        if (userId == null || userId.isBlank()) return null;
+        try {
+            Long visitorId = Long.parseLong(userId);
+            return visitorRepository.findById(visitorId).map(v -> v.getPurpose()).orElse(null);
+        } catch (NumberFormatException nfe) {
+            return null;
+        } catch (Exception ex) { return null; }
     }
 
 }
