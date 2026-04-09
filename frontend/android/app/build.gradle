@@ -93,6 +93,12 @@ android {
         versionName "8.0.0"
         buildConfigField "boolean", "IS_PRODUCTION", "true"
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
+
+        // Fast builds: pass -Pfast on CLI to build arm64-v8a only (covers all modern phones)
+        // Full builds: default uses all 4 ABIs from gradle.properties
+        if (project.hasProperty('fast')) {
+            ndk { abiFilters "arm64-v8a" }
+        }
     }
     signingConfigs {
         debug {
