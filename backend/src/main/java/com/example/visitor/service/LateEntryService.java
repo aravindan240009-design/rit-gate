@@ -95,8 +95,6 @@ public class LateEntryService {
         
         // Notify the student themselves
         notificationService.notifyPersonOfLateEntry(regNo, student.getFullName(), "STUDENT");
-        // Notify security
-        notificationService.notifySecurityOfLateEntry(student.getFullName(), regNo, "Student", student.getDepartment());
         
         // Build response
         return LateEntryResponse.builder()
@@ -195,8 +193,6 @@ public class LateEntryService {
         
         // Notify the staff themselves
         notificationService.notifyPersonOfLateEntry(staff.getStaffCode(), staff.getStaffName(), "Staff");
-        // Notify security
-        notificationService.notifySecurityOfLateEntry(staff.getStaffName(), staff.getStaffCode(), "Staff", staff.getDepartment());
         
         return LateEntryResponse.builder()
             .success(true)
@@ -271,9 +267,8 @@ public class LateEntryService {
             }
         }
 
-        // Notify the staff member themselves + security
+        // Notify the staff member themselves
         notificationService.notifyPersonOfLateEntry(staff.getStaffCode(), staffName, "Staff");
-        notificationService.notifySecurityOfLateEntry(staffName, staff.getStaffCode(), "Staff", staff.getDepartment());
         // Also notify HR (NCI/NTF go directly to HR)
         notificationService.notifyHROfLateEntry(staffName, staff.getStaffCode(), "Staff (NCI/NTF)", staff.getDepartment());
         
@@ -356,9 +351,8 @@ public class LateEntryService {
             log.error("Error sending notifications to HR: {}", e.getMessage());
         }
 
-        // Notify the HOD themselves + security
+        // Notify the HOD themselves
         notificationService.notifyPersonOfLateEntry(hodCode, hod.getHodName(), "HOD");
-        notificationService.notifySecurityOfLateEntry(hod.getHodName(), hodCode, "HOD", hod.getDepartment());
         
         return LateEntryResponse.builder()
             .success(true)

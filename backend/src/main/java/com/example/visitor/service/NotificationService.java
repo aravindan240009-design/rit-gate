@@ -8,7 +8,6 @@ import com.example.visitor.repository.StaffRepository;
 import com.example.visitor.repository.HODRepository;
 import com.example.visitor.repository.HRRepository;
 import com.example.visitor.repository.StaffMemberRepository;
-import com.example.visitor.repository.SecurityPersonnelRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -26,7 +25,6 @@ public class NotificationService {
     private final HODRepository hodRepository;
     private final HRRepository hrRepository;
     private final StaffMemberRepository staffMemberRepository;
-    private final SecurityPersonnelRepository securityPersonnelRepository;
     private final PushNotificationService pushNotificationService;
 
     public NotificationService(
@@ -36,7 +34,6 @@ public class NotificationService {
             HODRepository hodRepository,
             HRRepository hrRepository,
             StaffMemberRepository staffMemberRepository,
-            SecurityPersonnelRepository securityPersonnelRepository,
             PushNotificationService pushNotificationService) {
         this.notificationRepository = notificationRepository;
         this.studentRepository = studentRepository;
@@ -44,7 +41,6 @@ public class NotificationService {
         this.hodRepository = hodRepository;
         this.hrRepository = hrRepository;
         this.staffMemberRepository = staffMemberRepository;
-        this.securityPersonnelRepository = securityPersonnelRepository;
         this.pushNotificationService = pushNotificationService;
     }
 
@@ -415,18 +411,6 @@ public class NotificationService {
         } catch (Exception e) { log.error("Error notifying staff of visitor arrival", e); }
     }
 
-    /** Notify all security personnel when a visitor self-registers via website */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void notifySecurityOfWebsiteVisitorRegistration(String visitorName, String department, String personToMeet) {
-        try {
-            securityPersonnelRepository.findAll().forEach(sec -> save(sec.getSecurityId(),
-                "New Visitor Registration",
-                "Visitor " + visitorName + " registered online to meet " + personToMeet + " (" + department + "). Pending staff approval.",
-                Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.HIGH,
-                "/security/visitors"));
-        } catch (Exception e) { log.error("Error notifying security of website visitor registration", e); }
-    }
-
     /** Notify staff when security approves their escalated visitor */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyStaffOfSecurityVisitorApproval(String staffCode, String visitorName) {
@@ -463,18 +447,6 @@ public class NotificationService {
                 Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.NORMAL,
                 null);
         } catch (Exception e) { log.error("Error notifying {} of late entry", userType, e); }
-    }
-
-    /** Notify all security personnel of a late entry */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void notifySecurityOfLateEntry(String name, String userId, String userType, String department) {
-        try {
-            String msg = String.format("%s (%s) from %s recorded a late entry.", name, userId, department != null ? department : "N/A");
-            securityPersonnelRepository.findAll().forEach(sec -> save(sec.getSecurityId(),
-                "Late Entry - " + userType, msg,
-                Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.NORMAL,
-                "/security/scan-history"));
-        } catch (Exception e) { log.error("Error notifying security of late entry", e); }
     }
 
     /** Notify all HR of a late entry (for HOD/NTF/NCI/HR themselves) */

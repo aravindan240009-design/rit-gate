@@ -60,15 +60,6 @@ public class UnifiedVisitorController {
             response.setPersonToMeet(saved.getPersonToMeet());
             response.setApprovalStatus("PENDING");
             response.setMessage("Your visit request has been sent for approval. QR/manual codes will be ready once approved.");
-
-            // Notify all security personnel of the new website visitor registration
-            try {
-                String personToMeet = request.getStaffCode();
-                notificationService.notifySecurityOfWebsiteVisitorRegistration(
-                    saved.getName(), saved.getDepartment(), personToMeet);
-            } catch (Exception ne) {
-                System.err.println("⚠️ Security notification failed (non-fatal): " + ne.getMessage());
-            }
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {

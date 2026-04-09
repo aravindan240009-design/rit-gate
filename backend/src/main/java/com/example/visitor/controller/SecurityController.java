@@ -2317,26 +2317,6 @@ public class SecurityController {
                 System.out.println("Entry recorded: " + savedScan.getPersonName() + " - " + savedScan.getScanLocation());
             }
             
-            // Create notification for security personnel
-            String securityId = (String) scanData.get("securityId");
-            if (securityId != null) {
-                String notificationType = (scanLocation != null && scanLocation.toLowerCase().contains("exit")) ? "EXIT" : "ENTRY";
-                String message = String.format("%s %s has %s the premises at %s", 
-                    scanData.get("personType"), 
-                    scanData.get("personName"),
-                    notificationType.equals("ENTRY") ? "entered" : "exited",
-                    scanLocation);
-                
-                notificationService.createVisitorNotification(
-                    securityId, 
-                    notificationType, 
-                    message,
-                    (String) scanData.get("personName"),
-                    (String) scanData.get("personType")
-                );
-                System.out.println("Notification created for security: " + securityId);
-            }
-            
             return ResponseEntity.ok(savedLog);
         } catch (Exception e) {
             System.err.println("Error recording scan: " + e.getMessage());
