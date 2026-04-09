@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.entity.Visitor;
+import com.example.visitor.service.NotificationService;
 import com.example.visitor.service.VisitorGatepassService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,9 @@ public class UnifiedVisitorController {
     
     @Autowired
     private VisitorGatepassService visitorGatepassService;
+
+    @Autowired
+    private NotificationService notificationService;
     
     /**
      * Register visitor from website
@@ -56,6 +60,15 @@ public class UnifiedVisitorController {
             response.setPersonToMeet(saved.getPersonToMeet());
             response.setApprovalStatus("PENDING");
             response.setMessage("Your visit request has been sent for approval. QR/manual codes will be ready once approved.");
+
+            // Notify all security personnel of the new website visitor registration
+            try {
+                String personToMeet = request.getStaffCode();
+                notificationService.notifySecurityOfWebsiteVisitorRegistration(
+                    saved.getName(), saved.getDepartment(), personToMeet);
+            } catch (Exception ne) {
+                System.err.println("⚠️ Security notification failed (non-fatal): " + ne.getMessage());
+            }
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {

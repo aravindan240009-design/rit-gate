@@ -7,6 +7,8 @@ import com.example.visitor.repository.StudentRepository;
 import com.example.visitor.repository.StaffRepository;
 import com.example.visitor.repository.HODRepository;
 import com.example.visitor.repository.HRRepository;
+import com.example.visitor.repository.StaffMemberRepository;
+import com.example.visitor.repository.SecurityPersonnelRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -23,6 +25,8 @@ public class NotificationService {
     private final StaffRepository staffRepository;
     private final HODRepository hodRepository;
     private final HRRepository hrRepository;
+    private final StaffMemberRepository staffMemberRepository;
+    private final SecurityPersonnelRepository securityPersonnelRepository;
     private final PushNotificationService pushNotificationService;
 
     public NotificationService(
@@ -31,12 +35,16 @@ public class NotificationService {
             StaffRepository staffRepository,
             HODRepository hodRepository,
             HRRepository hrRepository,
+            StaffMemberRepository staffMemberRepository,
+            SecurityPersonnelRepository securityPersonnelRepository,
             PushNotificationService pushNotificationService) {
         this.notificationRepository = notificationRepository;
         this.studentRepository = studentRepository;
         this.staffRepository = staffRepository;
         this.hodRepository = hodRepository;
         this.hrRepository = hrRepository;
+        this.staffMemberRepository = staffMemberRepository;
+        this.securityPersonnelRepository = securityPersonnelRepository;
         this.pushNotificationService = pushNotificationService;
     }
 
@@ -342,6 +350,143 @@ public class NotificationService {
         } catch (Exception e) {
             log.error("Error notifying bulk participants", e);
         }
+    }
+
+    // ==================== VISITOR NOTIFICATIONS (MISSING) ====================
+
+    /** Notify staff/NCI/NTF that a visitor assigned to them has been approved */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyStaffOfVisitorApproval(String staffCode, String visitorName) {
+        try {
+            save(staffCode, "Visitor Approved",
+                "Your visitor " + visitorName + " has been approved. QR/manual code is ready.",
+                Notification.NotificationType.APPROVAL, Notification.NotificationPriority.URGENT,
+                "/staff/visitor-requests");
+        } catch (Exception e) { log.error("Error notifying staff of visitor approval", e); }
+    }
+
+    /** Notify staff/NCI/NTF that a visitor assigned to them was rejected */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyStaffOfVisitorRejection(String staffCode, String visitorName, String reason) {
+        try {
+            String msg = (reason != null && !reason.isBlank())
+                ? "Visitor request for " + visitorName + " was rejected. Reason: " + reason
+                : "Visitor request for " + visitorName + " was rejected.";
+            save(staffCode, "Visitor Rejected", msg,
+                Notification.NotificationType.REJECTION, Notification.NotificationPriority.HIGH,
+                "/staff/visitor-requests");
+        } catch (Exception e) { log.error("Error notifying staff of visitor rejection", e); }
+    }
+
+    /** Notify HOD when a visitor for their department is approved */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyHODOfVisitorApproval(String department, String visitorName, String personToMeet) {
+        try {
+            hodRepository.findByDepartment(department).stream()
+                .filter(h -> Boolean.TRUE.equals(h.getIsActive()))
+                .forEach(hod -> save(hod.getHodCode(),
+                    "Visitor Approved in Your Department",
+                    "Visitor " + visitorName + " approved to meet " + personToMeet + " in " + department + ".",
+                    Notification.NotificationType.APPROVAL, Notification.NotificationPriority.NORMAL,
+                    "/hod/visitor-requests"));
+        } catch (Exception e) { log.error("Error notifying HOD of visitor approval", e); }
+    }
+
+    /** Notify all HR when a visitor is approved */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyHROfVisitorApproval(String visitorName, String department) {
+        try {
+            hrRepository.findAll().forEach(hr -> save(hr.getHrCode(),
+                "Visitor Approved",
+                "Visitor " + visitorName + " approved for " + department + " department.",
+                Notification.NotificationType.APPROVAL, Notification.NotificationPriority.NORMAL,
+                "/hr/visitor-requests"));
+        } catch (Exception e) { log.error("Error notifying HR of visitor approval", e); }
+    }
+
+    /** Notify staff when their visitor physically arrives (entry scan) */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyStaffOfVisitorArrival(String staffCode, String visitorName) {
+        try {
+            save(staffCode, "Your Visitor Has Arrived",
+                visitorName + " has entered the premises and is on their way to meet you.",
+                Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.URGENT,
+                "/staff/visitor-requests");
+        } catch (Exception e) { log.error("Error notifying staff of visitor arrival", e); }
+    }
+
+    /** Notify all security personnel when a visitor self-registers via website */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifySecurityOfWebsiteVisitorRegistration(String visitorName, String department, String personToMeet) {
+        try {
+            securityPersonnelRepository.findAll().forEach(sec -> save(sec.getSecurityId(),
+                "New Visitor Registration",
+                "Visitor " + visitorName + " registered online to meet " + personToMeet + " (" + department + "). Pending staff approval.",
+                Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.HIGH,
+                "/security/visitors"));
+        } catch (Exception e) { log.error("Error notifying security of website visitor registration", e); }
+    }
+
+    /** Notify staff when security approves their escalated visitor */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyStaffOfSecurityVisitorApproval(String staffCode, String visitorName) {
+        try {
+            save(staffCode, "Visitor Approved by Security",
+                "Your visitor " + visitorName + " was approved by security. QR/manual code is ready.",
+                Notification.NotificationType.APPROVAL, Notification.NotificationPriority.URGENT,
+                "/staff/visitor-requests");
+        } catch (Exception e) { log.error("Error notifying staff of security visitor approval", e); }
+    }
+
+    /** Notify staff when security rejects their escalated visitor */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyStaffOfSecurityVisitorRejection(String staffCode, String visitorName, String reason) {
+        try {
+            String msg = (reason != null && !reason.isBlank())
+                ? "Your visitor " + visitorName + " was rejected by security. Reason: " + reason
+                : "Your visitor " + visitorName + " was rejected by security.";
+            save(staffCode, "Visitor Rejected by Security", msg,
+                Notification.NotificationType.REJECTION, Notification.NotificationPriority.HIGH,
+                "/staff/visitor-requests");
+        } catch (Exception e) { log.error("Error notifying staff of security visitor rejection", e); }
+    }
+
+    // ==================== LATE ENTRY NOTIFICATIONS (MISSING) ====================
+
+    /** Notify the late person themselves */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyPersonOfLateEntry(String userId, String name, String userType) {
+        try {
+            save(userId, "Late Entry Recorded",
+                "Your late entry has been recorded at " + java.time.LocalDateTime.now().format(
+                    java.time.format.DateTimeFormatter.ofPattern("hh:mm a")) + ". Please ensure timely attendance.",
+                Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.NORMAL,
+                null);
+        } catch (Exception e) { log.error("Error notifying {} of late entry", userType, e); }
+    }
+
+    /** Notify all security personnel of a late entry */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifySecurityOfLateEntry(String name, String userId, String userType, String department) {
+        try {
+            String msg = String.format("%s (%s) from %s recorded a late entry.", name, userId, department != null ? department : "N/A");
+            securityPersonnelRepository.findAll().forEach(sec -> save(sec.getSecurityId(),
+                "Late Entry - " + userType, msg,
+                Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.NORMAL,
+                "/security/scan-history"));
+        } catch (Exception e) { log.error("Error notifying security of late entry", e); }
+    }
+
+    /** Notify all HR of a late entry (for HOD/NTF/NCI/HR themselves) */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyHROfLateEntry(String name, String userId, String userType, String department) {
+        try {
+            String msg = String.format("%s (%s) from %s arrived late.", name, userId, department != null ? department : "N/A");
+            hrRepository.findAll().forEach(hr -> save(hr.getHrCode(),
+                "Late Entry Alert - " + userType, msg,
+                Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.NORMAL,
+                "/hr/gate-logs"));
+        } catch (Exception e) { log.error("Error notifying HR of late entry", e); }
     }
 
     // ==================== UTILITY METHODS ====================

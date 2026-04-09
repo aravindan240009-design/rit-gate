@@ -179,6 +179,11 @@ public class VisitorGatepassService {
                     "APPROVAL",
                     "URGENT"
                 );
+                // Also notify HOD and HR
+                notificationService.notifyHODOfVisitorApproval(
+                    savedRequest.getDepartment(), savedRequest.getName(),
+                    savedRequest.getPersonToMeet() != null ? savedRequest.getPersonToMeet() : savedRequest.getStaffCode());
+                notificationService.notifyHROfVisitorApproval(savedRequest.getName(), savedRequest.getDepartment());
             }
 
             String registeredBy = savedRequest.getRegisteredBy();
@@ -265,6 +270,9 @@ public class VisitorGatepassService {
                 "REJECTION",
                 "HIGH"
             );
+            notificationService.notifyHODOfVisitorApproval(
+                savedRequest.getDepartment(), savedRequest.getName(),
+                savedRequest.getPersonToMeet() != null ? savedRequest.getPersonToMeet() : savedRequest.getStaffCode());
 
             emailService.sendRejectionEmail(
                 savedRequest.getEmail(),

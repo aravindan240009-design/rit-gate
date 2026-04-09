@@ -525,6 +525,15 @@ public class SecurityController {
                                 visitorRepository.save(visitor);
                                 System.out.println("✅ Visitor entry time recorded: " + visitor.getName());
 
+                                // Notify the staff member that their visitor has arrived
+                                try {
+                                    if (visitor.getStaffCode() != null && !visitor.getStaffCode().isBlank()) {
+                                        notificationService.notifyStaffOfVisitorArrival(visitor.getStaffCode(), visitor.getName());
+                                    }
+                                } catch (Exception ne) {
+                                    System.err.println("⚠️ Could not send visitor arrival notification: " + ne.getMessage());
+                                }
+
                                 // Register vehicle entry if vehicle number provided (use JDBC to avoid tainting main transaction)
                                 if (visitor.getVehicleNumber() != null && !visitor.getVehicleNumber().isBlank()) {
                                     try {
@@ -3264,6 +3273,15 @@ public class SecurityController {
             visitorRepository.save(visitor);
             
             System.out.println("✅ Security approved escalated visitor: " + visitor.getName());
+
+            // Notify the staff member that their visitor was approved by security
+            try {
+                if (visitor.getStaffCode() != null && !visitor.getStaffCode().isBlank()) {
+                    notificationService.notifyStaffOfSecurityVisitorApproval(visitor.getStaffCode(), visitor.getName());
+                }
+            } catch (Exception ne) {
+                System.err.println("⚠️ Could not send security visitor approval notification: " + ne.getMessage());
+            }
             
             return ResponseEntity.ok(visitor);
         } catch (Exception e) {
@@ -3301,6 +3319,15 @@ public class SecurityController {
             visitorRepository.save(visitor);
             
             System.out.println("✅ Security rejected escalated visitor: " + visitor.getName());
+
+            // Notify the staff member that their visitor was rejected by security
+            try {
+                if (visitor.getStaffCode() != null && !visitor.getStaffCode().isBlank()) {
+                    notificationService.notifyStaffOfSecurityVisitorRejection(visitor.getStaffCode(), visitor.getName(), rejectionReason);
+                }
+            } catch (Exception ne) {
+                System.err.println("⚠️ Could not send security visitor rejection notification: " + ne.getMessage());
+            }
             
             return ResponseEntity.ok(visitor);
         } catch (Exception e) {

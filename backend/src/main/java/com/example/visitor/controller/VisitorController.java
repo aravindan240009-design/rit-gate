@@ -5,6 +5,7 @@ import com.example.visitor.entity.Staff;
 import com.example.visitor.repository.VisitorRepository;
 import com.example.visitor.repository.StaffRepository;
 import com.example.visitor.service.EmailService;
+import com.example.visitor.service.NotificationService;
 import com.example.visitor.service.VisitorRequestService;
 import com.example.visitor.util.DepartmentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +33,9 @@ public class VisitorController {
     
     @Autowired
     private VisitorRequestService visitorRequestService;
-    
+
+    @Autowired
+    private NotificationService notificationService;
     // Register a new visitor
     @PostMapping
     public ResponseEntity<VisitorRegistrationResponse> registerVisitor(@RequestBody VisitorRegistrationRequest request) {
@@ -328,8 +331,13 @@ public class VisitorController {
                     visitorRequestService.notifyRegisteredBy(registeredBy, "Visitor Approved",
                         "Visitor " + visitor.getName() + " has been approved by staff.");
                 }
+                // Notify HOD and HR of the approval
+                notificationService.notifyStaffOfVisitorApproval(visitor.getStaffCode(), visitor.getName());
+                notificationService.notifyHODOfVisitorApproval(visitor.getDepartment(), visitor.getName(),
+                    visitor.getPersonToMeet() != null ? visitor.getPersonToMeet() : visitor.getStaffCode());
+                notificationService.notifyHROfVisitorApproval(visitor.getName(), visitor.getDepartment());
             } catch (Exception notifEx) {
-                System.err.println("⚠️ Notification to security failed (non-fatal): " + notifEx.getMessage());
+                System.err.println("⚠️ Notification failed (non-fatal): " + notifEx.getMessage());
             }
 
             java.util.Map<String, Object> resp = new java.util.HashMap<>();
@@ -363,6 +371,12 @@ public class VisitorController {
                 emailService.sendRejectionEmail(visitor.getEmail(), visitor.getName(), visitor.getPersonToMeet());
             } catch (Exception emailError) {
                 System.err.println("⚠️ Rejection email failed: " + emailError.getMessage());
+            }
+
+            try {
+                notificationService.notifyStaffOfVisitorRejection(visitor.getStaffCode(), visitor.getName(), reason);
+            } catch (Exception notifEx) {
+                System.err.println("⚠️ Rejection notification failed (non-fatal): " + notifEx.getMessage());
             }
 
             java.util.Map<String, Object> resp = new java.util.HashMap<>();

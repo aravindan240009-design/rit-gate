@@ -93,6 +93,11 @@ public class LateEntryService {
             }
         }
         
+        // Notify the student themselves
+        notificationService.notifyPersonOfLateEntry(regNo, student.getFullName(), "STUDENT");
+        // Notify security
+        notificationService.notifySecurityOfLateEntry(student.getFullName(), regNo, "Student", student.getDepartment());
+        
         // Build response
         return LateEntryResponse.builder()
             .success(true)
@@ -188,6 +193,11 @@ public class LateEntryService {
             }
         }
         
+        // Notify the staff themselves
+        notificationService.notifyPersonOfLateEntry(staff.getStaffCode(), staff.getStaffName(), "Staff");
+        // Notify security
+        notificationService.notifySecurityOfLateEntry(staff.getStaffName(), staff.getStaffCode(), "Staff", staff.getDepartment());
+        
         return LateEntryResponse.builder()
             .success(true)
             .message("Late entry recorded for " + staff.getStaffName())
@@ -260,6 +270,12 @@ public class LateEntryService {
                 log.info("Notification sent to HOD: {}", hod.getHodCode());
             }
         }
+
+        // Notify the staff member themselves + security
+        notificationService.notifyPersonOfLateEntry(staff.getStaffCode(), staffName, "Staff");
+        notificationService.notifySecurityOfLateEntry(staffName, staff.getStaffCode(), "Staff", staff.getDepartment());
+        // Also notify HR (NCI/NTF go directly to HR)
+        notificationService.notifyHROfLateEntry(staffName, staff.getStaffCode(), "Staff (NCI/NTF)", staff.getDepartment());
         
         return LateEntryResponse.builder()
             .success(true)
@@ -339,6 +355,10 @@ public class LateEntryService {
         } catch (Exception e) {
             log.error("Error sending notifications to HR: {}", e.getMessage());
         }
+
+        // Notify the HOD themselves + security
+        notificationService.notifyPersonOfLateEntry(hodCode, hod.getHodName(), "HOD");
+        notificationService.notifySecurityOfLateEntry(hod.getHodName(), hodCode, "HOD", hod.getDepartment());
         
         return LateEntryResponse.builder()
             .success(true)
