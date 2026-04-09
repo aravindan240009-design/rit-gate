@@ -27,5 +27,14 @@ COPY --from=build /app/build/libs/*.jar app.jar
 # Expose port (Render uses dynamic port)
 EXPOSE 8080
 
-# Run app with memory optimization (important for free tier)
-ENTRYPOINT ["java", "-Xmx256m", "-Xms128m", "-jar", "app.jar"]
+# Run app with memory optimization for Render free tier (512MB RAM)
+ENTRYPOINT ["java", \
+  "-Xmx384m", \
+  "-Xms128m", \
+  "-XX:+UseContainerSupport", \
+  "-XX:MaxRAMPercentage=75.0", \
+  "-XX:+UseG1GC", \
+  "-XX:MaxGCPauseMillis=200", \
+  "-XX:+ExitOnOutOfMemoryError", \
+  "-Djava.security.egd=file:/dev/./urandom", \
+  "-jar", "app.jar"]
