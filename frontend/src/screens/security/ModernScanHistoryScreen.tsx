@@ -641,7 +641,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                 </View>
                 <View style={styles.scanInfo}>
                   <ThemedText style={[styles.scanName, { color: theme.text }]}>{scan.name}</ThemedText>
-                  <ThemedText style={[styles.scanType, { color: theme.textSecondary }]}>{scan.type}</ThemedText>
+                  <ThemedText style={[styles.scanType, { color: theme.textSecondary }]}>{scan.role || scan.type}</ThemedText>
                   <ThemedText style={[styles.scanPurpose, { color: theme.textSecondary }]} numberOfLines={1}>{scan.purpose}</ThemedText>
                 </View>
                 <View style={styles.scanRight}>
@@ -981,7 +981,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     ) : (
                       <>
                         <ThemedText style={[styles.scanName, { color: theme.text }]}>{scan.name}</ThemedText>
-                        <ThemedText style={[styles.scanType, { color: theme.primary }]}>{scan.type}</ThemedText>
+                        <ThemedText style={[styles.scanType, { color: theme.primary }]}>{scan.role || scan.type}</ThemedText>
                         <ThemedText style={[styles.scanPurpose, { color: theme.textSecondary }]} numberOfLines={1}>
                           {scan.purpose}
                         </ThemedText>
