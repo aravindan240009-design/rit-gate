@@ -1850,6 +1850,17 @@ public class SecurityController {
                 rec.put("purpose",     entryPurpose);
                 rec.put("reason",      "");
                 if (entry.getDepartment() != null) rec.put("department", entry.getDepartment());
+                // Resolve visitor role (VISITOR/VENDOR)
+                if ("VISITOR".equals(utype) || "VG".equals(utype)) {
+                    if (uid != null && !"null".equals(uid)) {
+                        try {
+                            Long visitorId = Long.parseLong(uid);
+                            visitorRepository.findById(visitorId).ifPresent(v -> {
+                                if (v.getRole() != null) rec.put("role", v.getRole());
+                            });
+                        } catch (Exception ignored) {}
+                    }
+                }
                 scanHistory.add(rec);
             }
 
@@ -1979,6 +1990,17 @@ public class SecurityController {
                 if (resolvedDept != null) rec.put("department", resolvedDept);
                 if (exitLog.getEmail() != null) rec.put("email", exitLog.getEmail());
                 if (exitLog.getPhone() != null) rec.put("phone", exitLog.getPhone());
+                // Resolve visitor role (VISITOR/VENDOR)
+                if ("VISITOR".equals(utype) || "VG".equals(utype)) {
+                    if (uid != null && !"null".equals(uid)) {
+                        try {
+                            Long visitorId = Long.parseLong(uid);
+                            visitorRepository.findById(visitorId).ifPresent(v -> {
+                                if (v.getRole() != null) rec.put("role", v.getRole());
+                            });
+                        } catch (Exception ignored) {}
+                    }
+                }
                 scanHistory.add(rec);
             }
 

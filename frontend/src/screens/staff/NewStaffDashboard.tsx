@@ -131,6 +131,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           reason: req.purpose,
           requestDate: req.createdAt,
           originalId: req.requestId,
+          role: req.role || 'VISITOR',
         }));
 
         allRequests = [...allRequests, ...visitorReqs];
@@ -417,7 +418,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                     </ThemedText>
                     {request.requestType === 'VISITOR' ? (
                       <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
-                        <ThemedText style={[styles.passTypePillText, { color: theme.text }]}>Visitor</ThemedText>
+                        <ThemedText style={[styles.passTypePillText, { color: theme.text }]}>{(request.role || 'VISITOR').charAt(0).toUpperCase() + (request.role || 'VISITOR').slice(1).toLowerCase()}</ThemedText>
                       </View>
                     ) : (
                       <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
@@ -429,7 +430,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                   </View>
                   <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
                     {request.requestType === 'VISITOR'
-                      ? `Visitor • ${request.visitorPhone || ''}`
+                      ? `${(request.role || 'Visitor').charAt(0).toUpperCase() + (request.role || 'Visitor').slice(1).toLowerCase()} • ${request.visitorPhone || ''}`
                       : `${request.regNo || 'N/A'} • ${request.department || 'Department'}`}
                   </ThemedText>
                 </View>

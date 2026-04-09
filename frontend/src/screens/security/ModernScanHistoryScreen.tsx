@@ -38,6 +38,7 @@ interface ScanRecord {
   id: number;
   name: string;
   type: string;
+  role?: string;
   purpose: string;
   inTime?: string;
   outTime?: string;
@@ -1167,7 +1168,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                         <View style={styles.fsProfileInfo}>
                           <ThemedText style={[styles.fsProfileName, { color: theme.text }]}>{selectedScan.name}</ThemedText>
                           <ThemedText style={[styles.fsProfileSub, { color: theme.textSecondary }]}>
-                            {selectedScan.regNo ? `${selectedScan.regNo} • ` : ''}{selectedScan.type}
+                            {selectedScan.regNo ? `${selectedScan.regNo} • ` : ''}{selectedScan.role || selectedScan.type}
                             {selectedScan.department ? ` • ${selectedScan.department}` : ''}
                           </ThemedText>
                         </View>
@@ -1182,7 +1183,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                         <View style={[styles.fsInfoDivider, { backgroundColor: theme.border }]} />
                         <View style={styles.fsInfoCell}>
                           <ThemedText style={[styles.fsInfoLabel, { color: theme.textTertiary }]}>TYPE</ThemedText>
-                          <ThemedText style={[styles.fsInfoValue, { color: theme.text }]}>{selectedScan.type || 'N/A'}</ThemedText>
+                          <ThemedText style={[styles.fsInfoValue, { color: theme.text }]}>{selectedScan.role || selectedScan.type || 'N/A'}</ThemedText>
                         </View>
                       </View>
 
