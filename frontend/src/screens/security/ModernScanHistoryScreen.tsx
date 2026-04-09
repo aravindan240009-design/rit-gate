@@ -414,6 +414,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadVehicleHistory(); }} colors={[theme.primary]} />}
             ListHeaderComponent={
               <View style={styles.rangeResultsTop}>
                 <ThemedText style={[styles.rangeResultsSub, { color: theme.textSecondary }]}>
@@ -620,6 +621,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadScanHistory(); }} colors={[theme.primary]} />}
             ListHeaderComponent={
               <View style={styles.rangeResultsTop}>
                 <ThemedText style={[styles.rangeResultsSub, { color: theme.textSecondary }]}>

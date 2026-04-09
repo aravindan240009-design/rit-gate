@@ -234,6 +234,7 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadScans(); }} colors={[theme.primary]} />}
             ListHeaderComponent={
               <View style={[styles.rangeTop, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
                 <ThemedText style={[styles.rangeTopSub, { color: theme.textSecondary }]}>
