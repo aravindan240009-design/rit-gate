@@ -172,18 +172,8 @@ public class VisitorGatepassService {
             String personToMeet = staff != null ? staff.getStaffName() : savedRequest.getStaffCode();
 
             if (!isInstantPreGuest(savedRequest)) {
-                notificationService.createUserNotification(
-                    savedRequest.getStaffCode(),
-                    "Visitor Approved",
-                    "Visitor pass approved for " + savedRequest.getName() + ". QR/manual codes are ready.",
-                    "APPROVAL",
-                    "URGENT"
-                );
-                // Also notify HOD and HR
-                notificationService.notifyHODOfVisitorApproval(
-                    savedRequest.getDepartment(), savedRequest.getName(),
-                    savedRequest.getPersonToMeet() != null ? savedRequest.getPersonToMeet() : savedRequest.getStaffCode());
-                notificationService.notifyHROfVisitorApproval(savedRequest.getName(), savedRequest.getDepartment());
+                // No self-confirmation needed — staff just approved it themselves
+                // No HOD/HR notification — visitor is meeting a staff member, not their concern
             }
 
             String registeredBy = savedRequest.getRegisteredBy();
@@ -263,17 +253,8 @@ public class VisitorGatepassService {
             Staff staff = staffRepository.findByStaffCode(savedRequest.getStaffCode()).orElse(null);
             String personToMeet = staff != null ? staff.getStaffName() : savedRequest.getPersonToMeet();
 
-            notificationService.createUserNotification(
-                savedRequest.getStaffCode(),
-                "Visitor Rejected",
-                "Visitor request rejected for " + savedRequest.getName() + ". Reason: " + rejectionReason,
-                "REJECTION",
-                "HIGH"
-            );
-            notificationService.notifyHODOfVisitorApproval(
-                savedRequest.getDepartment(), savedRequest.getName(),
-                savedRequest.getPersonToMeet() != null ? savedRequest.getPersonToMeet() : savedRequest.getStaffCode());
-
+            // No self-confirmation to staff — they just rejected it themselves
+            // Just send rejection email to the visitor
             emailService.sendRejectionEmail(
                 savedRequest.getEmail(),
                 savedRequest.getName(),

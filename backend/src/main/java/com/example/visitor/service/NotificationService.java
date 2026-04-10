@@ -350,56 +350,6 @@ public class NotificationService {
 
     // ==================== VISITOR NOTIFICATIONS (MISSING) ====================
 
-    /** Notify staff/NCI/NTF that a visitor assigned to them has been approved */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void notifyStaffOfVisitorApproval(String staffCode, String visitorName) {
-        try {
-            save(staffCode, "Visitor Approved",
-                "Your visitor " + visitorName + " has been approved. QR/manual code is ready.",
-                Notification.NotificationType.APPROVAL, Notification.NotificationPriority.URGENT,
-                "/staff/visitor-requests");
-        } catch (Exception e) { log.error("Error notifying staff of visitor approval", e); }
-    }
-
-    /** Notify staff/NCI/NTF that a visitor assigned to them was rejected */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void notifyStaffOfVisitorRejection(String staffCode, String visitorName, String reason) {
-        try {
-            String msg = (reason != null && !reason.isBlank())
-                ? "Visitor request for " + visitorName + " was rejected. Reason: " + reason
-                : "Visitor request for " + visitorName + " was rejected.";
-            save(staffCode, "Visitor Rejected", msg,
-                Notification.NotificationType.REJECTION, Notification.NotificationPriority.HIGH,
-                "/staff/visitor-requests");
-        } catch (Exception e) { log.error("Error notifying staff of visitor rejection", e); }
-    }
-
-    /** Notify HOD when a visitor for their department is approved */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void notifyHODOfVisitorApproval(String department, String visitorName, String personToMeet) {
-        try {
-            hodRepository.findByDepartment(department).stream()
-                .filter(h -> Boolean.TRUE.equals(h.getIsActive()))
-                .forEach(hod -> save(hod.getHodCode(),
-                    "Visitor Approved in Your Department",
-                    "Visitor " + visitorName + " approved to meet " + personToMeet + " in " + department + ".",
-                    Notification.NotificationType.APPROVAL, Notification.NotificationPriority.NORMAL,
-                    "/hod/visitor-requests"));
-        } catch (Exception e) { log.error("Error notifying HOD of visitor approval", e); }
-    }
-
-    /** Notify all HR when a visitor is approved */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void notifyHROfVisitorApproval(String visitorName, String department) {
-        try {
-            hrRepository.findAll().forEach(hr -> save(hr.getHrCode(),
-                "Visitor Approved",
-                "Visitor " + visitorName + " approved for " + department + " department.",
-                Notification.NotificationType.APPROVAL, Notification.NotificationPriority.NORMAL,
-                "/hr/visitor-requests"));
-        } catch (Exception e) { log.error("Error notifying HR of visitor approval", e); }
-    }
-
     /** Notify staff when their visitor physically arrives (entry scan) */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyStaffOfVisitorArrival(String staffCode, String visitorName) {
