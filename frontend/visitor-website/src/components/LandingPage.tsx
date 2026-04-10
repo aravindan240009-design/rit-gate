@@ -110,32 +110,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onShowFeatures 
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" style={{ padding: '80px 24px', background: 'linear-gradient(160deg, #f0fdff 0%, #e0f7fa 60%, #f8fafc 100%)' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ display: 'inline-block', background: 'rgba(0,188,212,0.08)', color: '#0097A7', fontSize: 13, fontWeight: 700, letterSpacing: 1, padding: '6px 16px', borderRadius: 50, marginBottom: 16 }}>FEATURES</div>
-            <h2 style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 800, color: '#0f172a', letterSpacing: -1 }}>Why choose RIT Gate?</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
-            {[
-              { icon: '&#128274;', title: 'Secure & Private', desc: 'Your information is encrypted and stored securely on our servers.' },
-              { icon: '&#9201;&#65039;', title: 'Quick Process', desc: 'Complete your registration in under 2 minutes from any device.' },
-              { icon: '&#128242;', title: 'Digital QR Pass', desc: 'Receive a unique QR code for contactless, paperless gate entry.' },
-              { icon: '&#128276;', title: 'Real-time Updates', desc: 'Get instant notifications when your visit request is approved or rejected.' },
-              { icon: '&#127760;', title: 'Works Everywhere', desc: 'Access from any browser — mobile, tablet, or desktop.' },
-              { icon: '&#128222;', title: '24/7 Support', desc: 'Security personnel are always available to assist you at the gate.' },
-            ].map((f) => (
-              <div key={f.title} className="info-card">
-                <div style={{ fontSize: 40, marginBottom: 14 }} dangerouslySetInnerHTML={{ __html: f.icon }} />
-                <h4 style={{ fontSize: 17, fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>{f.title}</h4>
-                <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6 }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA Banner */}
       <section style={{ padding: '80px 24px', background: 'linear-gradient(135deg, #006064 0%, #00838F 50%, #00BCD4 100%)', textAlign: 'center' }}>
         <div style={{ maxWidth: 600, margin: '0 auto' }}>
