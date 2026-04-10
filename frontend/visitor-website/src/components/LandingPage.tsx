@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 
 interface LandingPageProps {
   onGetStarted: () => void;
+  onShowFeatures?: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onShowFeatures }) => {
   const [hoveredCard, setHoveredCard] = useState<string>('');
   const [scrolled, setScrolled] = useState(false);
 
@@ -50,7 +51,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
         <div style={{ display: 'flex', gap: 32 }}>
           <a href="#how-it-works" className="nav-link">How it works</a>
-          <a href="#features" className="nav-link">Features</a>
+          <a href="#features" className="nav-link" onClick={(e) => { if (onShowFeatures) { e.preventDefault(); onShowFeatures(); } }}>Features</a>
         </div>
         <button className="cta-btn" style={{ padding: '10px 24px', fontSize: 14, animation: 'none' }} onClick={onGetStarted}>Register Visit</button>
       </nav>
