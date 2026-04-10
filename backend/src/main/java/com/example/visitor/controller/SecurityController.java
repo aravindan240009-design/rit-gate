@@ -540,9 +540,10 @@ public class SecurityController {
                                         String plate = visitor.getVehicleNumber().toUpperCase().trim();
                                         String vType = visitor.getVehicleType() != null ? visitor.getVehicleType() : "Unknown";
                                         String tag = "VISITOR_" + visitor.getId();
+                                        String ownerType = visitor.getRole() != null && !visitor.getRole().isBlank() ? visitor.getRole() : "VISITOR";
                                         jdbcTemplate.update(
                                             "INSERT INTO Vehicle (license_plate, owner_name, owner_phone, owner_type, vehicle_type, registered_by, created_at, updated_at) VALUES (?,?,?,?,?,?,NOW(),NOW())",
-                                            plate, visitor.getName(), visitor.getPhone(), "VISITOR", vType, tag
+                                            plate, visitor.getName(), visitor.getPhone(), ownerType, vType, tag
                                         );
                                         System.out.println("✅ Vehicle entry registered: " + plate);
                                     } catch (Exception ve) {
@@ -1984,7 +1985,7 @@ public class SecurityController {
                 rec.put("exitTime",    exitTimeStr);
                 rec.put("status",      "EXITED");
                 rec.put("isBulkPass",  false);
-                // Resolve purpose — prefer stored, fallback to gate pass request via qrId
+                // Resolve purpose — prefer stored, fallback to gate pass request via qrId, then Visitor table
                 String resolvedPurpose = exitLog.getPurpose();
                 if ((resolvedPurpose == null || resolvedPurpose.isBlank()) && exitLog.getQrId() != null) {
                     try {
@@ -1997,6 +1998,16 @@ public class SecurityController {
                             }
                         }
                     } catch (Exception ignored) {}
+                }
+                // Final fallback: look up Visitor table by userId
+                if ((resolvedPurpose == null || resolvedPurpose.isBlank()) && ("VISITOR".equals(utype) || "VG".equals(utype))) {
+                    if (uid != null && !"null".equals(uid)) {
+                        try {
+                            Long visitorId = Long.parseLong(uid);
+                            String vPurpose = visitorRepository.findById(visitorId).map(v -> v.getPurpose()).orElse(null);
+                            if (vPurpose != null && !vPurpose.isBlank()) resolvedPurpose = vPurpose;
+                        } catch (Exception ignored) {}
+                    }
                 }
                 rec.put("purpose", resolvedPurpose != null ? resolvedPurpose : "Gate Pass Exit");
                 rec.put("reason",      "");
@@ -2911,6 +2922,25 @@ public class SecurityController {
             exitLog.setAccessGranted(true);
             railwayExitLogRepository.save(exitLog);
             System.out.println("✅ Manual exit recorded for visitor: " + personName);
+
+            // Update vehicle exit time if visitor came with a vehicle
+            try {
+                if (visitorUserId != null && !visitorUserId.isBlank() && !"null".equals(visitorUserId)) {
+                    Long vid = Long.parseLong(visitorUserId);
+                    visitorRepository.findById(vid).ifPresent(v -> {
+                        if (v.getVehicleNumber() != null && !v.getVehicleNumber().isBlank()) {
+                            String entryTag = "VISITOR_" + v.getId();
+                            jdbcTemplate.update(
+                                "UPDATE Vehicle SET updated_at = NOW() WHERE registered_by = ?",
+                                entryTag
+                            );
+                            System.out.println("✅ Vehicle exit recorded for manual exit: " + v.getVehicleNumber());
+                        }
+                    });
+                }
+            } catch (Exception ve) {
+                System.err.println("⚠️ Could not update vehicle exit on manual exit: " + ve.getMessage());
+            }
 
             java.util.Map<String, Object> resp = new java.util.HashMap<>();
             resp.put("status", "SUCCESS");
