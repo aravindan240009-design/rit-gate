@@ -1660,6 +1660,34 @@ public class SecurityController {
                 activePersons.add(person);
             }
 
+            // Also include visitors from Visitor table who entered (entryTime set) but haven't exited
+            // These are visitors scanned via QR entry but may not have a ScanLog entry
+            java.util.Set<String> alreadyAddedNames = new java.util.HashSet<>();
+            activePersons.forEach(p -> {
+                String n = (String) p.get("name");
+                if (n != null) alreadyAddedNames.add(n.toLowerCase().trim());
+            });
+
+            visitorRepository.findAll().stream()
+                .filter(v -> v.getEntryTime() != null)
+                .filter(v -> v.getExitTime() == null)
+                .filter(v -> !"EXITED".equals(v.getStatus()) && !"REJECTED".equals(v.getStatus()))
+                .filter(v -> v.getName() != null && !alreadyAddedNames.contains(v.getName().toLowerCase().trim()))
+                .forEach(v -> {
+                    java.util.Map<String, Object> person = new java.util.HashMap<>();
+                    person.put("id", v.getId());
+                    person.put("name", v.getName());
+                    person.put("type", v.getRole() != null ? v.getRole() : "VISITOR");
+                    person.put("role", v.getRole() != null ? v.getRole() : "VISITOR");
+                    person.put("purpose", v.getPurpose() != null ? v.getPurpose() : "General");
+                    person.put("status", "PENDING");
+                    person.put("inTime", v.getEntryTime().toString());
+                    person.put("outTime", null);
+                    person.put("userId", v.getId().toString());
+                    if (v.getDepartment() != null) person.put("department", v.getDepartment());
+                    activePersons.add(person);
+                });
+
             System.out.println("Fetched " + activePersons.size() + " active visitors (PENDING only)");
             return ResponseEntity.ok(activePersons);
         } catch (Exception e) {
