@@ -10,6 +10,7 @@ import {
   TextInput,
   Platform,
   Animated,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -89,6 +90,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
     total: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [personsLoading, setPersonsLoading] = useState(true);
 
   useEffect(() => {
     loadDashboardData();
@@ -131,21 +133,23 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       }
 
       setActivePersons(mergedPersons);
+      setPersonsLoading(false);
 
-      // Use fast stats endpoint for ACTIVE / EXITED / TOTAL counts
+      // Use fast stats endpoint for EXITED / TOTAL, but use actual list for ACTIVE count
+      const actualActiveCount = mergedPersons.filter(p => p.status === 'PENDING').length;
       if (statsResponse.success && statsResponse.data) {
         setStats({
-          active: statsResponse.data.active,
+          active: actualActiveCount,
           exited: statsResponse.data.exited,
-          total:  statsResponse.data.total,
+          total:  actualActiveCount + statsResponse.data.exited,
         });
       } else {
-        const activeCount = mergedPersons.filter(p => p.status === 'PENDING').length;
-        setStats({ active: activeCount, exited: 0, total: activeCount });
+        setStats({ active: actualActiveCount, exited: 0, total: actualActiveCount });
       }
 
     } catch (error) {
       console.error('Error loading dashboard data:', error);
+      setPersonsLoading(false);
     } finally {
       setRefreshing(false);
       setStatsLoading(false);
@@ -166,6 +170,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
   const onRefresh = () => {
     setRefreshing(true);
     setStatsLoading(true);
+    setPersonsLoading(true);
     loadDashboardData();
     loadEscalatedVisitors();
   };
@@ -315,8 +320,9 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
           contentContainerStyle={styles.outerScrollContent}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
-          data={activePersons.filter(p => p.status === 'PENDING')}
+          data={personsLoading ? [] : activePersons.filter(p => p.status === 'PENDING')}
           keyExtractor={(person, index) => `${person.id}-${index}`}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
           ListHeaderComponent={
             <>
               <View style={[styles.controlCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
@@ -443,8 +449,11 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                 <View style={styles.sectionTitleRow}>
                   <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Active Persons</ThemedText>
                 </View>
-                <ThemedText style={[styles.sectionCount, { color: theme.textSecondary }]}>{stats.active} active</ThemedText>
+                <ThemedText style={[styles.sectionCount, { color: theme.textSecondary }]}>
+                  {personsLoading ? '...' : `${activePersons.filter(p => p.status === 'PENDING').length} active`}
+                </ThemedText>
               </View>
+              {personsLoading && <SkeletonList count={3} />}
             </>
           }
           renderItem={({ item: person }) => (
