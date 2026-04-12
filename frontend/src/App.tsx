@@ -680,23 +680,13 @@ const App: React.FC = () => {
     initPushNotifications(adminData.staffCode, 'staff');
   };
 
+  const isLoggingOut = React.useRef(false);
   const handleLogout = async () => {
+    if (isLoggingOut.current) return;
+    isLoggingOut.current = true;
     try {
       console.log('🚪 Logging out user...');
-      // Unregister push token before clearing session
-      await unregisterPushToken();
-      // Clear all user sessions
-      await offlineStorage.clearCurrentStudent();
-      await offlineStorage.clearCurrentStaff();
-      await offlineStorage.clearCurrentHOD();
-      await offlineStorage.clearCurrentHR();
-      await offlineStorage.clearCurrentSecurity();
-      await offlineStorage.clearCurrentNTF();
-      await offlineStorage.clearCurrentNCI();
-      await offlineStorage.clearCurrentAdmin();
-      await offlineStorage.clearCurrentNTF();
-      
-      // Reset all state
+      // Navigate immediately — don't wait for cleanup
       setStudent(null);
       setStaff(null);
       setHod(null);
@@ -710,10 +700,24 @@ const App: React.FC = () => {
       setRequiresBiometricGate(false);
       setBiometricVerified(false);
       setBiometricPrompted(false);
-      await biometricAuthService.clearSession();
-      console.log('✅ Logout completed - all sessions cleared');
+      // Clean up storage and push token in background
+      Promise.all([
+        unregisterPushToken(),
+        offlineStorage.clearCurrentStudent(),
+        offlineStorage.clearCurrentStaff(),
+        offlineStorage.clearCurrentHOD(),
+        offlineStorage.clearCurrentHR(),
+        offlineStorage.clearCurrentSecurity(),
+        offlineStorage.clearCurrentNTF(),
+        offlineStorage.clearCurrentNCI(),
+        offlineStorage.clearCurrentAdmin(),
+        biometricAuthService.clearSession(),
+      ]).catch(e => console.log('⚠️ Logout cleanup error (non-fatal):', e))
+        .finally(() => { isLoggingOut.current = false; });
+      console.log('✅ Logout — navigated home, cleanup running in background');
     } catch (error) {
       console.log('❌ Error during logout:', error);
+      isLoggingOut.current = false;
     }
   };
 
