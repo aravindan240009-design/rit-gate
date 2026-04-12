@@ -314,7 +314,12 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
 
       {/* Stats Cards */}
       <ScreenContentContainer style={{ flex: 1 }}>
-        <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
+        <TopRefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          color={theme.primary}
+          pullEnabled={!personsLoading && activePersons.filter(p => p.status === 'PENDING').length === 0}
+        >
         <VerticalFlatList
           style={styles.outerScroll}
           contentContainerStyle={styles.outerScrollContent}
@@ -322,7 +327,11 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
           decelerationRate="normal"
           data={personsLoading ? [] : activePersons.filter(p => p.status === 'PENDING')}
           keyExtractor={(person, index) => `${person.id}-${index}`}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />}
+          refreshControl={
+            (!personsLoading && activePersons.filter(p => p.status === 'PENDING').length > 0)
+              ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
+              : undefined
+          }}
           ListHeaderComponent={
             <>
               <View style={[styles.controlCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
