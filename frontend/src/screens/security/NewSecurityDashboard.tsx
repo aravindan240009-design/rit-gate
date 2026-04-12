@@ -331,7 +331,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
             (!personsLoading && activePersons.filter(p => p.status === 'PENDING').length > 0)
               ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} tintColor={theme.primary} />
               : undefined
-          }}
+          }
           ListHeaderComponent={
             <>
               <View style={[styles.controlCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
