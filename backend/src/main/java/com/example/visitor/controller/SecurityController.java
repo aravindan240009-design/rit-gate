@@ -2960,31 +2960,22 @@ public class SecurityController {
     }
 
 
-    // Dashboard Stats Endpoint — active visitors + today's exits
+    // Dashboard Stats Endpoint — active visitors + today's exits (fast version)
     @GetMapping("/stats")
     public ResponseEntity<?> getDashboardStats() {
         try {
-            // Active = visitors whose last ScanLog is NOT an exit
-            List<ScanLog> allScans = scanLogRepository.findAll();
-            java.util.Map<String, java.util.List<ScanLog>> byPerson = new java.util.HashMap<>();
-            for (ScanLog s : allScans) {
-                String key = s.getPersonName();
-                if (key == null || key.isBlank()) continue;
-                String utype = s.getUserType() != null ? s.getUserType().toUpperCase() : "";
-                if (!"VISITOR".equals(utype) && !"VG".equals(utype)) continue;
-                if (s.getTimestamp() == null) continue;
-                byPerson.computeIfAbsent(key, k -> new java.util.ArrayList<>()).add(s);
-            }
-            long active = byPerson.values().stream().filter(scans -> {
-                scans.sort((a, b) -> a.getTimestamp().compareTo(b.getTimestamp()));
-                ScanLog last = scans.get(scans.size() - 1);
-                return last.getScanLocation() == null || !last.getScanLocation().toLowerCase().contains("exit");
-            }).count();
-
-            // Exited today = RailwayExitLog rows with exitTime today and VISITOR type
             java.time.LocalDate today = java.time.LocalDate.now();
-            long exited = railwayExitLogRepository.findAll().stream()
-                .filter(e -> e.getExitTime() != null && e.getExitTime().toLocalDate().equals(today))
+            java.time.LocalDateTime startOfDay = today.atStartOfDay();
+            java.time.LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
+
+            // Active = visitors in Visitor table with status APPROVED and no exitTime
+            long active = visitorRepository.findAll().stream()
+                .filter(v -> "APPROVED".equals(v.getStatus()) && v.getExitTime() == null && v.getEntryTime() != null)
+                .count();
+
+            // Exited today = RailwayExitLog with exitTime today and VISITOR/VG type
+            long exited = railwayExitLogRepository.findByExitTimeBetweenOrderByExitTimeDesc(startOfDay, endOfDay)
+                .stream()
                 .filter(e -> {
                     String ut = e.getUserType() != null ? e.getUserType().toUpperCase() : "";
                     return "VISITOR".equals(ut) || "VG".equals(ut);
@@ -2992,24 +2983,12 @@ public class SecurityController {
                 .filter(e -> Boolean.TRUE.equals(e.getAccessGranted()))
                 .count();
 
-            // Total today = visitors who entered today (first ScanLog today) + those who exited today
-            java.util.Set<String> todayNames = new java.util.HashSet<>();
-            for (java.util.List<ScanLog> scans : byPerson.values()) {
-                ScanLog first = scans.get(0);
-                if (first.getTimestamp().toLocalDate().equals(today)) {
-                    todayNames.add(first.getPersonName());
-                }
-            }
-            // Also add exited visitors from today
-            railwayExitLogRepository.findAll().stream()
-                .filter(e -> e.getExitTime() != null && e.getExitTime().toLocalDate().equals(today))
-                .filter(e -> e.getPersonName() != null)
-                .forEach(e -> todayNames.add(e.getPersonName()));
+            long total = active + exited;
 
             java.util.Map<String, Object> stats = new java.util.HashMap<>();
             stats.put("active", active);
             stats.put("exited", exited);
-            stats.put("total", todayNames.size());
+            stats.put("total", total);
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             System.err.println("Error fetching stats: " + e.getMessage());

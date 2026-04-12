@@ -107,22 +107,19 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
 
   const loadDashboardData = async () => {
     try {
-      // Run both API calls in parallel for faster loading
-      const [personsResponse, historyResponse] = await Promise.all([
+      // Run active persons + fast stats endpoint in parallel
+      const [personsResponse, statsResponse] = await Promise.all([
         apiService.getActivePersons(),
-        apiService.getScanHistory(user.securityId),
+        apiService.getSecurityStats(),
       ]);
-      
+
       let mergedPersons: ActivePerson[] = [];
 
       if (personsResponse.success && personsResponse.data) {
         mergedPersons = personsResponse.data.filter((person: ActivePerson) => {
           const name = person.name || (person as any).fullName || (person as any).studentName;
-          return name && 
-            !name.startsWith('QR Not Found') && 
-            !name.includes('Unknown');
+          return name && !name.startsWith('QR Not Found') && !name.includes('Unknown');
         }).map((person: ActivePerson) => {
-          // Normalize name
           let name = person.name || (person as any).fullName || (person as any).studentName;
           if (!name || name === 'Visitor-null' || name.includes('-null')) {
             name = person.type === 'VISITOR' ? 'Visitor' : (name || 'User');
@@ -131,60 +128,20 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
         });
       }
 
-      // If we have history, find visitors who entered today but haven't exited
-      if (historyResponse.success && historyResponse.data) {
-        const today = new Date().toDateString();
-        const activeVisitors = historyResponse.data.filter((r: any) => {
-          const entryTime = r.entryTime || r.inTime;
-          const exitTime = r.exitTime || r.outTime;
-          // People with entry today but no exit
-          return entryTime && 
-                 !exitTime && 
-                 new Date(entryTime).toDateString() === today &&
-                 (r.type === 'VISITOR' || r.type === 'VENDOR');
-        }).map((r: any) => {
-          // Normalize name to handle "Visitor-null" or missing names
-          let normalizedName = r.name || r.fullName || r.studentName || r.staffName;
-          if (!normalizedName || normalizedName === 'Visitor-null' || normalizedName.includes('-null')) {
-            normalizedName = r.type === 'VISITOR' ? 'Visitor' : (normalizedName || 'User');
-          }
+      setActivePersons(mergedPersons);
 
-          return {
-            id: r.id || Math.random(),
-            name: normalizedName,
-            type: r.role || r.type || 'VISITOR',
-            purpose: r.purpose || r.reason || 'Visit',
-            status: 'PENDING' as 'PENDING',
-            inTime: r.entryTime || r.inTime,
-            outTime: null,
-            qrCode: r.qrCode || '',
-            userId: r.userId || r.id?.toString(),
-            scanId: r.scanId || r.id, // Try to pick up scanId from history
-          };
+      // Use fast stats endpoint for counts
+      if (statsResponse.success && statsResponse.data) {
+        setStats({
+          active: statsResponse.data.active,
+          exited: statsResponse.data.exited,
+          total:  statsResponse.data.total,
         });
-
-        // Merge only if not already in the list (by name + type)
-        activeVisitors.forEach(v => {
-          const exists = mergedPersons.some(p => p.name === v.name && p.type === v.type);
-          if (!exists) mergedPersons.push(v);
-        });
-
-        // Update stats
-        const activeCount = mergedPersons.filter(p => p.status === 'PENDING').length;
-        const todayRecords = historyResponse.data.filter((r: any) => {
-          const t = r.exitTime || r.entryTime || r.inTime || r.outTime;
-          return t && new Date(t).toDateString() === today;
-        });
-        const exitedCount = todayRecords.filter((r: any) => r.status === 'EXITED' || !!r.exitTime).length;
-        const totalCount = activeCount + exitedCount;
-        
-        setStats({ active: activeCount, exited: exitedCount, total: totalCount });
       } else {
-        const activeCount = mergedPersons.length;
+        const activeCount = mergedPersons.filter(p => p.status === 'PENDING').length;
         setStats({ active: activeCount, exited: 0, total: activeCount });
       }
 
-      setActivePersons(mergedPersons);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
