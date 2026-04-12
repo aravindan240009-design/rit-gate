@@ -165,6 +165,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
 
   const onRefresh = () => {
     setRefreshing(true);
+    setStatsLoading(true);
     loadDashboardData();
     loadEscalatedVisitors();
   };

@@ -135,6 +135,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
 
   const onRefresh = () => {
     setRefreshing(true);
+    setLoading(true);
     loadRequests();
   };
 

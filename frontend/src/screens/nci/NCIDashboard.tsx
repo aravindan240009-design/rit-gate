@@ -85,7 +85,7 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
     }
   };
 
-  const onRefresh = () => { setRefreshing(true); loadData(); };
+  const onRefresh = () => { setRefreshing(true); setLoading(true); loadData(); };
 
   const filtered = allRequests.filter(r => {
     const matchesTab = activeTab === 'PENDING' ? r.status === 'PENDING' : 

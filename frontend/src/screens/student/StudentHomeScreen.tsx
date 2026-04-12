@@ -105,6 +105,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
   const onRefresh = () => {
     setRefreshing(true);
+    setStatsLoading(true);
     loadData();
   };
 

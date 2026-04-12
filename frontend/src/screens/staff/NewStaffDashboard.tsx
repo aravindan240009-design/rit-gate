@@ -178,6 +178,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
   const onRefresh = () => {
     setRefreshing(true);
+    setLoading(true);
     loadRequests();
   };
 
