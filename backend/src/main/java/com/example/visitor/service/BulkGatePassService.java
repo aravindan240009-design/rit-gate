@@ -359,8 +359,15 @@ public class BulkGatePassService {
             requestData.put("studentCount", request.getStudentCount() != null ? request.getStudentCount() : 0);
             requestData.put("participantCount", participants.size());
             requestData.put("participants", participants);
-            // Staff bulk passes: QR/manual only after HR approval (QR is generated on HR approve).
-            boolean bulkQrReleased = request.getHrApproval() == GatePassRequest.ApprovalStatus.APPROVED;
+            // Staff bulk passes: QR released after HOD approval (no HR step for staff bulk)
+            // HOD bulk passes: QR released after HR approval
+            boolean isHodBulk = "HOD".equalsIgnoreCase(request.getUserType()) || 
+                                 (request.getRequestedByStaffCode() != null && 
+                                  hodRepository.isHOD(request.getRequestedByStaffCode()));
+            boolean bulkQrReleased = isHodBulk
+                ? request.getHrApproval() == GatePassRequest.ApprovalStatus.APPROVED
+                : (request.getHodApproval() == GatePassRequest.ApprovalStatus.APPROVED ||
+                   request.getStatus() == GatePassRequest.RequestStatus.APPROVED);
             requestData.put("qrCode", bulkQrReleased ? request.getQrCode() : null);
             requestData.put("includeStaff", request.getIncludeStaff());
             requestData.put("qrOwnerId", request.getQrOwnerId());
@@ -426,11 +433,14 @@ public class BulkGatePassService {
             requestInfo.put("status", request.getStatus());
             requestInfo.put("hrApproval", request.getHrApproval());
             requestInfo.put("hodApproval", request.getHodApproval());
-            boolean bulkQrReleased = request.getHrApproval() == GatePassRequest.ApprovalStatus.APPROVED;
-            requestInfo.put("qrCode", bulkQrReleased ? request.getQrCode() : null);
-            requestInfo.put("manualCode", bulkQrReleased ? request.getManualCode() : null);
+            boolean bulkQrReleased2 = hodRepository.isHOD(request.getRequestedByStaffCode())
+                ? request.getHrApproval() == GatePassRequest.ApprovalStatus.APPROVED
+                : (request.getHodApproval() == GatePassRequest.ApprovalStatus.APPROVED ||
+                   request.getStatus() == GatePassRequest.RequestStatus.APPROVED);
+            requestInfo.put("qrCode", bulkQrReleased2 ? request.getQrCode() : null);
+            requestInfo.put("manualCode", bulkQrReleased2 ? request.getManualCode() : null);
             requestInfo.put("qrOwnerId", request.getQrOwnerId());
-            requestInfo.put("qrGenerated", bulkQrReleased && request.getQrCode() != null);
+            requestInfo.put("qrGenerated", bulkQrReleased2 && request.getQrCode() != null);
             requestInfo.put("requestDate", request.getRequestDate());
             requestInfo.put("attachmentUri", request.getAttachmentUri());
             requestInfo.put("hodRemark", request.getHodRemark());
