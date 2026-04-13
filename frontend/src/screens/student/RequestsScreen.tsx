@@ -206,25 +206,13 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
   };
 
   const handleCardPress = (request: GatePassRequest) => {
-    // Show QR for approved requests (both single and bulk passes)
-    if (request.status === 'APPROVED' || request.status === 'APPROVED_BY_HOD' || request.status === 'USED') {
-      // For bulk passes, check if QR code exists
-      if (request.passType === 'BULK' && request.qrCode) {
-        // Only show QR if this student is the owner
-        if (request.qrOwnerId === user.regNo) {
-          handleViewQR(request);
-        } else {
-          setTrackingRequest(request);
-          setShowTrackingModal(true);
-        }
-      } else if (request.passType !== 'BULK') {
-        // For single passes, always try to fetch QR
-        handleViewQR(request);
-      } else {
-        // Bulk pass without QR (still pending HOD approval)
-        setTrackingRequest(request);
-        setShowTrackingModal(true);
-      }
+    if (request.passType === 'BULK') {
+      // Bulk passes always open tracking/details modal — QR is inside there
+      setTrackingRequest(request);
+      setShowTrackingModal(true);
+    } else if (request.status === 'APPROVED' || request.status === 'APPROVED_BY_HOD' || request.status === 'USED') {
+      // Single approved passes — show QR directly
+      handleViewQR(request);
     } else {
       setTrackingRequest(request);
       setShowTrackingModal(true);
@@ -333,7 +321,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
                 </View>
 
                 {((request.status === 'APPROVED' || request.status === 'APPROVED_BY_HOD' || request.status === 'USED') && 
-                  (request.passType !== 'BULK' || request.qrOwnerId === user.regNo)) ? (
+                  request.passType !== 'BULK') ? (
                   <TouchableOpacity
                     style={[styles.quickQrButton, { backgroundColor: theme.primary + '15' }]}
                     onPress={(e) => { e.stopPropagation(); handleViewQR(request); }}
@@ -341,7 +329,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
                     <View style={styles.cardFooter}>
                       <Ionicons name="qr-code-outline" size={16} color={theme.primary} />
                       <ThemedText style={[styles.cardFooterText, { color: theme.primary }]}>
-                        {request.passType === 'BULK' ? 'View Group Pass QR' : 'View QR Code'}
+                        View QR Code
                       </ThemedText>
                     </View>
                   </TouchableOpacity>
@@ -349,7 +337,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
                   <View style={styles.cardFooter}>
                     <Ionicons name="time-outline" size={16} color={theme.textSecondary} />
                     <ThemedText style={[styles.cardFooterText, { color: theme.textSecondary }]}>
-                      {request.passType === 'BULK' && request.status !== 'REJECTED' ? 'Waiting for HOD approval' : 'Tap to track status'}
+                      {request.passType === 'BULK' && request.status !== 'REJECTED' ? 'Tap to view bulk pass details' : 'Tap to track status'}
                     </ThemedText>
                   </View>
                 )}

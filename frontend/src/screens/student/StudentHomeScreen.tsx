@@ -190,7 +190,10 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
   const handleRequestClick = (request: any) => {
     setSelectedRequest(request);
-    if (request.status === 'APPROVED') {
+    if (request.passType === 'BULK') {
+      // Bulk passes — open detail modal, QR is inside there
+      setShowDetailModal(true);
+    } else if (request.status === 'APPROVED') {
       handleViewQR(request);
     } else {
       setShowDetailModal(true);
@@ -290,25 +293,22 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
             contentContainerStyle={styles.scrollContent}
             renderItem={({ item: request }) => (
             <TouchableOpacity style={[styles.requestItem, { backgroundColor: theme.cardBackground }]} onPress={() => handleRequestClick(request)}>
-              <View style={styles.requestItemTop}>
-                <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                    <ThemedText style={[styles.requestId, { color: theme.text }]} numberOfLines={1}>{request.purpose || 'Gate Pass Request'}</ThemedText>
-                    <View style={[styles.passTypePill, { backgroundColor: request.passType === 'BULK' ? theme.primary + '20' : theme.success + '20' }]}>
-                      <ThemedText style={[styles.passTypeText, { color: request.passType === 'BULK' ? theme.primary : theme.success }]}>
-                        {request.passType === 'BULK' ? 'Bulk' : 'Single'}
-                      </ThemedText>
-                    </View>
-                  </View>
-                  <ThemedText style={[styles.requestReason, { color: theme.textSecondary }]}>{formatDate(request.requestDate)}</ThemedText>
+              {/* Row 1: pass type tag + status badge */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <View style={[styles.passTypePill, { backgroundColor: request.passType === 'BULK' ? theme.primary + '20' : theme.success + '20' }]}>
+                  <ThemedText style={[styles.passTypeText, { color: request.passType === 'BULK' ? theme.primary : theme.success }]}>
+                    {request.passType === 'BULK' ? 'Bulk Pass' : 'Single Pass'}
+                  </ThemedText>
                 </View>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor(request.status) }]}>
                   <ThemedText style={styles.statusText}>{getStatusLabel(request.status)}</ThemedText>
                 </View>
               </View>
-              {/* QR inside card — only when this student is the receiver */}
-              {request.status === 'APPROVED' &&
-                (request.passType !== 'BULK' || request.qrOwnerId === student.regNo) && (
+              {/* Row 2: purpose + date */}
+              <ThemedText style={[styles.requestId, { color: theme.text }]} numberOfLines={1}>{request.purpose || 'Gate Pass Request'}</ThemedText>
+              <ThemedText style={[styles.requestReason, { color: theme.textSecondary }]}>{formatDate(request.requestDate)}</ThemedText>
+              {/* View QR — only for single passes where this student is the receiver */}
+              {request.status === 'APPROVED' && request.passType !== 'BULK' && (
                 <TouchableOpacity style={[styles.viewQRButton, { backgroundColor: theme.primary }]} onPress={(e) => { e.stopPropagation(); handleViewQR(request); }}>
                   <Ionicons name="qr-code-outline" size={13} color="#FFFFFF" />
                   <ThemedText style={styles.viewQRButtonText}>View QR Code</ThemedText>
@@ -436,13 +436,13 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 16, fontWeight: '600', marginTop: 12 },
   requestItem: { marginBottom: 12, padding: 16, borderRadius: 12, elevation: 2 },
   requestItemTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  viewQRButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 10, marginTop: 10, gap: 6 },
-  viewQRButtonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
-  requestId: { fontSize: 14, fontWeight: '700', flex: 1 },
-  requestReason: { fontSize: 12, marginTop: 2 },
+  viewQRButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 8, paddingVertical: 8, marginTop: 10, gap: 6 },
+  viewQRButtonText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
+  requestId: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  requestReason: { fontSize: 12, marginTop: 2, marginBottom: 4 },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   statusText: { fontSize: 10, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.3 },
-  passTypePill: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  passTypePill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   passTypeText: { fontSize: 10, fontWeight: '700' },
   bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 8, position: 'relative' },
