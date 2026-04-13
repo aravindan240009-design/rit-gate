@@ -185,13 +185,11 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
               </ThemedText>
             </View>
           )}
-          {/* QR button inside infoBox — only when this staff is the receiver */}
-          {request.status === 'APPROVED' && (
-            !isBulk || request.qrOwnerId === user.staffCode || request.requestedByStaffCode === user.staffCode
-          ) && (
+          {/* QR button inside infoBox — only for single passes (bulk QR is inside the details modal) */}
+          {request.status === 'APPROVED' && !isBulk && (
             <TouchableOpacity
               style={[styles.qrButtonInline, { backgroundColor: theme.primary }]}
-              onPress={(e) => { e.stopPropagation(); handleViewQR(request, isBulk); }}
+              onPress={(e) => { e.stopPropagation(); handleViewQR(request, false); }}
             >
               <Ionicons name="qr-code-outline" size={14} color="#fff" />
               <ThemedText style={styles.qrButtonText}>View QR Code</ThemedText>

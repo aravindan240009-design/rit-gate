@@ -300,6 +300,13 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
         {/* Footer */}
         {!loading && !error && (
           <View style={[styles.footer, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+            {/* View QR — above View Participants, only for the QR owner */}
+            {isApproved && hasQR && isQROwner && (
+              <TouchableOpacity style={[styles.footerBtn, { backgroundColor: theme.success, marginBottom: 10 }]} onPress={() => setShowQR(true)}>
+                <Ionicons name="qr-code" size={20} color="#FFF" />
+                <ThemedText style={styles.footerBtnText}>View QR & Manual Code</ThemedText>
+              </TouchableOpacity>
+            )}
             {participants.length > 0 && (
               <TouchableOpacity
                 style={[styles.footerBtn, { backgroundColor: theme.primary, marginBottom: 10 }]}
@@ -309,16 +316,9 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
                 <ThemedText style={styles.footerBtnText}>View Participants ({participants.length})</ThemedText>
               </TouchableOpacity>
             )}
-            {isApproved && hasQR && isQROwner && viewerRole !== 'STUDENT' ? (
-              <TouchableOpacity style={[styles.footerBtn, { backgroundColor: theme.success }]} onPress={() => setShowQR(true)}>
-                <Ionicons name="qr-code" size={20} color="#FFF" />
-                <ThemedText style={styles.footerBtnText}>View QR & Manual Code</ThemedText>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={[styles.footerBtn, { backgroundColor: theme.primary }]} onPress={onClose}>
-                <ThemedText style={styles.footerBtnText}>Close</ThemedText>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity style={[styles.footerBtn, { backgroundColor: theme.inputBackground }]} onPress={onClose}>
+              <ThemedText style={[styles.footerBtnText, { color: theme.text }]}>Close</ThemedText>
+            </TouchableOpacity>
           </View>
         )}
 
