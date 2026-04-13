@@ -754,7 +754,21 @@ public class AuthController {
             }
             
             HOD hod = hodOpt.get();
+
+            // Email is not in departments table — fetch from teaching_staffs
             String email = hod.getEmail();
+            if (email == null || email.isBlank()) {
+                Optional<Staff> staffInfo = staffRepository.findByStaffCode(hodCode);
+                if (staffInfo.isPresent()) {
+                    email = staffInfo.get().getEmail();
+                    hod.setEmail(email);
+                    hod.setPhone(staffInfo.get().getPhone());
+                }
+            }
+            if (email == null || email.isBlank()) {
+                logAuthEvent(hodCode, "HOD", "LOGIN", "FAILED", "No email on file");
+                return ResponseEntity.status(404).body(createErrorResponse("No email found for this HOD"));
+            }
             
             // Use unified verification with attempt limiting
             ResponseEntity<?> verificationError = verifyOTPWithAttempts(email, otp, hodCode, "HOD");
@@ -767,13 +781,12 @@ public class AuthController {
                 null,
                 hod.getHodCode(),
                 hod.getHodName(),
-                hod.getEmail(),
+                email,
                 hod.getPhone(),
                 hod.getDepartment(),
                 hod.getIsActive()
             );
             
-            // Set hodName explicitly for frontend compatibility
             userDTO.setHodName(hod.getHodName());
             userDTO.setHodCode(hod.getHodCode());
             
