@@ -1407,7 +1407,7 @@ public class SecurityController {
     @GetMapping("/hods/department/{departmentName}")
     public ResponseEntity<HODDTO> getHODByDepartment(@PathVariable String departmentName) {
         try {
-            List<HOD> hods = hodRepository.findByDepartment(departmentName);
+            List<HOD> hods = hodRepository.findAllByDepartment(departmentName);
             Optional<HOD> activeHod = hods.stream()
                 .filter(hod -> hod.getIsActive())
                 .findFirst();

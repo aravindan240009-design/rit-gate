@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "students")
 public class Student {
-    // students table has no numeric PK — use register_no as the ID
     @Id
     @Column(name = "register_no", nullable = false, unique = true, length = 50)
     private String regNo;
@@ -31,13 +30,22 @@ public class Student {
     @Column(name = "class_incharge", length = 100)
     private String classIncharge;
 
+    @Column(name = "course", length = 100)
+    private String course;
+
+    @Column(name = "batch", length = 20)
+    private String batch;
+
+    @Column(name = "degree_type", length = 20)
+    private String degreeType;
+
     // staff_code in students = class incharge's staff code
     @Column(name = "staff_code", length = 50)
     private String staffCode;
 
     @Transient private Long id;
     @Transient private String year;
-    @Transient private String hod;  // resolved at runtime from departments table
+    @Transient private String hod;
     @Transient private String lastName;
     @Transient private boolean isActive = true;
 

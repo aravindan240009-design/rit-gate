@@ -26,6 +26,12 @@ public interface StudentRepository extends JpaRepository<Student, String> {
     @Query("SELECT s FROM Student s WHERE LOWER(s.classIncharge) LIKE LOWER(CONCAT('%', :name, '%'))")
     List<Student> findByClassInchargeContaining(@Param("name") String name);
 
+    @Query("SELECT s FROM Student s WHERE LOWER(s.classIncharge) LIKE LOWER(CONCAT('%', :name, '%')) AND s.department LIKE CONCAT('%', :deptKeyword, '%')")
+    List<Student> findByClassInchargeContainingAndDepartment(@Param("name") String name, @Param("deptKeyword") String deptKeyword);
+
+    @Query("SELECT s FROM Student s WHERE s.department = :department OR s.department LIKE CONCAT('%', :keyword, '%')")
+    List<Student> findByDepartmentOrKeyword(@Param("department") String department, @Param("keyword") String keyword);
+
     // Students by class incharge staff_code (staff_code column = class incharge's code)
     List<Student> findByStaffCode(String staffCode);
 

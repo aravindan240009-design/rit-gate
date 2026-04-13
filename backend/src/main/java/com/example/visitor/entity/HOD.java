@@ -33,6 +33,7 @@ public class HOD {
     public void setHodCode(String hodCode) { this.hodCode = hodCode; }
     public String getHodName() { return hodName; }
     public void setHodName(String hodName) { this.hodName = hodName; }
+    public String getStaffName() { return hodName; } // alias for compatibility
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getPhone() { return phone; }

@@ -22,6 +22,10 @@ public interface HODRepository extends JpaRepository<HOD, String> {
     // Find by department name
     Optional<HOD> findByDepartment(String department);
 
+    // Find all HODs for a department (returns list for SecurityController compat)
+    @Query("SELECT h FROM HOD h WHERE LOWER(h.department) = LOWER(:department)")
+    List<HOD> findAllByDepartment(@Param("department") String department);
+
     // All HODs (one per department)
     @Query("SELECT h FROM HOD h WHERE h.hodCode IS NOT NULL")
     List<HOD> findAllHODs();
