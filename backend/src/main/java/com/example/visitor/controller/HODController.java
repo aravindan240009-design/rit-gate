@@ -409,7 +409,14 @@ public class HODController {
                     m.put("regNo", s.getRegNo());
                     m.put("fullName", s.getFullName());
                     m.put("department", s.getDepartment());
-                    m.put("year", s.getYear() != null ? s.getYear() : "");
+                    // Convert semester to year (1-2→1, 3-4→2, 5-6→3, 7-8→4)
+                    String yearStr = "";
+                    if (s.getSemester() != null) {
+                        int yr = (int) Math.ceil(s.getSemester() / 2.0);
+                        yearStr = yr + (yr == 1 ? "st" : yr == 2 ? "nd" : yr == 3 ? "rd" : "th") + " Year";
+                    }
+                    m.put("year", yearStr);
+                    m.put("semester", s.getSemester());
                     m.put("section", s.getSection() != null ? s.getSection() : "");
                     return m;
                 })
