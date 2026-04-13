@@ -4,7 +4,6 @@ import com.example.visitor.entity.GatePassRequest;
 import com.example.visitor.entity.Student;
 import com.example.visitor.entity.Staff;
 import com.example.visitor.entity.HOD;
-import com.example.visitor.entity.HODBulkGatePassRequest;
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.repository.StudentRepository;
 import com.example.visitor.repository.StaffRepository;

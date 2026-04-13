@@ -1,7 +1,6 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.entity.GatePassRequest;
-import com.example.visitor.entity.HODBulkGatePassRequest;
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.service.GatePassRequestService;
 import com.example.visitor.service.HODBulkGatePassService;

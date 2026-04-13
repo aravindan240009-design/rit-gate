@@ -1,6 +1,10 @@
 package com.example.visitor.service;
 
+import com.example.visitor.entity.HOD;
+import com.example.visitor.entity.HR;
 import com.example.visitor.entity.Staff;
+import com.example.visitor.repository.HODRepository;
+import com.example.visitor.repository.HRRepository;
 import com.example.visitor.repository.StaffRepository;
 import com.example.visitor.repository.StudentRepository;
 import com.example.visitor.util.DepartmentMapper;
@@ -14,14 +18,12 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Resolves staff/HOD/HR codes purely from the staff table.
- * - HOD: found by looking up the student's `hod` column (HOD name),
- *        then matching that name in the staff table.
- * - HR:  found by matching role containing "HR" in the staff table.
- * - Staff: first staff member in the department.
+ * Resolves staff/HOD/HR codes from the correct tables:
+ * - HOD: from departments table (staff_code column)
+ * - HR:  from non_teaching_staffs where designation = 'Senior Manager - HR'
+ * - Staff: from teaching_staffs
  *
- * Each method runs in REQUIRES_NEW so any DB error never poisons
- * the caller's transaction.
+ * First-year students (semester 1-2) always get S&H HOD (MA36).
  */
 @Service
 @RequiredArgsConstructor
@@ -30,18 +32,28 @@ public class DepartmentLookupService {
 
     private final StaffRepository staffRepository;
     private final StudentRepository studentRepository;
+    private final HODRepository hodRepository;
+    private final HRRepository hrRepository;
 
     /**
-     * Returns the staff_code of the first staff member in the given department.
-     * Used to assign a class incharge / staff approver for student gate pass requests.
+     * Returns the staff_code of the class incharge for the given department.
+     * Looks up teaching_staffs for the department.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public String findStaffForDepartment(String department) {
         try {
-            // Normalize to staff table format (e.g. "B.E. CSE (AI & ML)" → "AI & ML")
             String staffDept = DepartmentMapper.toStaffDeptFormat(department);
             log.info("findStaffForDepartment: '{}' → '{}'", department, staffDept);
+            // Find class incharges (staff_code in students.staff_code)
+            List<String> ciCodes = staffRepository.findAllClassInchargeCodes();
             List<Staff> staffList = staffRepository.findByDepartment(staffDept);
+            // Prefer a class incharge from this department
+            for (Staff s : staffList) {
+                if (ciCodes.contains(s.getStaffCode())) {
+                    return s.getStaffCode();
+                }
+            }
+            // Fallback: any staff in department
             if (!staffList.isEmpty()) {
                 return staffList.get(0).getStaffCode();
             }
@@ -54,100 +66,68 @@ public class DepartmentLookupService {
 
     /**
      * Returns the staff_code of the HOD for the given department.
-     * Strategy:
-     *   1. Look up the HOD name from the students table (hod column).
-     *   2. Find that person by name in the staff table.
-     *   3. Fallback: find any staff in the department whose role contains "HOD".
+     * Source: departments table (staff_code column).
+     *
+     * Special rule: for first-year students (semester 1-2), always return S&H HOD.
+     * Pass semester=1 or semester=2 to trigger this.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public String findHODForDepartment(String department) {
+        return findHODForDepartment(department, null);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public String findHODForDepartment(String department, Integer semester) {
         try {
-            // Try with the exact department string first, then with all known aliases
-            // (staff.department is "AI & ML" but students.department is "B.E. CSE (AI & ML)")
-            String staffFmt = com.example.visitor.util.DepartmentMapper.toStaffDeptFormat(department);
-
-            // Step 1: get HOD name from students table — try exact dept, then LIKE keyword
-            List<String> hodNames = studentRepository.findHodNamesByDepartment(department);
-            if (hodNames.isEmpty() && !staffFmt.equals(department)) {
-                hodNames = studentRepository.findHodNamesByDepartment(staffFmt);
-            }
-            // Also try via LIKE query using the staff-format keyword
-            if (hodNames.isEmpty()) {
-                try {
-                    hodNames = studentRepository.findHodNamesByDepartmentKeyword(staffFmt);
-                } catch (Exception ignored) {}
-            }
-
-            if (!hodNames.isEmpty()) {
-                String rawHod = hodNames.get(0);
-                if (rawHod != null && !rawHod.isBlank()) {
-                    // Clean: take only the part before '/' (e.g. "UMA S./ASSO P" → "UMA S.")
-                    String hodName = rawHod.split("/")[0].trim();
-                    // Remove common prefixes like "DR.", "Dr."
-                    hodName = hodName.replaceAll("(?i)^dr\\.?\\s*", "").trim();
-                    log.info("Cleaned HOD name: '{}' for dept '{}'", hodName, department);
-
-                    // Step 2a: exact match
-                    Optional<Staff> exact = staffRepository.findByStaffName(hodName);
-                    if (exact.isPresent()) {
-                        log.info("HOD exact match: '{}' → {}", hodName, exact.get().getStaffCode());
-                        return exact.get().getStaffCode();
-                    }
-
-                    // Step 2b: case-insensitive contains
-                    List<Staff> fuzzy = staffRepository.findByStaffNameContainingIgnoreCase(hodName);
-                    if (!fuzzy.isEmpty()) {
-                        log.info("HOD fuzzy match: '{}' → {}", hodName, fuzzy.get(0).getStaffCode());
-                        return fuzzy.get(0).getStaffCode();
-                    }
-
-                    // Step 2c: try each significant word (skip initials < 3 chars)
-                    for (String part : hodName.split("\\s+")) {
-                        if (part.length() < 3) continue;
-                        List<Staff> partMatch = staffRepository.findByStaffNameContainingIgnoreCase(part);
-                        if (!partMatch.isEmpty()) {
-                            log.info("HOD partial word match '{}' → {}", part, partMatch.get(0).getStaffCode());
-                            return partMatch.get(0).getStaffCode();
-                        }
-                    }
-
-                    log.warn("HOD '{}' (raw: '{}') not matched in staff table for dept '{}'", hodName, rawHod, department);
+            // First-year rule: semester 1 or 2 → always S&H HOD
+            if (semester != null && (semester == 1 || semester == 2)) {
+                Optional<HOD> shHod = hodRepository.findSHHod();
+                if (shHod.isPresent() && shHod.get().getHodCode() != null) {
+                    log.info("First-year student → S&H HOD: {}", shHod.get().getHodCode());
+                    return shHod.get().getHodCode();
                 }
             }
-        } catch (Exception e) {
-            log.warn("HOD lookup via students table failed for dept '{}': {}", department, e.getMessage());
-        }
 
-        // Step 3: fallback — role contains "HOD"
-        try {
+            // Look up HOD from departments table by department name
             String staffDept = DepartmentMapper.toStaffDeptFormat(department);
-            List<Staff> staffList = staffRepository.findByDepartment(staffDept);
-            for (Staff s : staffList) {
-                if (s.getRole() != null && s.getRole().toUpperCase().contains("HOD")) {
-                    log.info("HOD role fallback: {} for dept '{}'", s.getStaffCode(), department);
-                    return s.getStaffCode();
+
+            // Try exact match first
+            Optional<HOD> hod = hodRepository.findByDepartmentIgnoreCase(staffDept);
+            if (hod.isPresent() && hod.get().getHodCode() != null) {
+                log.info("HOD found for dept '{}': {}", staffDept, hod.get().getHodCode());
+                return hod.get().getHodCode();
+            }
+
+            // Try original department string
+            if (!staffDept.equals(department)) {
+                hod = hodRepository.findByDepartmentIgnoreCase(department);
+                if (hod.isPresent() && hod.get().getHodCode() != null) {
+                    log.info("HOD found for dept '{}': {}", department, hod.get().getHodCode());
+                    return hod.get().getHodCode();
                 }
             }
+
             log.warn("No HOD found for department: '{}'", department);
         } catch (Exception e) {
-            log.error("HOD role fallback failed for dept '{}': {}", department, e.getMessage());
+            log.error("HOD lookup failed for dept '{}': {}", department, e.getMessage());
         }
         return null;
     }
 
     /**
      * Returns the staff_code of the active HR.
-     * Finds the first staff member whose role contains "HR" (e.g. "Senior Manager-HR").
+     * Source: non_teaching_staffs where designation = 'Senior Manager - HR'.
+     * If multiple, returns the first one.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public String findActiveHR() {
         try {
-            List<Staff> hrStaff = staffRepository.findByRoleContainingIgnoreCase("HR");
-            if (!hrStaff.isEmpty()) {
-                log.info("Found HR: {} (role: {})", hrStaff.get(0).getStaffCode(), hrStaff.get(0).getRole());
-                return hrStaff.get(0).getStaffCode();
+            List<HR> hrList = hrRepository.findAllHR();
+            if (!hrList.isEmpty()) {
+                log.info("Found HR: {} ({})", hrList.get(0).getHrCode(), hrList.get(0).getHrName());
+                return hrList.get(0).getHrCode();
             }
-            log.warn("No HR staff found in staff table");
+            log.warn("No HR staff found in non_teaching_staffs");
         } catch (Exception e) {
             log.error("Error finding active HR: {}", e.getMessage());
         }
@@ -156,7 +136,6 @@ public class DepartmentLookupService {
 
     /**
      * Returns the full Staff object for a given staff code.
-     * Used by controllers/services that need HR/HOD details (name, email, etc.)
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Optional<Staff> findStaffByCode(String staffCode) {

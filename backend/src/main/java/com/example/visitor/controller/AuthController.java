@@ -1306,64 +1306,15 @@ public class AuthController {
      *   3. Token intersection: if ≥50% of the shorter name's tokens (≥2 chars) match
      */
     private boolean isHodByNameMatch(String rawStaffName) {
-        String staffNorm = normalizeNameForComparison(rawStaffName);
-        if (staffNorm.isEmpty()) return false;
-
-        java.util.List<String> allHodEntries = studentRepository.findAllDistinctHodNames();
-        for (String hodEntry : allHodEntries) {
-            String hodNorm = extractHodNameFromEntry(hodEntry);
-            if (hodNorm.isEmpty()) continue;
-
-            // Strategy 1: Exact match after normalization
-            if (staffNorm.equals(hodNorm)) {
-                log.info("HOD match (exact): staff='{}' hod='{}'", staffNorm, hodNorm);
-                return true;
-            }
-
-            // Strategy 2: Contains match (handles "KANAGAVALLI" vs "KANAGAVALLI N")
-            if (staffNorm.contains(hodNorm) || hodNorm.contains(staffNorm)) {
-                log.info("HOD match (contains): staff='{}' hod='{}'", staffNorm, hodNorm);
-                return true;
-            }
-
-            // Strategy 3: Token intersection (≥2 char tokens, ≥50% of shorter name's tokens match)
-            String[] staffTokens = staffNorm.split("\\s+");
-            String[] hodTokens = hodNorm.split("\\s+");
-
-            // Filter to tokens ≥ 2 chars (captures initials like "S" but not single chars from stripping)
-            java.util.Set<String> staffSet = new java.util.HashSet<>();
-            for (String t : staffTokens) { if (t.length() >= 2) staffSet.add(t); }
-            java.util.Set<String> hodSet = new java.util.HashSet<>();
-            for (String t : hodTokens) { if (t.length() >= 2) hodSet.add(t); }
-
-            if (!staffSet.isEmpty() && !hodSet.isEmpty()) {
-                // Count how many tokens from the shorter set appear in the longer set
-                java.util.Set<String> shorter = staffSet.size() <= hodSet.size() ? staffSet : hodSet;
-                java.util.Set<String> longer = staffSet.size() <= hodSet.size() ? hodSet : staffSet;
-                int matchCount = 0;
-                for (String token : shorter) {
-                    if (longer.contains(token)) matchCount++;
-                }
-                double matchRatio = (double) matchCount / shorter.size();
-                if (matchRatio >= 0.5 && matchCount >= 1) {
-                    log.info("HOD match (token {}%): staff='{}' hod='{}'",
-                             (int)(matchRatio * 100), staffNorm, hodNorm);
-                    return true;
-                }
-            }
-
-            // Strategy 4: Match on ALL tokens including single-char initials
-            // "UMA S" vs "UMA S" — if ALL tokens match regardless of length
-            java.util.Set<String> staffAllTokens = new java.util.HashSet<>(java.util.Arrays.asList(staffTokens));
-            java.util.Set<String> hodAllTokens = new java.util.HashSet<>(java.util.Arrays.asList(hodTokens));
-            if (staffAllTokens.equals(hodAllTokens)) {
-                log.info("HOD match (all-tokens): staff='{}' hod='{}'", staffNorm, hodNorm);
-                return true;
-            }
-        }
-
-        log.info("No HOD match found for staff name: '{}'", staffNorm);
-        return false;
+        // HOD is now determined by departments table, not students.hod column
+        // This method is kept for backward compat but uses hodRepository
+        if (rawStaffName == null || rawStaffName.isBlank()) return false;
+        String norm = normalizeNameForComparison(rawStaffName);
+        return hodRepository.findAll().stream().anyMatch(hod -> {
+            if (hod.getHodName() == null) return false;
+            String hodNorm = normalizeNameForComparison(hod.getHodName());
+            return norm.equals(hodNorm) || norm.contains(hodNorm) || hodNorm.contains(norm);
+        });
     }
 
     /**

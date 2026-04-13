@@ -31,6 +31,7 @@ public class StaffMember {
     public void setStaffCode(String staffCode) { this.staffCode = staffCode; }
     public String getStaffName() { return staffName; }
     public void setStaffName(String staffName) { this.staffName = staffName; }
+    public String getName() { return staffName; } // alias
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getPhone() { return phone; }

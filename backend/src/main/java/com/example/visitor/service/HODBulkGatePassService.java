@@ -19,6 +19,7 @@ public class HODBulkGatePassService {
     private final GatePassRequestRepository gatePassRequestRepository;
     private final StudentRepository studentRepository;
     private final StaffRepository staffRepository;
+    private final HODRepository hodRepository;
     private final QRTableRepository qrTableRepository;
     private final NotificationService notificationService;
     private final DepartmentLookupService departmentLookupService;
@@ -33,15 +34,15 @@ public class HODBulkGatePassService {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            // Validate HOD — look up from staff table
-            Optional<Staff> hodStaffOpt = staffRepository.findByStaffCode(hodCode);
-            if (!hodStaffOpt.isPresent()) {
+            // Validate HOD — look up from departments table
+            Optional<HOD> hodOpt = hodRepository.findByHodCode(hodCode);
+            if (!hodOpt.isPresent()) {
                 response.put("success", false);
                 response.put("message", "HOD not found");
                 return response;
             }
             
-            Staff hodStaff = hodStaffOpt.get();
+            HOD hodStaff = hodOpt.get();
             String department = hodStaff.getDepartment();
             
             // Validate at least one participant type is selected

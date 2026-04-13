@@ -18,6 +18,7 @@ public class GatePassRequestService {
     private final GatePassRequestRepository gatePassRequestRepository;
     private final StudentRepository studentRepository;
     private final StaffRepository staffRepository;
+    private final HRRepository hrRepository;
     private final QRTableRepository qrTableRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
@@ -28,6 +29,7 @@ public class GatePassRequestService {
             GatePassRequestRepository gatePassRequestRepository,
             StudentRepository studentRepository,
             StaffRepository staffRepository,
+            HRRepository hrRepository,
             QRTableRepository qrTableRepository,
             NotificationService notificationService,
             EmailService emailService,
@@ -35,6 +37,7 @@ public class GatePassRequestService {
         this.gatePassRequestRepository = gatePassRequestRepository;
         this.studentRepository = studentRepository;
         this.staffRepository = staffRepository;
+        this.hrRepository = hrRepository;
         this.qrTableRepository = qrTableRepository;
         this.notificationService = notificationService;
         this.emailService = emailService;
@@ -56,14 +59,17 @@ public class GatePassRequestService {
         Student student = studentOpt.get();
         String department = student.getDepartment();
         
-        // Find assigned staff (first active staff in department)
-        String assignedStaffCode = departmentLookupService.findStaffForDepartment(department);
+        // Find assigned staff (class incharge for this student's section)
+        String assignedStaffCode = student.getStaffCode(); // students.staff_code = class incharge
+        if (assignedStaffCode == null || assignedStaffCode.isBlank()) {
+            assignedStaffCode = departmentLookupService.findStaffForDepartment(department);
+        }
         if (assignedStaffCode == null) {
             throw new RuntimeException("No staff found for department: " + department);
         }
         
-        // Find assigned HOD (optional — if not found, request goes directly to PENDING_HOD with null hodCode)
-        String assignedHodCode = departmentLookupService.findHODForDepartment(department);
+        // Find assigned HOD — first-year students (semester 1-2) always get S&H HOD
+        String assignedHodCode = departmentLookupService.findHODForDepartment(department, student.getSemester());
         if (assignedHodCode == null) {
             log.warn("No HOD found for department: {}. Request will be submitted without HOD assignment.", department);
         }
@@ -158,17 +164,18 @@ public class GatePassRequestService {
                                             LocalDateTime requestDate, String attachmentUri) {
         log.info("Submitting NTF gate pass request for: {}", staffCode);
 
-        Optional<Staff> staffOpt = staffRepository.findByStaffCode(staffCode);
-        if (staffOpt.isEmpty()) {
+        // NTF staff are in non_teaching_staffs table (via hrRepository)
+        Optional<HR> hrOpt = hrRepository.findByHrCode(staffCode);
+        if (hrOpt.isEmpty()) {
             throw new RuntimeException("Staff not found with code: " + staffCode);
         }
-        Staff staff = staffOpt.get();
+        HR staff = hrOpt.get();
         String department = staff.getDepartment();
         String assignedHrCode = departmentLookupService.findActiveHR();
 
         GatePassRequest request = new GatePassRequest();
         request.setRegNo(staffCode);
-        request.setStudentName(staff.getStaffName());
+        request.setStudentName(staff.getHrName());
         request.setDepartment(department);
         request.setPurpose(purpose);
         request.setReason(reason);

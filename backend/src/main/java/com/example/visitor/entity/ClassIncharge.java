@@ -3,14 +3,15 @@ package com.example.visitor.entity;
 import jakarta.persistence.*;
 
 /**
- * Maps the existing `class_incharge` table.
- * Columns: department, section, class_incharge_name, staff_code
- * No primary key defined in DB — using composite @IdClass workaround with @EmbeddedId.
- * Since all columns are nullable we use a generated surrogate via @GeneratedValue on a
- * @Column that doesn't exist — instead we use @Id on department+section as a safe read-only entity.
+ * Class incharge data is derived from the students table.
+ * students.staff_code = class incharge's staff_code
+ * students.class_incharge = class incharge's name
+ * students.department + students.section = the class they manage
+ *
+ * This entity maps to students table for read-only class incharge lookups.
  */
 @Entity
-@Table(name = "class_incharge")
+@Table(name = "students")
 @IdClass(ClassInchargeId.class)
 public class ClassIncharge {
 
@@ -19,13 +20,13 @@ public class ClassIncharge {
     private String department;
 
     @Id
-    @Column(name = "section", length = 5)
+    @Column(name = "section", length = 10)
     private String section;
 
-    @Column(name = "class_incharge_name", length = 100)
+    @Column(name = "class_incharge", length = 100)
     private String classInchargeName;
 
-    @Column(name = "staff_code", length = 20)
+    @Column(name = "staff_code", length = 50)
     private String staffCode;
 
     public String getDepartment() { return department; }

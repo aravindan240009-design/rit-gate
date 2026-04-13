@@ -27,24 +27,26 @@ public class DepartmentController {
     @Autowired
     private StudentRepository studentRepository;
 
-    // Get all departments — uses native SQL to avoid JPA @Id null issue on department_summary
+    // Get all departments — uses departments table
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllDepartments() {
         try {
             List<Map<String, Object>> departmentList = jdbcTemplate.queryForList(
-                "SELECT department_name, total_staff, total_student FROM department_summary WHERE department_name IS NOT NULL AND department_name != ''"
+                "SELECT name, hod, staff_code, student_count, staff_count FROM departments WHERE name IS NOT NULL AND name != ''"
             ).stream().map(row -> {
-                String name = (String) row.get("department_name");
+                String name = (String) row.get("name");
                 Map<String, Object> map = new HashMap<>();
                 map.put("id", name);
                 map.put("name", name);
                 map.put("code", name);
-                map.put("totalStaff", row.get("total_staff"));
-                map.put("totalStudents", row.get("total_student"));
+                map.put("hod", row.get("hod"));
+                map.put("hodStaffCode", row.get("staff_code"));
+                map.put("totalStaff", row.get("staff_count"));
+                map.put("totalStudents", row.get("student_count"));
                 return map;
             }).collect(Collectors.toList());
 
-            System.out.println("Fetched " + departmentList.size() + " departments from department_summary");
+            System.out.println("Fetched " + departmentList.size() + " departments");
             return ResponseEntity.ok(departmentList);
         } catch (Exception e) {
             System.err.println("Error fetching departments: " + e.getMessage());
@@ -58,14 +60,15 @@ public class DepartmentController {
     public ResponseEntity<Map<String, Object>> getDepartmentById(@PathVariable String id) {
         try {
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT department_name, total_staff, total_student FROM department_summary WHERE department_name = ?", id
+                "SELECT name, hod, staff_code, student_count, staff_count FROM departments WHERE name = ?", id
             );
             if (rows.isEmpty()) return ResponseEntity.notFound().build();
-            String name = (String) rows.get(0).get("department_name");
             Map<String, Object> map = new HashMap<>();
-            map.put("id", name);
-            map.put("name", name);
-            map.put("code", name);
+            map.put("id", rows.get(0).get("name"));
+            map.put("name", rows.get(0).get("name"));
+            map.put("code", rows.get(0).get("name"));
+            map.put("hod", rows.get(0).get("hod"));
+            map.put("hodStaffCode", rows.get(0).get("staff_code"));
             return ResponseEntity.ok(map);
         } catch (Exception e) {
             System.err.println("Error fetching department: " + e.getMessage());
@@ -79,16 +82,15 @@ public class DepartmentController {
     public ResponseEntity<List<Map<String, Object>>> getStaffByDepartment(@PathVariable String departmentCode) {
         try {
             System.out.println("Fetching staff for department: " + departmentCode);
-            
-            // Convert to the exact format used in staff.department column
             String searchDept = DepartmentMapper.toStaffDeptFormat(departmentCode);
-            System.out.println("Resolved search department to staff format: " + searchDept);
 
-            // Get staff from the Staff repository only
+            // Get HOD staff_code from departments table
+            List<Map<String, Object>> deptRows = jdbcTemplate.queryForList(
+                "SELECT staff_code FROM departments WHERE name = ?", searchDept
+            );
+            String hodStaffCode = deptRows.isEmpty() ? null : (String) deptRows.get(0).get("staff_code");
+
             List<com.example.visitor.entity.Staff> staffList = staffRepository.findByDepartment(searchDept);
-
-            // Build a set of HOD names from the students table
-            java.util.Set<String> hodNames = new java.util.HashSet<>(studentRepository.findAllDistinctHodNames());
 
             List<Map<String, Object>> staffData = staffList.stream()
                 .map(staff -> {
@@ -99,15 +101,8 @@ public class DepartmentController {
                     map.put("email", staff.getEmail());
                     map.put("phone", staff.getPhone());
                     map.put("department", staff.getDepartment());
-                    // Determine role: HOD if name matches students.hod, else HR if role contains HR, else Faculty
-                    String role;
-                    if (staff.getStaffName() != null && hodNames.contains(staff.getStaffName().trim())) {
-                        role = "HOD";
-                    } else if (staff.getRole() != null && staff.getRole().toUpperCase().contains("HR")) {
-                        role = "HR";
-                    } else {
-                        role = staff.getRole() != null && !staff.getRole().isBlank() ? staff.getRole() : "Faculty";
-                    }
+                    String role = staff.getStaffCode().equals(hodStaffCode) ? "HOD"
+                        : (staff.getRole() != null && !staff.getRole().isBlank() ? staff.getRole() : "Faculty");
                     map.put("role", role);
                     return map;
                 })
