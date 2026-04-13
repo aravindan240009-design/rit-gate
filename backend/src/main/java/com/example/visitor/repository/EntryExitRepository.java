@@ -43,7 +43,7 @@ public interface EntryExitRepository extends JpaRepository<EntryExit, Long> {
     @Query("SELECT e FROM EntryExit e WHERE " +
            "e.userId LIKE %:search% OR " +
            "e.userName LIKE %:search% OR " +
-           "e.userEmail LIKE %:search% OR " +
+           "e.department LIKE %:search% OR " +
            "e.location LIKE %:search%")
     Page<EntryExit> findBySearchTerm(@Param("search") String search, Pageable pageable);
 }

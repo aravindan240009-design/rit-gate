@@ -28,7 +28,7 @@ public class EntryExit {
     private String userName;
 
     @Column(name = "department")
-    private String userEmail;
+    private String department;
 
     @Column(name = "scanned_by")
     private String action; // ENTRY, EXIT

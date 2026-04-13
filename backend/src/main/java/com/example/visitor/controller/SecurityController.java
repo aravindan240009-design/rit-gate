@@ -1196,7 +1196,7 @@ public class SecurityController {
             Optional<Person> personOpt = personRepository.findById(id);
             if (personOpt.isPresent()) {
                 Person person = personOpt.get();
-                person.setStatus(status);
+                person.setStatus(status != null ? status.name() : "PENDING");
                 Person updatedPerson = personRepository.save(person);
                 System.out.println("Person status updated: " + person.getName() + " - " + status);
                 return ResponseEntity.ok(updatedPerson);
