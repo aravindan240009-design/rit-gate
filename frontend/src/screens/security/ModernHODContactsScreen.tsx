@@ -10,7 +10,6 @@ import {
   Linking,
   ActivityIndicator,
   Dimensions,
-  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -162,7 +161,7 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>HOD Contacts</ThemedText>
         <View style={styles.headerRight} />
       </View>
-      <TopRefreshControl refreshing={refreshing} onRefresh={handleRefresh} color={theme.primary} pullEnabled={false}>
+      <TopRefreshControl refreshing={refreshing} onRefresh={handleRefresh} color={theme.primary} pullEnabled={true}>
       <View style={{ paddingHorizontal: 20 }}>
         {/* Search Bar */}
         <View style={[styles.searchContainer, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
@@ -202,7 +201,6 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
         keyExtractor={(item: HODContact) => (item.id ?? Math.random()).toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={[theme.primary]} />}
         ListHeaderComponent={
           <>
             {isLoading && <SkeletonList count={6} />}

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StatusBar,
   BackHandler,
-  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -149,7 +148,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>History</ThemedText>
       </View>
@@ -159,7 +158,6 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
           data={historyData}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           renderItem={({ item }) => (
             <View key={item.id} style={[styles.historyCard, { backgroundColor: theme.cardBackground }]}>
               <View style={[styles.iconContainer, { backgroundColor: getIconColor(item.type) + '20' }]}>

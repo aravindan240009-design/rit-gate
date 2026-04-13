@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { NonTeachingFaculty } from '../../types';
@@ -109,7 +109,7 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
         <View style={{ width: 40 }} />
       </View>
 
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
         <ScreenContentContainer>
           {refreshing ? <SkeletonList count={5} /> : (
             <VerticalFlatList
@@ -119,7 +119,6 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
               contentContainerStyle={styles.listContent}
               showsVerticalScrollIndicator={false}
               decelerationRate="normal"
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
               renderItem={({ item: req }) => {
                 const badge = getStatusBadge(req.status);
                 const dateStr = req.requestDate || req.createdAt;

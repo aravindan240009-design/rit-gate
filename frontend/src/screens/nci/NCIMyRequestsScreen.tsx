@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { NonTeachingFaculty } from '../../types';
@@ -88,7 +88,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack 
         <View style={{ width: 40 }} />
       </View>
 
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
         <ScreenContentContainer>
           {(loading || refreshing) ? (
             <SkeletonList count={5} />
@@ -100,7 +100,6 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack 
               decelerationRate="normal"
               data={requests}
               keyExtractor={(item) => item.id?.toString()}
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
               renderItem={({ item: req }) => {
                 const st = getStatusStyle(req.status);
                 return (

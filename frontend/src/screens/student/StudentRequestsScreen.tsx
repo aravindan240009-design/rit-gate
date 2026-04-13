@@ -7,7 +7,6 @@ import {
   StatusBar,
   TextInput,
   BackHandler,
-  RefreshControl
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -182,7 +181,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.surface} />
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
       </View>
@@ -207,7 +206,6 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
           keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           renderItem={({ item }) => renderCard(item)}          ListEmptyComponent={
             !refreshing ? (
               <View style={styles.empty}>

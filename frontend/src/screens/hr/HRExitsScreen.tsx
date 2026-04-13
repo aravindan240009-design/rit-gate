@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, StyleSheet, TouchableOpacity, Modal, ScrollView,
-  ActivityIndicator, StatusBar, BackHandler, Animated, RefreshControl,
+  ActivityIndicator, StatusBar, BackHandler, Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
@@ -122,7 +122,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Gate Logs</ThemedText>
         <View style={{ width: 40 }} />
       </View>
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
 
       <ScreenContentContainer style={{ flex: 1 }}>
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
@@ -154,7 +154,6 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
           contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           renderItem={({ item }) => {
             const entry = isEntry(item);
             const badgeColor = entry ? theme.success : theme.error;

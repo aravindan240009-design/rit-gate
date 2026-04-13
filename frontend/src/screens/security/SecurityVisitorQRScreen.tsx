@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Modal,
-  RefreshControl,
   StatusBar,
   Clipboard
 } from 'react-native';
@@ -20,6 +19,7 @@ import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import { useTheme } from '../../context/ThemeContext';
+import TopRefreshControl from '../../components/TopRefreshControl';
 
 
 interface VisitorRequest {
@@ -131,19 +131,13 @@ const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate
       </View>
 
       {/* List */}
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color="#00BCD4" pullEnabled={true}>
       <VerticalFlatList
         style={styles.scrollView}
         data={filteredVisitors}
         keyExtractor={(item) => item.id.toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl 
-            refreshing={refreshing} 
-            onRefresh={onRefresh} 
-            colors={['#00BCD4']} 
-          />
-        }
         ListHeaderComponent={
           <>
             {/* Filter Tabs */}
@@ -220,6 +214,7 @@ const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate
           </TouchableOpacity>
         )}
       />
+      </TopRefreshControl>
 
       {/* QR Modal — floating card style */}
       <Modal visible={showQRModal} animationType="fade" transparent={true} statusBarTranslucent onRequestClose={() => setShowQRModal(false)}>

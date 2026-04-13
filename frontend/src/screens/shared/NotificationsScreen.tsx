@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   BackHandler,
-  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -199,7 +198,7 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
           </View>
         </View>
       </View>
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <ScreenContentContainer>
         {notifications.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -247,7 +246,6 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
           />
         )}
       </ScreenContentContainer>

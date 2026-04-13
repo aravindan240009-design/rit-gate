@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, StyleSheet, TouchableOpacity, ScrollView,
-  ActivityIndicator, StatusBar, BackHandler, RefreshControl,
+  ActivityIndicator, StatusBar, BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
@@ -123,7 +123,7 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
         <View style={{ width: 40 }} />
       </View>
 
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
         <ScreenContentContainer style={{ flex: 1 }}>
           <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
             <ThemedText style={[styles.hint, { color: theme.textSecondary }]}>
@@ -153,7 +153,6 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
             contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
             renderItem={({ item }) => {
               const entry = isEntry(item);
               const badgeColor = entry ? theme.success : theme.error;

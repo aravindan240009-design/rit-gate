@@ -9,7 +9,6 @@ import {
   Modal,
   ActivityIndicator,
   Platform,
-  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -416,7 +415,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadVehicleHistory(); }} colors={[theme.primary]} />}
+            
             ListHeaderComponent={
               <View style={styles.rangeResultsTop}>
                 <ThemedText style={[styles.rangeResultsSub, { color: theme.textSecondary }]}>
@@ -623,7 +622,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadScanHistory(); }} colors={[theme.primary]} />}
+            
             ListHeaderComponent={
               <View style={styles.rangeResultsTop}>
                 <ThemedText style={[styles.rangeResultsSub, { color: theme.textSecondary }]}>
@@ -814,7 +813,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
         <View style={styles.headerRight} />
       </View>
 
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <ScreenContentContainer style={{ flex: 1 }}>
         <View style={{ paddingHorizontal: 16 }}>
           {/* Main Tab Switcher */}
@@ -951,7 +950,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           data={activeTab === 'SCANS' ? filteredScans : filteredVehicles}
           keyExtractor={(item, index) => `${item.id}-${index}`}
           contentContainerStyle={styles.scrollContent}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
+          
           renderItem={({ item }) => {
             if (activeTab === 'SCANS') {
               const scan = item as ScanRecord;

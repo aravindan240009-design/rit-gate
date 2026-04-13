@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StatusBar,
   Animated,
-  RefreshControl
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -283,7 +282,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
           </ThemedText>
           <View style={{ width: 40 }} />
         </View>
-        <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={false}>
+        <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
         <Animated.View 
           style={{ 
             flex: 1,
@@ -297,7 +296,6 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
             keyExtractor={(request, index) => request.id?.toString() || index.toString()}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 120 }} // Extra padding for student navbar
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />}
             renderItem={({ item: request, index }) => (
               <TouchableOpacity
                 key={request.id || index}
