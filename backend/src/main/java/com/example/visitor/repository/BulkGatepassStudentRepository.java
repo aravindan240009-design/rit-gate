@@ -17,7 +17,7 @@ public interface BulkGatepassStudentRepository extends JpaRepository<GatePassReq
     @Query("SELECT g FROM GatePassRequest g WHERE g.passType = 'BULK' AND g.id = :passRequestId")
     List<GatePassRequest> findByPassRequestId(@Param("passRequestId") Long passRequestId);
 
-    @Query("SELECT g FROM GatePassRequest g WHERE g.passType = 'BULK' AND FIND_IN_SET(:regNo, g.studentList) > 0")
+    @Query(value = "SELECT * FROM Gatepass WHERE pass_type = 'BULK' AND FIND_IN_SET(:regNo, student_list) > 0", nativeQuery = true)
     List<GatePassRequest> findByRegNo(@Param("regNo") String regNo);
 
     @Query("SELECT COUNT(g) FROM GatePassRequest g WHERE g.passType = 'BULK' AND g.id = :passRequestId")
