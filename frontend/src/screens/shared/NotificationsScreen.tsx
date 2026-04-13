@@ -15,6 +15,7 @@ import ThemedText from '../../components/ThemedText';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
+import { SkeletonList } from '../../components/SkeletonCard';
 
 
 interface Notification {
@@ -201,7 +202,7 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
       </View>
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <ScreenContentContainer>
-        {notifications.length === 0 ? (
+        {(loading || refreshing) ? <SkeletonList count={5} /> : notifications.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="notifications-off-outline" size={64} color={theme.border} />
             <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No notifications yet</ThemedText>

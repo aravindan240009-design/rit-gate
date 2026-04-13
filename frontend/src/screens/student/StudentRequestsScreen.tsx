@@ -22,6 +22,7 @@ import ThemedText from '../../components/ThemedText';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
+import { SkeletonList } from '../../components/SkeletonCard';
 
 
 interface StudentRequestsScreenProps {
@@ -32,6 +33,7 @@ interface StudentRequestsScreenProps {
 const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, onTabChange }) => {
   const { theme } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [requests, setRequests] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
@@ -79,11 +81,12 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
       console.error('Error loading requests:', error);
     } finally {
       setRefreshing(false);
+      setIsLoading(false);
     }
   };
 
   const onRefresh = () => {
-    console.log('🔄 [REFRESH] Student/StudentRequests'); setRefreshing(true); loadRequests(); };
+    console.log('🔄 [REFRESH] Student/StudentRequests'); setRefreshing(true); setIsLoading(true); loadRequests(); };
 
   const filteredRequests = requests.filter(r =>
     searchQuery === '' ||
@@ -201,26 +204,28 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
           </View>
         </View>
 
+        {(isLoading || refreshing) ? <SkeletonList count={5} /> : (
         <VerticalFlatList
           style={styles.scroll}
           data={filteredRequests}
           keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
-          renderItem={({ item }) => renderCard(item)}          ListEmptyComponent={
-            !refreshing ? (
-              <View style={styles.empty}>
-                <Ionicons name="document-text-outline" size={64} color={theme.border} />
-                <ThemedText style={[styles.emptyText, { color: theme.textTertiary }]}>
-                  No requests found
-                </ThemedText>
-              </View>
-            ) : null
+          renderItem={({ item }) => renderCard(item)}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Ionicons name="document-text-outline" size={64} color={theme.border} />
+              <ThemedText style={[styles.emptyText, { color: theme.textTertiary }]}>
+                No requests found
+              </ThemedText>
+            </View>
           }
         />
+        )}
       </ScreenContentContainer>
+      </TopRefreshControl>
 
-      {/* Bottom nav */}
+      {/* Bottom nav — outside TopRefreshControl so it never shifts */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         {[
           { tab: 'HOME', icon: 'home-outline', label: 'Home' },
@@ -240,7 +245,6 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
           );
         })}
       </View>
-      </TopRefreshControl>
 
       {/* Single pass details */}
       <SinglePassDetailsModal

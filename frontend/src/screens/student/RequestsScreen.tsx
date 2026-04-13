@@ -19,6 +19,7 @@ import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
+import { SkeletonList } from '../../components/SkeletonCard';
 
 
 const TypedModal = Modal as any;
@@ -284,6 +285,9 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
           <View style={{ width: 40 }} />
         </View>
         <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
+        {(loading || refreshing) ? (
+          <SkeletonList count={5} />
+        ) : (
         <Animated.View 
           style={{ 
             flex: 1,
@@ -296,7 +300,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
             data={filteredRequests}
             keyExtractor={(request, index) => request.id?.toString() || index.toString()}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 120 }} // Extra padding for student navbar
+            contentContainerStyle={{ paddingBottom: 120 }}
             renderItem={({ item: request, index }) => (
               <TouchableOpacity
                 key={request.id || index}
@@ -322,12 +326,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
                       }
                     ]}
                   >
-                    <ThemedText
-                      style={[
-                        styles.statusText,
-                        { color: '#FFFFFF' }
-                      ]}
-                    >
+                    <ThemedText style={[styles.statusText, { color: '#FFFFFF' }]}>
                       {request.status || 'PENDING'}
                     </ThemedText>
                   </View>
@@ -337,10 +336,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
                   (request.passType !== 'BULK' || (request.qrCode && request.qrOwnerId === user.regNo))) ? (
                   <TouchableOpacity
                     style={[styles.quickQrButton, { backgroundColor: theme.primary + '15' }]}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      handleViewQR(request);
-                    }}
+                    onPress={(e) => { e.stopPropagation(); handleViewQR(request); }}
                   >
                     <View style={styles.cardFooter}>
                       <Ionicons name="qr-code-outline" size={16} color={theme.primary} />
@@ -369,17 +365,16 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
               </TouchableOpacity>
             )}
             ListEmptyComponent={
-              !loading ? (
-                <View style={styles.emptyContainer}>
-                  <Ionicons name="document-text-outline" size={64} color={theme.textSecondary} />
-                  <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
-                    No requests found
-                  </ThemedText>
-                </View>
-              ) : null
+              <View style={styles.emptyContainer}>
+                <Ionicons name="document-text-outline" size={64} color={theme.textSecondary} />
+                <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
+                  No requests found
+                </ThemedText>
+              </View>
             }
           />
         </Animated.View>
+        )}
         </TopRefreshControl>
 
         {/* QR Code Modal */}

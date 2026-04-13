@@ -16,6 +16,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
+import { SkeletonList } from '../../components/SkeletonCard';
 
 
 interface StudentHistoryScreenProps {
@@ -38,6 +39,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
 }) => {
   const { theme, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
 
   useEffect(() => {
@@ -101,12 +103,14 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
       console.error('Error loading history:', error);
     } finally {
       setRefreshing(false);
+      setIsLoading(false);
     }
   };
 
   const onRefresh = () => {
     console.log('🔄 [REFRESH] Student/History');
     setRefreshing(true);
+    setIsLoading(true);
     loadHistory();
   };
 
@@ -154,6 +158,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>History</ThemedText>
       </View>
       <ScreenContentContainer>
+        {(isLoading || refreshing) ? <SkeletonList count={5} /> : (
         <VerticalFlatList
           style={styles.content}
           data={historyData}
@@ -188,7 +193,9 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
             </View>
           }
         />
+        )}
       </ScreenContentContainer>
+      </TopRefreshControl>
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
           <Ionicons name="home-outline" size={24} color={theme.textTertiary} />
@@ -208,7 +215,6 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
         </TouchableOpacity>
       </View>
-      </TopRefreshControl>
     </SafeAreaView>
   );
 };
