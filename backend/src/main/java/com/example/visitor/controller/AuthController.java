@@ -680,19 +680,22 @@ public class AuthController {
             
             HOD hod = hodOpt.get();
 
-            // Validate this person is actually a HOD (not just any staff member)
-            boolean isActualHOD = false;
-            // Check 1: role field contains HOD
-            if (hod.getRole() != null && hod.getRole().toUpperCase().contains("HOD")) {
-                isActualHOD = true;
+            // HOD is validated by presence in departments table — no extra check needed
+            // Fetch email and phone from teaching_staffs since departments table has no email
+            String hodEmail = hod.getEmail();
+            String hodPhone = hod.getPhone();
+            if (hodEmail == null || hodEmail.isBlank()) {
+                Optional<Staff> staffInfo = staffRepository.findByStaffCode(hodCode);
+                if (staffInfo.isPresent()) {
+                    hodEmail = staffInfo.get().getEmail();
+                    hodPhone = staffInfo.get().getPhone();
+                    hod.setEmail(hodEmail);
+                    hod.setPhone(hodPhone);
+                }
             }
-            // Check 2: name appears in students.hod column using shared matching
-            if (!isActualHOD && hod.getHodName() != null && !hod.getHodName().isBlank()) {
-                isActualHOD = isHodByNameMatch(hod.getHodName());
-            }
-            if (!isActualHOD) {
-                logAuthEvent(hodCode, "HOD", "OTP_SENT", "FAILED", "Not a HOD");
-                return ResponseEntity.status(403).body(createErrorResponse("This account is not registered as HOD"));
+            if (hodEmail == null || hodEmail.isBlank()) {
+                logAuthEvent(hodCode, "HOD", "OTP_SENT", "FAILED", "No email on file");
+                return ResponseEntity.status(404).body(createErrorResponse("No email found for this HOD"));
             }
             
             // Generate and store OTP with BCrypt hashing
@@ -1382,103 +1385,43 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Staff code required"));
             }
 
-            // Check if it's a student
+            // 1. Student?
             if (studentRepository.findByRegNo(code).isPresent()) {
                 return ResponseEntity.ok(Map.of("success", true, "role", "STUDENT"));
             }
 
-            // Look up in staff table
-            Optional<Staff> staffOpt = staffRepository.findByStaffCode(code);
-            if (staffOpt.isEmpty()) {
-                return ResponseEntity.ok(Map.of("success", false, "role", "UNKNOWN", "message", "User not found"));
-            }
-
-            Staff staff = staffOpt.get();
-            String staffName  = staff.getStaffName()  != null ? staff.getStaffName().trim()  : "";
-            String role       = staff.getRole()        != null ? staff.getRole().trim().toUpperCase() : "";
-            String department = staff.getDepartment()  != null ? staff.getDepartment().trim() : "";
-
-            // 1. Explicit role field check (HR / HOD)
-            if (role.contains("HR")) {
-                return ResponseEntity.ok(Map.of("success", true, "role", "HR"));
-            }
-            if (role.contains("HOD")) {
+            // 2. HOD? — check departments table (staff_code column)
+            if (hodRepository.isHOD(code)) {
                 return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
             }
 
-            // 2. PRIMARY HOD CHECK: look up staff name directly in students.hod column
-            //    This is the authoritative source — if the name appears there, they ARE a HOD.
-            if (!staffName.isEmpty()) {
-                // Try full name first
-                if (studentRepository.countByHodContaining(staffName) > 0) {
-                    log.info("HOD detected via students.hod column (full name): '{}'", staffName);
-                    return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
+            // 3. HR or AO? — check non_teaching_staffs by designation
+            Optional<HR> hrOpt = hrRepository.findByHrCode(code);
+            if (hrOpt.isPresent()) {
+                String designation = hrOpt.get().getRole() != null ? hrOpt.get().getRole() : "";
+                if (designation.equalsIgnoreCase("Senior Manager - HR")) {
+                    return ResponseEntity.ok(Map.of("success", true, "role", "HR"));
                 }
-                // Try each significant token (handles "KANAGAVALLI N." stored as "KANAGAVALLI N./ASSO P")
-                for (String token : staffName.split("\\s+")) {
-                    if (token.length() >= 4) { // skip short initials like "N."
-                        if (studentRepository.countByHodContaining(token) > 0) {
-                            log.info("HOD detected via students.hod column (token '{}'): '{}'", token, staffName);
-                            return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
-                        }
-                    }
+                if (designation.equalsIgnoreCase("Administrative Officer")) {
+                    return ResponseEntity.ok(Map.of("success", true, "role", "ADMIN_OFFICER"));
                 }
+                // Other non-teaching staff → NON_TEACHING
+                return ResponseEntity.ok(Map.of("success", true, "role", "NON_TEACHING"));
             }
 
-            // 3. Principal / Director → NON_CLASS_INCHARGE (direct-to-HR)
-            if (role.contains("PRINCIPAL") || role.contains("DIRECTOR")) {
+            // 4. Teaching staff? — check teaching_staffs table
+            Optional<Staff> staffOpt = staffRepository.findByStaffCode(code);
+            if (staffOpt.isPresent()) {
+                // Is this staff code a class incharge? (appears in students.staff_code)
+                boolean isClassIncharge = staffRepository.isClassIncharge(code);
+                if (isClassIncharge) {
+                    return ResponseEntity.ok(Map.of("success", true, "role", "STAFF"));
+                }
+                // Not a class incharge → NCI
                 return ResponseEntity.ok(Map.of("success", true, "role", "NON_CLASS_INCHARGE"));
             }
 
-            // 3b. Administrative Officer → ADMIN_OFFICER (before non-teaching dept check)
-            if (role.contains("ADMINISTRATIVE") || role.equalsIgnoreCase("ADMINISTRATIVE OFFICER")) {
-                return ResponseEntity.ok(Map.of("success", true, "role", "ADMIN_OFFICER"));
-            }
-
-            // 4. Non-Teaching department → NON_TEACHING
-            boolean isNonTeachingDept = department.toLowerCase().startsWith("non-teaching") ||
-                                        department.toLowerCase().startsWith("non teaching");
-            if (isNonTeachingDept) {
-                return ResponseEntity.ok(Map.of("success", true, "role", "NON_TEACHING"));
-            }
-
-            // 5. Check class_incharge table — by staff_code first, then by name
-            boolean isClassIncharge = false;
-
-            if (classInchargeRepository.countByStaffCode(code) > 0) {
-                isClassIncharge = true;
-            }
-
-            if (!isClassIncharge && !staffName.isEmpty()) {
-                if (classInchargeRepository.countByNameContaining(staffName) > 0) {
-                    isClassIncharge = true;
-                }
-                if (!isClassIncharge) {
-                    for (String token : staffName.split("\\s+")) {
-                        if (token.length() >= 3) {
-                            if (classInchargeRepository.countByNameContaining(token) > 0) {
-                                isClassIncharge = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (isClassIncharge) {
-                return ResponseEntity.ok(Map.of("success", true, "role", "STAFF"));
-            }
-
-            // 6. Non-teaching role (no class incharge assignment) → NON_TEACHING or NON_CLASS_INCHARGE
-            boolean isTeachingRole = role.contains("PROFESSOR") || role.contains("LECTURER") ||
-                                     role.contains("FACULTY")   || role.contains("ASSOCIATE PROF") ||
-                                     role.contains("ASST. PROF") || role.contains("ASST PROF");
-            if (!isTeachingRole && !role.isEmpty()) {
-                return ResponseEntity.ok(Map.of("success", true, "role", "NON_TEACHING"));
-            }
-
-            // Default: not a class incharge → NON_CLASS_INCHARGE
-            return ResponseEntity.ok(Map.of("success", true, "role", "NON_CLASS_INCHARGE"));
+            return ResponseEntity.ok(Map.of("success", false, "role", "UNKNOWN", "message", "User not found"));
 
         } catch (Exception e) {
             log.error("Error detecting role for {}: {}", staffCode, e.getMessage());

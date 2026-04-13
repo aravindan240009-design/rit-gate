@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface StudentRepository extends JpaRepository<Student, Long> {
+public interface StudentRepository extends JpaRepository<Student, String> {
 
-    // regNo field maps to register_number column
+    // Primary key is register_no (mapped as regNo)
     Optional<Student> findByRegNo(String regNo);
 
     @Query("SELECT s FROM Student s WHERE s.regNo IN :regNos")
@@ -20,42 +20,38 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     List<Student> findByDepartment(String department);
 
-    // Find students by department using LIKE — handles format mismatches
-    // e.g. staff has "AI & ML", students have "B.E. CSE (AI & ML)"
-    @Query("SELECT s FROM Student s WHERE s.department = :department OR s.department LIKE CONCAT('%', :keyword, '%')")
-    List<Student> findByDepartmentOrKeyword(@Param("department") String department, @Param("keyword") String keyword);
-
-    // Students assigned to a specific class incharge (exact name match)
+    // Students assigned to a specific class incharge by name
     List<Student> findByClassIncharge(String classIncharge);
 
-    // Case-insensitive contains match for class incharge name (no department filter — handles dept format mismatch)
     @Query("SELECT s FROM Student s WHERE LOWER(s.classIncharge) LIKE LOWER(CONCAT('%', :name, '%'))")
     List<Student> findByClassInchargeContaining(@Param("name") String name);
 
-    // Case-insensitive contains match for class incharge name within department (LIKE on both)
-    @Query("SELECT s FROM Student s WHERE LOWER(s.classIncharge) LIKE LOWER(CONCAT('%', :name, '%')) AND s.department LIKE CONCAT('%', :deptKeyword, '%')")
-    List<Student> findByClassInchargeContainingAndDepartment(@Param("name") String name, @Param("deptKeyword") String deptKeyword);
+    // Students by class incharge staff_code (staff_code column = class incharge's code)
+    List<Student> findByStaffCode(String staffCode);
 
-    // Fallback: students by department and section
     List<Student> findByDepartmentAndSection(String department, String section);
 
-    // Get the HOD name for a department (hod column stores the HOD's name)
-    @Query("SELECT DISTINCT s.hod FROM Student s WHERE s.department = :department AND s.hod IS NOT NULL")
-    List<String> findHodNamesByDepartment(@Param("department") String department);
+    // First-year students (semester 1 or 2) — HOD is always S&H HOD
+    @Query("SELECT s FROM Student s WHERE s.semester IN (1, 2)")
+    List<Student> findFirstYearStudents();
 
-    // HOD lookup via LIKE — handles format mismatch (e.g. staff dept "AI & ML" vs student dept "B.E. CSE (AI & ML)")
-    @Query("SELECT DISTINCT s.hod FROM Student s WHERE s.department LIKE CONCAT('%', :keyword, '%') AND s.hod IS NOT NULL")
-    List<String> findHodNamesByDepartmentKeyword(@Param("keyword") String keyword);
+    // Check if a staff code is a class incharge
+    @Query("SELECT COUNT(s) > 0 FROM Student s WHERE s.staffCode = :staffCode")
+    boolean isClassIncharge(@Param("staffCode") String staffCode);
 
-    // Get all distinct HOD names across all departments
-    @Query("SELECT DISTINCT s.hod FROM Student s WHERE s.hod IS NOT NULL AND s.hod <> ''")
-    List<String> findAllDistinctHodNames();
+    // Count students by class incharge staff code
+    @Query("SELECT COUNT(s) FROM Student s WHERE s.staffCode = :staffCode")
+    long countByStaffCode(@Param("staffCode") String staffCode);
 
-    // Check if a staff name appears as a class incharge in any student row
+    // Count students by class incharge name (for HOD detection fallback)
     @Query("SELECT COUNT(s) FROM Student s WHERE LOWER(s.classIncharge) LIKE LOWER(CONCAT('%', :name, '%'))")
     long countByClassInchargeContaining(@Param("name") String name);
 
-    // Check if a staff name appears in the hod column of any student row
-    @Query("SELECT COUNT(s) FROM Student s WHERE LOWER(s.hod) LIKE LOWER(CONCAT('%', :name, '%')) AND s.hod IS NOT NULL AND s.hod <> ''")
-    long countByHodContaining(@Param("name") String name);
+    // HOD is resolved from departments table — these are kept for backward compat
+    @Query("SELECT DISTINCT s.department FROM Student s WHERE s.department IS NOT NULL")
+    List<String> findAllDistinctDepartments();
+
+    // Kept for backward compat — returns empty since hod column doesn't exist
+    default List<String> findAllDistinctHodNames() { return java.util.Collections.emptyList(); }
+    default long countByHodContaining(String name) { return 0L; }
 }

@@ -9,19 +9,32 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * HOD data comes from the departments table.
+ * staff_code = HOD's login code, hod = HOD name, name = department name.
+ */
 @Repository
 public interface HODRepository extends JpaRepository<HOD, String> {
 
-    // hodCode maps to staff_code column
+    // Primary key is staff_code (mapped as hodCode)
     Optional<HOD> findByHodCode(String hodCode);
 
-    // Find by department
-    List<HOD> findByDepartment(String department);
+    // Find by department name
+    Optional<HOD> findByDepartment(String department);
 
-    // Filter by role containing HOD keyword
-    @Query("SELECT h FROM HOD h WHERE LOWER(h.role) LIKE LOWER(CONCAT('%', :role, '%'))")
-    List<HOD> findByRoleContaining(@Param("role") String role);
+    // All HODs (one per department)
+    @Query("SELECT h FROM HOD h WHERE h.hodCode IS NOT NULL")
+    List<HOD> findAllHODs();
 
-    // isActive is transient — not queryable from DB
-    // List<HOD> findByIsActive(Boolean isActive); // removed
+    // Check if a staff_code is a HOD
+    @Query("SELECT COUNT(h) > 0 FROM HOD h WHERE h.hodCode = :staffCode")
+    boolean isHOD(@Param("staffCode") String staffCode);
+
+    // Find HOD by department name (case-insensitive)
+    @Query("SELECT h FROM HOD h WHERE LOWER(h.department) = LOWER(:department)")
+    Optional<HOD> findByDepartmentIgnoreCase(@Param("department") String department);
+
+    // S&H HOD — used for all first-year students
+    @Query("SELECT h FROM HOD h WHERE h.department = 'S & H'")
+    Optional<HOD> findSHHod();
 }
