@@ -333,7 +333,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
                 </View>
 
                 {((request.status === 'APPROVED' || request.status === 'APPROVED_BY_HOD' || request.status === 'USED') && 
-                  (request.passType !== 'BULK' || (request.qrCode && request.qrOwnerId === user.regNo))) ? (
+                  (request.passType !== 'BULK' || request.qrOwnerId === user.regNo)) ? (
                   <TouchableOpacity
                     style={[styles.quickQrButton, { backgroundColor: theme.primary + '15' }]}
                     onPress={(e) => { e.stopPropagation(); handleViewQR(request); }}

@@ -306,10 +306,12 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
                   <ThemedText style={styles.statusText}>{getStatusLabel(request.status)}</ThemedText>
                 </View>
               </View>
-              {request.status === 'APPROVED' && (
-                <TouchableOpacity style={[styles.viewQRButton, { backgroundColor: theme.primary }]} onPress={() => handleViewQR(request)}>
+              {/* QR inside card — only when this student is the receiver */}
+              {request.status === 'APPROVED' &&
+                (request.passType !== 'BULK' || request.qrOwnerId === student.regNo) && (
+                <TouchableOpacity style={[styles.viewQRButton, { backgroundColor: theme.primary }]} onPress={(e) => { e.stopPropagation(); handleViewQR(request); }}>
                   <Ionicons name="qr-code-outline" size={13} color="#FFFFFF" />
-                  <ThemedText style={styles.viewQRButtonText}>View QR</ThemedText>
+                  <ThemedText style={styles.viewQRButtonText}>View QR Code</ThemedText>
                 </TouchableOpacity>
               )}
             </TouchableOpacity>
@@ -434,7 +436,7 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 16, fontWeight: '600', marginTop: 12 },
   requestItem: { marginBottom: 12, padding: 16, borderRadius: 12, elevation: 2 },
   requestItemTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  viewQRButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 8, paddingVertical: 5, paddingHorizontal: 10, marginTop: 8, gap: 4, alignSelf: 'flex-start' },
+  viewQRButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 10, marginTop: 10, gap: 6 },
   viewQRButtonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
   requestId: { fontSize: 14, fontWeight: '700', flex: 1 },
   requestReason: { fontSize: 12, marginTop: 2 },

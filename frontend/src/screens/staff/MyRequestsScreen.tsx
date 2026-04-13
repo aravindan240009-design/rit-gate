@@ -185,6 +185,18 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
               </ThemedText>
             </View>
           )}
+          {/* QR button inside infoBox — only when this staff is the receiver */}
+          {request.status === 'APPROVED' && (
+            !isBulk || request.qrOwnerId === user.staffCode || request.requestedByStaffCode === user.staffCode
+          ) && (
+            <TouchableOpacity
+              style={[styles.qrButtonInline, { backgroundColor: theme.primary }]}
+              onPress={(e) => { e.stopPropagation(); handleViewQR(request, isBulk); }}
+            >
+              <Ionicons name="qr-code-outline" size={14} color="#fff" />
+              <ThemedText style={styles.qrButtonText}>View QR Code</ThemedText>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.cardBottomRow}>
@@ -192,15 +204,6 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
             <View style={[styles.statusDot, { backgroundColor: badge.bgColor }]} />
             <ThemedText style={[styles.statusTagText, { color: badge.bgColor }]}>{badge.text}</ThemedText>
           </View>
-          {request.status === 'APPROVED' && (
-            <TouchableOpacity
-              style={[styles.qrButton, { backgroundColor: theme.primary }]}
-              onPress={(e) => { e.stopPropagation(); handleViewQR(request, isBulk); }}
-            >
-              <Ionicons name="qr-code-outline" size={14} color="#fff" />
-              <ThemedText style={styles.qrButtonText}>View QR</ThemedText>
-            </TouchableOpacity>
-          )}
         </View>
       </TouchableOpacity>
     );
@@ -358,6 +361,7 @@ const styles = StyleSheet.create({
   statusTagText: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.4 },
   qrButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
   qrButtonText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  qrButtonInline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, borderRadius: 8, marginTop: 8 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 40, maxHeight: '85%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
