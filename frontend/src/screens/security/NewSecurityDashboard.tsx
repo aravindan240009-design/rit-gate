@@ -490,10 +490,12 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
             </TouchableOpacity>
           )}
           ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <Ionicons name="people-outline" size={64} color={theme.border} />
-              <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No active persons</ThemedText>
-            </View>
+            (!personsLoading && !refreshing) ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="people-outline" size={64} color={theme.border} />
+                <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No active persons</ThemedText>
+              </View>
+            ) : null
           }
         />
         </TopRefreshControl>
