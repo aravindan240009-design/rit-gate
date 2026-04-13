@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -218,8 +218,11 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
       .substring(0, 2);
   };
 
+  const actionInFlight = useRef(false);
+
   const handleApprove = async (id?: number, remark?: string) => {
-    if (!selectedRequest) return;
+    if (!selectedRequest || actionInFlight.current) return;
+    actionInFlight.current = true;
     const req = selectedRequest;
     setProcessing(true);
     lock('Approving request...');
@@ -243,11 +246,13 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     } finally {
       unlock();
       setProcessing(false);
+      actionInFlight.current = false;
     }
   };
 
   const handleReject = async (id?: number, remark?: string) => {
-    if (!selectedRequest) return;
+    if (!selectedRequest || actionInFlight.current) return;
+    actionInFlight.current = true;
     const req = selectedRequest;
     setProcessing(true);
     lock('Rejecting request...');
@@ -271,6 +276,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     } finally {
       unlock();
       setProcessing(false);
+      actionInFlight.current = false;
     }
   };
 

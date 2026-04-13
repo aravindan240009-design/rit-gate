@@ -308,9 +308,15 @@ public class GatePassRequestService {
         }
         
         GatePassRequest request = requestOpt.get();
+
+        // Idempotency: already approved — return as-is
+        if (request.getStaffApproval() == GatePassRequest.ApprovalStatus.APPROVED) {
+            log.info("Request {} already approved by staff — idempotent return", requestId);
+            return request;
+        }
         
         // Verify authorization
-        if (!staffCode.equals(request.getAssignedStaffCode())) {
+        if (!staffCode.equalsIgnoreCase(request.getAssignedStaffCode())) {
             throw new RuntimeException("You are not authorized to approve this request");
         }
         
@@ -398,9 +404,15 @@ public class GatePassRequestService {
         }
         
         GatePassRequest request = requestOpt.get();
+
+        // Idempotency: already approved by HOD — return as-is
+        if (request.getHodApproval() == GatePassRequest.ApprovalStatus.APPROVED) {
+            log.info("Request {} already approved by HOD — idempotent return", requestId);
+            return request;
+        }
         
         // Verify authorization
-        if (!hodCode.equals(request.getAssignedHodCode())) {
+        if (!hodCode.equalsIgnoreCase(request.getAssignedHodCode())) {
             throw new RuntimeException("You are not authorized to approve this request");
         }
         
@@ -765,9 +777,16 @@ public class GatePassRequestService {
         }
         
         GatePassRequest request = requestOpt.get();
+
+        // Idempotency: already rejected — return as-is
+        if (request.getStatus() == GatePassRequest.RequestStatus.REJECTED &&
+            request.getStaffApproval() == GatePassRequest.ApprovalStatus.REJECTED) {
+            log.info("Request {} already rejected by staff — idempotent return", requestId);
+            return request;
+        }
         
         // Verify authorization
-        if (!staffCode.equals(request.getAssignedStaffCode())) {
+        if (!staffCode.equalsIgnoreCase(request.getAssignedStaffCode())) {
             throw new RuntimeException("You are not authorized to reject this request");
         }
         
@@ -801,9 +820,16 @@ public class GatePassRequestService {
         }
         
         GatePassRequest request = requestOpt.get();
+
+        // Idempotency: already rejected — return as-is
+        if (request.getStatus() == GatePassRequest.RequestStatus.REJECTED &&
+            request.getHodApproval() == GatePassRequest.ApprovalStatus.REJECTED) {
+            log.info("Request {} already rejected by HOD — idempotent return", requestId);
+            return request;
+        }
         
         // Verify authorization
-        if (!hodCode.equals(request.getAssignedHodCode())) {
+        if (!hodCode.equalsIgnoreCase(request.getAssignedHodCode())) {
             throw new RuntimeException("You are not authorized to reject this request");
         }
         
