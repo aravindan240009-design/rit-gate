@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { NonTeachingFaculty } from '../../types';
@@ -11,7 +11,6 @@ import MyRequestsBulkModal from '../../components/MyRequestsBulkModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
-import { getRelativeTime, formatDateShort } from '../../utils/dateUtils';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
 
@@ -22,28 +21,29 @@ interface NTFMyRequestsScreenProps {
 
 const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack }) => {
   const { theme } = useTheme();
-  const [requests, setRequests] = useState<any[]>([]);
+  const [allRequests, setAllRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showBulkModal, setShowBulkModal] = useState(false);
-  const [selectedBulkId, setSelectedBulkId] = useState<number | null>(null);
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [manualCode, setManualCode] = useState<string | null>(null);
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [selectedBulkId, setSelectedBulkId] = useState<number | null>(null);
 
-  useEffect(() => { fetchRequests(); }, []);
+  const getRequestDate = (r: any) =>
+    r.passType === 'BULK' ? (r.exitDateTime || r.createdAt || r.requestDate) : (r.requestDate || r.createdAt);
+  const isUsedRequest = (r: any) => r.qrUsed === true || r.status === 'USED' || r.status === 'EXITED';
 
   const fetchRequests = async () => {
     try {
       const res = await apiService.getNTFOwnGatePassRequests(user.staffCode);
       const all: any[] = (res as any).requests || res.data || [];
-      const isUsed = (r: any) => r.qrUsed === true || r.status === 'USED' || r.status === 'EXITED';
       const filtered = all
-        .filter(r => !isUsed(r))
-        .sort((a, b) => new Date(b.requestDate || b.createdAt).getTime() - new Date(a.requestDate || a.createdAt).getTime());
-      setRequests(filtered);
+        .filter(r => !isUsedRequest(r))
+        .sort((a, b) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
+      setAllRequests(filtered);
     } catch (e) {
       console.error('NTF my requests error:', e);
     } finally {
@@ -52,16 +52,31 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack 
     }
   };
 
-  const onRefresh = () => {
-    console.log('🔄 [REFRESH] NTF/MyRequests'); setRefreshing(true); fetchRequests(); };
+  useEffect(() => { fetchRequests(); }, []);
 
-  const getInitials = (name: string) =>
-    name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  const onRefresh = useCallback(() => {
+    console.log('🔄 [REFRESH] NTF/MyRequests');
+    setRefreshing(true);
+    setLoading(false);
+    fetchRequests();
+  }, []);
 
-  const getStatusStyle = (status: string) => {
-    if (status === 'APPROVED') return { bg: '#DCFCE7', text: '#16A34A', dot: '#16A34A', label: 'ACTIVE' };
-    if (status === 'REJECTED') return { bg: '#FEE2E2', text: '#DC2626', dot: '#DC2626', label: 'REJECTED' };
-    return { bg: '#FEF9C3', text: '#CA8A04', dot: '#CA8A04', label: 'PENDING' };
+  const getStatusBadge = (status: string) => {
+    if (status === 'APPROVED') return { text: 'ACTIVE', bgColor: theme.success };
+    if (status === 'REJECTED') return { text: 'REJECTED', bgColor: theme.error };
+    return { text: 'PENDING', bgColor: theme.warning };
+  };
+
+  const formatDate = (d: string) =>
+    new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+
+  const getTimeAgo = (d: string) => {
+    const diffMs = new Date().getTime() - new Date(d).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${Math.floor(diffHours / 24)}d ago`;
   };
 
   const handleViewQR = async (req: any) => {
@@ -71,23 +86,95 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack 
     setShowQRModal(true);
     try {
       const res = await apiService.getGatePassQRCode(req.id, user.staffCode, true);
-      if (res.success && res.qrCode) {
-        setQrCodeData(res.qrCode);
-        if (res.manualCode) setManualCode(res.manualCode);
-      } else {
-        setShowQRModal(false);
-      }
-    } catch {
-      setShowQRModal(false);
-    }
+      if (res.success && res.qrCode) { setQrCodeData(res.qrCode); setManualCode(res.manualCode || null); }
+      else setShowQRModal(false);
+    } catch { setShowQRModal(false); }
   };
 
+  const handleReviewRequest = (req: any) => {
+    if (req.passType === 'BULK') { setSelectedBulkId(req.id); setShowBulkModal(true); }
+    else { setSelectedRequest(req); setShowDetailModal(true); }
+  };
+
+  const renderCard = (request: any) => {
+    const badge = getStatusBadge(request.status);
+    const isBulk = request.passType === 'BULK';
+    const name = user.staffName || 'Staff';
+    const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+    const dateStr = getRequestDate(request);
+
+    return (
+      <TouchableOpacity style={[styles.requestCard, { backgroundColor: theme.surface }]} onPress={() => handleReviewRequest(request)} activeOpacity={0.85}>
+        <View style={styles.cardTopRow}>
+          <View style={[styles.avatarCircle, { backgroundColor: theme.warning + '22' }]}>
+            <ThemedText style={[styles.avatarText, { color: theme.warning }]}>{initials}</ThemedText>
+          </View>
+          <View style={styles.cardNameBlock}>
+            <View style={styles.cardNameRow}>
+              <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>
+              <View style={[styles.typePillInline, { backgroundColor: theme.inputBackground }]}>
+                <ThemedText style={[styles.typePillInlineText, { color: theme.textSecondary }]}>{isBulk ? 'Bulk Pass' : 'Single Pass'}</ThemedText>
+              </View>
+            </View>
+            <ThemedText style={[styles.cardSubtitle, { color: theme.textSecondary }]}>NTF • {user.department || 'Department'}</ThemedText>
+          </View>
+          <ThemedText style={[styles.cardTimeAgo, { color: theme.textTertiary }]}>{getTimeAgo(dateStr)}</ThemedText>
+        </View>
+
+        <View style={[styles.infoBox, { backgroundColor: theme.inputBackground }]}>
+          <View style={styles.infoBoxRow}>
+            <Ionicons name="document-text-outline" size={16} color={theme.textSecondary} />
+            <ThemedText style={[styles.infoBoxText, { color: theme.text }]} numberOfLines={1}>{request.purpose || request.reason || 'Gate Pass Request'}</ThemedText>
+          </View>
+          <View style={styles.infoBoxRow}>
+            <Ionicons name="calendar-outline" size={16} color={theme.textSecondary} />
+            <ThemedText style={[styles.infoBoxText, { color: theme.text }]}>{formatDate(dateStr)}</ThemedText>
+          </View>
+          {isBulk && (
+            <View style={styles.infoBoxRow}>
+              <Ionicons name="people-outline" size={16} color={theme.textSecondary} />
+              <ThemedText style={[styles.infoBoxText, { color: theme.text }]}>
+                {(() => {
+                  const parts: string[] = [];
+                  if ((request.staffCount ?? 0) > 0) parts.push(`Staff - ${request.staffCount}`);
+                  if ((request.studentCount ?? 0) > 0) parts.push(`Students - ${request.studentCount}`);
+                  return parts.length > 0 ? parts.join(', ') : `${request.participantCount || 0} Participants`;
+                })()}
+              </ThemedText>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.cardBottomRow}>
+          <View style={[styles.statusTag, { backgroundColor: badge.bgColor + '22' }]}>
+            <View style={[styles.statusDot, { backgroundColor: badge.bgColor }]} />
+            <ThemedText style={[styles.statusTagText, { color: badge.bgColor }]}>{badge.text}</ThemedText>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+          <TouchableOpacity onPress={onBack} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
+          </TouchableOpacity>
+          <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
+          <View style={{ width: 40 }} />
+        </View>
+        <SkeletonList count={5} />
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: '#F1F5F9' }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: '#F1F5F9' }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surface }]} onPress={onBack}>
-          <Ionicons name="arrow-back" size={20} color={theme.text} />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+        <TouchableOpacity onPress={onBack} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
         <View style={{ width: 40 }} />
@@ -95,82 +182,20 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack 
 
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <ScreenContentContainer>
-        {(loading || refreshing) ? (
-          <SkeletonList count={5} />
-        ) : (
+        {refreshing ? <SkeletonList count={5} /> : (
           <VerticalFlatList
-            style={styles.list}
-            contentContainerStyle={styles.listContent}
+            style={[styles.content, { backgroundColor: theme.background }]}
+            data={allRequests}
+            keyExtractor={(r, i) => `${r.passType === 'BULK' ? 'bulk' : 'single'}-${r.id}-${i}`}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
-            data={requests}
-            keyExtractor={(item) => item.id?.toString()}
-            renderItem={({ item: req }) => {
-              const st = getStatusStyle(req.status);
-              return (
-                <TouchableOpacity
-                  style={styles.card}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    if (req.passType === 'BULK') {
-                      setSelectedBulkId(req.id);
-                      setShowBulkModal(true);
-                    } else if (req.status === 'APPROVED') {
-                      handleViewQR(req);
-                    } else {
-                      setSelectedRequest(req);
-                      setShowDetailModal(true);
-                    }
-                  }}
-                >
-                  {/* Top row: avatar + name + pass type + time */}
-                  <View style={styles.cardTop}>
-                    <View style={styles.avatarWrap}>
-                      <ThemedText style={styles.avatarText}>{getInitials(user.staffName)}</ThemedText>
-                    </View>
-                    <View style={styles.cardMeta}>
-                      <View style={styles.nameRow}>
-                        <ThemedText style={styles.cardName} numberOfLines={1}>{user.staffName.toUpperCase()}</ThemedText>
-                        <View style={styles.passTypePill}>
-                          <ThemedText style={styles.passTypeText}>Single Gatepass</ThemedText>
-                        </View>
-                      </View>
-                      <ThemedText style={styles.cardDept}>
-                        Non-Teaching • {user.department || 'Admin'}
-                      </ThemedText>
-                    </View>
-                    <ThemedText style={styles.timeAgo}>{getRelativeTime(req.requestDate || req.createdAt)}</ThemedText>
-                  </View>
-
-                  {/* Details block */}
-                  <View style={styles.detailsBlock}>
-                    <View style={styles.detailRow}>
-                      <Ionicons name="document-text-outline" size={15} color="#64748B" />
-                      <ThemedText style={styles.detailText}>{req.purpose || req.reason || 'Gate Pass'}</ThemedText>
-                    </View>
-                    <View style={styles.detailRow}>
-                      <Ionicons name="calendar-outline" size={15} color="#64748B" />
-                      <ThemedText style={styles.detailText}>{formatDateShort(req.requestDate || req.createdAt)}</ThemedText>
-                    </View>
-                  </View>
-
-                  {/* Status */}
-                  <View style={styles.cardFooter}>
-                    <View style={[styles.statusBadge, { backgroundColor: st.bg }]}>
-                      <View style={[styles.statusDot, { backgroundColor: st.dot }]} />
-                      <ThemedText style={[styles.statusText, { color: st.text }]}>{st.label}</ThemedText>
-                    </View>
-                    {req.status === 'APPROVED' && (
-                      <ThemedText style={styles.tapHint}>Tap to view QR</ThemedText>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              );
-            }}
+            contentContainerStyle={styles.scrollContent}
+            renderItem={({ item }) => <View>{renderCard(item)}</View>}
             ListEmptyComponent={
               <View style={styles.emptyState}>
-                <Ionicons name="document-outline" size={56} color="#CBD5E1" />
-                <ThemedText style={styles.emptyText}>No requests found</ThemedText>
+                <Ionicons name="document-text-outline" size={64} color={theme.textTertiary} />
+                <ThemedText style={[styles.emptyStateText, { color: theme.text }]}>No requests found</ThemedText>
+                <ThemedText style={[styles.emptyStateSubtext, { color: theme.textSecondary }]}>Your requests will appear here</ThemedText>
               </View>
             }
           />
@@ -178,42 +203,42 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack 
       </ScreenContentContainer>
       </TopRefreshControl>
 
+      {/* NTF: direct to HR — no HOD step */}
       <SinglePassDetailsModal
         visible={showDetailModal}
-        onClose={() => { setShowDetailModal(false); setSelectedRequest(null); }}
+        onClose={() => setShowDetailModal(false)}
         request={selectedRequest}
         viewerRole="staff"
-        onApprove={undefined}
-        onReject={undefined}
+        onViewQR={(req) => handleViewQR(req)}
         timelineSteps={selectedRequest ? (() => {
           const s = selectedRequest.status;
-          const hrDone = s === 'APPROVED';
-          const hrRejected = s === 'REJECTED';
+          const approved = s === 'APPROVED';
+          const rejected = s === 'REJECTED';
           return [
             { label: 'Request Submitted', status: 'done' as const },
-            { label: 'HR Approval', status: hrDone ? 'done' as const : hrRejected ? 'rejected' as const : 'pending' as const, remark: selectedRequest.hrRemark || (hrRejected ? selectedRequest.rejectionReason : undefined) },
+            { label: 'HR Approval', status: approved ? 'done' as const : rejected ? 'rejected' as const : 'pending' as const, remark: selectedRequest.hrRemark || (rejected ? selectedRequest.rejectionReason : undefined) },
           ];
         })() : []}
-      />
-
-      <MyRequestsBulkModal
-        visible={showBulkModal}
-        onClose={() => { setShowBulkModal(false); setSelectedBulkId(null); }}
-        requestId={selectedBulkId || 0}
-        userRole="STAFF"
-        viewerRole="STAFF"
-        currentUserId={user.staffCode}
-        requesterInfo={{ name: user.staffName || 'Staff', role: 'NTF', department: user.department || '' }}
       />
 
       <GatePassQRModal
         visible={showQRModal}
         onClose={() => setShowQRModal(false)}
+        personName={user.staffName || 'Staff'}
+        personId={user.staffCode}
         qrCodeData={qrCodeData}
         manualCode={manualCode}
-        personName={user.staffName}
-        personId={user.staffCode}
         reason={selectedRequest?.reason || selectedRequest?.purpose}
+      />
+
+      <MyRequestsBulkModal
+        visible={showBulkModal}
+        onClose={() => setShowBulkModal(false)}
+        requestId={selectedBulkId || 0}
+        userRole="STAFF"
+        viewerRole="STAFF"
+        currentUserId={user.staffCode}
+        requesterInfo={{ name: user.staffName || 'Staff', role: 'NTF', department: user.department || '' }}
       />
     </SafeAreaView>
   );
@@ -221,34 +246,32 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack 
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
-  backBtn: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', elevation: 1 },
-  headerTitle: { fontSize: 17, fontWeight: '700' },
-  loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  list: { flex: 1 },
-  listContent: { padding: 14, paddingBottom: 24, gap: 12 },
-  card: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 14, elevation: 1, gap: 10 },
-  cardTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  avatarWrap: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#FDE68A', alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 14, fontWeight: '800', color: '#92400E' },
-  cardMeta: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  cardName: { fontSize: 13, fontWeight: '800', color: '#0F172A' },
-  passTypePill: { backgroundColor: '#F1F5F9', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
-  passTypeText: { fontSize: 11, color: '#64748B', fontWeight: '600' },
-  cardDept: { fontSize: 12, color: '#64748B', marginTop: 2 },
-  timeAgo: { fontSize: 12, color: '#94A3B8' },
-  detailsBlock: { backgroundColor: '#F8FAFC', borderRadius: 10, padding: 10, gap: 6 },
-  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  detailText: { fontSize: 13, color: '#334155' },
-  cardFooter: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
-  statusDot: { width: 7, height: 7, borderRadius: 4 },
-  statusText: { fontSize: 12, fontWeight: '700' },
-  viewQRText: { color: '#FFF', fontSize: 12, fontWeight: '700' },
-  tapHint: { fontSize: 12, color: '#64748B', fontStyle: 'italic' },
-  emptyState: { alignItems: 'center', paddingTop: 60, gap: 8 },
-  emptyText: { fontSize: 15, fontWeight: '600', color: '#94A3B8' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
+  backButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  headerTitle: { fontSize: 18, fontWeight: '700' },
+  content: { flex: 1 },
+  scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 100 },
+  emptyState: { paddingVertical: 80, alignItems: 'center' },
+  emptyStateText: { fontSize: 18, fontWeight: '600', marginTop: 16 },
+  emptyStateSubtext: { fontSize: 14, marginTop: 8 },
+  requestCard: { borderRadius: 16, padding: 16, marginBottom: 12, elevation: 2 },
+  cardTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 12 },
+  avatarCircle: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  avatarText: { fontSize: 18, fontWeight: '700' },
+  cardNameBlock: { flex: 1 },
+  cardNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  cardName: { fontSize: 16, fontWeight: '700', flexShrink: 1 },
+  typePillInline: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  typePillInlineText: { fontSize: 10, fontWeight: '700', letterSpacing: 0.2 },
+  cardSubtitle: { fontSize: 13, marginTop: 2 },
+  cardTimeAgo: { fontSize: 12, flexShrink: 0 },
+  infoBox: { borderRadius: 12, padding: 16, marginBottom: 12, gap: 12 },
+  infoBoxRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  infoBoxText: { fontSize: 15, fontWeight: '500', flexShrink: 1 },
+  cardBottomRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  statusTag: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, gap: 6 },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusTagText: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.4 },
 });
 
 export default NTFMyRequestsScreen;
