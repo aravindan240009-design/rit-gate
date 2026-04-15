@@ -370,28 +370,31 @@ public class HODController {
     
     // ==================== HOD BULK GATE PASS ENDPOINTS ====================
     
-    // Resolve all departments this HOD has control over (via students.hod column)
+    // Resolve all departments this HOD has control over
+    // A HOD can be HOD of multiple departments — find all rows in departments table with this staff_code
     private List<String> getHODDepartments(String hodCode) {
-        HOD hod = hodRepository.findByHodCode(hodCode)
-            .orElseThrow(() -> new RuntimeException("HOD not found"));
-        String hodName = hod.getHodName();
+        // Find all department rows where staff_code = hodCode (HOD of multiple depts)
+        List<HOD> allHodRows = hodRepository.findAll().stream()
+            .filter(h -> hodCode.equalsIgnoreCase(h.getHodCode()))
+            .collect(Collectors.toList());
 
-        // Find all departments where this staff member's name appears in students.hod
-        List<String> allHodDepts = studentRepository.findAll().stream()
-            .filter(s -> s.getHod() != null && !s.getHod().isBlank() && s.getDepartment() != null)
-            .filter(s -> {
-                String cleaned = s.getHod().split("/")[0].trim().replaceAll("(?i)^dr\\.?\\s*", "").trim();
-                return cleaned.equalsIgnoreCase(hodName) || hodName.toLowerCase().contains(cleaned.toLowerCase());
-            })
-            .map(Student::getDepartment)
+        List<String> depts = allHodRows.stream()
+            .map(HOD::getDepartment)
+            .filter(d -> d != null && !d.isBlank())
             .distinct()
             .collect(Collectors.toList());
 
-        // Always include the HOD's own staff department as fallback
-        if (allHodDepts.isEmpty() && hod.getDepartment() != null) {
-            allHodDepts = java.util.Arrays.asList(hod.getDepartment());
+        if (depts.isEmpty()) {
+            // Fallback: use the single department from the HOD's own row
+            hodRepository.findByHodCode(hodCode).ifPresent(h -> {
+                if (h.getDepartment() != null && !h.getDepartment().isBlank()) {
+                    depts.add(h.getDepartment());
+                }
+            });
         }
-        return allHodDepts;
+
+        log.info("HOD {} controls departments: {}", hodCode, depts);
+        return depts;
     }
 
     // Get all students across all departments this HOD controls
@@ -399,17 +402,18 @@ public class HODController {
     public ResponseEntity<?> getDepartmentStudents(@PathVariable String hodCode) {
         try {
             List<String> hodDepts = getHODDepartments(hodCode);
-            log.info("HOD {} controls departments: {}", hodCode, hodDepts);
+            log.info("HOD {} fetching students for departments: {}", hodCode, hodDepts);
 
-            List<Map<String, Object>> students = studentRepository.findAll().stream()
-                .filter(s -> s.getDepartment() != null && hodDepts.contains(s.getDepartment()) && s.getIsActive())
+            List<Map<String, Object>> students = hodDepts.stream()
+                .flatMap(dept -> studentRepository.findByDepartment(dept).stream())
+                .filter(s -> s.getIsActive())
+                .distinct()
                 .map(s -> {
                     Map<String, Object> m = new HashMap<>();
-                    m.put("id", s.getId());
+                    m.put("id", s.getRegNo());
                     m.put("regNo", s.getRegNo());
                     m.put("fullName", s.getFullName());
                     m.put("department", s.getDepartment());
-                    // Convert semester to year (1-2→1, 3-4→2, 5-6→3, 7-8→4)
                     String yearStr = "";
                     if (s.getSemester() != null) {
                         int yr = (int) Math.ceil(s.getSemester() / 2.0);
@@ -422,6 +426,7 @@ public class HODController {
                 })
                 .collect(Collectors.toList());
 
+            log.info("Fetched {} students for HOD {} across depts: {}", students.size(), hodCode, hodDepts);
             return ResponseEntity.ok(Map.of("success", true, "students", students, "count", students.size()));
         } catch (Exception e) {
             log.error("Error fetching HOD students", e);
@@ -439,13 +444,15 @@ public class HODController {
                 .orElseThrow(() -> new RuntimeException("HOD not found"));
             String hodName = hod.getHodName() != null ? hod.getHodName().trim().toLowerCase() : "";
 
-            List<Map<String, Object>> staff = staffRepository.findAll().stream()
-                .filter(s -> s.getDepartment() != null && hodDepts.contains(s.getDepartment()) && s.getIsActive())
+            List<Map<String, Object>> staff = hodDepts.stream()
+                .flatMap(dept -> staffRepository.findByDepartment(dept).stream())
+                .filter(s -> s.getIsActive())
                 .filter(s -> !s.getStaffCode().equalsIgnoreCase(hodCode))
                 .filter(s -> s.getStaffName() == null || !s.getStaffName().trim().toLowerCase().equals(hodName))
+                .distinct()
                 .map(s -> {
                     Map<String, Object> staffMap = new HashMap<>();
-                    staffMap.put("id", s.getId());
+                    staffMap.put("id", s.getStaffCode());
                     staffMap.put("staffCode", s.getStaffCode());
                     staffMap.put("fullName", s.getStaffName());
                     staffMap.put("department", s.getDepartment());

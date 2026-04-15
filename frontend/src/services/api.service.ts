@@ -57,50 +57,58 @@ class ApiService {
 
   async checkBackendStatus(): Promise<boolean> { return true; }
 
-  // ── Core request — single attempt, 120s timeout ───────────────────────────
+  // ── Core request — up to 2 attempts, 120s timeout ────────────────────────
   private async makeRequest(url: string, options: RequestInit): Promise<any> {
     console.log(`📡 ${options.method || 'GET'} ${url}`);
     const t0 = Date.now();
-
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), API_CONFIG.TIMEOUT);
-
-    // Attach time headers to every request for server-side drift validation
     const { timeHeaders } = require('../utils/timeUtils');
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...timeHeaders(),
+      ...options.headers,
+    };
 
-    try {
-      const res = await fetch(url, {
-        ...options,
-        signal: ctrl.signal,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          ...timeHeaders(),
-          ...options.headers,
-        },
-      });
-      clearTimeout(timer);
-      console.log(`✅ ${res.status} in ${Date.now() - t0}ms`);
+    const attempt = async (): Promise<any> => {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), API_CONFIG.TIMEOUT);
+      try {
+        const res = await fetch(url, { ...options, signal: ctrl.signal, headers });
+        clearTimeout(timer);
+        console.log(`✅ ${res.status} in ${Date.now() - t0}ms`);
 
-      let data: any;
-      try { data = await res.json(); } catch { data = {}; }
+        let data: any;
+        try { data = await res.json(); } catch { data = {}; }
 
-      if (!res.ok) {
-        // If backend returned a structured error, surface it
-        if (data && typeof data === 'object' && 'success' in data) return data;
-        // Scan endpoint returns accessGranted:false on 403 — convert to standard shape
-        if (data && typeof data === 'object' && 'accessGranted' in data) {
-          return { success: false, message: data.message || 'Access denied', ...data };
+        if (!res.ok) {
+          if (data && typeof data === 'object' && 'success' in data) return data;
+          if (data && typeof data === 'object' && 'accessGranted' in data) {
+            return { success: false, message: data.message || 'Access denied', ...data };
+          }
+          const errMsg = (data && (data.message || data.error || data.errorMessage)) || 'Something went wrong. Please try again.';
+          throw new Error(errMsg);
         }
-        // Extract a clean message from the response — never expose raw JSON to the user
-        const errMsg = (data && (data.message || data.error || data.errorMessage)) || 'Something went wrong. Please try again.';
-        throw new Error(errMsg);
+        return data;
+      } catch (err: any) {
+        clearTimeout(timer);
+        if (err.name === 'AbortError') {
+          throw new Error('Server is starting up (Render free tier). Please wait ~60s and try again.');
+        }
+        throw err;
       }
-      return data;
+    };
+
+    // Retry once on network errors / 5xx (not on 4xx)
+    try {
+      return await attempt();
     } catch (err: any) {
-      clearTimeout(timer);
-      if (err.name === 'AbortError') {
-        throw new Error('Server is starting up (Render free tier). Please wait ~60s and try again.');
+      const msg = err?.message || '';
+      const isRetryable = msg.includes('502') || msg.includes('503') || msg.includes('504') ||
+        msg.includes('Network') || msg.includes('fetch') || msg.includes('network');
+      if (isRetryable) {
+        console.log(`🔄 Retrying after error: ${msg}`);
+        await new Promise(r => setTimeout(r, 1500));
+        return await attempt();
       }
       throw err;
     }
