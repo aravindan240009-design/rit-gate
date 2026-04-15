@@ -372,18 +372,16 @@ public class HODController {
     
     // Resolve all departments this HOD has control over
     private List<String> getHODDepartments(String hodCode) {
-        // Find all department rows where staff_code = hodCode (HOD of multiple depts)
         List<String> depts = hodRepository.findAll().stream()
-            .filter(h -> hodCode.equalsIgnoreCase(h.getHodCode()))
+            .filter(h -> h != null && h.getHodCode() != null && hodCode.equalsIgnoreCase(h.getHodCode()))
             .map(HOD::getDepartment)
             .filter(d -> d != null && !d.isBlank())
             .distinct()
             .collect(Collectors.toCollection(java.util.ArrayList::new));
 
         if (depts.isEmpty()) {
-            // Fallback: use the single department from the HOD's own row
             hodRepository.findByHodCode(hodCode).ifPresent(h -> {
-                if (h.getDepartment() != null && !h.getDepartment().isBlank()) {
+                if (h != null && h.getDepartment() != null && !h.getDepartment().isBlank()) {
                     depts.add(h.getDepartment());
                 }
             });
@@ -402,8 +400,7 @@ public class HODController {
 
             List<Map<String, Object>> students = hodDepts.stream()
                 .flatMap(dept -> studentRepository.findByDepartment(dept).stream())
-                .filter(s -> s.getIsActive())
-                .distinct()
+                .filter(s -> s != null && s.getIsActive())
                 .map(s -> {
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", s.getRegNo());
@@ -442,10 +439,9 @@ public class HODController {
 
             List<Map<String, Object>> staff = hodDepts.stream()
                 .flatMap(dept -> staffRepository.findByDepartment(dept).stream())
-                .filter(s -> s.getIsActive())
+                .filter(s -> s != null && s.getIsActive())
                 .filter(s -> !s.getStaffCode().equalsIgnoreCase(hodCode))
                 .filter(s -> s.getStaffName() == null || !s.getStaffName().trim().toLowerCase().equals(hodName))
-                .distinct()
                 .map(s -> {
                     Map<String, Object> staffMap = new HashMap<>();
                     staffMap.put("id", s.getStaffCode());
