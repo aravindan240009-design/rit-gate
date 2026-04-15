@@ -49,6 +49,13 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
         userType="HR"
         onBack={() => setActiveTab('DASHBOARD')}
         onLogout={onLogout}
+        showBottomNav={true}
+        onTabChange={(tab) => {
+          if (tab === 'HOME') setActiveTab('DASHBOARD');
+          else if (tab === 'REQUESTS') setActiveTab('MY_REQUESTS');
+          else if (tab === 'NEW_PASS') setActiveTab('DASHBOARD');
+          else if (tab === 'PROFILE') { /* already here */ }
+        }}
       />
     );
   }

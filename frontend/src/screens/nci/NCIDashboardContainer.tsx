@@ -34,6 +34,13 @@ const NCIDashboardContainer: React.FC<NCIDashboardContainerProps> = ({ nci, onLo
         userType="STAFF"
         onBack={() => setActiveTab('DASHBOARD')}
         onLogout={onLogout}
+        showBottomNav={true}
+        onTabChange={(tab) => {
+          if (tab === 'HOME') setActiveTab('DASHBOARD');
+          else if (tab === 'REQUESTS') onNavigate('NCI_MY_REQUESTS' as any);
+          else if (tab === 'NEW_PASS') setActiveTab('DASHBOARD');
+          else if (tab === 'PROFILE') { /* already here */ }
+        }}
       />
     );
   }

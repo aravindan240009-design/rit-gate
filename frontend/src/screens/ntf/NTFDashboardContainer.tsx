@@ -36,6 +36,13 @@ const NTFDashboardContainer: React.FC<NTFDashboardContainerProps> = ({ ntf, onLo
         userType="STAFF"
         onBack={() => setActiveTab('DASHBOARD')}
         onLogout={onLogout}
+        showBottomNav={true}
+        onTabChange={(tab) => {
+          if (tab === 'HOME') setActiveTab('DASHBOARD');
+          else if (tab === 'REQUESTS') onNavigate('NTF_MY_REQUESTS' as any);
+          else if (tab === 'NEW_PASS') setActiveTab('DASHBOARD');
+          else if (tab === 'PROFILE') { /* already here */ }
+        }}
       />
     );
   }

@@ -46,6 +46,13 @@ const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
         userType="HOD"
         onBack={() => setActiveTab('DASHBOARD')}
         onLogout={onLogout}
+        showBottomNav={true}
+        onTabChange={(tab) => {
+          if (tab === 'HOME') setActiveTab('DASHBOARD');
+          else if (tab === 'REQUESTS') onNavigate('HOD_MY_REQUESTS' as any);
+          else if (tab === 'NEW_PASS') setActiveTab('DASHBOARD');
+          else if (tab === 'PROFILE') { /* already here */ }
+        }}
       />
     );
   }

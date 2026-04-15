@@ -36,7 +36,7 @@ interface ProfileScreenProps {
   onBack: () => void;
   onLogout: () => void;
   showBottomNav?: boolean;
-  onTabChange?: (tab: 'HOME' | 'REQUESTS' | 'HISTORY' | 'PROFILE') => void;
+  onTabChange?: (tab: string) => void;
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ 
@@ -220,29 +220,87 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().substring(0, 2);
   };
 
+  const renderBottomNav = (tabChange: (tab: string) => void) => {
+    const isStudent = userType.toUpperCase() === 'STUDENT';
+    if (isStudent) {
+      return (
+        <>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HOME')}>
+            <Ionicons name="home-outline" size={24} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('REQUESTS')}>
+            <Ionicons name="document-text-outline" size={24} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Requests</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HISTORY')}>
+            <Ionicons name="time-outline" size={24} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>History</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="person" size={24} color={theme.primary} />
+            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>Profile</ThemedText>
+            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+          </TouchableOpacity>
+        </>
+      );
+    }
+    // Staff / HOD / HR / NCI / NTF
+    return (
+      <>
+        <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HOME')}>
+          <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => tabChange('NEW_PASS')}>
+          <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => tabChange('REQUESTS')}>
+          <Ionicons name="list-outline" size={22} color={theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>My Requests</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons name="person" size={22} color={theme.primary} />
+          <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>Profile</ThemedText>
+          <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+        </TouchableOpacity>
+      </>
+    );
+  };
+
   if (initialLoading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
         <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={onBack} style={[styles.backButton, { backgroundColor: theme.surface }]}>
-            <Ionicons name="arrow-back" size={24} color={theme.text} />
-          </TouchableOpacity>
-        </View>
+        {!showBottomNav && (
+          <View style={styles.topBar}>
+            <TouchableOpacity onPress={onBack} style={[styles.backButton, { backgroundColor: theme.surface }]}>
+              <Ionicons name="arrow-back" size={24} color={theme.text} />
+            </TouchableOpacity>
+          </View>
+        )}
         <ScreenContentContainer>
           <ProfileSkeleton />
         </ScreenContentContainer>
+        {showBottomNav && onTabChange && (
+          <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+            {renderBottomNav(onTabChange)}
+          </View>
+        )}
       </SafeAreaView>
     );
   }
 
   return (    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={onBack} style={[styles.backButton, { backgroundColor: theme.surface }]}>
-          <Ionicons name="arrow-back" size={24} color={theme.text} />
-        </TouchableOpacity>
-      </View>
+      {!showBottomNav && (
+        <View style={styles.topBar}>
+          <TouchableOpacity onPress={onBack} style={[styles.backButton, { backgroundColor: theme.surface }]}>
+            <Ionicons name="arrow-back" size={24} color={theme.text} />
+          </TouchableOpacity>
+        </View>
+      )}
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <ScreenContentContainer>
       <VerticalScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} nestedScrollEnabled scrollEnabled={outerScrollEnabled}>
@@ -337,10 +395,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
       {showBottomNav && onTabChange && (
         <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
-          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}><Ionicons name="home-outline" size={24} color={theme.textTertiary} /><ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText></TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('REQUESTS')}><Ionicons name="document-text-outline" size={24} color={theme.textTertiary} /><ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Requests</ThemedText></TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HISTORY')}><Ionicons name="time-outline" size={24} color={theme.textTertiary} /><ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>History</ThemedText></TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('PROFILE')}><Ionicons name="person" size={24} color={theme.primary} /><ThemedText style={[styles.navLabelActive, { color: theme.primary }]}>Profile</ThemedText><View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} /></TouchableOpacity>
+          {renderBottomNav(onTabChange)}
         </View>
       )}
       </TopRefreshControl>

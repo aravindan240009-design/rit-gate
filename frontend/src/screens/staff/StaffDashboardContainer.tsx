@@ -47,6 +47,13 @@ const StaffDashboardContainer: React.FC<StaffDashboardContainerProps> = ({
         userType="STAFF"
         onBack={() => setActiveTab('DASHBOARD')}
         onLogout={onLogout}
+        showBottomNav={true}
+        onTabChange={(tab) => {
+          if (tab === 'HOME') setActiveTab('DASHBOARD');
+          else if (tab === 'REQUESTS') onNavigate('MY_REQUESTS' as any);
+          else if (tab === 'NEW_PASS') setActiveTab('DASHBOARD'); // dashboard has the new pass button
+          else if (tab === 'PROFILE') { /* already here */ }
+        }}
       />
     );
   }
