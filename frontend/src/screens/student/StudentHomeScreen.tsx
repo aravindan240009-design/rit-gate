@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   StatusBar,
   Image,
   Modal,
-  TextInput,
-  FlatList,
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -33,7 +30,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
-import { StatsSkeleton, SkeletonList } from '../../components/SkeletonCard';
+import { SkeletonList } from '../../components/SkeletonCard';
 
 
 interface StudentHomeScreenProps {
@@ -60,11 +57,6 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   const { profileImage } = useProfile();
   const [recentRequests, setRecentRequests] = useState<any[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    entries: 0,
-    exits: 0,
-  });
-  const [statsLoading, setStatsLoading] = useState(true);
   const [showQRModal, setShowQRModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
@@ -82,13 +74,6 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
   const loadData = async () => {
     try {
-      const historyResponse = await apiService.getUserEntryHistory(student.regNo);
-      const historyData = (historyResponse as any).history || historyResponse || [];
-      
-      const entries = historyData.filter((item: any) => item.type === 'ENTRY').length;
-      const exits = historyData.filter((item: any) => item.type === 'EXIT').length;
-      setStats({ entries, exits });
-
       const response = await apiService.getStudentGatePassRequests(student.regNo);
       if (response.success && response.requests) {
         const recent = response.requests
@@ -100,7 +85,6 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
       console.error('❌ Error loading data:', error);
     } finally {
       setRefreshing(false);
-      setStatsLoading(false);
       setRequestsLoading(false);
     }
   };
@@ -108,7 +92,6 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   const onRefresh = () => {
     console.log('🔄 [REFRESH] Student/Home');
     setRefreshing(true);
-    setStatsLoading(true);
     setRequestsLoading(true);
     loadData();
   };
@@ -203,7 +186,8 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
+
+      {/* Header — always visible, outside refresh control */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => onTabChange('PROFILE')}>
@@ -225,7 +209,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
             onPress={() => onNavigate('NOTIFICATIONS')}
           >
@@ -239,12 +223,10 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
         </View>
       </View>
 
+      {/* Scrollable content with pull-to-refresh */}
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
       <ScreenContentContainer>
           <View style={styles.staticHeaderContainer}>
-            {statsLoading ? (
-              <StatsSkeleton />
-            ) : null}
-
             <TouchableOpacity style={[styles.requestCard, { backgroundColor: theme.cardBackground }]} onPress={onRequestGatePass}>
               <View style={[styles.requestCardTop, { backgroundColor: theme.primary }]}>
                 <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.7)" />
@@ -264,11 +246,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
             </View>
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ flexGrow: 1 }}
-          >
-          {(requestsLoading || refreshing) ? (
+          {(requestsLoading && !refreshing) ? (
             <SkeletonList count={3} />
           ) : (
           <VerticalFlatList
@@ -281,7 +259,6 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
             contentContainerStyle={styles.scrollContent}
             renderItem={({ item: request }) => (
             <TouchableOpacity style={[styles.requestItem, { backgroundColor: theme.cardBackground }]} onPress={() => handleRequestClick(request)}>
-              {/* Row 1: pass type tag + status badge */}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                 <View style={[styles.passTypePill, { backgroundColor: request.passType === 'BULK' ? theme.primary + '20' : theme.success + '20' }]}>
                   <ThemedText style={[styles.passTypeText, { color: request.passType === 'BULK' ? theme.primary : theme.success }]}>
@@ -292,10 +269,8 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
                   <ThemedText style={styles.statusText}>{getStatusLabel(request.status)}</ThemedText>
                 </View>
               </View>
-              {/* Row 2: purpose + date */}
               <ThemedText style={[styles.requestId, { color: theme.text }]} numberOfLines={1}>{request.purpose || 'Gate Pass Request'}</ThemedText>
               <ThemedText style={[styles.requestReason, { color: theme.textSecondary }]}>{formatDate(request.requestDate)}</ThemedText>
-              {/* View QR — only for single passes where this student is the receiver */}
               {request.status === 'APPROVED' && request.passType !== 'BULK' && (
                 <TouchableOpacity style={[styles.viewQRButton, { backgroundColor: theme.primary }]} onPress={(e) => { e.stopPropagation(); handleViewQR(request); }}>
                   <Ionicons name="qr-code-outline" size={13} color="#FFFFFF" />
@@ -312,9 +287,10 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           }
         />
           )}
-          </ScrollView>
       </ScreenContentContainer>
+      </TopRefreshControl>
 
+      {/* Bottom nav — always fixed, outside refresh control */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
           <Ionicons name="home" size={24} color={theme.primary} />
@@ -334,7 +310,6 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
         </TouchableOpacity>
       </View>
-      </TopRefreshControl>
 
       <NotificationDropdown visible={showNotificationDropdown} onClose={() => setShowNotificationDropdown(false)} userId={student.regNo} userType="student" />
 

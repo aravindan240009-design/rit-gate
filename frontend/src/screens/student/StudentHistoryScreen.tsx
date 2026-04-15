@@ -16,7 +16,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
-import { SkeletonList } from '../../components/SkeletonCard';
+import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
 
 
 interface StudentHistoryScreenProps {
@@ -157,23 +157,27 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>History</ThemedText>
       </View>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <ScreenContentContainer>
         {/* Entries / Exits summary */}
-        <View style={[styles.statsCard, { backgroundColor: theme.cardBackground, margin: 16, marginBottom: 0, borderRadius: 12 }]}>
-          <View style={styles.statItem}>
-            <ThemedText style={[styles.statValue, { color: theme.text }]}>{entriesCount}</ThemedText>
-            <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ENTRIES</ThemedText>
+        {(isLoading || refreshing) ? (
+          <StatsSkeleton />
+        ) : (
+          <View style={[styles.statsCard, { backgroundColor: theme.cardBackground, margin: 16, marginBottom: 0, borderRadius: 12 }]}>
+            <View style={styles.statItem}>
+              <ThemedText style={[styles.statValue, { color: theme.text }]}>{entriesCount}</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ENTRIES</ThemedText>
+            </View>
+            <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+            <View style={styles.statItem}>
+              <ThemedText style={[styles.statValue, { color: theme.text }]}>{exitsCount}</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITS</ThemedText>
+            </View>
           </View>
-          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
-          <View style={styles.statItem}>
-            <ThemedText style={[styles.statValue, { color: theme.text }]}>{exitsCount}</ThemedText>
-            <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITS</ThemedText>
-          </View>
-        </View>
+        )}
         {(isLoading || refreshing) ? <SkeletonList count={5} /> : (
         <VerticalFlatList
           style={styles.content}

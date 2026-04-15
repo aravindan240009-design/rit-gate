@@ -202,26 +202,36 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-          <TouchableOpacity onPress={() => onBack && onBack()} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
-            <Ionicons name="arrow-back" size={24} color={theme.text} />
-          </TouchableOpacity>
           <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
-          <View style={{ width: 40 }} />
         </View>
         <SkeletonList count={5} />
+        <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+          <TouchableOpacity style={styles.navItem} onPress={() => onBack && onBack()}>
+            <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => {}}>
+            <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="list" size={22} color={theme.primary} />
+            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
+            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => {}}>
+            <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Header stays outside TopRefreshControl so back button always works */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={() => onBack && onBack()} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
-          <Ionicons name="arrow-back" size={24} color={theme.text} />
-        </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
-        <View style={{ width: 40 }} />
       </View>
 
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
@@ -252,6 +262,27 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
         )}
       </ScreenContentContainer>
       </TopRefreshControl>
+
+      {/* Bottom Navigation */}
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+        <TouchableOpacity style={styles.navItem} onPress={() => onBack && onBack()}>
+          <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons name="list" size={22} color={theme.primary} />
+          <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
+          <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
+        </TouchableOpacity>
+      </View>
 
       <SinglePassDetailsModal
         visible={showDetailModal}
@@ -317,10 +348,8 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack }) => 
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
-  backButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  header: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   headerTitle: { fontSize: 18, fontWeight: '700' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 12, fontSize: 14 },
   content: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 100 },
@@ -328,6 +357,10 @@ const styles = StyleSheet.create({
   emptyState: { paddingVertical: 80, alignItems: 'center' },
   emptyStateText: { fontSize: 18, fontWeight: '600', marginTop: 16 },
   emptyStateSubtext: { fontSize: 14, marginTop: 8 },
+  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
+  navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
+  navLabel: { fontSize: 11, marginTop: 3, fontWeight: '500' },
+  activeIndicator: { position: 'absolute', bottom: 0, width: 28, height: 3, borderRadius: 2 },
   requestCard: { borderRadius: 16, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 },
   cardTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 12 },
   avatarCircle: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },

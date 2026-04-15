@@ -102,13 +102,28 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack }) =
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-          <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-            <Ionicons name="arrow-back" size={22} color={theme.text} />
-          </TouchableOpacity>
           <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
-          <View style={{ width: 40 }} />
         </View>
         <SkeletonList count={5} />
+        <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+          <TouchableOpacity style={styles.navItem} onPress={onBack}>
+            <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="list" size={22} color={theme.primary} />
+            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
+            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -116,11 +131,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack }) =
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-          <Ionicons name="arrow-back" size={22} color={theme.text} />
-        </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
-        <View style={{ width: 40 }} />
       </View>
 
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
@@ -196,6 +207,27 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack }) =
         </ScreenContentContainer>
       </TopRefreshControl>
 
+      {/* Bottom Navigation */}
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+        <TouchableOpacity style={styles.navItem} onPress={onBack}>
+          <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons name="list" size={22} color={theme.primary} />
+          <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
+          <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
+        </TouchableOpacity>
+      </View>
+
       <SinglePassDetailsModal
         visible={showDetail}
         onClose={() => setShowDetail(false)}
@@ -220,9 +252,12 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack }) =
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  header: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
   headerTitle: { fontSize: 17, fontWeight: '700' },
+  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
+  navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
+  navLabel: { fontSize: 11, marginTop: 3, fontWeight: '500' },
+  activeIndicator: { position: 'absolute', bottom: 0, width: 28, height: 3, borderRadius: 2 },
   listContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 },
   card: { borderRadius: 16, padding: 16, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3 },
   cardTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 12 },
