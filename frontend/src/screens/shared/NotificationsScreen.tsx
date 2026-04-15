@@ -56,10 +56,10 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
       const data = await response.json();
       
       if (data.success && data.notifications) {
-        // Get latest 5 notifications
         const latest = data.notifications as Notification[];
-        const todaysOnly = latest.filter((n) => isRecent(n.timestamp || n.createdAt));
-        setNotifications(todaysOnly.slice(0, 5));
+        // Only show unread notifications (read ones are dismissed)
+        const unread = latest.filter((n) => !n.isRead && isRecent(n.timestamp || n.createdAt));
+        setNotifications(unread.slice(0, 20));
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -71,16 +71,9 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
 
   const markAsRead = async (notificationId: number) => {
     try {
-      await fetch(`${API_CONFIG.BASE_URL}/notifications/${notificationId}/read`, {
-        method: 'PUT',
-      });
-      
-      // Update local state
-      setNotifications(prev =>
-        prev.map(notif =>
-          notif.id === notificationId ? { ...notif, isRead: true } : notif
-        )
-      );
+      await fetch(`${API_CONFIG.BASE_URL}/notifications/${notificationId}/read`, { method: 'PUT' });
+      // Remove from list so it doesn't reappear
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -88,19 +81,20 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
 
   const markAllAsRead = async () => {
     try {
-      const unreadNotifs = notifications.filter(n => !n.isRead);
-      for (const notif of unreadNotifs) {
-        await fetch(`${API_CONFIG.BASE_URL}/notifications/${notif.id}/read`, {
-          method: 'PUT',
-        });
-      }
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      await fetch(`${API_CONFIG.BASE_URL}/notifications/user/${userId}/read-all`, { method: 'PUT' });
+      setNotifications([]);
     } catch (error) {
       console.error('Error marking all as read:', error);
     }
   };
 
-  const clearAllNotifications = () => {
+  const clearAllNotifications = async () => {
+    try {
+      // Delete all notifications from backend
+      await fetch(`${API_CONFIG.BASE_URL}/notifications/user/${userId}/delete-all`, { method: 'DELETE' });
+    } catch (error) {
+      console.error('Error deleting notifications:', error);
+    }
     setNotifications([]);
   };
 

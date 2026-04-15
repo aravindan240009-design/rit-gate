@@ -271,7 +271,11 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         <View style={styles.headerRight}>
           <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
             <Ionicons name="notifications-outline" size={24} color={theme.text} />
-            {unreadCount > 0 && <View style={[styles.notificationIndicator, { backgroundColor: theme.error, borderColor: theme.surface }]} />}
+            {unreadCount > 0 && (
+              <View style={[styles.notificationBadge, { backgroundColor: theme.error }]}>
+                <ThemedText style={styles.notificationBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</ThemedText>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -586,6 +590,8 @@ const styles = StyleSheet.create({
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', position: 'relative' },
   notificationIndicator: { position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: 5, borderWidth: 2 },
+  notificationBadge: { position: 'absolute', top: 4, right: 4, minWidth: 18, height: 18, borderRadius: 9, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4 },
+  notificationBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
   searchContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
   searchInput: { flex: 1, fontSize: 16 },
   statsContainer: { flexDirection: 'row', marginBottom: 16, borderRadius: 12, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },

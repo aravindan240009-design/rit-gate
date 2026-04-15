@@ -2,9 +2,11 @@ package com.example.visitor.service;
 
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.entity.Staff;
+import com.example.visitor.entity.HR;
 import com.example.visitor.entity.QRTable;
 import com.example.visitor.repository.VisitorRepository;
 import com.example.visitor.repository.StaffRepository;
+import com.example.visitor.repository.HRRepository;
 import com.example.visitor.repository.QRTableRepository;
 import com.example.visitor.service.NotificationService;
 import com.example.visitor.service.EmailService;
@@ -28,6 +30,9 @@ public class VisitorGatepassService {
     private StaffRepository staffRepository;
 
     @Autowired
+    private HRRepository hrRepository;
+
+    @Autowired
     private QRTableRepository qrTableRepository;
 
     @Autowired
@@ -42,18 +47,31 @@ public class VisitorGatepassService {
      */
     @Transactional
     public Visitor createRequest(Visitor request) throws Exception {
-        // Validate staff exists in main staff table
+        // Validate staff exists — check both teaching_staffs and non_teaching_staffs tables
         Optional<Staff> staffOpt = staffRepository.findByStaffCode(request.getStaffCode());
-        if (!staffOpt.isPresent()) {
-            throw new Exception("Staff member not found with ID: " + request.getStaffCode());
+        String staffDept = null;
+        String staffName = null;
+        String staffEmail = null;
+        if (staffOpt.isPresent()) {
+            Staff staff = staffOpt.get();
+            staffDept = staff.getDepartment();
+            staffName = staff.getStaffName();
+            staffEmail = staff.getEmail();
+        } else {
+            Optional<HR> hrOpt = hrRepository.findByHrCode(request.getStaffCode());
+            if (!hrOpt.isPresent()) {
+                throw new Exception("Staff member not found with ID: " + request.getStaffCode());
+            }
+            HR hr = hrOpt.get();
+            staffDept = hr.getDepartment();
+            staffName = hr.getHrName();
+            staffEmail = hr.getEmail();
         }
         
-        Staff staff = staffOpt.get();
-        
         // Validate department match using DepartmentMapper
-        if (staff.getDepartment() != null && request.getDepartment() != null && 
-            !DepartmentMapper.isSameDepartment(staff.getDepartment(), request.getDepartment())) {
-            throw new Exception("Department mismatch. Staff belongs to " + staff.getDepartment() + 
+        if (staffDept != null && request.getDepartment() != null && 
+            !DepartmentMapper.isSameDepartment(staffDept, request.getDepartment())) {
+            throw new Exception("Department mismatch. Staff belongs to " + staffDept + 
                               " but request is for " + request.getDepartment());
         }
         
@@ -77,8 +95,7 @@ public class VisitorGatepassService {
         // Notify and email assigned staff (keeps visitor workflow consistent with UnifiedVisitorService).
         try {
             String staffId = savedRequest.getStaffCode();
-            String staffName = staff.getStaffName();
-            String staffEmail = staff.getEmail();
+            // staffName and staffEmail are already resolved above
 
             notificationService.createUserNotification(
                 staffId,
@@ -88,17 +105,19 @@ public class VisitorGatepassService {
                 "HIGH"
             );
 
-            emailService.sendApprovalRequestEmail(
-                staffEmail,
-                staffName,
-                savedRequest.getName(),
-                savedRequest.getEmail(),
-                savedRequest.getPhone(),
-                savedRequest.getPurpose(),
-                savedRequest.getNumberOfPeople(),
-                savedRequest.getDepartment(),
-                savedRequest.getId()
-            );
+            if (staffEmail != null && !staffEmail.isBlank()) {
+                emailService.sendApprovalRequestEmail(
+                    staffEmail,
+                    staffName,
+                    savedRequest.getName(),
+                    savedRequest.getEmail(),
+                    savedRequest.getPhone(),
+                    savedRequest.getPurpose(),
+                    savedRequest.getNumberOfPeople(),
+                    savedRequest.getDepartment(),
+                    savedRequest.getId()
+                );
+            }
         } catch (Exception ignored) {
             // Notifications/emails should not break the core gatepass request creation.
         }
@@ -214,7 +233,8 @@ public class VisitorGatepassService {
         if (creatorStaffCode == null || creatorStaffCode.isBlank()) {
             throw new Exception("creatorStaffCode is required");
         }
-        if (!staffRepository.findByStaffCode(creatorStaffCode).isPresent()) {
+        if (!staffRepository.findByStaffCode(creatorStaffCode).isPresent()
+                && !hrRepository.findByHrCode(creatorStaffCode).isPresent()) {
             throw new Exception("Creator staff not found: " + creatorStaffCode);
         }
         String role = creatorRole != null ? creatorRole.trim().toUpperCase() : "STAFF";

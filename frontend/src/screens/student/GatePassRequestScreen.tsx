@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   TextInput,
   StatusBar,
-  Animated,
   Image,
   Dimensions,
   BackHandler,
@@ -16,7 +14,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import ImagePicker from '../../utils/safeImagePicker';
 import * as DocumentPicker from '../../shims/expoDocumentPicker';
 import LinearGradient from 'react-native-linear-gradient';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Student, Staff, HOD } from '../../types';
 import { apiService } from '../../services/api';
@@ -24,6 +21,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useActionLock } from '../../context/ActionLockContext';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 
@@ -41,45 +39,47 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
   const { withLock, isLocked } = useActionLock();
   const [purpose, setPurpose] = useState('');
   const [reason, setReason] = useState('');
-  const [requestDate, setRequestDate] = useState(new Date());
   const [attachment, setAttachment] = useState<any>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
 
   const isImageAttachment = !!attachment?.name?.toLowerCase?.().match(/\.(jpg|jpeg|png|gif|webp)$/);
 
   const getUserDisplayName = () => {
     if (!user) return { fullName: 'User', firstLetter: 'U' };
     if ('firstName' in user) {
-        return { fullName: `${user.firstName} ${user.lastName || ''}`, firstLetter: user.firstName.charAt(0) };
+      return { fullName: `${user.firstName} ${user.lastName || ''}`, firstLetter: user.firstName.charAt(0) };
     }
     const name = (user as any).staffName || (user as any).hodName || 'User';
     return { fullName: name, firstLetter: name.charAt(0) };
   };
 
-  const getUserIdentifier = () => {
-    if (!user) return 'UNKNOWN';
-    return (user as any).regNo || (user as any).staffCode || (user as any).hodCode || 'UNKNOWN';
-  };
-
   const userInfo = getUserDisplayName();
-  
+
   const handleGoBack = () => {
     if (navigation?.goBack) navigation.goBack();
     else if (onBack) onBack();
   };
 
+  const confirmGoBack = () => {
+    if (purpose.trim() || reason.trim() || attachment) {
+      setShowBackConfirm(true);
+    } else {
+      handleGoBack();
+    }
+  };
+
   useEffect(() => {
     const onBackPress = () => {
-      handleGoBack();
+      confirmGoBack();
       return true;
     };
     const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
     return () => subscription.remove();
-  }, [handleGoBack]);
+  }, [purpose, reason, attachment]);
 
   useEffect(() => {
     if (!user) {
@@ -87,24 +87,6 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
       setShowErrorModal(true);
     }
   }, [user]);
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      const newDate = new Date(requestDate);
-      newDate.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-      setRequestDate(newDate);
-    }
-  };
-
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      const newDate = new Date(requestDate);
-      newDate.setHours(selectedTime.getHours(), selectedTime.getMinutes());
-      setRequestDate(newDate);
-    }
-  };
 
   const pickDocument = async () => {
     try {
@@ -143,36 +125,29 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
     }
   };
 
-  const handleSubmit = async () => {
-    if (isLocked) return;
-    if (!purpose.trim() || !reason.trim()) {
-      setErrorMessage('Please provide purpose and reason.');
-      setShowErrorModal(true);
-      return;
-    }
+  const doSubmit = async () => {
     const staffCode = (user as any).staffCode || ((user as any).userId && !(user as any).regNo && !(user as any).hodCode ? (user as any).userId : undefined);
     const hodCode = (user as any).hodCode;
     const regNo = (user as any).regNo;
     const isStaff = !!staffCode;
     const isHOD = !staffCode && !!hodCode;
     const identifier = staffCode || hodCode || regNo;
+    const requestDate = new Date().toISOString();
     const payload = isStaff
-      ? { staffCode: identifier, purpose: purpose.trim(), reason: reason.trim(), requestDate: requestDate.toISOString(), attachmentUri: attachment?.base64Uri }
+      ? { staffCode: identifier, purpose: purpose.trim(), reason: reason.trim(), requestDate, attachmentUri: attachment?.base64Uri }
       : isHOD
-      ? { staffCode: identifier, purpose: purpose.trim(), reason: reason.trim(), requestDate: requestDate.toISOString(), attachmentUri: attachment?.base64Uri }
-      : { regNo: identifier, purpose: purpose.trim(), reason: reason.trim(), requestDate: requestDate.toISOString(), attachmentUri: attachment?.base64Uri || undefined };
+      ? { staffCode: identifier, purpose: purpose.trim(), reason: reason.trim(), requestDate, attachmentUri: attachment?.base64Uri }
+      : { regNo: identifier, purpose: purpose.trim(), reason: reason.trim(), requestDate, attachmentUri: attachment?.base64Uri || undefined };
     await withLock(async () => {
       try {
         let response;
         if (isNTF) {
-          // NTF: submit directly to HR (skip HOD)
           response = await apiService.submitNTFGatePassRequest(payload as any);
         } else if (isNCI) {
-          // NCI: route based on designation — Principal/Director → HR directly, others → HOD → HR
           const designation = (user as any).designation || (user as any).role || '';
           response = await apiService.submitNonClassInchargeRequest(
             (payload as any).staffCode, purpose.trim(), reason.trim(),
-            requestDate.toISOString(), attachment?.base64Uri, designation
+            requestDate, attachment?.base64Uri, designation
           );
         } else {
           response = (isStaff || isHOD) ? await apiService.submitStaffGatePassRequest(payload as any) : await apiService.submitGatePassRequest(payload as any);
@@ -180,13 +155,26 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
         if (response.success) setShowSuccessModal(true);
         else { setErrorMessage(response.message || 'Failed to submit.'); setShowErrorModal(true); }
       } catch (error: any) { setErrorMessage(error.message || 'Error occurred.'); setShowErrorModal(true); }
-    }, 'Submitting request...');  };
+    }, 'Submitting request...');
+  };
+
+  const handleSubmit = () => {
+    if (isLocked) return;
+    if (!purpose.trim() || !reason.trim()) {
+      setErrorMessage('Please provide purpose and reason.');
+      setShowErrorModal(true);
+      return;
+    }
+    setShowConfirmSubmit(true);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
       <View style={[styles.header, { backgroundColor: theme.surface }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={handleGoBack}><Ionicons name="arrow-back" size={24} color={theme.text} /></TouchableOpacity>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={confirmGoBack}>
+          <Ionicons name="arrow-back" size={24} color={theme.text} />
+        </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>New Gate Pass Request</ThemedText>
         <View style={{ width: 44 }} />
       </View>
@@ -207,30 +195,49 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
             </View>
           </View>
           <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: theme.textSecondary }]}>DATE & TIME</ThemedText>
-            <View style={styles.row}>
-              <TouchableOpacity style={[styles.selector, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setShowDatePicker(true)}><Ionicons name="calendar-outline" size={22} color={theme.primary} /><ThemedText style={[styles.selectorText, { color: theme.text }]}>{requestDate.toLocaleDateString()}</ThemedText></TouchableOpacity>
-              <TouchableOpacity style={[styles.selector, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setShowTimePicker(true)}><Ionicons name="time-outline" size={22} color={theme.primary} /><ThemedText style={[styles.selectorText, { color: theme.text }]}>{requestDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase()}</ThemedText></TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.formSection}>
             <ThemedText style={[styles.label, { color: theme.textSecondary }]}>PURPOSE</ThemedText>
-            <TextInput style={[styles.purposeInput, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]} placeholder="Purpose" placeholderTextColor={theme.textTertiary} value={purpose} onChangeText={setPurpose} />
+            <TextInput
+              style={[styles.purposeInput, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
+              placeholder="Purpose"
+              placeholderTextColor={theme.textTertiary}
+              value={purpose}
+              onChangeText={setPurpose}
+            />
           </View>
           <View style={styles.formSection}>
             <ThemedText style={[styles.label, { color: theme.textSecondary }]}>REASON</ThemedText>
-            <TextInput style={[styles.textArea, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]} placeholder="Reason" placeholderTextColor={theme.textTertiary} multiline value={reason} onChangeText={setReason} />
+            <TextInput
+              style={[styles.textArea, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
+              placeholder="Reason"
+              placeholderTextColor={theme.textTertiary}
+              multiline
+              value={reason}
+              onChangeText={setReason}
+            />
           </View>
           <View style={styles.formSection}>
             <ThemedText style={[styles.label, { color: theme.textSecondary }]}>ATTACHMENT</ThemedText>
-            <TouchableOpacity style={[styles.uploadBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]} onPress={pickDocument}><Ionicons name="attach-outline" size={22} color={theme.primary} /><ThemedText style={[styles.uploadText, { color: theme.textSecondary }]}>{attachment ? attachment.name : 'Attach image or PDF'}</ThemedText></TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.uploadBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}
+              onPress={pickDocument}
+            >
+              <Ionicons name="attach-outline" size={22} color={theme.primary} />
+              <ThemedText style={[styles.uploadText, { color: theme.textSecondary }]}>
+                {attachment ? attachment.name : 'Attach image or PDF'}
+              </ThemedText>
+            </TouchableOpacity>
             {attachment && (
               isImageAttachment ? (
                 <Image source={{ uri: attachment.base64Uri || attachment.uri }} style={styles.attachmentPreview} resizeMode="cover" />
               ) : (
-                <TouchableOpacity style={[styles.filePreview, { borderColor: theme.border, backgroundColor: theme.surface }]} onPress={() => Linking.openURL(attachment.uri || attachment.base64Uri)}>
+                <TouchableOpacity
+                  style={[styles.filePreview, { borderColor: theme.border, backgroundColor: theme.surface }]}
+                  onPress={() => Linking.openURL(attachment.uri || attachment.base64Uri)}
+                >
                   <Ionicons name="document-text-outline" size={20} color={theme.primary} />
-                  <ThemedText style={[styles.filePreviewText, { color: theme.text }]} numberOfLines={1}>Tap to preview {attachment.name}</ThemedText>
+                  <ThemedText style={[styles.filePreviewText, { color: theme.text }]} numberOfLines={1}>
+                    Tap to preview {attachment.name}
+                  </ThemedText>
                   <Ionicons name="open-outline" size={18} color={theme.textSecondary} />
                 </TouchableOpacity>
               )
@@ -238,13 +245,33 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
           </View>
           <TouchableOpacity style={[styles.submitBtn, isLocked && { opacity: 0.7 }]} onPress={handleSubmit} disabled={isLocked}>
             <LinearGradient colors={theme.gradients.primary as [string, string, ...string[]]} style={styles.btnGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-              <View style={styles.btnContent}><Ionicons name="send" size={20} color="#FFF" /><ThemedText style={styles.submitText}>SUBMIT REQUEST</ThemedText></View>
+              <View style={styles.btnContent}>
+                <Ionicons name="send" size={20} color="#FFF" />
+                <ThemedText style={styles.submitText}>SUBMIT REQUEST</ThemedText>
+              </View>
             </LinearGradient>
           </TouchableOpacity>
         </View>
       </VerticalScrollView>
-      {showDatePicker && <DateTimePicker value={requestDate} mode="date" display="default" onChange={handleDateChange} minimumDate={new Date()} />}
-      {showTimePicker && <DateTimePicker value={requestDate} mode="time" display="default" onChange={handleTimeChange} />}
+
+      <ConfirmationModal
+        visible={showConfirmSubmit}
+        title="Submit Gate Pass Request"
+        message="Are you sure you want to submit this gate pass request?"
+        confirmText="Submit"
+        onConfirm={() => { setShowConfirmSubmit(false); doSubmit(); }}
+        onCancel={() => setShowConfirmSubmit(false)}
+        icon="send-outline"
+      />
+      <ConfirmationModal
+        visible={showBackConfirm}
+        title="Discard Changes"
+        message="You have unsaved changes. Are you sure you want to go back?"
+        confirmText="Discard"
+        onConfirm={() => { setShowBackConfirm(false); handleGoBack(); }}
+        onCancel={() => setShowBackConfirm(false)}
+        icon="arrow-back-outline"
+      />
       <SuccessModal visible={showSuccessModal} title="Success" message="Submitted!" onClose={() => { setShowSuccessModal(false); handleGoBack(); }} />
       <ErrorModal visible={showErrorModal} title="Error" message={errorMessage} onClose={() => setShowErrorModal(false)} type="general" />
     </SafeAreaView>
@@ -268,9 +295,6 @@ const styles = StyleSheet.create({
   activeText: { fontSize: 10, fontWeight: '700' },
   formSection: { marginBottom: 16 },
   label: { fontSize: 11, fontWeight: '700', marginBottom: 8, letterSpacing: 0.8 },
-  row: { flexDirection: 'row', gap: 10 },
-  selector: { flex: 1, height: 48, borderRadius: 12, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 8, borderWidth: 1 },
-  selectorText: { fontSize: 13, fontWeight: '600', flex: 1 },
   purposeInput: { borderRadius: 12, padding: 12, fontSize: 14, borderWidth: 1 },
   textArea: { borderRadius: 12, padding: 12, minHeight: 90, fontSize: 14, borderWidth: 1, textAlignVertical: 'top' },
   uploadBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, padding: 12, gap: 10, borderWidth: 1.5, borderStyle: 'dashed' },

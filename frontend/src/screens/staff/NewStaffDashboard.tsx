@@ -356,7 +356,9 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           >
             <Ionicons name="notifications-outline" size={24} color={theme.text} />
             {unreadCount > 0 && (
-              <View style={[styles.notificationIndicator, { backgroundColor: theme.success, borderColor: theme.surface }]} />
+              <View style={[styles.notificationBadge, { backgroundColor: theme.error }]}>
+                <ThemedText style={styles.notificationBadgeText}>{unreadCount > 99 ? '99+' : unreadCount}</ThemedText>
+              </View>
             )}
           </TouchableOpacity>
         </View>
@@ -816,6 +818,22 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     borderWidth: 2,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
   searchContainer: { flexDirection: 'row', alignItems: 'center', marginTop: 16, marginBottom: 12, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 2 },
   searchInput: { flex: 1, fontSize: 16 },

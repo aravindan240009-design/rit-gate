@@ -243,19 +243,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           <View style={styles.staticHeaderContainer}>
             {statsLoading ? (
               <StatsSkeleton />
-            ) : (
-            <View style={[styles.statsCard, { backgroundColor: theme.cardBackground, marginTop: 0 }]}>
-              <View style={styles.statItem}>
-                <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.entries}</ThemedText>
-                <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ENTRIES</ThemedText>
-              </View>
-              <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
-              <View style={styles.statItem}>
-                <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.exits}</ThemedText>
-                <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITS</ThemedText>
-              </View>
-            </View>
-            )}
+            ) : null}
 
             <TouchableOpacity style={[styles.requestCard, { backgroundColor: theme.cardBackground }]} onPress={onRequestGatePass}>
               <View style={[styles.requestCardTop, { backgroundColor: theme.primary }]}>

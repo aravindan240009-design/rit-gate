@@ -157,6 +157,7 @@ const App: React.FC = () => {
       if (ut === 'STUDENT') setCurrentScreen('REQUESTS');
       else if (ut === 'STAFF') setCurrentScreen('MY_REQUESTS');
       else if (ut === 'HOD') setCurrentScreen('HOD_MY_REQUESTS');
+      else if (ut === 'HR') setCurrentScreen('HR_MY_REQUESTS');
       else if (ut === 'NON_TEACHING') setCurrentScreen('NTF_MY_REQUESTS');
       else if (ut === 'NON_CLASS_INCHARGE') setCurrentScreen('NCI_MY_REQUESTS');
     }
@@ -177,16 +178,20 @@ const App: React.FC = () => {
     else if (r.includes('notifications')) {
       setCurrentScreen('NOTIFICATIONS');
     }
-    // Gate pass approved — go to QR screen
+    // Gate pass approved — go to my requests (QR is there)
     else if (r.includes('approved') || r.includes('qr-code') || r.includes('qr_code')) {
       if (ut === 'STUDENT') setCurrentScreen('REQUESTS');
       else if (ut === 'STAFF') setCurrentScreen('MY_REQUESTS');
       else if (ut === 'HOD') setCurrentScreen('HOD_MY_REQUESTS');
+      else if (ut === 'HR') setCurrentScreen('HR_MY_REQUESTS');
+      else if (ut === 'NON_TEACHING') setCurrentScreen('NTF_MY_REQUESTS');
+      else if (ut === 'NON_CLASS_INCHARGE') setCurrentScreen('NCI_MY_REQUESTS');
     }
-    // Visitor requests
+    // Visitor requests — go to the respective user's dashboard
     else if (r.includes('visitor')) {
       if (ut === 'STAFF') setCurrentScreen('STAFF_DASHBOARD');
       else if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
+      else if (ut === 'HR') setCurrentScreen('HR_DASHBOARD');
       else if (ut === 'SECURITY') setCurrentScreen('SECURITY_DASHBOARD');
     }
   }, []);

@@ -130,7 +130,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode; onNavigate?: 
       const data = await response.json();
       if (data.success && Array.isArray(data.notifications)) {
         const latest = data.notifications as Notification[];
-        const recent = latest.filter((n) => isRecent(n.timestamp || n.createdAt));
+        const recent = latest.filter((n) => isRecent(n.timestamp || n.createdAt) && !n.isRead);
 
         if (options.scheduleBanners) {
           // Always re-sync from AsyncStorage before checking — the FCM background handler
@@ -179,7 +179,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode; onNavigate?: 
       const data = await response.json();
       if (data.success && Array.isArray(data.notifications)) {
         const latest = data.notifications as Notification[];
-        const recent = latest.filter((n) => isRecent(n.timestamp || n.createdAt));
+        const recent = latest.filter((n) => isRecent(n.timestamp || n.createdAt) && !n.isRead);
         // Mark ALL existing notifications as shown — prevents re-banners on app open
         for (const n of recent) {
           shownNotificationIdsRef.current.add(n.id);
@@ -194,10 +194,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode; onNavigate?: 
   };
 
   const markAsRead = async (notificationId: number) => {
-    // Optimistic update immediately
-    setNotifications(prev =>
-      prev.map(n => (n.id === notificationId ? { ...n, isRead: true } : n))
-    );
+    // Remove from list immediately (read = dismissed)
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
     // Use offline queue so it retries if network is slow (Feature 2)
     try {
       await fetch(`${API_CONFIG.BASE_URL}/notifications/${notificationId}/read`, { method: 'PUT' });
@@ -212,7 +210,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode; onNavigate?: 
 
   const markAllAsRead = async (userId: string) => {
     // Optimistic update immediately
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    setNotifications([]);
     clearBadge().catch(() => {});
     try {
       await fetch(`${API_CONFIG.BASE_URL}/notifications/user/${userId}/read-all`, { method: 'PUT' });

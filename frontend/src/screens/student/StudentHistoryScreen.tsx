@@ -41,6 +41,8 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
+  const [entriesCount, setEntriesCount] = useState(0);
+  const [exitsCount, setExitsCount] = useState(0);
 
   useEffect(() => {
     const onBackPress = () => {
@@ -99,6 +101,8 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
 
       combinedHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       setHistoryData(combinedHistory);
+      setEntriesCount(combinedHistory.filter(i => i.type === 'ENTRY' || i.type === 'LATE_ENTRY').length);
+      setExitsCount(combinedHistory.filter(i => i.type === 'EXIT').length);
     } catch (error) {
       console.error('Error loading history:', error);
     } finally {
@@ -158,6 +162,18 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>History</ThemedText>
       </View>
       <ScreenContentContainer>
+        {/* Entries / Exits summary */}
+        <View style={[styles.statsCard, { backgroundColor: theme.cardBackground, margin: 16, marginBottom: 0, borderRadius: 12 }]}>
+          <View style={styles.statItem}>
+            <ThemedText style={[styles.statValue, { color: theme.text }]}>{entriesCount}</ThemedText>
+            <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ENTRIES</ThemedText>
+          </View>
+          <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+          <View style={styles.statItem}>
+            <ThemedText style={[styles.statValue, { color: theme.text }]}>{exitsCount}</ThemedText>
+            <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITS</ThemedText>
+          </View>
+        </View>
         {(isLoading || refreshing) ? <SkeletonList count={5} /> : (
         <VerticalFlatList
           style={styles.content}
@@ -236,6 +252,11 @@ const styles = StyleSheet.create({
   historyMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   historyTimestamp: { fontSize: 13 },
   historyLocation: { fontSize: 13 },
+  statsCard: { flexDirection: 'row', padding: 16, alignItems: 'center', justifyContent: 'space-around' },
+  statItem: { flex: 1, alignItems: 'center' },
+  statDivider: { width: 1, height: 40 },
+  statValue: { fontSize: 28, fontWeight: '800' },
+  statLabel: { fontSize: 11, fontWeight: '600', marginTop: 2, letterSpacing: 0.5 },
   bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 8, position: 'relative' },
   navLabel: { fontSize: 12, marginTop: 4, fontWeight: '500' },

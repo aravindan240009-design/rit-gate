@@ -36,8 +36,8 @@ public class EmailService {
 
     private void sendEmail(String toEmail, String toName, String subject, String textBody) {
         if (brevoApiKey == null || brevoApiKey.isBlank()) {
-            System.err.println("❌ BREVO_API_KEY not configured — cannot send email to " + toEmail);
-            throw new RuntimeException("BREVO_API_KEY is not configured");
+            System.out.println("⚠️ BREVO_API_KEY not configured — skipping email to " + toEmail);
+            return;
         }
 
         Map<String, Object> payload = new HashMap<>();

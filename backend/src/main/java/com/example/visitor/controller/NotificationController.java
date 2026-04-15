@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -226,6 +227,20 @@ public class NotificationController {
             errorResponse.put("success", false);
             errorResponse.put("message", "Error marking all notifications as read: " + e.getMessage());
             return ResponseEntity.internalServerError().body(errorResponse);
+        }
+    }
+
+    // Delete all notifications for a user
+    @DeleteMapping("/user/{userId}/delete-all")
+    @Transactional
+    public ResponseEntity<?> deleteAllNotifications(@PathVariable String userId) {
+        try {
+            List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+            notificationRepository.deleteAll(notifications);
+            return ResponseEntity.ok(Map.of("success", true, "message", "All notifications deleted", "count", notifications.size()));
+        } catch (Exception e) {
+            System.err.println("❌ Error deleting notifications: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
 
