@@ -428,24 +428,6 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
           <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>Gate Pass Details</ThemedText>
 
           <View style={styles.formGroup}>
-            <ThemedText style={[styles.label, { color: theme.textSecondary }]}>REQUEST DATE & TIME</ThemedText>
-            <View style={styles.requestDateTimeRow}>
-              <View style={[styles.requestDateTimeBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                <Ionicons name="calendar-outline" size={18} color={theme.textSecondary} />
-                <ThemedText style={[styles.requestDateTimeText, { color: theme.text }]}>
-                  {formatDateGB(requestDateTime)}
-                </ThemedText>
-              </View>
-              <View style={[styles.requestDateTimeBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                <Ionicons name="time-outline" size={18} color={theme.textSecondary} />
-                <ThemedText style={[styles.requestDateTimeText, { color: theme.text }]}>
-                  {formatTime(requestDateTime)}
-                </ThemedText>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.formGroup}>
             <ThemedText style={[styles.label, { color: theme.textSecondary }]}>Purpose *</ThemedText>
             <TextInput
               style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.border, color: theme.text }]}

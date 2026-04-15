@@ -13,7 +13,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ImagePicker from '../../utils/safeImagePicker';
 import LinearGradient from 'react-native-linear-gradient';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { HOD } from '../../types';
 import { apiService } from '../../services/api';
@@ -33,17 +32,11 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
   const { theme, isDark } = useTheme();
   const [purpose, setPurpose] = useState('');
   const [reason, setReason] = useState('');
-  const [requestDate, setRequestDate] = useState(new Date());
   const [attachment, setAttachment] = useState<{ name: string; base64Uri: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -51,24 +44,6 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
       Animated.spring(slideAnim, { toValue: 0, tension: 50, friction: 7, useNativeDriver: true }),
     ]).start();
   }, []);
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      const newDate = new Date(requestDate);
-      newDate.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-      setRequestDate(newDate);
-    }
-  };
-
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      const newDate = new Date(requestDate);
-      newDate.setHours(selectedTime.getHours(), selectedTime.getMinutes());
-      setRequestDate(newDate);
-    }
-  };
 
   const pickDocument = async () => {
     try {
@@ -155,23 +130,6 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
             </View>
           </View>
 
-          {/* Date & Time */}
-          <View style={styles.formSection}>
-            <ThemedText style={[styles.label, { color: theme.textSecondary }]}>REQUEST DATE & TIME</ThemedText>
-            <View style={styles.row}>
-              <TouchableOpacity style={[styles.selector, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setShowDatePicker(true)}>
-                <Ionicons name="calendar-outline" size={20} color={theme.primary} />
-                <ThemedText style={[styles.selectorText, { color: theme.text }]}>{requestDate.toLocaleDateString()}</ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.selector, { backgroundColor: theme.surface, borderColor: theme.border }]} onPress={() => setShowTimePicker(true)}>
-                <Ionicons name="time-outline" size={20} color={theme.primary} />
-                <ThemedText style={[styles.selectorText, { color: theme.text }]}>
-                  {requestDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).toLowerCase()}
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-
           {/* Purpose */}
           <View style={styles.formSection}>
             <ThemedText style={[styles.label, { color: theme.textSecondary }]}>PURPOSE</ThemedText>
@@ -241,13 +199,6 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
 
         </Animated.View>
       </VerticalScrollView>
-
-      {showDatePicker && (
-        <DateTimePicker value={requestDate} mode="date" display="default" onChange={handleDateChange} minimumDate={new Date()} />
-      )}
-      {showTimePicker && (
-        <DateTimePicker value={requestDate} mode="time" display="default" onChange={handleTimeChange} />
-      )}
 
       <SuccessModal
         visible={showSuccessModal}

@@ -371,18 +371,14 @@ public class HODController {
     // ==================== HOD BULK GATE PASS ENDPOINTS ====================
     
     // Resolve all departments this HOD has control over
-    // A HOD can be HOD of multiple departments — find all rows in departments table with this staff_code
     private List<String> getHODDepartments(String hodCode) {
         // Find all department rows where staff_code = hodCode (HOD of multiple depts)
-        List<HOD> allHodRows = hodRepository.findAll().stream()
+        List<String> depts = hodRepository.findAll().stream()
             .filter(h -> hodCode.equalsIgnoreCase(h.getHodCode()))
-            .collect(Collectors.toList());
-
-        List<String> depts = allHodRows.stream()
             .map(HOD::getDepartment)
             .filter(d -> d != null && !d.isBlank())
             .distinct()
-            .collect(Collectors.toList());
+            .collect(Collectors.toCollection(java.util.ArrayList::new));
 
         if (depts.isEmpty()) {
             // Fallback: use the single department from the HOD's own row
