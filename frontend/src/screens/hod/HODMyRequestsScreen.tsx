@@ -263,11 +263,10 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
       </View>
-      {/* Header */}
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <ScreenContentContainer>
         {refreshing ? (
           <SkeletonList count={5} />
