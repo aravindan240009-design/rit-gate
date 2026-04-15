@@ -395,20 +395,27 @@ class ApiService {
   }
 
   async getHRPendingRequests(hrCode: string): Promise<ApiResponse<GatePassRequest[]>> {
-    // endpoint: GET /api/hr/gate-pass/pending?hrCode=...
+    // Backend: GET /api/hr/gate-pass/pending?hrCode=...  returns { status, requests, count }
     try {
       const data = await this.makeRequest(`${this.baseURL}/hr/gate-pass/pending?hrCode=${encodeURIComponent(hrCode)}`, { method: 'GET' });
-      return { success: data.success || true, message: data.message || 'OK', data: data.requests || [] };
+      const ok = data.status === 'SUCCESS' || data.success !== false;
+      return { success: ok, message: data.message || 'OK', data: data.requests || [] };
     } catch (e: any) { return { success: false, message: e.message || 'Failed', data: [] }; }
   }
 
   async approveGatePassByHR(hrCode: string, requestId: number): Promise<ApiResponse> {
-    try { return await this.makeRequest(`${this.baseURL}/gate-pass/hr/${hrCode}/approve/${requestId}`, { method: 'POST' }); }
+    // Backend: POST /api/hr/gate-pass/{id}/approve  (hrCode in body)
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/hr/gate-pass/${requestId}/approve`, { method: 'POST', body: JSON.stringify({ hrCode }) });
+      const ok = data.success === true || data.status === 'SUCCESS' || data.status === 'success';
+      return { success: ok, message: data.message };
+    }
     catch (e: any) { return { success: false, message: e.message || 'Failed to approve' }; }
   }
 
   async rejectGatePassByHR(hrCode: string, requestId: number, reason: string): Promise<ApiResponse> {
-    try { return await this.makeRequest(`${this.baseURL}/gate-pass/hr/${hrCode}/reject/${requestId}`, { method: 'POST', body: JSON.stringify({ reason }) }); }
+    // Backend: POST /api/hr/gate-pass/{id}/reject  (hrCode + reason in body)
+    try { return await this.makeRequest(`${this.baseURL}/hr/gate-pass/${requestId}/reject`, { method: 'POST', body: JSON.stringify({ hrCode, reason }) }); }
     catch (e: any) { return { success: false, message: e.message || 'Failed to reject' }; }
   }
 
@@ -492,19 +499,22 @@ class ApiService {
   }
 
   async getSecurityDashboard(securityId: string): Promise<any> {
-    try { return await this.makeRequest(`${this.baseURL}/security/dashboard/${securityId}`, { method: 'GET' }); }
+    // Backend: GET /api/security/{securityId}  (profile endpoint, no separate dashboard)
+    try { return await this.makeRequest(`${this.baseURL}/security/${securityId}`, { method: 'GET' }); }
     catch (e: any) { return { success: false, message: e.message }; }
   }
 
   async getRecentEntries(limit = 20): Promise<any[]> {
+    // Backend: GET /api/security/recent-scans
     try {
-      const data = await this.makeRequest(`${this.baseURL}/security/recent-entries?limit=${limit}`, { method: 'GET' });
-      return data.entries || data || [];
+      const data = await this.makeRequest(`${this.baseURL}/security/recent-scans`, { method: 'GET' });
+      return data.scans || data.entries || data || [];
     } catch { return []; }
   }
 
   async getUserStatus(userId: string): Promise<any> {
-    try { return await this.makeRequest(`${this.baseURL}/entry-exit/user/${userId}/status`, { method: 'GET' }); }
+    // Backend: GET /api/entry-exit/status/{userId}
+    try { return await this.makeRequest(`${this.baseURL}/entry-exit/status/${userId}`, { method: 'GET' }); }
     catch (e: any) { return { success: false, message: e.message }; }
   }
 
@@ -536,8 +546,9 @@ class ApiService {
   }
 
   async getBulkGatePassRequests(hodCode: string): Promise<any[]> {
+    // Backend: GET /api/hod/{hodCode}/bulk-pass/requests
     try {
-      const data = await this.makeRequest(`${this.baseURL}/bulk-gate-pass/hod/${hodCode}`, { method: 'GET' });
+      const data = await this.makeRequest(`${this.baseURL}/hod/${hodCode}/bulk-pass/requests`, { method: 'GET' });
       return data.requests || data || [];
     } catch { return []; }
   }
@@ -665,7 +676,8 @@ class ApiService {
 
   // ── Push tokens ───────────────────────────────────────────────────────────
   async registerPushToken(userId: string, role: string, token: string): Promise<ApiResponse> {
-    try { return await this.makeRequest(`${this.baseURL}/notifications/register-token`, { method: 'POST', body: JSON.stringify({ userId, role, token }) }); }
+    // Backend: POST /api/notifications/push-token
+    try { return await this.makeRequest(`${this.baseURL}/notifications/push-token`, { method: 'POST', body: JSON.stringify({ userId, role, token }) }); }
     catch (e: any) { return { success: false, message: e.message || 'Failed' }; }
   }
 
