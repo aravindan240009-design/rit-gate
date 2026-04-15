@@ -292,7 +292,7 @@ public class LateEntryService {
         log.info("Recording HOD late entry: {}", hodCode);
         
         // Fetch HOD details
-        Optional<HOD> hodOpt = hodRepository.findByHodCode(hodCode);
+        Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(hodCode);
         if (hodOpt.isEmpty()) {
             throw new RuntimeException("HOD not found with code: " + hodCode);
         }

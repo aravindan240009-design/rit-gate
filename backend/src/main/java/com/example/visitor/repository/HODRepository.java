@@ -10,23 +10,26 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * HOD data comes from the departments table.
- * staff_code = HOD's login code, hod = HOD name, name = department name.
+ * departments table: id (PK int), name, hod, staff_code, student_count, staff_count
+ * staff_code = HOD's login code (NOT the PK — multiple rows can share the same staff_code)
  */
 @Repository
-public interface HODRepository extends JpaRepository<HOD, String> {
+public interface HODRepository extends JpaRepository<HOD, Long> {
 
-    // Primary key is staff_code (mapped as hodCode)
-    Optional<HOD> findByHodCode(String hodCode);
+    // Find by staff_code — returns ALL departments this HOD manages (can be multiple)
+    List<HOD> findByHodCode(String hodCode);
+
+    // Find first match by staff_code (for single-dept lookups)
+    Optional<HOD> findFirstByHodCode(String hodCode);
 
     // Find by department name
     Optional<HOD> findByDepartment(String department);
 
-    // Find all HODs for a department (returns list for SecurityController compat)
+    // Find all HODs for a department
     @Query("SELECT h FROM HOD h WHERE LOWER(h.department) = LOWER(:department)")
     List<HOD> findAllByDepartment(@Param("department") String department);
 
-    // All HODs (one per department)
+    // All HODs
     @Query("SELECT h FROM HOD h WHERE h.hodCode IS NOT NULL")
     List<HOD> findAllHODs();
 
@@ -42,7 +45,7 @@ public interface HODRepository extends JpaRepository<HOD, String> {
     @Query("SELECT h FROM HOD h WHERE LOWER(h.department) = LOWER(:department)")
     Optional<HOD> findByDepartmentIgnoreCase(@Param("department") String department);
 
-    // S&H HOD — used for all first-year students
+    // S&H HOD
     @Query("SELECT h FROM HOD h WHERE h.department = 'S & H'")
     Optional<HOD> findSHHod();
 }

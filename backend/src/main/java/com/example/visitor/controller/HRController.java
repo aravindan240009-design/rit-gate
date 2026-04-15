@@ -453,7 +453,7 @@ public class HRController {
                                 resolvedName = staffRepository.findByStaffCode(uid)
                                     .map(s -> s.getStaffName()).orElse(null);
                                 if (resolvedName == null) {
-                                    resolvedName = hodRepository.findByHodCode(uid)
+                                    resolvedName = hodRepository.findFirstByHodCode(uid)
                                         .map(h -> h.getHodName()).orElse(uid);
                                 }
                             }
@@ -477,7 +477,7 @@ public class HRController {
                             } else if ("STAFF".equals(utype)) {
                                 dept = staffRepository.findByStaffCode(uid).map(s -> s.getDepartment()).orElse(null);
                             } else if ("HOD".equals(utype)) {
-                                dept = hodRepository.findByHodCode(uid).map(h -> h.getDepartment()).orElse(null);
+                                dept = hodRepository.findFirstByHodCode(uid).map(h -> h.getDepartment()).orElse(null);
                             }
                         } catch (Exception ex) { /* ignore */ }
                     }
@@ -739,7 +739,7 @@ public class HRController {
             } else if ("STAFF".equals(utype) || "HOD".equals(utype)) {
                 String name = staffRepository.findByStaffCode(userId).map(s -> s.getStaffName()).orElse(null);
                 if (name == null) {
-                    name = hodRepository.findByHodCode(userId).map(h -> h.getHodName()).orElse(userId);
+                    name = hodRepository.findFirstByHodCode(userId).map(h -> h.getHodName()).orElse(userId);
                 }
                 return name;
             } else if ("VISITOR".equals(utype) || "VG".equals(utype) || "VENDOR".equals(utype)) {
@@ -763,7 +763,7 @@ public class HRController {
             } else if ("STAFF".equals(utype)) {
                 return staffRepository.findByStaffCode(userId).map(s -> s.getDepartment()).orElse(null);
             } else if ("HOD".equals(utype)) {
-                return hodRepository.findByHodCode(userId).map(h -> h.getDepartment()).orElse(null);
+                return hodRepository.findFirstByHodCode(userId).map(h -> h.getDepartment()).orElse(null);
             } else if ("VISITOR".equals(utype) || "VG".equals(utype) || "VENDOR".equals(utype)) {
                 try {
                     Long visitorId = Long.parseLong(userId);

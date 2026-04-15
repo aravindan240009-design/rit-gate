@@ -35,7 +35,7 @@ public class HODBulkGatePassService {
         
         try {
             // Validate HOD — look up from departments table
-            Optional<HOD> hodOpt = hodRepository.findByHodCode(hodCode);
+            Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(hodCode);
             if (!hodOpt.isPresent()) {
                 response.put("success", false);
                 response.put("message", "HOD not found");

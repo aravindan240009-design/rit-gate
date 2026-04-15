@@ -651,7 +651,7 @@ public class AuthController {
                 return rateLimitResponse;
             }
             
-            Optional<HOD> hodOpt = hodRepository.findByHodCode(hodCode);
+            Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(hodCode);
             
             if (hodOpt.isEmpty()) {
                 logAuthEvent(hodCode, "HOD", "OTP_SENT", "FAILED", "HOD not found");
@@ -726,7 +726,7 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(createErrorResponse("HOD code and OTP are required"));
             }
             
-            Optional<HOD> hodOpt = hodRepository.findByHodCode(hodCode);
+            Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(hodCode);
             
             if (hodOpt.isEmpty()) {
                 logAuthEvent(hodCode, "HOD", "LOGIN", "FAILED", "HOD not found");
@@ -1115,7 +1115,7 @@ public class AuthController {
                     break;
                 }
                 case "HOD": {
-                    Optional<HOD> hodOpt = hodRepository.findByHodCode(userId);
+                    Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(userId);
                     if (hodOpt.isEmpty()) {
                         logAuthEvent(userId, "HOD", "QR_LOGIN", "FAILED", "HOD not found");
                         return ResponseEntity.status(404).body(createErrorResponse("HOD not found"));

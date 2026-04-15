@@ -225,7 +225,7 @@ public class SecurityController {
             }
             
             // 4. Check if it's a HOD (HOD code)
-            Optional<HOD> hodOpt = hodRepository.findByHodCode(idCode);
+            Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(idCode);
             if (hodOpt.isPresent()) {
                 com.example.visitor.service.LateEntryService.LateEntryResponse response = 
                     lateEntryService.recordHODLateEntry(idCode, securityId);
@@ -467,7 +467,7 @@ public class SecurityController {
                         } else if ("SF".equals(userType)) {
                             staffRepository.findByStaffCode(userId).ifPresent(s -> exitLog.setDepartment(s.getDepartment()));
                         } else if ("HD".equals(userType)) {
-                            hodRepository.findByHodCode(userId).ifPresent(h -> exitLog.setDepartment(h.getDepartment()));
+                            hodRepository.findFirstByHodCode(userId).ifPresent(h -> exitLog.setDepartment(h.getDepartment()));
                         }
                     }
                     railwayExitLogRepository.save(exitLog);
@@ -740,7 +740,7 @@ public class SecurityController {
                     detailedInfo.put("type", "HOD");
                     detailedInfo.put("facultyId", userId);
                     
-                    Optional<HOD> hod = hodRepository.findByHodCode(userId);
+                    Optional<HOD> hod = hodRepository.findFirstByHodCode(userId);
                     if (hod.isPresent()) {
                         HOD h = hod.get();
                         personName = h.getHodName();
@@ -963,7 +963,7 @@ public class SecurityController {
             // If SIG (Staff/HOD Included Group), add the incharge to participants
             if ("SIG".equals(subtype)) {
                 // Determine if incharge is HOD or Staff from DB (not via code prefix).
-                boolean isHod = hodRepository.findByHodCode(incharge).isPresent();
+                boolean isHod = hodRepository.findFirstByHodCode(incharge).isPresent();
                 participants.add((isHod ? "HOD:" : "SF:") + incharge);
                 System.out.println("✅ SIG detected - Added incharge to participants: " + incharge);
             }
@@ -1016,7 +1016,7 @@ public class SecurityController {
                         department = staff.get().getDepartment();
                     }
                 } else if ("HOD".equals(participantType)) {
-                    Optional<HOD> hod = hodRepository.findByHodCode(participantId);
+                    Optional<HOD> hod = hodRepository.findFirstByHodCode(participantId);
                     if (hod.isPresent()) {
                         name = hod.get().getHodName();
                         department = hod.get().getDepartment();
@@ -1711,7 +1711,7 @@ public class SecurityController {
         try {
             // Try HOD first if detected
             if ("HOD".equalsIgnoreCase(detectedType) || "HD".equalsIgnoreCase(detectedType)) {
-                Optional<HOD> hod = hodRepository.findByHodCode(userId);
+                Optional<HOD> hod = hodRepository.findFirstByHodCode(userId);
                 if (hod.isPresent()) return hod.get().getHodName();
             }
             
@@ -1748,7 +1748,7 @@ public class SecurityController {
                 if (vOpt.isPresent()) return vOpt.get().getName();
             } catch(NumberFormatException ignored) {}
             
-            Optional<HOD> hod = hodRepository.findByHodCode(userId);
+            Optional<HOD> hod = hodRepository.findFirstByHodCode(userId);
             if (hod.isPresent()) return hod.get().getHodName();
             
             Optional<Staff> staff = staffRepository.findByStaffCode(userId);
@@ -1774,7 +1774,7 @@ public class SecurityController {
         
         try {
             if ("HOD".equalsIgnoreCase(detectedType) || "HD".equalsIgnoreCase(detectedType)) {
-                Optional<HOD> hod = hodRepository.findByHodCode(userId);
+                Optional<HOD> hod = hodRepository.findFirstByHodCode(userId);
                 if (hod.isPresent()) {
                     String dept = DepartmentMapper.toFullName(hod.get().getDepartment());
                     return "HOD of " + dept;
@@ -2140,7 +2140,7 @@ public class SecurityController {
             } else if ("SF".equals(utype) || "STAFF".equals(utype)) {
                 return staffRepository.findByStaffCode(userId).map(s -> s.getDepartment()).orElse(null);
             } else if ("HD".equals(utype) || "HOD".equals(utype)) {
-                return hodRepository.findByHodCode(userId).map(h -> h.getDepartment()).orElse(null);
+                return hodRepository.findFirstByHodCode(userId).map(h -> h.getDepartment()).orElse(null);
             }
         } catch (Exception ignored) {}
         return null;
@@ -2628,7 +2628,7 @@ public class SecurityController {
                 }
             } else if ("HD".equals(type)) {
                 personType = PersonType.FACULTY;
-                Optional<HOD> hod = hodRepository.findByHodCode(userId);
+                Optional<HOD> hod = hodRepository.findFirstByHodCode(userId);
                 if (hod.isPresent()) {
                     HOD h = hod.get();
                     personName = h.getHodName();

@@ -327,7 +327,7 @@ public class BulkGatePassService {
                         participants.add(info);
                     } else {
                         // Check if it's HOD (unlikely for staff bulk pass but for robustness)
-                        Optional<HOD> hodOpt = hodRepository.findByHodCode(trimmedCode);
+                        Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(trimmedCode);
                         if (hodOpt.isPresent()) {
                             HOD hod = hodOpt.get();
                             Map<String, String> info = new HashMap<>();
@@ -495,7 +495,7 @@ public class BulkGatePassService {
                         log.info("Added staff participant: {} - {}", staff.getStaffCode(), staff.getStaffName());
                     } else {
                         // Check HOD table
-                        Optional<HOD> hodOpt = hodRepository.findByHodCode(trimmed);
+                        Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(trimmed);
                         if (hodOpt.isPresent()) {
                             HOD hod = hodOpt.get();
                             Map<String, Object> info = new HashMap<>();

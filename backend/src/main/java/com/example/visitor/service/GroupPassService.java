@@ -97,7 +97,7 @@ public class GroupPassService {
             LocalDateTime exitTime = LocalDateTime.now();
             List<Long> exitLogIds = new ArrayList<>();
             Long qrId = qrRecord.getId();
-            boolean inchargeIsHod = hodRepository.findByHodCode(passData.inchargeStaffId).isPresent();
+            boolean inchargeIsHod = hodRepository.findFirstByHodCode(passData.inchargeStaffId).isPresent();
 
             // Students exit logs
             for (String studentRegNo : passData.studentRolls) {
@@ -269,7 +269,7 @@ public class GroupPassService {
         if (inchargeOpt.isPresent()) {
             details.inchargeName = inchargeOpt.get().getStaffName();
         } else {
-            Optional<HOD> hodOpt = hodRepository.findByHodCode(passData.inchargeStaffId);
+            Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(passData.inchargeStaffId);
             if (hodOpt.isPresent()) {
                 details.inchargeName = hodOpt.get().getHodName();
             } else {

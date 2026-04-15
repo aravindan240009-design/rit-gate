@@ -371,17 +371,18 @@ public class HODController {
     // ==================== HOD BULK GATE PASS ENDPOINTS ====================
     
     // Resolve all departments this HOD has control over
+    // staff_code is NOT unique in departments — one HOD can manage multiple departments
     private List<String> getHODDepartments(String hodCode) {
-        List<String> depts = hodRepository.findAll().stream()
-            .filter(h -> h != null && h.getHodCode() != null && hodCode.equalsIgnoreCase(h.getHodCode()))
+        List<String> depts = hodRepository.findFirstByHodCode(hodCode).stream()
             .map(HOD::getDepartment)
             .filter(d -> d != null && !d.isBlank())
             .distinct()
             .collect(Collectors.toCollection(java.util.ArrayList::new));
 
         if (depts.isEmpty()) {
-            hodRepository.findByHodCode(hodCode).ifPresent(h -> {
-                if (h != null && h.getDepartment() != null && !h.getDepartment().isBlank()) {
+            // Fallback: try first match
+            hodRepository.findFirstByHodCode(hodCode).ifPresent(h -> {
+                if (h.getDepartment() != null && !h.getDepartment().isBlank()) {
                     depts.add(h.getDepartment());
                 }
             });
@@ -433,7 +434,7 @@ public class HODController {
         try {
             List<String> hodDepts = getHODDepartments(hodCode);
 
-            HOD hod = hodRepository.findByHodCode(hodCode)
+            HOD hod = hodRepository.findFirstByHodCode(hodCode)
                 .orElseThrow(() -> new RuntimeException("HOD not found"));
             String hodName = hod.getHodName() != null ? hod.getHodName().trim().toLowerCase() : "";
 
@@ -487,7 +488,7 @@ public class HODController {
             String hodCode = (String) requestData.get("hodCode");
             
             // Validate HOD exists
-            HOD hod = hodRepository.findByHodCode(hodCode)
+            HOD hod = hodRepository.findFirstByHodCode(hodCode)
                 .orElseThrow(() -> new RuntimeException("HOD not found"));
                    // Extract basic fields first to avoid variable ordering issues in logging
             String purpose = (String) requestData.get("purpose");
@@ -700,7 +701,7 @@ public class HODController {
         try {
             log.info("📋 Fetching HOD profile for: {}", hodCode);
 
-            Optional<HOD> hodOpt = hodRepository.findByHodCode(hodCode);
+            Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(hodCode);
             if (!hodOpt.isPresent()) {
                 log.error("❌ HOD not found: {}", hodCode);
                 return ResponseEntity.notFound().build();
