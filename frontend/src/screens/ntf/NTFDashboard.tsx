@@ -80,10 +80,9 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
       if (myFetchId !== fetchIdRef.current) return;
       console.error('NTF visitor load error:', e);
     } finally {
-      if (myFetchId === fetchIdRef.current) {
-        setLoading(false);
-        setRefreshing(false);
-      }
+      // Always clear loading/refreshing — even if superseded by a newer fetch
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 

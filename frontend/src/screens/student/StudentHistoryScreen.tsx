@@ -114,10 +114,9 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
       if (myFetchId !== fetchIdRef.current) return;
       console.error('Error loading history:', error);
     } finally {
-      if (myFetchId === fetchIdRef.current) {
-        setRefreshing(false);
-        setIsLoading(false);
-      }
+      // Always clear loading/refreshing
+      setRefreshing(false);
+      setIsLoading(false);
     }
   };
 

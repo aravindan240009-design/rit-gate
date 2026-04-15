@@ -134,10 +134,9 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       if (myFetchId !== fetchIdRef.current) return;
       console.error('Error loading requests:', error);
     } finally {
-      if (myFetchId === fetchIdRef.current) {
-        setRefreshing(false);
-        setLoading(false);
-      }
+      // Always clear loading/refreshing
+      setRefreshing(false);
+      setLoading(false);
     }
   };
 

@@ -573,7 +573,7 @@ class ApiService {
 
   async getStaffBulkPassRequests(staffCode: string): Promise<{ success: boolean; requests?: any[]; message?: string }> {
     try {
-      const data = await this.makeRequest(`${this.baseURL}/bulk-pass/staff/${staffCode}`, { method: 'GET' });
+      const data = await this.makeRequest(`${this.baseURL}/staff/${staffCode}/bulk-pass/requests`, { method: 'GET' });
       return { success: data.success !== false, requests: data.requests || data.data || [] };
     } catch (e: any) { return { success: false, requests: [], message: e.message || 'Failed' }; }
   }

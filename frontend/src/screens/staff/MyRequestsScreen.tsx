@@ -74,10 +74,9 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
       if (myFetchId !== fetchIdRef.current) return;
       console.error('Error fetching requests:', error);
     } finally {
-      if (myFetchId === fetchIdRef.current) {
-        setLoading(false);
-        setRefreshing(false);
-      }
+      // Always clear loading/refreshing — even if superseded by a newer fetch
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 

@@ -168,7 +168,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       if (myFetchId !== fetchIdRef.current) return;
       console.error('Error loading requests:', error);
     } finally {
-      if (myFetchId === fetchIdRef.current) setRefreshing(false);
+      setRefreshing(false);
     }
   };
 

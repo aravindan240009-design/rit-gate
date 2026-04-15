@@ -48,10 +48,9 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
       if (myFetchId !== fetchIdRef.current) return;
       console.error('HR my requests error:', e);
     } finally {
-      if (myFetchId === fetchIdRef.current) {
-        setLoading(false);
-        setRefreshing(false);
-      }
+      // Always clear loading/refreshing — even if superseded by a newer fetch
+      setLoading(false);
+      setRefreshing(false);
     }
   }, [hr.hrCode]);
 
