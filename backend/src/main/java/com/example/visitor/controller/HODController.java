@@ -373,14 +373,14 @@ public class HODController {
     // Resolve all departments this HOD has control over
     // staff_code is NOT unique in departments — one HOD can manage multiple departments
     private List<String> getHODDepartments(String hodCode) {
-        List<String> depts = hodRepository.findFirstByHodCode(hodCode).stream()
+        // findByHodCode returns List<HOD> — all department rows for this staff_code
+        List<String> depts = hodRepository.findByHodCode(hodCode).stream()
             .map(HOD::getDepartment)
             .filter(d -> d != null && !d.isBlank())
             .distinct()
             .collect(Collectors.toCollection(java.util.ArrayList::new));
 
         if (depts.isEmpty()) {
-            // Fallback: try first match
             hodRepository.findFirstByHodCode(hodCode).ifPresent(h -> {
                 if (h.getDepartment() != null && !h.getDepartment().isBlank()) {
                     depts.add(h.getDepartment());
