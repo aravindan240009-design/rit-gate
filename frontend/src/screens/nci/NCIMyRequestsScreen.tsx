@@ -36,19 +36,26 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack 
     r.passType === 'BULK' ? (r.exitDateTime || r.createdAt || r.requestDate) : (r.requestDate || r.createdAt);
   const isUsedRequest = (r: any) => r.qrUsed === true || r.status === 'USED' || r.status === 'EXITED';
 
+  const fetchIdRef = React.useRef(0);
+
   const fetchRequests = async () => {
+    const myFetchId = ++fetchIdRef.current;
     try {
       const res = await apiService.getNonClassInchargeOwnRequests(user.staffCode);
+      if (myFetchId !== fetchIdRef.current) return;
       const all: any[] = (res as any).requests || res.data || [];
       const filtered = all
         .filter(r => !isUsedRequest(r))
         .sort((a, b) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
       setAllRequests(filtered);
     } catch (e) {
+      if (myFetchId !== fetchIdRef.current) return;
       console.error('NCI my requests error:', e);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (myFetchId === fetchIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 
@@ -57,7 +64,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack 
   const onRefresh = useCallback(() => {
     console.log('🔄 [REFRESH] NCI/MyRequests');
     setRefreshing(true);
-    setLoading(false);
+    setLoading(true);
     fetchRequests();
   }, []);
 

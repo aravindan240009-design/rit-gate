@@ -83,21 +83,24 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
   useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);
 
+  const fetchIdRef = React.useRef(0);
+
   const loadRequests = async () => {
+    const myFetchId = ++fetchIdRef.current;
+    setLoading(true);
     try {
-      setLoading(true);
       const [ownRequestsResponse, assignedRequestsResponse, visitorRequestsResponse] = await Promise.all([
         apiService.getStaffOwnGatePassRequests(staff.staffCode),
         apiService.getAllStaffRequests(staff.staffCode),
         apiService.getVisitorRequestsForStaff(staff.staffCode)
       ]);
 
-      // Combine all types of requests
+      if (myFetchId !== fetchIdRef.current) return;
+
       let allRequests: any[] = [];
 
       if (ownRequestsResponse.success) {
         const ownReqs = ((ownRequestsResponse as any).requests || ownRequestsResponse.data || []);
-        // Mark own requests
         allRequests = ownReqs.map((req: any) => ({
           ...req,
           isOwnRequest: true,
@@ -114,7 +117,6 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         allRequests = [...allRequests, ...assignedReqs];
       }
 
-      // Add visitor requests
       if (visitorRequestsResponse.success && visitorRequestsResponse.requests && Array.isArray(visitorRequestsResponse.requests)) {
         const visitorReqs = visitorRequestsResponse.requests.map((req: any) => ({
           id: `VISITOR-${req.requestId}`,
@@ -133,19 +135,15 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           originalId: req.requestId,
           role: req.role || 'VISITOR',
         }));
-
         allRequests = [...allRequests, ...visitorReqs];
       }
 
-      // Remove duplicates based on ID
       const uniqueRequests = allRequests.filter((req, index, self) =>
         index === self.findIndex((r) => r.id === req.id)
       ).sort((a: any, b: any) => {
         const dateB = new Date(b.requestDate || b.createdAt).getTime();
         const dateA = new Date(a.requestDate || a.createdAt).getTime();
         if (dateB !== dateA) return dateB - dateA;
-
-        // Extract numeric part of ID for robust sorting (e.g., "GP-47" -> 47)
         const idB = parseInt(b.id?.toString().split('-')[1]) || 0;
         const idA = parseInt(a.id?.toString().split('-')[1]) || 0;
         return idB - idA;
@@ -153,7 +151,6 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
       setRequests(uniqueRequests);
 
-      // Calculate stats from ALL requests assigned to staff (student gate pass + visitor requests, exclude staff's own requests)
       const assignedPending = uniqueRequests.filter((r: any) =>
         !r.isOwnRequest && (
           r.status === 'PENDING_STAFF' ||
@@ -163,22 +160,20 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
       const assignedApproved = uniqueRequests.filter((r: any) => !r.isOwnRequest && r.staffApproval === 'APPROVED').length;
       const assignedRejected = uniqueRequests.filter((r: any) => !r.isOwnRequest && r.staffApproval === 'REJECTED').length;
 
-      setStats({
-        pending: assignedPending,
-        approved: assignedApproved,
-        rejected: assignedRejected,
-      });
+      setStats({ pending: assignedPending, approved: assignedApproved, rejected: assignedRejected });
     } catch (error) {
+      if (myFetchId !== fetchIdRef.current) return;
       console.error('Error loading requests:', error);
     } finally {
-      setRefreshing(false);
-      setLoading(false);
+      if (myFetchId === fetchIdRef.current) {
+        setRefreshing(false);
+        setLoading(false);
+      }
     }
   };
 
   const onRefresh = () => {
     setRefreshing(true);
-    setLoading(true);
     loadRequests();
   };
 

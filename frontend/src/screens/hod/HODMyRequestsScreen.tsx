@@ -52,32 +52,26 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack 
   const isUsedRequest = (request: any) =>
     request.qrUsed === true || request.status === 'USED' || request.status === 'EXITED';
 
+  const fetchIdRef = React.useRef(0);
+
   const fetchRequests = async () => {
+    const myFetchId = ++fetchIdRef.current;
     try {
       const result = await apiService.getHODMyGatePassRequests(user.hodCode);
-      let combined: any[] = [];
-      
-      if (result.success && result.requests) {
-        combined = result.requests;
-      }
-
-      const todayOnly = combined
+      if (myFetchId !== fetchIdRef.current) return;
+      const combined: any[] = (result.success && result.requests) ? result.requests : [];
+      const sorted = combined
         .filter((request) => !isUsedRequest(request))
-        .filter((request) => 
-          request.status === 'PENDING' || 
-          request.status === 'PENDING_STAFF' || 
-          request.status === 'PENDING_HOD' || 
-          request.status === 'PENDING_HR' || 
-          request.status === 'REJECTED' || 
-          isToday(getRequestDate(request))
-        )
         .sort((a, b) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
-      setAllRequests(todayOnly);
+      setAllRequests(sorted);
     } catch (error) {
+      if (myFetchId !== fetchIdRef.current) return;
       console.error('Error fetching requests:', error);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (myFetchId === fetchIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 

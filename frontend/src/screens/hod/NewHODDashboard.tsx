@@ -85,13 +85,18 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
 
   useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);
 
+  const fetchIdRef = React.useRef(0);
+
   const loadRequests = async () => {
+    const myFetchId = ++fetchIdRef.current;
+    setLoading(true);
     try {
-      setLoading(true);
       const [gatePassResponse, visitorRequests] = await Promise.all([
         apiService.getAllHODRequests(hod.hodCode),
         apiService.getHODVisitorRequests(hod.hodCode),
       ]);
+
+      if (myFetchId !== fetchIdRef.current) return;
 
       const gatePassList =
         gatePassResponse.success && gatePassResponse.data ? gatePassResponse.data : [];
@@ -126,16 +131,18 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       ).length;
       setStats({ pending, approved, rejected });
     } catch (error) {
+      if (myFetchId !== fetchIdRef.current) return;
       console.error('Error loading requests:', error);
     } finally {
-      setRefreshing(false);
-      setLoading(false);
+      if (myFetchId === fetchIdRef.current) {
+        setRefreshing(false);
+        setLoading(false);
+      }
     }
   };
 
   const onRefresh = () => {
     setRefreshing(true);
-    setLoading(true);
     loadRequests();
   };
 

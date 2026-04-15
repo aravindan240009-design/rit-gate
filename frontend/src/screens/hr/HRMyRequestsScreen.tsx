@@ -31,34 +31,26 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack }) =
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [manualCode, setManualCode] = useState<string | null>(null);
 
+  const fetchIdRef = React.useRef(0);
+
   const fetchRequests = useCallback(async () => {
+    const myFetchId = ++fetchIdRef.current;
     try {
       const res = await apiService.getStaffOwnGatePassRequests(hr.hrCode);
+      if (myFetchId !== fetchIdRef.current) return;
       const all: any[] = (res as any).requests || (res as any).data || [];
-      const now = new Date();
       const filtered = all
         .filter(r => r.status !== 'USED' && r.status !== 'EXITED')
-        .filter(r => {
-          // Show only today's requests (same as staff)
-          const d = new Date(r.requestDate || r.createdAt || 0);
-          return (
-            r.status === 'PENDING' ||
-            r.status === 'PENDING_STAFF' ||
-            r.status === 'PENDING_HOD' ||
-            r.status === 'PENDING_HR' ||
-            r.status === 'REJECTED' ||
-            (d.getFullYear() === now.getFullYear() &&
-              d.getMonth() === now.getMonth() &&
-              d.getDate() === now.getDate())
-          );
-        })
         .sort((a, b) => new Date(b.requestDate || b.createdAt || 0).getTime() - new Date(a.requestDate || a.createdAt || 0).getTime());
       setRequests(filtered);
     } catch (e) {
+      if (myFetchId !== fetchIdRef.current) return;
       console.error('HR my requests error:', e);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (myFetchId === fetchIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, [hr.hrCode]);
 

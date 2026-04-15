@@ -108,7 +108,10 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
     return () => clearTimeout(timer);
   }, [bottomTab]);
 
+  const fetchIdRef = React.useRef(0);
+
   const loadRequests = async () => {
+    const myFetchId = ++fetchIdRef.current;
     try {
       const hrCode = hr.hrCode;
 
@@ -117,6 +120,8 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
         apiService.getHRPendingRequests(hrCode),
         apiService.getHRVisitorRequests(hrCode),
       ]);
+
+      if (myFetchId !== fetchIdRef.current) return;
 
       let allRequests: any[] = [];
 
@@ -160,9 +165,10 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
       setStats({ pending, approved, rejected });
     } catch (error) {
+      if (myFetchId !== fetchIdRef.current) return;
       console.error('Error loading requests:', error);
     } finally {
-      setRefreshing(false);
+      if (myFetchId === fetchIdRef.current) setRefreshing(false);
     }
   };
 

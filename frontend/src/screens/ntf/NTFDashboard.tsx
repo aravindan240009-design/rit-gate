@@ -62,9 +62,14 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   useEffect(() => { loadData(); loadNotifications(ntf.staffCode, 'staff'); }, []);
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
+  const fetchIdRef = React.useRef(0);
+
   const loadData = async () => {
+    const myFetchId = ++fetchIdRef.current;
+    setLoading(true);
     try {
       const res = await apiService.getVisitorRequestsForStaff(ntf.staffCode);
+      if (myFetchId !== fetchIdRef.current) return;
       const all: any[] = res.requests || [];
       const websiteOnly = all.filter((r: any) => {
         const rb = (r.registeredBy || r.registered_by || '').toString();
@@ -72,10 +77,13 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
       });
       setAllRequests(websiteOnly);
     } catch (e) {
+      if (myFetchId !== fetchIdRef.current) return;
       console.error('NTF visitor load error:', e);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (myFetchId === fetchIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 

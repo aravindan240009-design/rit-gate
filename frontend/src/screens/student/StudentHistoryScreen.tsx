@@ -43,6 +43,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
   const [entriesCount, setEntriesCount] = useState(0);
   const [exitsCount, setExitsCount] = useState(0);
+  const fetchIdRef = React.useRef(0);
 
   useEffect(() => {
     const onBackPress = () => {
@@ -58,10 +59,16 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
   }, []);
 
   const loadHistory = async () => {
+    const myFetchId = ++fetchIdRef.current;
     try {
-      const entryHistory = await apiService.getUserEntryHistory(student.regNo);
-      const gatePassResponse = await apiService.getStudentGatePassRequests(student.regNo);
-      const gatePasses = gatePassResponse.success ? gatePassResponse.requests : [];
+      const [entryHistory, gatePassResponse] = await Promise.all([
+        apiService.getUserEntryHistory(student.regNo),
+        apiService.getStudentGatePassRequests(student.regNo),
+      ]);
+      // Discard if a newer fetch started
+      if (myFetchId !== fetchIdRef.current) return;
+
+      const gatePasses = gatePassResponse.success ? (gatePassResponse.requests || []) : [];
       const combinedHistory: HistoryItem[] = [];
 
       entryHistory.forEach((item: any) => {
@@ -104,10 +111,13 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
       setEntriesCount(combinedHistory.filter(i => i.type === 'ENTRY' || i.type === 'LATE_ENTRY').length);
       setExitsCount(combinedHistory.filter(i => i.type === 'EXIT').length);
     } catch (error) {
+      if (myFetchId !== fetchIdRef.current) return;
       console.error('Error loading history:', error);
     } finally {
-      setRefreshing(false);
-      setIsLoading(false);
+      if (myFetchId === fetchIdRef.current) {
+        setRefreshing(false);
+        setIsLoading(false);
+      }
     }
   };
 

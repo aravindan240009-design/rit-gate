@@ -68,9 +68,14 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
   useEffect(() => { loadData(); loadNotifications(nci.staffCode, 'staff'); }, []);
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
+  const fetchIdRef = React.useRef(0);
+
   const loadData = async () => {
+    const myFetchId = ++fetchIdRef.current;
+    setLoading(true);
     try {
       const res = await apiService.getVisitorRequestsForStaff(nci.staffCode);
+      if (myFetchId !== fetchIdRef.current) return;
       const all: any[] = res.requests || [];
       const websiteOnly = all.filter((r: any) => {
         const rb = (r.registeredBy || r.registered_by || '').toString();
@@ -78,14 +83,17 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
       });
       setAllRequests(websiteOnly);
     } catch (e) {
+      if (myFetchId !== fetchIdRef.current) return;
       console.error('NCI visitor load error:', e);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (myFetchId === fetchIdRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 
-  const onRefresh = () => { setRefreshing(true); setLoading(true); loadData(); };
+  const onRefresh = () => { setRefreshing(true); loadData(); };
 
   const filtered = allRequests.filter(r => {
     const matchesTab = activeTab === 'PENDING' ? r.status === 'PENDING' : 

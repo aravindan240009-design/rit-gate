@@ -67,26 +67,36 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
   const isUsedRequest = (request: any) =>
     request.qrUsed === true || request.status === 'USED' || request.status === 'EXITED';
 
+  const fetchIdRef = React.useRef(0);
+
   const loadRequests = async () => {
+    const myFetchId = ++fetchIdRef.current;
     try {
       const response = await apiService.getStudentGatePassRequests(student.regNo);
+      if (myFetchId !== fetchIdRef.current) return;
       if (response.success && response.requests) {
-        const todayOnly = response.requests
-          .filter((r: any) => isToday(getRequestDate(r)))
+        const sorted = response.requests
           .filter((r: any) => !isUsedRequest(r))
           .sort((a: any, b: any) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
-        setRequests(todayOnly);
+        setRequests(sorted);
       }
     } catch (error) {
+      if (myFetchId !== fetchIdRef.current) return;
       console.error('Error loading requests:', error);
     } finally {
-      setRefreshing(false);
-      setIsLoading(false);
+      if (myFetchId === fetchIdRef.current) {
+        setRefreshing(false);
+        setIsLoading(false);
+      }
     }
   };
 
   const onRefresh = () => {
-    console.log('🔄 [REFRESH] Student/StudentRequests'); setRefreshing(true); setIsLoading(true); loadRequests(); };
+    console.log('🔄 [REFRESH] Student/StudentRequests');
+    setRefreshing(true);
+    setIsLoading(true);
+    loadRequests();
+  };
 
   const filteredRequests = requests.filter(r =>
     searchQuery === '' ||
