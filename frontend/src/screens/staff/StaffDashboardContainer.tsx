@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, BackHandler } from 'react-native';
 import { Staff, ScreenName } from '../../types';
 import NewStaffDashboard from './NewStaffDashboard';
+import MyRequestsScreen from './MyRequestsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 
 interface StaffDashboardContainerProps {
@@ -10,7 +11,7 @@ interface StaffDashboardContainerProps {
   onNavigate: (screen: ScreenName) => void;
 }
 
-type InternalTab = 'DASHBOARD' | 'PROFILE';
+type InternalTab = 'DASHBOARD' | 'PROFILE' | 'MY_REQUESTS';
 
 const StaffDashboardContainer: React.FC<StaffDashboardContainerProps> = ({
   staff,
@@ -19,7 +20,6 @@ const StaffDashboardContainer: React.FC<StaffDashboardContainerProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<InternalTab>('DASHBOARD');
 
-  // Profile sub-screen goes back to DASHBOARD; DASHBOARD lets App.tsx handle (exit modal)
   useEffect(() => {
     const onBack = () => {
       if (activeTab !== 'DASHBOARD') {
@@ -33,11 +33,9 @@ const StaffDashboardContainer: React.FC<StaffDashboardContainerProps> = ({
   }, [activeTab]);
 
   const handleNavigate = (screen: ScreenName) => {
-    if (screen === 'PROFILE') {
-      setActiveTab('PROFILE');
-    } else {
-      onNavigate(screen);
-    }
+    if (screen === 'PROFILE') setActiveTab('PROFILE');
+    else if ((screen as any) === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
+    else onNavigate(screen);
   };
 
   if (activeTab === 'PROFILE') {
@@ -50,9 +48,22 @@ const StaffDashboardContainer: React.FC<StaffDashboardContainerProps> = ({
         showBottomNav={true}
         onTabChange={(tab) => {
           if (tab === 'HOME') setActiveTab('DASHBOARD');
-          else if (tab === 'REQUESTS') onNavigate('MY_REQUESTS' as any);
-          else if (tab === 'NEW_PASS') setActiveTab('DASHBOARD'); // dashboard has the new pass button
-          else if (tab === 'PROFILE') { /* already here */ }
+          else if (tab === 'REQUESTS') setActiveTab('MY_REQUESTS');
+          else if (tab === 'NEW_PASS') setActiveTab('DASHBOARD');
+        }}
+      />
+    );
+  }
+
+  if (activeTab === 'MY_REQUESTS') {
+    return (
+      <MyRequestsScreen
+        user={staff}
+        onBack={() => setActiveTab('DASHBOARD')}
+        onNavigate={(screen) => {
+          if (screen === 'HOME') setActiveTab('DASHBOARD');
+          else if (screen === 'PROFILE') setActiveTab('PROFILE');
+          else if (screen === 'NEW_PASS') { setActiveTab('DASHBOARD'); onNavigate('NEW_PASS_REQUEST' as any); }
         }}
       />
     );

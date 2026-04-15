@@ -24,9 +24,10 @@ import { SkeletonList } from '../../components/SkeletonCard';
 interface HODMyRequestsScreenProps {
   user: HOD;
   onBack?: () => void;
+  onNavigate?: (screen: 'HOME' | 'NEW_PASS' | 'PROFILE') => void;
 }
 
-const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack }) => {
+const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack, onNavigate }) => {
   const { theme } = useTheme();
   const [allRequests, setAllRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -243,7 +244,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack 
             <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
             <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('NEW_PASS')}>
             <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
             <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
           </TouchableOpacity>
@@ -252,7 +253,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack 
             <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
             <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('PROFILE')}>
             <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
             <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
           </TouchableOpacity>
@@ -304,7 +305,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack 
           <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('NEW_PASS')}>
           <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
         </TouchableOpacity>
@@ -313,7 +314,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack 
           <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
           <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('PROFILE')}>
           <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
         </TouchableOpacity>

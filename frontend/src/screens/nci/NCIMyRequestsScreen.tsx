@@ -17,9 +17,10 @@ import { SkeletonList } from '../../components/SkeletonCard';
 interface NCIMyRequestsScreenProps {
   user: NonTeachingFaculty;
   onBack?: () => void;
+  onNavigate?: (screen: 'HOME' | 'NEW_PASS' | 'PROFILE') => void;
 }
 
-const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack }) => {
+const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack, onNavigate }) => {
   const { theme } = useTheme();
   const [allRequests, setAllRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -174,7 +175,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack 
             <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
             <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('NEW_PASS')}>
             <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
             <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
           </TouchableOpacity>
@@ -183,7 +184,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack 
             <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
             <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
+          <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('PROFILE')}>
             <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
             <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
           </TouchableOpacity>
@@ -227,7 +228,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack 
           <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('NEW_PASS')}>
           <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
         </TouchableOpacity>
@@ -236,7 +237,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack 
           <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
           <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('PROFILE')}>
           <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
         </TouchableOpacity>
