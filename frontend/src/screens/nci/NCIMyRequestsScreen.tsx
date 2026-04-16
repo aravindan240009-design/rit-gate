@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { NonTeachingFaculty } from '../../types';
 import { apiService } from '../../services/api.service';
@@ -22,6 +22,7 @@ interface NCIMyRequestsScreenProps {
 
 const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack, onNavigate }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [allRequests, setAllRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -169,7 +170,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
           <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
         </View>
         <SkeletonList count={5} />
-        <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+        <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
           <TouchableOpacity style={styles.navItem} onPress={onBack}>
             <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
             <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
@@ -222,7 +223,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
       </TopRefreshControl>
 
       {/* Bottom Navigation */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
         <TouchableOpacity style={styles.navItem} onPress={onBack}>
           <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>

@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   FlatList,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Staff, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
@@ -46,6 +46,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   onNavigate,
 }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -504,7 +505,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         )}
       </ScreenContentContainer>
       </TopRefreshControl>
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => setBottomTab('HOME')}

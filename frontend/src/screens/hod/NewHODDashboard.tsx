@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   FlatList,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { HOD, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
@@ -45,6 +45,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
   onNavigate,
 }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -441,7 +442,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       </TopRefreshControl>
 
       {/* Bottom Navigation */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('HOME')}>
           <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>

@@ -7,7 +7,7 @@ import {
   StatusBar,
   BackHandler,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Student } from '../../types';
 import { apiService } from '../../services/api';
@@ -39,6 +39,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
 }) => {
   const { theme, isDark } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState(true);
   const [historyData, setHistoryData] = useState<HistoryItem[]>([]);
   const [entriesCount, setEntriesCount] = useState(0);
@@ -225,7 +226,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
         )}
       </ScreenContentContainer>
       </TopRefreshControl>
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
           <Ionicons name="home-outline" size={24} color={theme.textTertiary} />
           <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>

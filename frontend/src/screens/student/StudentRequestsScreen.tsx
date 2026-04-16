@@ -8,7 +8,7 @@ import {
   TextInput,
   BackHandler,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Student } from '../../types';
 import { apiService } from '../../services/api';
@@ -32,6 +32,7 @@ interface StudentRequestsScreenProps {
 
 const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, onTabChange }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [requests, setRequests] = useState<any[]>([]);
@@ -235,7 +236,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
       </TopRefreshControl>
 
       {/* Bottom nav — outside TopRefreshControl so it never shifts */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
         {[
           { tab: 'HOME', icon: 'home-outline', label: 'Home' },
           { tab: 'REQUESTS', icon: 'document-text', label: 'Requests' },

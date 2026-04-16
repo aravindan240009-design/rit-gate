@@ -3,7 +3,7 @@ import {
   View, StyleSheet, TouchableOpacity, StatusBar, Image,
   ActivityIndicator, TextInput, ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { NonTeachingFaculty, ScreenName } from '../../types';
 import { apiService } from '../../services/api.service';
@@ -32,6 +32,7 @@ type TabType = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [allRequests, setAllRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -290,7 +291,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
       </TopRefreshControl>
 
       {/* Bottom Nav */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => setBottomTab('HOME')}

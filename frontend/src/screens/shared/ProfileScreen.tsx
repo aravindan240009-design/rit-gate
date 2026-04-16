@@ -12,7 +12,7 @@ import {
   BackHandler,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../../context/ThemeContext';
 import { useProfile } from '../../context/ProfileContext';
@@ -57,6 +57,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   });
 
   const [loadingStats, setLoadingStats] = useState(true);
+  const insets = useSafeAreaInsets();
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({ stat1: 0, stat2: 0, stat3: 0 });
@@ -284,7 +285,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <ProfileSkeleton />
         </ScreenContentContainer>
         {showBottomNav && onTabChange && (
-          <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+          <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
             {renderBottomNav(onTabChange)}
           </View>
         )}
@@ -394,7 +395,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       </ScreenContentContainer>
 
       {showBottomNav && onTabChange && (
-        <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+        <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
           {renderBottomNav(onTabChange)}
         </View>
       )}

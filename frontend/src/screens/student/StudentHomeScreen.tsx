@@ -8,7 +8,7 @@ import {
   Modal,
   Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Student } from '../../types';
 import { apiService } from '../../services/api';
@@ -49,6 +49,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   onRequestGatePass,
 }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
   const { translateY: detailSheetY, panHandlers: detailPanHandlers, openSheet: openDetailSheet } = useBottomSheetSwipe(() => setShowDetailModal(false));
@@ -291,7 +292,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
       </TopRefreshControl>
 
       {/* Bottom nav — always fixed, outside refresh control */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
         <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
           <Ionicons name="home" size={24} color={theme.primary} />
           <ThemedText style={[styles.navLabelActive, { color: theme.primary }]}>Home</ThemedText>
