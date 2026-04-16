@@ -1354,48 +1354,39 @@ public class SecurityController {
     @GetMapping("/hods")
     public ResponseEntity<List<HODDTO>> getAllHODs() {
         try {
-            // Step 1: Get distinct (hod, department) pairs from students
+            // Use departments table — has staff_code, hod (name), name (dept)
             List<java.util.Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT DISTINCT hod, department FROM students WHERE hod IS NOT NULL AND hod != ''"
+                "SELECT staff_code, hod, name FROM departments WHERE staff_code IS NOT NULL AND staff_code != '' AND hod IS NOT NULL AND hod != ''"
             );
 
-            // Step 2: Build HOD list, deduplicating by cleaned name
-            java.util.Map<String, HODDTO> hodMap = new java.util.LinkedHashMap<>();
+            List<HODDTO> hodDTOs = new java.util.ArrayList<>();
+            java.util.Set<String> seen = new java.util.HashSet<>();
+
             for (java.util.Map<String, Object> row : rows) {
-                String rawHod = (String) row.get("hod");
-                String dept   = (String) row.get("department");
-                if (rawHod == null || rawHod.isBlank()) continue;
+                String staffCode = (String) row.get("staff_code");
+                String hodName   = (String) row.get("hod");
+                String dept      = (String) row.get("name");
+                if (staffCode == null || staffCode.isBlank()) continue;
+                if (seen.contains(staffCode)) continue;
+                seen.add(staffCode);
 
-                // Strip designation suffix after '/'
-                String cleanName = rawHod.contains("/") ? rawHod.substring(0, rawHod.indexOf('/')).trim() : rawHod.trim();
-                if (cleanName.isEmpty()) continue;
+                // Look up contact info from teaching_staffs table
+                String email = null, phone = null;
+                try {
+                    List<java.util.Map<String, Object>> staffRows = jdbcTemplate.queryForList(
+                        "SELECT email, phone FROM teaching_staffs WHERE staff_code = ? LIMIT 1",
+                        staffCode
+                    );
+                    if (!staffRows.isEmpty()) {
+                        email = (String) staffRows.get(0).get("email");
+                        phone = (String) staffRows.get(0).get("phone");
+                    }
+                } catch (Exception ignored) {}
 
-                // Normalize: strip trailing dots/slashes for dedup key
-                String dedupKey = cleanName.replaceAll("[./]+$", "").trim().toUpperCase();
-                if (hodMap.containsKey(dedupKey)) continue; // already added
-
-                // Step 3: Look up contact info from staff table by name (partial match)
-                List<java.util.Map<String, Object>> staffRows = jdbcTemplate.queryForList(
-                    "SELECT staff_code, name, email, contact_no, department FROM staff WHERE name LIKE ? LIMIT 1",
-                    "%" + cleanName + "%"
-                );
-
-                String staffCode = cleanName.replaceAll("\\s+", "_").toUpperCase();
-                String email = null, phone = null, staffDept = dept;
-
-                if (!staffRows.isEmpty()) {
-                    java.util.Map<String, Object> s = staffRows.get(0);
-                    staffCode = s.get("staff_code") != null ? (String) s.get("staff_code") : staffCode;
-                    email     = (String) s.get("email");
-                    phone     = (String) s.get("contact_no");
-                    if (s.get("department") != null) staffDept = (String) s.get("department");
-                }
-
-                hodMap.put(dedupKey, new HODDTO(staffCode, staffCode, cleanName, email, phone, staffDept));
+                hodDTOs.add(new HODDTO(staffCode, staffCode, hodName, email, phone, dept));
             }
 
-            List<HODDTO> hodDTOs = new java.util.ArrayList<>(hodMap.values());
-            System.out.println("Fetched " + hodDTOs.size() + " HODs from students table");
+            System.out.println("Fetched " + hodDTOs.size() + " HODs from departments table");
             return ResponseEntity.ok(hodDTOs);
         } catch (Exception e) {
             System.err.println("Error fetching HODs: " + e.getMessage());

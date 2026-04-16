@@ -152,15 +152,16 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       setActivePersons(mergedPersons);
       setPersonsLoading(false);
 
-      // Use fast stats endpoint for EXITED / TOTAL, but use actual list for ACTIVE count
-      const actualActiveCount = mergedPersons.filter(p => p.status === 'PENDING').length;
+      // Use backend stats: active = on campus, total = entries today, exited = exits today
       if (statsResponse.success && statsResponse.data) {
         setStats({
-          active: actualActiveCount,
+          active: statsResponse.data.active,
           exited: statsResponse.data.exited,
-          total:  actualActiveCount + statsResponse.data.exited,
+          total:  statsResponse.data.total,  // entries today
         });
       } else {
+        // Fallback: use active persons list
+        const actualActiveCount = mergedPersons.filter(p => p.status === 'PENDING').length;
         setStats({ active: actualActiveCount, exited: 0, total: actualActiveCount });
       }
 
@@ -352,30 +353,30 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                 <View style={styles.statsGrid}>
                   <View style={styles.statBox}>
                     <View style={[styles.statIcon, { backgroundColor: theme.success + '20' }]}>
-                      <Ionicons name="enter-outline" size={18} color={theme.success} />
+                      <Ionicons name="radio-button-on-outline" size={18} color={theme.success} />
                     </View>
                     <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.active}</ThemedText>
                     <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ACTIVE</ThemedText>
-                  </View>
-                  
-                  <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
-                  
-                  <View style={styles.statBox}>
-                    <View style={[styles.statIcon, { backgroundColor: theme.error + '20' }]}>
-                      <Ionicons name="exit-outline" size={18} color={theme.error} />
-                    </View>
-                    <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.exited}</ThemedText>
-                    <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITED</ThemedText>
                   </View>
 
                   <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
 
                   <View style={styles.statBox}>
                     <View style={[styles.statIcon, { backgroundColor: theme.primary + '20' }]}>
-                      <Ionicons name="people-outline" size={18} color={theme.primary} />
+                      <Ionicons name="enter-outline" size={18} color={theme.primary} />
                     </View>
                     <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.total}</ThemedText>
-                    <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>TOTAL</ThemedText>
+                    <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>ENTRIES</ThemedText>
+                  </View>
+
+                  <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+
+                  <View style={styles.statBox}>
+                    <View style={[styles.statIcon, { backgroundColor: theme.error + '20' }]}>
+                      <Ionicons name="exit-outline" size={18} color={theme.error} />
+                    </View>
+                    <ThemedText style={[styles.statValue, { color: theme.text }]}>{stats.exited}</ThemedText>
+                    <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>EXITED</ThemedText>
                   </View>
                 </View>
                 )}
