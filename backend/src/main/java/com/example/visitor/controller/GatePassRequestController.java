@@ -654,12 +654,16 @@ public class GatePassRequestController {
                 // Also fetch the manual code from the request
                 Optional<GatePassRequest> requestOpt = gatePassRequestRepository.findById(requestId);
                 String manualCode = requestOpt.map(GatePassRequest::getManualCode).orElse(null);
+                String qrExpiresAt = requestOpt
+                    .map(r -> r.getQrExpiresAt() != null ? r.getQrExpiresAt().toString() : null)
+                    .orElse(null);
                 
                 response.put("success", true);
                 response.put("qrCode", qrCode);
                 response.put("manualCode", manualCode);
+                response.put("qrExpiresAt", qrExpiresAt);
                 response.put("message", "QR code retrieved successfully");
-                log.info("✅ QR code retrieved successfully for request {} (manual code: {})", requestId, manualCode);
+                log.info("✅ QR code retrieved successfully for request {} (manual code: {}, expires: {})", requestId, manualCode, qrExpiresAt);
             } else {
                 response.put("success", false);
                 response.put("message", "QR code not found or not yet generated");

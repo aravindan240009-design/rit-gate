@@ -57,6 +57,9 @@ public class QRTable {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "qr_expires_at")
+    private LocalDateTime qrExpiresAt; // Midnight of the day the QR was generated
     
     @Column(length = 12)
     private String entry; // Timestamp marker for entry
@@ -166,6 +169,9 @@ public class QRTable {
     
     public String getGroupType() { return groupType; }
     public void setGroupType(String groupType) { this.groupType = groupType; }
+
+    public LocalDateTime getQrExpiresAt() { return qrExpiresAt; }
+    public void setQrExpiresAt(LocalDateTime qrExpiresAt) { this.qrExpiresAt = qrExpiresAt; }
     
     @PreUpdate
     public void preUpdate() {

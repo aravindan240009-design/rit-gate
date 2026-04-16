@@ -111,6 +111,9 @@ public class GatePassRequest {
     
     @Column(name = "qr_used_at")
     private LocalDateTime qrUsedAt;
+
+    @Column(name = "qr_expires_at")
+    private LocalDateTime qrExpiresAt; // Midnight of the day the QR was generated
     
     @Column(name = "pass_type")
     private String passType = "SINGLE"; // SINGLE, BULK

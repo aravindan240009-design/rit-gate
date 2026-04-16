@@ -356,7 +356,21 @@ public class SecurityController {
             
             QRTable qrTable = qrTableOpt.get();
             
-            // Step 3.5: Fallback for old Visitor passes which hardcoded userId as "null"
+            // Step 3.1: Check midnight expiry
+            if (qrTable.getQrExpiresAt() != null && java.time.LocalDateTime.now().isAfter(qrTable.getQrExpiresAt())) {
+                System.out.println("⏰ ACCESS DENIED - QR code expired at midnight: " + qrCode);
+                // Delete the expired row
+                qrTableRepository.delete(qrTable);
+                return ResponseEntity.status(403).body(new java.util.HashMap<String, Object>() {{
+                    put("qrCode", qrCode);
+                    put("status", "DENIED");
+                    put("message", "QR code expired at midnight. Gate passes are valid only on the day they are approved.");
+                    put("success", false);
+                    put("accessGranted", false);
+                    put("name", "QR Expired");
+                    put("type", "UNKNOWN");
+                }});
+            }
             if ("VG".equals(userType) && ("null".equals(userId) || userId == null)) {
                 if (qrTable.getPassRequestId() != null) {
                     userId = qrTable.getPassRequestId().toString();

@@ -605,22 +605,23 @@ public class GatePassRequestService {
                 qrTable.setExit(token); // Token goes in exit column (single-use)
             }
             
+            // Expiry = midnight (00:00:00) of the NEXT day (i.e. end of today)
+            LocalDateTime midnight = LocalDateTime.now().toLocalDate().plusDays(1).atStartOfDay();
+
             qrTable.setCreatedAt(LocalDateTime.now());
             qrTable.setUpdatedAt(LocalDateTime.now());
+            qrTable.setQrExpiresAt(midnight);
             
             qrTableRepository.save(qrTable);
             
-            // Update request with QR info and schedule deletion
+            // Update request with QR info
             request.setQrCode(qrString);
             request.setManualCode(qrTable.getManualEntryCode()); // Store manual code in request
             request.setQrCodeGeneratedAt(LocalDateTime.now());
+            request.setQrExpiresAt(midnight);
             
-            // Schedule QR deletion 1 day after approval
-            LocalDateTime deletionTime = LocalDateTime.now().plusDays(1);
-            scheduleQRDeletion(request.getId(), deletionTime);
-            
-            log.info("✅ Generated QR code for single pass {} - Token: {} - Manual Code: {} - Scheduled for deletion: {}", 
-                request.getId(), token, qrTable.getManualEntryCode(), deletionTime);
+            log.info("✅ Generated QR code for single pass {} - Token: {} - Manual Code: {} - Expires at midnight: {}", 
+                request.getId(), token, qrTable.getManualEntryCode(), midnight);
             
         } catch (Exception e) {
             log.error("Error generating single pass QR code", e);
@@ -628,37 +629,34 @@ public class GatePassRequestService {
         }
     }
     
-    // Schedule QR code deletion after 1 day
+    // Schedule QR code deletion after 1 day (kept for legacy compatibility — no-op now)
     private void scheduleQRDeletion(Long requestId, LocalDateTime deletionTime) {
-        // This would ideally use a proper job scheduler like Quartz or Spring's @Scheduled
-        // For now, we'll implement a simple check in the QR retrieval method
-        log.info("📅 Scheduled QR deletion for request {} at {}", requestId, deletionTime);
+        log.info("📅 QR for request {} expires at midnight: {}", requestId, deletionTime);
     }
     
-    // Check and delete expired QR codes
+    // Clean up QR codes that have passed midnight expiry
     @Transactional
     public void cleanupExpiredQRCodes() {
-        LocalDateTime cutoffTime = LocalDateTime.now().minusDays(1);
+        LocalDateTime now = LocalDateTime.now();
         List<QRTable> expiredQRs = qrTableRepository.findAll().stream()
-            .filter(qr -> qr.getCreatedAt().isBefore(cutoffTime))
+            .filter(qr -> qr.getQrExpiresAt() != null && qr.getQrExpiresAt().isBefore(now))
             .collect(java.util.stream.Collectors.toList());
             
         if (!expiredQRs.isEmpty()) {
-            log.info("🗑️  Cleaning up {} expired QR codes older than {}", expiredQRs.size(), cutoffTime);
+            log.info("🗑️  Cleaning up {} midnight-expired QR codes", expiredQRs.size());
             qrTableRepository.deleteAll(expiredQRs);
             
-            // Update corresponding requests to remove QR codes
+            // Clear QR fields on the corresponding gate pass requests
             for (QRTable qr : expiredQRs) {
                 if (qr.getPassRequestId() != null) {
-                    Optional<GatePassRequest> requestOpt = gatePassRequestRepository.findById(qr.getPassRequestId());
-                    if (requestOpt.isPresent()) {
-                        GatePassRequest request = requestOpt.get();
-                        request.setQrCode(null);
-                        request.setManualCode(null);
-                        request.setQrCodeGeneratedAt(null);
-                        gatePassRequestRepository.save(request);
-                        log.info("🗑️  Removed QR code for request {} due to 1-day expiration", request.getId());
-                    }
+                    gatePassRequestRepository.findById(qr.getPassRequestId()).ifPresent(gpr -> {
+                        gpr.setQrCode(null);
+                        gpr.setManualCode(null);
+                        gpr.setQrCodeGeneratedAt(null);
+                        gpr.setQrExpiresAt(null);
+                        gatePassRequestRepository.save(gpr);
+                        log.info("🗑️  Cleared QR for request {} (midnight expiry)", gpr.getId());
+                    });
                 }
             }
         }
@@ -724,8 +722,11 @@ public class GatePassRequestService {
             qrTable.setGroupType(subtype);
             qrTable.setEntry(null); // No entry column for group pass
             qrTable.setExit(token); // Token goes in exit column (single-use)
+            // Expiry = midnight (00:00:00) of the NEXT day (i.e. end of today)
+            LocalDateTime midnight = LocalDateTime.now().toLocalDate().plusDays(1).atStartOfDay();
             qrTable.setCreatedAt(LocalDateTime.now());
             qrTable.setUpdatedAt(LocalDateTime.now());
+            qrTable.setQrExpiresAt(midnight);
             
             qrTableRepository.save(qrTable);
             
@@ -733,9 +734,10 @@ public class GatePassRequestService {
             request.setQrCode(qrString);
             request.setManualCode(qrTable.getManualEntryCode()); // Store manual code in request
             request.setQrCodeGeneratedAt(LocalDateTime.now());
+            request.setQrExpiresAt(midnight);
             
-            log.info("✅ Generated QR code for bulk pass {} - Token: {} - Manual Code: {}", 
-                request.getId(), token, qrTable.getManualEntryCode());
+            log.info("✅ Generated QR code for bulk pass {} - Token: {} - Manual Code: {} - Expires at midnight: {}", 
+                request.getId(), token, qrTable.getManualEntryCode(), midnight);
             
         } catch (Exception e) {
             log.error("Error generating bulk pass QR code", e);
@@ -1064,6 +1066,12 @@ public class GatePassRequestService {
         if (request.getQrCode() == null || request.getQrCode().isEmpty()) {
             log.error("QR code is null or empty for approved request {}", requestId);
             throw new RuntimeException("QR code has not been generated yet. Please contact support.");
+        }
+
+        // Check midnight expiry
+        if (request.getQrExpiresAt() != null && LocalDateTime.now().isAfter(request.getQrExpiresAt())) {
+            log.warn("⏰ QR code for request {} has expired at midnight ({})", requestId, request.getQrExpiresAt());
+            throw new RuntimeException("QR code has expired at midnight. Gate passes are valid only on the day they are approved.");
         }
         
         log.info("✅ Returning QR code for request {}: {}", requestId, request.getQrCode().substring(0, Math.min(20, request.getQrCode().length())) + "...");
