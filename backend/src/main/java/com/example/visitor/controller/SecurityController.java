@@ -2979,7 +2979,7 @@ public class SecurityController {
     }
 
 
-    // Dashboard Stats Endpoint — active persons + today's exits (all types)
+    // Dashboard Stats Endpoint
     @GetMapping("/stats")
     public ResponseEntity<?> getDashboardStats() {
         try {
@@ -2987,25 +2987,25 @@ public class SecurityController {
             java.time.LocalDateTime startOfDay = today.atStartOfDay();
             java.time.LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
 
-            // Exited today = ALL exits in RailwayExitLog with exitTime today (any userType, access granted)
+            // ACTIVE = visitors who have entered (entryTime set) but not yet exited (exitTime null)
+            // These are visitors currently on campus
+            long active = visitorRepository.findAll().stream()
+                .filter(v -> v.getEntryTime() != null && v.getExitTime() == null)
+                .count();
+
+            // ENTRIES = total entries today from Entry table (students + staff + visitors)
+            long entries = railwayEntryRepository.countTodaysEntries();
+
+            // EXITED = total exits today from Exit_logs table (students + staff + visitors)
             long exited = railwayExitLogRepository.findByExitTimeBetweenOrderByExitTimeDesc(startOfDay, endOfDay)
                 .stream()
                 .filter(e -> Boolean.TRUE.equals(e.getAccessGranted()))
                 .count();
 
-            // Entered today = all entries in RailwayEntry today
-            long enteredToday = railwayEntryRepository.countTodaysEntries();
-
-            // active = entered today - exited today (floor at 0)
-            long active = Math.max(0, enteredToday - exited);
-
-            // total = all who entered today
-            long total = enteredToday;
-
             java.util.Map<String, Object> stats = new java.util.HashMap<>();
-            stats.put("active", active);
-            stats.put("exited", exited);
-            stats.put("total", total);
+            stats.put("active", active);   // visitors on campus now
+            stats.put("total", entries);   // total entries today (shown as ENTRIES)
+            stats.put("exited", exited);   // total exits today
             stats.put("success", true);
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
