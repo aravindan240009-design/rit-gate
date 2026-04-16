@@ -13,6 +13,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
+import { formatDateTimeShort, getRelativeTime } from '../../utils/dateUtils';
 
 interface NCIMyRequestsScreenProps {
   user: NonTeachingFaculty;
@@ -84,17 +85,8 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
     return { text: 'PENDING', bgColor: theme.warning };
   };
 
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
-
-  const getTimeAgo = (d: string) => {
-    const diffMs = new Date().getTime() - new Date(d).getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${Math.floor(diffHours / 24)}d ago`;
-  };
+  const formatDate = (d: string) => formatDateTimeShort(d);
+  const getTimeAgo = (d: string) => getRelativeTime(d);
 
   const handleViewQR = async (req: any) => {
     setSelectedRequest(req);

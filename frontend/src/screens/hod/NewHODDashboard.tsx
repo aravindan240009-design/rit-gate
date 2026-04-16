@@ -29,6 +29,7 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
+import { formatDateShort } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 
@@ -400,7 +401,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
                 <View style={styles.detailItem}>
                   <Ionicons name="calendar" size={16} color={theme.textSecondary} />
                   <ThemedText style={[styles.detailText, { color: theme.text }]}>
-                    Exit: {new Date(request.exitDateTime || request.requestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    Exit: {formatDateShort(request.exitDateTime || request.requestDate)}
                   </ThemedText>
                 </View>
                 {request.passType === 'BULK' && (

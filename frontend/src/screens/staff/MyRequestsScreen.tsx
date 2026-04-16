@@ -18,6 +18,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
+import { formatDateTimeShort, getRelativeTime } from '../../utils/dateUtils';
 
 
 interface MyRequestsScreenProps {
@@ -100,7 +101,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+    return formatDateTimeShort(dateString);
   };
 
   const handleViewQR = async (request: any, isBulk: boolean = false) => {
@@ -128,14 +129,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
     else { setSelectedRequest(request); setShowDetailModal(true); }
   };
 
-  const getTimeAgo = (dateString: string) => {
-    const diffMs = new Date().getTime() - new Date(dateString).getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${Math.floor(diffHours / 24)}d ago`;
-  };
+  const getTimeAgo = (dateString: string) => getRelativeTime(dateString);
 
   const renderRequestCard = (request: any) => {
     const badge = getStatusBadge(request.status);

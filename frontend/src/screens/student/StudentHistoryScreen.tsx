@@ -17,6 +17,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
+import { formatDateTime } from '../../utils/dateUtils';
 
 
 interface StudentHistoryScreenProps {
@@ -158,11 +159,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
     }
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
-    });
-  };
+  const formatTimestamp = (timestamp: string) => formatDateTime(timestamp);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>

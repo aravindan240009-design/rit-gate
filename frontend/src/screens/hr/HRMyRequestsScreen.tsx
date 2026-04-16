@@ -14,6 +14,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
+import { formatDateTimeShort, getRelativeTime } from '../../utils/dateUtils';
 
 interface HRMyRequestsScreenProps {
   hr: HR;
@@ -86,17 +87,8 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
     return { text: 'PENDING', bg: theme.warning };
   };
 
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-  const getTimeAgo = (d: string) => {
-    const diff = Date.now() - new Date(d).getTime();
-    const m = Math.floor(diff / 60000);
-    if (m < 60) return `${m}m ago`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h ago`;
-    return `${Math.floor(h / 24)}d ago`;
-  };
+  const formatDate = (d: string) => formatDateTimeShort(d);
+  const getTimeAgo = (d: string) => getRelativeTime(d);
 
   const initials = (hr.hrName || hr.name || 'HR').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 

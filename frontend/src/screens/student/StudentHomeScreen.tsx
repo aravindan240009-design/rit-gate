@@ -46,6 +46,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
+import { formatDateTimeShort, formatDateTime } from '../../utils/dateUtils';
 
 
 interface StudentHomeScreenProps {
@@ -132,11 +133,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
     return 'GOOD EVENING,';
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-    });
-  };
+  const formatDate = (dateString: string) => formatDateTimeShort(dateString);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -385,7 +382,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
                     <View style={[styles.statusModalHeader, { borderBottomColor: theme.border }]}>
                       <View style={{ flex: 1 }}>
                         <ThemedText style={[styles.statusModalPurpose, { color: theme.text }]}>{selectedRequest.purpose || selectedRequest.reason || 'Gate Pass Request'}</ThemedText>
-                        <ThemedText style={[styles.statusModalDate, { color: theme.textSecondary }]}>{new Date(selectedRequest.requestDate).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</ThemedText>
+                        <ThemedText style={[styles.statusModalDate, { color: theme.textSecondary }]}>{formatDateTime(selectedRequest.requestDate)}</ThemedText>
                       </View>
                     </View>
                     <RequestTimeline status={selectedRequest.status} staffApproval={selectedRequest.staffApproval || 'PENDING'} hodApproval={selectedRequest.hodApproval || 'PENDING'} requestDate={selectedRequest.requestDate} staffRemark={selectedRequest.staffRemark} hodRemark={selectedRequest.hodRemark}/>
