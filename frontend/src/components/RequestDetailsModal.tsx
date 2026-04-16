@@ -221,7 +221,7 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
 
             <View style={{ height: 40 }} />
           </ScrollView>
-        </View>
+        </TouchableOpacity>
       </TouchableOpacity>
 
       {/* Full Screen Image Modal */}

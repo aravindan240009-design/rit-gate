@@ -288,11 +288,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   headerTitle: { fontSize: 18, fontWeight: '700' },
-  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
-  navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
-  navLabel: { fontSize: 11, marginTop: 3, fontWeight: '500' },
-  activeIndicator: { position: 'absolute', bottom: 0, width: 28, height: 3, borderRadius: 2 },
-  headerTitle: { fontSize: 18, fontWeight: '700' },
+
   content: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 100 },
   emptyState: { paddingVertical: 80, alignItems: 'center' },
@@ -316,6 +312,10 @@ const styles = StyleSheet.create({
   statusTag: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, gap: 6 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
   statusTagText: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.4 },
+  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
+  navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
+  navLabel: { fontSize: 11, marginTop: 3, fontWeight: '500' },
+  activeIndicator: { position: 'absolute', bottom: 0, width: 28, height: 3, borderRadius: 2 },
 });
 
 export default NTFMyRequestsScreen;

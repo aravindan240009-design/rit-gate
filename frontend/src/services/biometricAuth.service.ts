@@ -34,7 +34,6 @@ export const biometricAuthService = {
       const result = await rnBiometrics.simplePrompt({
         promptMessage: 'Use fingerprint to authenticate',
         cancelButtonText: 'Cancel',
-        allowDeviceCredentials: false,
       });
       if (result.success) return { success: true };
       return { success: false, error: 'Biometric authentication failed' };

@@ -19,7 +19,7 @@ const SkeletonList: React.FC<SkeletonListProps> = ({
     <FlatList
       data={data}
       keyExtractor={(item) => `skeleton-${item}`}
-      renderItem={() => <SkeletonCard colors={colors} />}
+      renderItem={() => <SkeletonCard />}
       contentContainerStyle={[
         styles.container,
         { paddingTop: headerHeight },

@@ -334,6 +334,7 @@ export type ScreenName =
   | 'HOD_BULK_GATE_PASS'
   | 'HR_APPROVAL'
   | 'HR_EXITS'
+  | 'HR_MY_REQUESTS'
   | 'GUEST_PRE_REQUEST'
   | 'NTF_DASHBOARD'
   | 'NTF_MY_REQUESTS'

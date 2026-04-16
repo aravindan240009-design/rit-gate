@@ -45,7 +45,7 @@ const StudentDashboardContainer: React.FC<StudentDashboardContainerProps> = ({
     setActiveTab(tab);
   };
 
-  const handleTabChange = (tab: 'HOME' | 'REQUESTS' | 'HISTORY' | 'PROFILE') => switchTab(tab);
+  const handleTabChange = (tab: string) => switchTab(tab as TabType);
   const handleRequestGatePass = () => switchTab('NEW_REQUEST');
   const handleBackToHome = () => switchTab('HOME');
 
