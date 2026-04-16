@@ -237,7 +237,18 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
     }
   };
 
+  const isToday = (dateValue?: string) => {
+    if (!dateValue) return false;
+    const d = new Date(dateValue);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   const filteredRequests = requests.filter(request => {
+    // Only show today's requests
+    const reqDate = request.requestDate || request.createdAt || request.visitDate || request.exitDateTime || request.timestamp;
+    if (!isToday(reqDate)) return false;
+
     const matchesSearch = searchQuery === '' ||
       request.purpose?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||

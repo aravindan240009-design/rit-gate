@@ -146,6 +146,13 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
     loadRequests();
   };
 
+  const isToday = (dateValue?: string) => {
+    if (!dateValue) return false;
+    const d = new Date(dateValue);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   const filteredRequests = requests.filter(request => {
     // Exclude the HOD's own submissions — those belong in My Requests
     const isOwnRequest =
@@ -153,6 +160,10 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       (request.requestedByStaffCode && request.requestedByStaffCode === hod.hodCode) ||
       (request.regNo && request.regNo === hod.hodCode);
     if (isOwnRequest) return false;
+
+    // Only show today's requests
+    const reqDate = request.requestDate || request.createdAt || request.visitDate || request.exitDateTime;
+    if (!isToday(reqDate)) return false;
 
     const matchesSearch = searchQuery === '' ||
       request.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||

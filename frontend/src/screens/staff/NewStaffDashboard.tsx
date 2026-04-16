@@ -177,11 +177,20 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     loadRequests();
   };
 
+  const isToday = (dateValue?: string) => {
+    if (!dateValue) return false;
+    const d = new Date(dateValue);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   const filteredRequests = requests.filter(request => {
     // EXCLUDE staff's own requests from home page - they only appear in "My Requests" page
-    if (request.isOwnRequest) {
-      return false;
-    }
+    if (request.isOwnRequest) return false;
+
+    // Only show today's requests
+    const reqDate = request.requestDate || request.createdAt || request.visitDate;
+    if (!isToday(reqDate)) return false;
 
     const matchesSearch = searchQuery === '' ||
       request.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -190,7 +199,6 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
     let matchesTab = false;
     if (activeTab === 'PENDING') {
-      // Gate pass requests waiting for staff approval OR visitor requests still pending
       matchesTab = request.status === 'PENDING_STAFF' ||
         (request.requestType === 'VISITOR' && (request.staffApproval === 'PENDING' || request.staffApproval === 'PENDING_STAFF'));
     } else if (activeTab === 'APPROVED') {

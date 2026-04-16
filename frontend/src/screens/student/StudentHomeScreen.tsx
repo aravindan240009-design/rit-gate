@@ -337,7 +337,6 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           >
             <View style={[styles.modalHandle, { backgroundColor: theme.border }]} />
             <TouchableOpacity activeOpacity={1} onPress={e => e.stopPropagation()}>
-            <View style={[styles.modalHandle, { backgroundColor: theme.border }]} />
             <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
               <ThemedText style={[styles.modalTitle, { color: theme.text }]}>Request Status</ThemedText>
               <TouchableOpacity onPress={() => setShowDetailModal(false)} style={[styles.closeButton, { backgroundColor: theme.surfaceHighlight }]}>
@@ -355,8 +354,8 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
                   <>
                     <View style={[styles.statusModalHeader, { borderBottomColor: theme.border }]}>
                       <View style={{ flex: 1 }}>
-                        <ThemedText style={[styles.statusModalId, { color: theme.primary }]}>#{selectedRequest.id}</ThemedText>
-                        <ThemedText style={[styles.statusModalDate, { color: theme.textSecondary }]}>{new Date(selectedRequest.requestDate).toLocaleDateString()}</ThemedText>
+                        <ThemedText style={[styles.statusModalPurpose, { color: theme.text }]}>{selectedRequest.purpose || selectedRequest.reason || 'Gate Pass Request'}</ThemedText>
+                        <ThemedText style={[styles.statusModalDate, { color: theme.textSecondary }]}>{new Date(selectedRequest.requestDate).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</ThemedText>
                       </View>
                     </View>
                     <RequestTimeline status={selectedRequest.status} staffApproval={selectedRequest.staffApproval || 'PENDING'} hodApproval={selectedRequest.hodApproval || 'PENDING'} requestDate={selectedRequest.requestDate} staffRemark={selectedRequest.staffRemark} hodRemark={selectedRequest.hodRemark}/>
@@ -435,9 +434,9 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: '700' },
   closeButton: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   detailModalContent: { paddingHorizontal: 20 },
-  statusModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, paddingBottom: 20, borderBottomWidth: 1 },
-  statusModalId: { fontSize: 20, fontWeight: '800', marginBottom: 6 },
-  statusModalDate: { fontSize: 14, fontWeight: '600' },
+  statusModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingBottom: 16, borderBottomWidth: 1 },
+  statusModalPurpose: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
+  statusModalDate: { fontSize: 13, fontWeight: '500' },
   closeModalButton: { paddingVertical: 15, borderRadius: 16, alignItems: 'center', marginTop: 20 },
   closeModalButtonText: { fontWeight: '800' },
 });
