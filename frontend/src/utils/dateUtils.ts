@@ -1,9 +1,21 @@
 // All date/time formatting uses IST (Asia/Kolkata, UTC+5:30)
 const IST: Intl.DateTimeFormatOptions = { timeZone: 'Asia/Kolkata' };
 
+/**
+ * Parse a date value to a JS Date.
+ * The backend sends LocalDateTime strings WITHOUT a timezone suffix (e.g. "2026-04-16T06:46:00").
+ * Without a suffix, new Date() treats them as LOCAL time on the device — which is wrong when
+ * the backend stores UTC. We append "Z" to bare ISO strings so they are always parsed as UTC,
+ * then all display functions apply the IST offset correctly via Intl.
+ */
 const toDate = (d: Date | string | null | undefined): Date => {
   if (!d) return new Date();
-  return typeof d === 'string' ? new Date(d) : d;
+  if (typeof d === 'string') {
+    // If the string has no timezone info (no Z, no +, no offset after time part), treat as UTC
+    const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(d.trim());
+    return new Date(bare ? d.trim() + 'Z' : d);
+  }
+  return d;
 };
 
 /** "15 Jan 2025" */
