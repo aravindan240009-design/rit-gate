@@ -101,7 +101,25 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       loadEscalatedVisitors();
     }, 30000);
 
-    return () => clearInterval(pollInterval);
+    // Refresh stats every 60 seconds (catches gate pass exits)
+    const statsInterval = setInterval(() => {
+      loadDashboardData();
+    }, 60000);
+
+    // Reset at midnight — schedule a reload at next midnight
+    const now = new Date();
+    const nextMidnight = new Date(now);
+    nextMidnight.setHours(24, 0, 0, 0);
+    const msToMidnight = nextMidnight.getTime() - now.getTime();
+    const midnightTimer = setTimeout(() => {
+      loadDashboardData();
+    }, msToMidnight + 500);
+
+    return () => {
+      clearInterval(pollInterval);
+      clearInterval(statsInterval);
+      clearTimeout(midnightTimer);
+    };
   }, []);
 
   useEffect(() => { if (refreshCount > 0) { loadDashboardData(); loadEscalatedVisitors(); } }, [refreshCount]);

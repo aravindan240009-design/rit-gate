@@ -2988,7 +2988,7 @@ public class SecurityController {
     }
 
 
-    // Dashboard Stats Endpoint — active visitors + today's exits (fast version)
+    // Dashboard Stats Endpoint — active persons + today's exits (all types)
     @GetMapping("/stats")
     public ResponseEntity<?> getDashboardStats() {
         try {
@@ -2996,31 +2996,30 @@ public class SecurityController {
             java.time.LocalDateTime startOfDay = today.atStartOfDay();
             java.time.LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
 
-            // Active = visitors in Visitor table with status APPROVED and no exitTime
-            long active = visitorRepository.findAll().stream()
-                .filter(v -> "APPROVED".equals(v.getStatus()) && v.getExitTime() == null && v.getEntryTime() != null)
-                .count();
-
-            // Exited today = RailwayExitLog with exitTime today and VISITOR/VG type
+            // Exited today = ALL exits in RailwayExitLog with exitTime today (any userType, access granted)
             long exited = railwayExitLogRepository.findByExitTimeBetweenOrderByExitTimeDesc(startOfDay, endOfDay)
                 .stream()
-                .filter(e -> {
-                    String ut = e.getUserType() != null ? e.getUserType().toUpperCase() : "";
-                    return "VISITOR".equals(ut) || "VG".equals(ut);
-                })
                 .filter(e -> Boolean.TRUE.equals(e.getAccessGranted()))
                 .count();
 
-            long total = active + exited;
+            // Entered today = all entries in RailwayEntry today
+            long enteredToday = railwayEntryRepository.countTodaysEntries();
+
+            // active = entered today - exited today (floor at 0)
+            long active = Math.max(0, enteredToday - exited);
+
+            // total = all who entered today
+            long total = enteredToday;
 
             java.util.Map<String, Object> stats = new java.util.HashMap<>();
             stats.put("active", active);
             stats.put("exited", exited);
             stats.put("total", total);
+            stats.put("success", true);
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             System.err.println("Error fetching stats: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(java.util.Map.of("error", e.getMessage()));
+            return ResponseEntity.internalServerError().body(java.util.Map.of("error", e.getMessage(), "success", false));
         }
     }
 
