@@ -68,6 +68,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
       if (bulkResult.success) combined = [...combined, ...(bulkResult.requests || [])];
       const sorted = combined
         .filter((request) => !isUsedRequest(request))
+        .filter((request) => isToday(getRequestDate(request)))
         .sort((a, b) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
       setAllRequests(sorted);
     } catch (error) {

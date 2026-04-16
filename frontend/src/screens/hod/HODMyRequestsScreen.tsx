@@ -64,6 +64,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
       const combined: any[] = (result.success && result.requests) ? result.requests : [];
       const sorted = combined
         .filter((request) => !isUsedRequest(request))
+        .filter((request) => isToday(getRequestDate(request)))
         .sort((a, b) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
       setAllRequests(sorted);
     } catch (error) {

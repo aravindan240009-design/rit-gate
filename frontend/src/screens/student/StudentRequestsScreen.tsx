@@ -78,14 +78,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
       if (response.success && response.requests) {
         const sorted = response.requests
           .filter((r: any) => !isUsedRequest(r))
-          .filter((r: any) =>
-            r.status === 'PENDING_STAFF' ||
-            r.status === 'PENDING_HOD' ||
-            r.status === 'PENDING_HR' ||
-            r.status === 'PENDING' ||
-            r.status === 'REJECTED' ||
-            isToday(getRequestDate(r))
-          )
+          .filter((r: any) => isToday(getRequestDate(r)))
           .sort((a: any, b: any) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
         setRequests(sorted);
       }

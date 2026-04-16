@@ -35,6 +35,13 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
 
   const fetchIdRef = React.useRef(0);
 
+  const isToday = (dateValue?: string) => {
+    if (!dateValue) return false;
+    const d = new Date(dateValue);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   const fetchRequests = useCallback(async () => {
     const myFetchId = ++fetchIdRef.current;
     try {
@@ -43,6 +50,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
       const all: any[] = (res as any).requests || (res as any).data || [];
       const filtered = all
         .filter(r => r.status !== 'USED' && r.status !== 'EXITED')
+        .filter(r => isToday(r.requestDate || r.createdAt))
         .sort((a, b) => new Date(b.requestDate || b.createdAt || 0).getTime() - new Date(a.requestDate || a.createdAt || 0).getTime());
       setRequests(filtered);
     } catch (e) {

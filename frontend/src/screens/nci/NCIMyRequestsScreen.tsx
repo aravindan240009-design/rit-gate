@@ -34,6 +34,13 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedBulkId, setSelectedBulkId] = useState<number | null>(null);
 
+
+  const isToday = (dateValue?: string) => {
+    if (!dateValue) return false;
+    const d = new Date(dateValue);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
   const getRequestDate = (r: any) =>
     r.passType === 'BULK' ? (r.exitDateTime || r.createdAt || r.requestDate) : (r.requestDate || r.createdAt);
   const isUsedRequest = (r: any) => r.qrUsed === true || r.status === 'USED' || r.status === 'EXITED';
@@ -48,6 +55,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
       const all: any[] = (res as any).requests || res.data || [];
       const filtered = all
         .filter(r => !isUsedRequest(r))
+        .filter(r => isToday(r.requestDate || r.createdAt || 0))
         .sort((a, b) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
       setAllRequests(filtered);
     } catch (e) {

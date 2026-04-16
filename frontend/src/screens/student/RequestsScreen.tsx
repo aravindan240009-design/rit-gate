@@ -111,14 +111,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
       if (response.success && response.requests) {
         const todayOnly = response.requests
           .filter((request: any) => !isUsedRequest(request))
-          .filter((request: any) => 
-            request.status === 'PENDING' || 
-            request.status === 'PENDING_STAFF' || 
-            request.status === 'PENDING_HOD' || 
-            request.status === 'PENDING_HR' || 
-            request.status === 'REJECTED' || 
-            isToday(getRequestDate(request))
-          )
+          .filter((request: any) => isToday(getRequestDate(request)))
           .sort((a: any, b: any) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
         setRequests(todayOnly);
       }

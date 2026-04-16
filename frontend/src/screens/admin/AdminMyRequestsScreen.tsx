@@ -38,12 +38,7 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
         .filter(r => r.status !== 'USED' && r.status !== 'EXITED')
         .filter(r => {
           const d = new Date(r.requestDate || r.createdAt || 0);
-          return (
-            r.status === 'PENDING' || r.status === 'PENDING_STAFF' ||
-            r.status === 'PENDING_HOD' || r.status === 'PENDING_HR' ||
-            r.status === 'REJECTED' ||
-            (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate())
-          );
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
         })
         .sort((a, b) => new Date(b.requestDate || b.createdAt || 0).getTime() - new Date(a.requestDate || a.createdAt || 0).getTime());
       setRequests(filtered);
