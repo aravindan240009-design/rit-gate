@@ -84,6 +84,13 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
   useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);
 
+  const isToday = (dateValue?: string) => {
+    if (!dateValue) return false;
+    const d = new Date(dateValue);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   const fetchIdRef = React.useRef(0);
 
   const loadRequests = async () => {
@@ -152,14 +159,18 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
       setRequests(uniqueRequests);
 
-      const assignedPending = uniqueRequests.filter((r: any) =>
-        !r.isOwnRequest && (
-          r.status === 'PENDING_STAFF' ||
-          (r.requestType === 'VISITOR' && (r.staffApproval === 'PENDING' || r.staffApproval === 'PENDING_STAFF'))
-        )
+      // Stats: only today's assigned requests
+      const todayAssigned = uniqueRequests.filter((r: any) => {
+        if (r.isOwnRequest) return false;
+        const reqDate = r.requestDate || r.createdAt || r.visitDate;
+        return isToday(reqDate);
+      });
+      const assignedPending = todayAssigned.filter((r: any) =>
+        r.status === 'PENDING_STAFF' ||
+        (r.requestType === 'VISITOR' && (r.staffApproval === 'PENDING' || r.staffApproval === 'PENDING_STAFF'))
       ).length;
-      const assignedApproved = uniqueRequests.filter((r: any) => !r.isOwnRequest && r.staffApproval === 'APPROVED').length;
-      const assignedRejected = uniqueRequests.filter((r: any) => !r.isOwnRequest && r.staffApproval === 'REJECTED').length;
+      const assignedApproved = todayAssigned.filter((r: any) => r.staffApproval === 'APPROVED').length;
+      const assignedRejected = todayAssigned.filter((r: any) => r.staffApproval === 'REJECTED').length;
 
       setStats({ pending: assignedPending, approved: assignedApproved, rejected: assignedRejected });
     } catch (error) {
@@ -175,13 +186,6 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   const onRefresh = () => {
     setRefreshing(true);
     loadRequests();
-  };
-
-  const isToday = (dateValue?: string) => {
-    if (!dateValue) return false;
-    const d = new Date(dateValue);
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
   };
 
   const filteredRequests = requests.filter(request => {

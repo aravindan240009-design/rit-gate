@@ -86,6 +86,13 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
 
   useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);
 
+  const isToday = (dateValue?: string) => {
+    if (!dateValue) return false;
+    const d = new Date(dateValue);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   const fetchIdRef = React.useRef(0);
 
   const loadRequests = async () => {
@@ -112,12 +119,12 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       });
       setRequests(sorted);
 
-      // Only count requests from staff/students — exclude HOD's own submissions
-      const incomingOnly = sorted.filter((r: any) =>
-        r.userType !== 'HOD' &&
-        r.requestedByStaffCode !== hod.hodCode &&
-        r.regNo !== hod.hodCode
-      );
+      // Stats: only today's incoming requests
+      const incomingOnly = sorted.filter((r: any) => {
+        if (r.userType === 'HOD' || r.requestedByStaffCode === hod.hodCode || r.regNo === hod.hodCode) return false;
+        const reqDate = r.requestDate || r.createdAt || r.visitDate || r.exitDateTime;
+        return isToday(reqDate);
+      });
 
       const pending = incomingOnly.filter((r: any) =>
         r.status === 'PENDING_HOD' || (r.passType === 'VISITOR' && r.status === 'PENDING')
@@ -144,13 +151,6 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
   const onRefresh = () => {
     setRefreshing(true);
     loadRequests();
-  };
-
-  const isToday = (dateValue?: string) => {
-    if (!dateValue) return false;
-    const d = new Date(dateValue);
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
   };
 
   const filteredRequests = requests.filter(request => {

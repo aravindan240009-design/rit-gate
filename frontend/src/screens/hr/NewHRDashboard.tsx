@@ -109,6 +109,13 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
     return () => clearTimeout(timer);
   }, [bottomTab]);
 
+  const isToday = (dateValue?: string) => {
+    if (!dateValue) return false;
+    const d = new Date(dateValue);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   const fetchIdRef = React.useRef(0);
 
   const loadRequests = async () => {
@@ -154,13 +161,18 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
       setRequests(sorted);
 
-      const pending = sorted.filter((r: any) =>
+      // Stats: only today's requests
+      const todayOnly = sorted.filter((r: any) => {
+        const reqDate = r.requestDate || r.createdAt || r.visitDate || r.exitDateTime || r.timestamp;
+        return isToday(reqDate);
+      });
+      const pending = todayOnly.filter((r: any) =>
         r.requestType === 'VISITOR' ? r.status === 'PENDING' : (r.hrApproval === 'PENDING_HR' || r.hrApproval === 'PENDING' || !r.hrApproval)
       ).length;
-      const approved = sorted.filter((r: any) =>
+      const approved = todayOnly.filter((r: any) =>
         r.requestType === 'VISITOR' ? r.status === 'APPROVED' : r.hrApproval === 'APPROVED'
       ).length;
-      const rejected = sorted.filter((r: any) =>
+      const rejected = todayOnly.filter((r: any) =>
         r.requestType === 'VISITOR' ? r.status === 'REJECTED' : r.hrApproval === 'REJECTED'
       ).length;
 
@@ -235,13 +247,6 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
     } finally {
       setIsDownloading(false);
     }
-  };
-
-  const isToday = (dateValue?: string) => {
-    if (!dateValue) return false;
-    const d = new Date(dateValue);
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
   };
 
   const filteredRequests = requests.filter(request => {
