@@ -32,6 +32,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
   const [showQR, setShowQR] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [manualCode, setManualCode] = useState<string | null>(null);
+  const [qrExpiresAt, setQrExpiresAt] = useState<string | null>(null);
 
   const fetchIdRef = React.useRef(0);
 
@@ -75,7 +76,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
     setShowQR(true);
     try {
       const res = await apiService.getGatePassQRCode(req.id, hr.hrCode, true);
-      if (res.success) { setQrCode(res.qrCode || null); setManualCode(res.manualCode || null); }
+      if (res.success) { setQrCode(res.qrCode || null); setManualCode(res.manualCode || null); setQrExpiresAt(res.qrExpiresAt || null); }
     } catch { setShowQR(false); }
   };
 
@@ -245,6 +246,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
         personId={hr.hrCode}
         qrCodeData={qrCode}
         manualCode={manualCode}
+        qrExpiresAt={qrExpiresAt}
         reason={selectedRequest?.purpose || selectedRequest?.reason}
       />
     </SafeAreaView>

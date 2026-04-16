@@ -5,7 +5,7 @@
 // BACKEND URL — always Render in production APK
 // ============================================
 
-const PRODUCTION_URL = 'https://ritgate-backend.onrender.com/api';
+const PRODUCTION_URL = 'https://rit-gate.onrender.com/api';
 
 const getBackendUrl = (): string => {
   // Env override (CI/staging only)

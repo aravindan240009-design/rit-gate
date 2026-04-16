@@ -38,6 +38,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [manualCode, setManualCode] = useState<string | null>(null);
+  const [qrExpiresAt, setQrExpiresAt] = useState<string | null>(null);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedBulkId, setSelectedBulkId] = useState<number | null>(null);
 
@@ -127,11 +128,13 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
       if (isBulk && request.qrCode) {
         setQrCodeData(request.qrCode);
         setManualCode(request.manualCode || null);
+        setQrExpiresAt(request.qrExpiresAt || null);
       } else {
         const result = await apiService.getHODGatePassQRCode(request.id, user.hodCode);
         if (result.success && result.qrCode) {
           setQrCodeData(result.qrCode);
           setManualCode(result.manualCode || null);
+          setQrExpiresAt((result as any).qrExpiresAt || null);
         }
       }
     } catch (error: any) {
@@ -350,6 +353,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
         personId={user.hodCode}
         qrCodeData={qrCodeData}
         manualCode={manualCode}
+        qrExpiresAt={qrExpiresAt}
         reason={selectedRequest?.reason || selectedRequest?.purpose}
       />
 

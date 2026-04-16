@@ -232,13 +232,13 @@ class ApiService {
   }
 
   // ── QR Code ───────────────────────────────────────────────────────────────
-  async getGatePassQRCode(requestId: number, identifier: string, download = false): Promise<{ success: boolean; qrCode?: string; manualCode?: string; message?: string }> {
+  async getGatePassQRCode(requestId: number, identifier: string, download = false): Promise<{ success: boolean; qrCode?: string; manualCode?: string; qrExpiresAt?: string; message?: string }> {
     try {
       const data = await this.makeRequest(
         `${this.baseURL}/gate-pass/qr-code/${requestId}?identifier=${encodeURIComponent(identifier)}&download=${download}`,
         { method: 'GET' }
       );
-      return { success: data.success, qrCode: data.qrCode, manualCode: data.manualCode, message: data.message };
+      return { success: data.success, qrCode: data.qrCode, manualCode: data.manualCode, qrExpiresAt: data.qrExpiresAt, message: data.message };
     } catch (e: any) { return { success: false, message: e.message || 'Failed to fetch QR code' }; }
   }
 

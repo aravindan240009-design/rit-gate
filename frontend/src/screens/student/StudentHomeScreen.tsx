@@ -8,6 +8,21 @@ import {
   Modal,
   Animated,
 } from 'react-native';
+
+/** Returns current time in IST (UTC+5:30) */
+const getISTTime = () => {
+  const now = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const istMs = utcMs + 5.5 * 60 * 60 * 1000;
+  const ist = new Date(istMs);
+  return { hours: ist.getHours(), minutes: ist.getMinutes() };
+};
+
+/** Students: gate pass disabled after 15:00 IST */
+const isStudentPassDisabled = () => {
+  const { hours } = getISTTime();
+  return hours >= 15;
+};
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Student } from '../../types';
@@ -63,6 +78,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [manualEntryCode, setManualEntryCode] = useState<string | null>(null);
+  const [qrExpiresAt, setQrExpiresAt] = useState<string | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { errorInfo, showError, hideError, handleRetry, isVisible: isErrorVisible } = useErrorModal();
   const { successInfo, showSuccess, hideSuccess, isVisible: isSuccessVisible } = useSuccessModal();
@@ -170,6 +186,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
         }
         setQrCodeData(qrCodeValue);
         setManualEntryCode(response.manualCode || (response as any).manualEntryCode || request.manualEntryCode || request.manualCode || null);
+        setQrExpiresAt(response.qrExpiresAt || null);
       } else {
         showError(new AppError('api', response.message || 'Could not fetch QR code', 'QR Code Error'));
         setShowQRModal(false);
@@ -236,19 +253,39 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
       <ScreenContentContainer>
           <View style={styles.staticHeaderContainer}>
-            <TouchableOpacity style={[styles.requestCard, { backgroundColor: theme.cardBackground }]} onPress={onRequestGatePass}>
-              <View style={[styles.requestCardTop, { backgroundColor: theme.primary }]}>
-                <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.7)" />
-              </View>
-              <View style={[styles.requestCardBottom, { backgroundColor: theme.cardBackground }]}>
-                <View style={styles.requestCardContent}>
-                  <ThemedText style={[styles.requestCardTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
-                </View>
-                <TouchableOpacity style={[styles.applyButton, { backgroundColor: theme.primary }]} onPress={onRequestGatePass}>
-                  <ThemedText style={styles.applyButtonText}>Apply Now</ThemedText>
+            {(() => {
+              const gatePassDisabled = isStudentPassDisabled();
+              return (
+                <TouchableOpacity
+                  style={[styles.requestCard, { backgroundColor: theme.cardBackground }]}
+                  onPress={gatePassDisabled ? undefined : onRequestGatePass}
+                  activeOpacity={gatePassDisabled ? 1 : 0.8}
+                >
+                  <View style={[styles.requestCardTop, { backgroundColor: gatePassDisabled ? '#9ca3af' : theme.primary }]}>
+                    <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.7)" />
+                  </View>
+                  <View style={[styles.requestCardBottom, { backgroundColor: theme.cardBackground }]}>
+                    <View style={styles.requestCardContent}>
+                      <ThemedText style={[styles.requestCardTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
+                      {gatePassDisabled && (
+                        <ThemedText style={[styles.disabledHint, { color: theme.error }]}>
+                          Not available after 3:00 PM
+                        </ThemedText>
+                      )}
+                    </View>
+                    {gatePassDisabled ? (
+                      <View style={[styles.applyButton, { backgroundColor: '#e5e7eb', justifyContent: 'center', alignItems: 'center' }]}>
+                        <ProhibitionIcon size={22} />
+                      </View>
+                    ) : (
+                      <TouchableOpacity style={[styles.applyButton, { backgroundColor: theme.primary }]} onPress={onRequestGatePass}>
+                        <ThemedText style={styles.applyButtonText}>Apply Now</ThemedText>
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
+              );
+            })()}
 
             <View style={styles.sectionHeader}>
               <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>RECENT REQUESTS</ThemedText>
@@ -364,7 +401,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
         </TouchableOpacity>
       </Modal>
 
-      <GatePassQRModal visible={showQRModal} onClose={() => setShowQRModal(false)} personName={`${student.firstName} ${student.lastName || ''}`} personId={student.regNo} qrCodeData={qrCodeData} manualCode={manualEntryCode} reason={selectedRequest?.reason || selectedRequest?.purpose}/>
+      <GatePassQRModal visible={showQRModal} onClose={() => setShowQRModal(false)} personName={`${student.firstName} ${student.lastName || ''}`} personId={student.regNo} qrCodeData={qrCodeData} manualCode={manualEntryCode} qrExpiresAt={qrExpiresAt} reason={selectedRequest?.reason || selectedRequest?.purpose}/>
       <ConfirmationModal visible={showLogoutModal} title="Logout" message="Are you sure you want to log out of your account?" confirmText="Logout" onConfirm={onLogout} onCancel={() => setShowLogoutModal(false)} icon="log-out-outline" />
       <ErrorModal visible={isErrorVisible} type={errorInfo?.type || 'general'} title={errorInfo?.title} message={errorInfo?.message || ''} onClose={hideError} onRetry={errorInfo?.canRetry ? handleRetry : undefined} />
       <SuccessModal visible={isSuccessVisible} title={successInfo?.title} message={successInfo?.message || ''} onClose={hideSuccess} />
@@ -399,6 +436,7 @@ const styles = StyleSheet.create({
   requestCardBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 18 },
   requestCardContent: { flex: 1 },
   requestCardTitle: { fontSize: 18, fontWeight: '800', marginBottom: 4 },
+  disabledHint: { fontSize: 11, fontWeight: '600', marginTop: 2 },
   applyButton: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, marginLeft: 12 },
   applyButtonText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   sectionHeader: { paddingTop: 32, paddingBottom: 16 },
@@ -435,3 +473,32 @@ const styles = StyleSheet.create({
 });
 
 export default StudentHomeScreen;
+
+/** Prohibition icon drawn with RN primitives — no SVG dependency */
+const ProhibitionIcon: React.FC<{ size?: number }> = ({ size = 24 }) => {
+  const stroke = size * 0.14;
+  return (
+    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+      <View
+        style={{
+          position: 'absolute',
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: stroke,
+          borderColor: '#DC2626',
+        }}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          width: stroke,
+          height: size * 0.88,
+          backgroundColor: '#DC2626',
+          borderRadius: stroke / 2,
+          transform: [{ rotate: '-45deg' }],
+        }}
+      />
+    </View>
+  );
+};

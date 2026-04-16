@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,7 +7,6 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import QRCode from 'react-native-qrcode-svg';
@@ -25,8 +24,9 @@ interface GatePassQRModalProps {
   qrCodeData: string | null;
   manualCode?: string | null;
   reason?: string;
+  /** ISO datetime string — midnight of the day the QR was generated */
+  qrExpiresAt?: string | null;
   validUntil?: string;
-  /** If true, show share buttons inside the modal (for guest pre-register) */
   showShare?: boolean;
   visitorName?: string;
 }
@@ -37,6 +37,16 @@ const isQRString = (val: string) => {
          v.startsWith('VG|') || v.startsWith('HD|');
 };
 
+/** Format remaining time as HH:MM:SS */
+const formatCountdown = (ms: number): string => {
+  if (ms <= 0) return '00:00:00';
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+};
+
 const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
   visible,
   onClose,
@@ -45,17 +55,42 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
   qrCodeData,
   manualCode,
   reason,
-  validUntil = 'One time',
+  qrExpiresAt,
+  validUntil,
   showShare = false,
   visitorName,
 }) => {
   const { theme } = useTheme();
   const qrRef = useRef<any>(null);
+  const [countdown, setCountdown] = useState<string>('');
+  const [isExpired, setIsExpired] = useState(false);
+
+  // Live countdown ticker
+  useEffect(() => {
+    if (!visible || !qrExpiresAt) {
+      setCountdown('');
+      setIsExpired(false);
+      return;
+    }
+    const expiryMs = new Date(qrExpiresAt).getTime();
+    const tick = () => {
+      const remaining = expiryMs - Date.now();
+      if (remaining <= 0) {
+        setCountdown('00:00:00');
+        setIsExpired(true);
+      } else {
+        setCountdown(formatCountdown(remaining));
+        setIsExpired(false);
+      }
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [visible, qrExpiresAt]);
 
   const exportQrPng = async (): Promise<string | null> => {
     if (!qrRef.current?.toDataURL) return null;
     const base64 = await new Promise<string | null>((resolve) => {
-      // Export at 1000px — quietZone is included in the SVG so shared image has proper white border
       qrRef.current.toDataURL((data: string) => resolve(data || null), { width: 1000, height: 1000 });
     });
     if (!base64) return null;
@@ -80,10 +115,16 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
     }
   };
 
-
   const handleCopy = () => {
     if (manualCode) Clipboard.setString(manualCode);
   };
+
+  // Determine "Valid Until" label
+  const validUntilLabel = (() => {
+    if (validUntil) return validUntil;
+    if (qrExpiresAt) return 'Midnight today (one-time use)';
+    return 'One time';
+  })();
 
   return (
     <Modal
@@ -107,8 +148,31 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
             <ThemedText style={[styles.personName, { color: theme.text }]}>{personName.toUpperCase()}</ThemedText>
             <ThemedText style={[styles.personId, { color: theme.textSecondary }]}>{personId}</ThemedText>
 
+            {/* Expiry countdown banner */}
+            {qrExpiresAt && (
+              <View style={[
+                styles.expiryBanner,
+                { backgroundColor: isExpired ? theme.error + '22' : theme.warning + '18', borderColor: isExpired ? theme.error : theme.warning },
+              ]}>
+                <Ionicons
+                  name={isExpired ? 'close-circle-outline' : 'time-outline'}
+                  size={16}
+                  color={isExpired ? theme.error : theme.warning}
+                />
+                {isExpired ? (
+                  <ThemedText style={[styles.expiryText, { color: theme.error }]}>
+                    QR Expired — valid only on the day of approval
+                  </ThemedText>
+                ) : (
+                  <ThemedText style={[styles.expiryText, { color: theme.warning }]}>
+                    Expires at midnight · {countdown} remaining
+                  </ThemedText>
+                )}
+              </View>
+            )}
+
             {/* QR Code */}
-            <View style={[styles.qrCard, { backgroundColor: '#FFFFFF' }]}>
+            <View style={[styles.qrCard, { backgroundColor: '#FFFFFF', opacity: isExpired ? 0.35 : 1 }]}>
               {qrCodeData ? (
                 isQRString(qrCodeData) ? (
                   <QRCode
@@ -124,7 +188,6 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
                     source={{ uri: qrCodeData.startsWith('data:image') ? qrCodeData : `data:image/png;base64,${qrCodeData}` }}
                     style={styles.qrImage}
                     resizeMode="contain"
-                    onError={() => console.warn('QR image failed to load:', qrCodeData?.substring(0, 50))}
                   />
                 )
               ) : (
@@ -143,7 +206,7 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
               </View>
             ) : null}
 
-            <ThemedText style={[styles.scanText, { color: theme.textTertiary }]}>SCAN AT MAIN GATE</ThemedText>
+            <ThemedText style={[styles.scanText, { color: theme.textTertiary }]}>SCAN AT MAIN GATE · ONE-TIME USE</ThemedText>
 
             {/* Details */}
             <View style={[styles.detailsCard, { backgroundColor: theme.inputBackground }]}>
@@ -153,7 +216,7 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
               </View>
               <View style={styles.detailRow}>
                 <ThemedText style={[styles.detailLabel, { color: theme.textSecondary }]}>Valid Until:</ThemedText>
-                <ThemedText style={[styles.detailValue, { color: theme.text }]}>{validUntil}</ThemedText>
+                <ThemedText style={[styles.detailValue, { color: theme.text }]}>{validUntilLabel}</ThemedText>
               </View>
             </View>
 
@@ -205,7 +268,19 @@ const styles = StyleSheet.create({
   closeBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   body: { alignItems: 'center', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 24 },
   personName: { fontSize: 17, fontWeight: '800', textAlign: 'center', letterSpacing: 0.5 },
-  personId: { fontSize: 13, fontWeight: '600', marginTop: 4, marginBottom: 16, textAlign: 'center' },
+  personId: { fontSize: 13, fontWeight: '600', marginTop: 4, marginBottom: 12, textAlign: 'center' },
+  expiryBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: 14,
+    width: '100%',
+  },
+  expiryText: { fontSize: 12, fontWeight: '700', flex: 1 },
   qrCard: {
     borderRadius: 16,
     padding: 16,
@@ -238,7 +313,6 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   detailLabel: { fontSize: 14, fontWeight: '500', flex: 1 },
   detailValue: { fontSize: 14, fontWeight: '800', flex: 2, textAlign: 'right' },
-  // Share section inside modal
   shareSection: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16, width: '100%', justifyContent: 'center' },
   shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 11, paddingHorizontal: 16, borderRadius: 12 },
   shareBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },

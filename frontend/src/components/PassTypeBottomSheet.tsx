@@ -21,6 +21,21 @@ interface PassTypeBottomSheetProps {
 
 const { width } = Dimensions.get('window');
 
+/** Returns current time in IST (UTC+5:30) as { hours, minutes } */
+const getISTTime = () => {
+  const now = new Date();
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const istMs = utcMs + 5.5 * 60 * 60 * 1000;
+  const ist = new Date(istMs);
+  return { hours: ist.getHours(), minutes: ist.getMinutes() };
+};
+
+/** Staff / HOD / NTF / NCI: gate pass disabled after 17:00 IST */
+const isStaffPassDisabled = () => {
+  const { hours } = getISTTime();
+  return hours >= 17;
+};
+
 const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
   visible,
   onClose,
@@ -29,6 +44,7 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
   onSelectGuest,
 }) => {
   const { theme } = useTheme();
+  const passDisabled = isStaffPassDisabled();
 
   return (
     <TypedModal
@@ -61,12 +77,16 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
         <View style={styles.cardsContainer}>
           {/* Single Pass Card */}
           <TouchableOpacity
-            style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
-            onPress={onSelectSingle}
-            activeOpacity={0.8}
+            style={[
+              styles.card,
+              { backgroundColor: theme.cardBackground, borderColor: theme.border },
+              passDisabled && styles.cardDisabled,
+            ]}
+            onPress={passDisabled ? undefined : onSelectSingle}
+            activeOpacity={passDisabled ? 1 : 0.8}
           >
             <TypedLinearGradient
-              colors={['#4facfe', '#00f2fe']}
+              colors={passDisabled ? ['#9ca3af', '#9ca3af'] : ['#4facfe', '#00f2fe']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.iconContainer}
@@ -75,46 +95,63 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
             </TypedLinearGradient>
 
             <View style={styles.cardContent}>
-              <ThemedText style={[styles.cardTitle, { color: theme.text }]}>Myself (Single Pass)</ThemedText>
-              <ThemedText style={[styles.cardDescription, { color: theme.textSecondary }]}>
-                Create a gate pass for yourself
+              <ThemedText style={[styles.cardTitle, { color: passDisabled ? theme.textTertiary : theme.text }]}>
+                Myself (Single Pass)
+              </ThemedText>
+              <ThemedText style={[styles.cardDescription, { color: theme.textTertiary }]}>
+                {passDisabled ? 'Not available after 5:00 PM' : 'Create a gate pass for yourself'}
               </ThemedText>
             </View>
 
             <View style={styles.arrowContainer}>
-              <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
+              {passDisabled ? (
+                <ProhibitionIcon size={26} />
+              ) : (
+                <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
+              )}
             </View>
           </TouchableOpacity>
 
           {/* Bulk Pass Card — only shown when onSelectBulk is provided */}
           {onSelectBulk ? (
-          <TouchableOpacity
-            style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
-            onPress={onSelectBulk}
-            activeOpacity={0.8}
-          >
-            <TypedLinearGradient
-              colors={['#667eea', '#764ba2']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.iconContainer}
+            <TouchableOpacity
+              style={[
+                styles.card,
+                { backgroundColor: theme.cardBackground, borderColor: theme.border },
+                passDisabled && styles.cardDisabled,
+              ]}
+              onPress={passDisabled ? undefined : onSelectBulk}
+              activeOpacity={passDisabled ? 1 : 0.8}
             >
-              <Ionicons name="people" size={28} color="#FFF" />
-            </TypedLinearGradient>
+              <TypedLinearGradient
+                colors={passDisabled ? ['#9ca3af', '#9ca3af'] : ['#667eea', '#764ba2']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.iconContainer}
+              >
+                <Ionicons name="people" size={28} color="#FFF" />
+              </TypedLinearGradient>
 
-            <View style={styles.cardContent}>
-              <ThemedText style={[styles.cardTitle, { color: theme.text }]}>Bulk Student Pass</ThemedText>
-              <ThemedText style={[styles.cardDescription, { color: theme.textSecondary }]}>
-                Create a gate pass for multiple students
-              </ThemedText>
-            </View>
+              <View style={styles.cardContent}>
+                <ThemedText style={[styles.cardTitle, { color: passDisabled ? theme.textTertiary : theme.text }]}>
+                  Bulk Student Pass
+                </ThemedText>
+                <ThemedText style={[styles.cardDescription, { color: theme.textTertiary }]}>
+                  {passDisabled ? 'Not available after 5:00 PM' : 'Create a gate pass for multiple students'}
+                </ThemedText>
+              </View>
 
-            <View style={styles.arrowContainer}>
-              <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
-            </View>
-          </TouchableOpacity>
+              <View style={styles.arrowContainer}>
+                {passDisabled ? (
+                  <ProhibitionIcon size={26} />
+                ) : (
+                  <Ionicons name="chevron-forward" size={24} color={theme.textSecondary} />
+                )}
+              </View>
+            </TouchableOpacity>
           ) : null}
 
+          {/* Guest / Pre-register — never time-restricted */}
           {onSelectGuest ? (
             <TouchableOpacity
               style={[styles.card, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
@@ -155,6 +192,38 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
         </TouchableOpacity>
       </View>
     </TypedModal>
+  );
+};
+
+/** SVG-free prohibition icon drawn with RN primitives */
+const ProhibitionIcon: React.FC<{ size?: number }> = ({ size = 24 }) => {
+  const r = size / 2;
+  const stroke = size * 0.14;
+  return (
+    <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+      {/* Outer circle */}
+      <View
+        style={{
+          position: 'absolute',
+          width: size,
+          height: size,
+          borderRadius: r,
+          borderWidth: stroke,
+          borderColor: '#DC2626',
+        }}
+      />
+      {/* Diagonal slash — rotated rectangle */}
+      <View
+        style={{
+          position: 'absolute',
+          width: stroke,
+          height: size * 0.88,
+          backgroundColor: '#DC2626',
+          borderRadius: stroke / 2,
+          transform: [{ rotate: '-45deg' }],
+        }}
+      />
+    </View>
   );
 };
 
@@ -200,6 +269,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
+  },
+  cardDisabled: {
+    opacity: 0.55,
   },
   iconContainer: {
     width: 56,

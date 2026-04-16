@@ -31,6 +31,7 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack,
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [manualCode, setManualCode] = useState<string | null>(null);
+  const [qrExpiresAt, setQrExpiresAt] = useState<string | null>(null);
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [selectedBulkId, setSelectedBulkId] = useState<number | null>(null);
 
@@ -102,7 +103,7 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack,
     setShowQRModal(true);
     try {
       const res = await apiService.getGatePassQRCode(req.id, user.staffCode, true);
-      if (res.success && res.qrCode) { setQrCodeData(res.qrCode); setManualCode(res.manualCode || null); }
+      if (res.success && res.qrCode) { setQrCodeData(res.qrCode); setManualCode(res.manualCode || null); setQrExpiresAt(res.qrExpiresAt || null); }
       else setShowQRModal(false);
     } catch { setShowQRModal(false); }
   };
@@ -276,6 +277,7 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack,
         personId={user.staffCode}
         qrCodeData={qrCodeData}
         manualCode={manualCode}
+        qrExpiresAt={qrExpiresAt}
         reason={selectedRequest?.reason || selectedRequest?.purpose}
       />
 
