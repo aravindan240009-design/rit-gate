@@ -73,11 +73,26 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
+  const isToday = (dateValue?: string) => {
+    if (!dateValue) return false;
+    const d = new Date(dateValue);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  };
+
   const loadData = async () => {
     try {
       const response = await apiService.getStudentGatePassRequests(student.regNo);
       if (response.success && response.requests) {
         const recent = response.requests
+          .filter((r: any) =>
+            r.status === 'PENDING_STAFF' ||
+            r.status === 'PENDING_HOD' ||
+            r.status === 'PENDING_HR' ||
+            r.status === 'PENDING' ||
+            r.status === 'REJECTED' ||
+            isToday(r.requestDate || r.createdAt)
+          )
           .sort((a: any, b: any) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime())
           .slice(0, 10);
         setRecentRequests(recent);
