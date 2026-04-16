@@ -1484,7 +1484,17 @@ const App: React.FC = () => {
           <RefreshProvider>
           <ActionLockProvider>
             <NotificationProvider onNavigate={handleNotificationRoute}>
-              <ProfileProvider>
+              <ProfileProvider userId={
+                  student?.regNo ||
+                  staff?.staffCode ||
+                  hod?.hodCode ||
+                  hr?.hrCode ||
+                  security?.securityId ||
+                  ntf?.staffCode ||
+                  nci?.staffCode ||
+                  admin?.staffCode ||
+                  null
+                }>
                 <ThemedApp>
                   <View style={[styles.container, { backgroundColor: '#F8FAFC' }]}>
                     <StatusBar
