@@ -14,7 +14,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShort, getRelativeTime } from '../../utils/dateUtils';
+import { formatDateTimeShort, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
 
 interface HRMyRequestsScreenProps {
   hr: HR;
@@ -39,9 +39,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    const d = new Date(dateValue);
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return isTodayUtil(dateValue);
   };
 
   const fetchRequests = useCallback(async () => {

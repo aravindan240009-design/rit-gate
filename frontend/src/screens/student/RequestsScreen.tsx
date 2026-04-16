@@ -20,7 +20,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDate as formatDateUtil, getRelativeTime } from '../../utils/dateUtils';
+import { formatDate as formatDateUtil, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
 
 
 const TypedModal = Modal as any;
@@ -95,9 +95,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    const d = new Date(dateValue);
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return isTodayUtil(dateValue);
   };
 
   const isUsedRequest = (request: any) =>

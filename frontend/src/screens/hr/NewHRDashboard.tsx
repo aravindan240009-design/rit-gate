@@ -22,7 +22,7 @@ import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useActionLock } from '../../context/ActionLockContext';
-import { formatDateShort } from '../../utils/dateUtils';
+import { formatDateShort, isToday as isTodayUtil } from '../../utils/dateUtils';
 import { notificationService } from '../../services/NotificationService';
 import NotificationDropdown from '../../components/NotificationDropdown';
 import BulkDetailsModal from '../../components/BulkDetailsModal';
@@ -111,9 +111,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    const d = new Date(dateValue);
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return isTodayUtil(dateValue);
   };
 
   const fetchIdRef = React.useRef(0);

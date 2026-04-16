@@ -34,13 +34,9 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
     try {
       const res = await apiService.getStaffOwnGatePassRequests(admin.staffCode);
       const all: any[] = (res as any).requests || (res as any).data || [];
-      const now = new Date();
       const filtered = all
         .filter(r => r.status !== 'USED' && r.status !== 'EXITED')
-        .filter(r => {
-          const d = new Date(r.requestDate || r.createdAt || 0);
-          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
-        })
+        .filter(r => isTodayUtil(r.requestDate || r.createdAt || ''))
         .sort((a, b) => new Date(b.requestDate || b.createdAt || 0).getTime() - new Date(a.requestDate || a.createdAt || 0).getTime());
       setRequests(filtered);
     } catch (e) { console.error('Admin my requests error:', e); }

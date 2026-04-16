@@ -11,7 +11,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { API_CONFIG } from '../config/api.config';
 import { useNotifications } from '../context/NotificationContext';
-import { getRelativeTime, formatDateShort } from '../utils/dateUtils';
+import { getRelativeTime, formatDateShort, isToday as isTodayUtil } from '../utils/dateUtils';
 import ThemedText from './ThemedText';
 
 interface Notification {
@@ -47,10 +47,7 @@ export default function NotificationDropdown({
 
   const isToday = (value?: string) => {
     if (!value) return false;
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return false;
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return isTodayUtil(value);
   };
 
   useEffect(() => {

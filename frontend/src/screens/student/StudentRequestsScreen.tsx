@@ -13,7 +13,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Student } from '../../types';
 import { apiService } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
-import { getRelativeTime, formatDateTimeShort } from '../../utils/dateUtils';
+import { getRelativeTime, formatDateTimeShort, isToday as isTodayUtil } from '../../utils/dateUtils';
 import MyRequestsBulkModal from '../../components/MyRequestsBulkModal';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import { useErrorModal } from '../../hooks/useErrorModal';
@@ -61,9 +61,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
   const getRequestDate = (request: any) => request.requestDate || request.createdAt || request.exitDateTime;
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    const d = new Date(dateValue);
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return isTodayUtil(dateValue);
   };
   const isUsedRequest = (request: any) =>
     request.qrUsed === true || request.status === 'USED' || request.status === 'EXITED';

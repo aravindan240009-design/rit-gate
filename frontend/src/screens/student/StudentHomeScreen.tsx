@@ -46,7 +46,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShort, formatDateTime } from '../../utils/dateUtils';
+import { formatDateTimeShort, formatDateTime, isToday as isTodayUtil } from '../../utils/dateUtils';
 
 
 interface StudentHomeScreenProps {
@@ -92,9 +92,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    const d = new Date(dateValue);
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return isTodayUtil(dateValue);
   };
 
   const loadData = async () => {

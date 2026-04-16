@@ -29,7 +29,7 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
-import { formatDateShort } from '../../utils/dateUtils';
+import { formatDateShort, isToday as isTodayUtil } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 
@@ -89,9 +89,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    const d = new Date(dateValue);
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return isTodayUtil(dateValue);
   };
 
   const fetchIdRef = React.useRef(0);

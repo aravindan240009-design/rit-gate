@@ -21,7 +21,7 @@ import { useTheme } from '../../context/ThemeContext';
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
 import { useActionLock } from '../../context/ActionLockContext';
-import { getRelativeTime, formatDateShort } from '../../utils/dateUtils';
+import { getRelativeTime, formatDateShort, isToday as isTodayUtil } from '../../utils/dateUtils';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import StaffRequestTimeline from '../../components/StaffRequestTimeline';
 import NotificationDropdown from '../../components/NotificationDropdown';
@@ -86,9 +86,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    const d = new Date(dateValue);
-    const now = new Date();
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+    return isTodayUtil(dateValue);
   };
 
   const fetchIdRef = React.useRef(0);
@@ -159,7 +157,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
       setRequests(uniqueRequests);
 
-      // Stats: only today's assigned requests
+      // Stats: today's assigned (non-own) requests
       const todayAssigned = uniqueRequests.filter((r: any) => {
         if (r.isOwnRequest) return false;
         const reqDate = r.requestDate || r.createdAt || r.visitDate;
@@ -169,9 +167,12 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         r.status === 'PENDING_STAFF' ||
         (r.requestType === 'VISITOR' && (r.staffApproval === 'PENDING' || r.staffApproval === 'PENDING_STAFF'))
       ).length;
-      const assignedApproved = todayAssigned.filter((r: any) => r.staffApproval === 'APPROVED').length;
-      const assignedRejected = todayAssigned.filter((r: any) => r.staffApproval === 'REJECTED').length;
-
+      const assignedApproved = todayAssigned.filter((r: any) =>
+        r.staffApproval === 'APPROVED' || r.status === 'APPROVED'
+      ).length;
+      const assignedRejected = todayAssigned.filter((r: any) =>
+        r.staffApproval === 'REJECTED' || r.status === 'REJECTED'
+      ).length;
       setStats({ pending: assignedPending, approved: assignedApproved, rejected: assignedRejected });
     } catch (error) {
       if (myFetchId !== fetchIdRef.current) return;
@@ -206,9 +207,9 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
       matchesTab = request.status === 'PENDING_STAFF' ||
         (request.requestType === 'VISITOR' && (request.staffApproval === 'PENDING' || request.staffApproval === 'PENDING_STAFF'));
     } else if (activeTab === 'APPROVED') {
-      matchesTab = request.staffApproval === 'APPROVED';
+      matchesTab = request.staffApproval === 'APPROVED' || request.status === 'APPROVED';
     } else if (activeTab === 'REJECTED') {
-      matchesTab = request.staffApproval === 'REJECTED';
+      matchesTab = request.staffApproval === 'REJECTED' || request.status === 'REJECTED';
     }
 
     const passes = matchesSearch && matchesTab;
