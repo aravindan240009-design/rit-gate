@@ -98,6 +98,26 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     try {
       const type = userType.toUpperCase();
 
+      // Helper: is the request from today?
+      const isToday = (dateValue?: string) => {
+        if (!dateValue) return false;
+        // Bare ISO strings from backend have no timezone — treat as UTC
+        const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test((dateValue || '').trim());
+        const d = new Date(bare ? dateValue.trim() + 'Z' : dateValue);
+        const now = new Date();
+        const todayStr = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+        return d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) === todayStr;
+      };
+
+      const countStats = (reqs: any[]) => {
+        const today = reqs.filter((r: any) => isToday(r.requestDate || r.createdAt || r.exitDateTime));
+        return {
+          stat1: today.filter((r: any) => r.status === 'APPROVED').length,
+          stat2: today.filter((r: any) => r.status === 'REJECTED').length,
+          stat3: today.filter((r: any) => r.status !== 'APPROVED' && r.status !== 'REJECTED').length,
+        };
+      };
+
       if (type === 'SECURITY') {
         const response = await apiService.getActivePersons();
         if (response.success && response.data) {
@@ -110,11 +130,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         const response = await apiService.getStudentGatePassRequests(user.regNo);
         if (response.success) {
           const reqs: any[] = response.requests || (response as any).data || [];
-          setStats({
-            stat1: reqs.filter((r: any) => r.status === 'APPROVED').length,
-            stat2: reqs.filter((r: any) => r.status === 'REJECTED').length,
-            stat3: reqs.filter((r: any) => r.status !== 'APPROVED' && r.status !== 'REJECTED').length,
-          });
+          setStats(countStats(reqs));
         }
       } else if (type === 'STAFF') {
         // Covers STAFF, NCI, NTF, Admin — all have staffCode
@@ -122,32 +138,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         const response = await apiService.getStaffOwnGatePassRequests(staffCode);
         if (response.success) {
           const reqs: any[] = (response as any).requests || (response as any).data || [];
-          setStats({
-            stat1: reqs.filter((r: any) => r.status === 'APPROVED').length,
-            stat2: reqs.filter((r: any) => r.status === 'REJECTED').length,
-            stat3: reqs.filter((r: any) => r.status !== 'APPROVED' && r.status !== 'REJECTED').length,
-          });
+          setStats(countStats(reqs));
         }
       } else if (type === 'HOD') {
         const response = await apiService.getHODMyGatePassRequests(user.hodCode);
         if (response.success) {
           const reqs: any[] = (response as any).requests || (response as any).data || [];
-          setStats({
-            stat1: reqs.filter((r: any) => r.status === 'APPROVED').length,
-            stat2: reqs.filter((r: any) => r.status === 'REJECTED').length,
-            stat3: reqs.filter((r: any) => r.status !== 'APPROVED' && r.status !== 'REJECTED').length,
-          });
+          setStats(countStats(reqs));
         }
       } else if (type === 'HR') {
         // HR's OWN gate pass requests (not the ones they approve)
         const response = await apiService.getStaffOwnGatePassRequests(user.hrCode);
         if (response.success) {
           const reqs: any[] = (response as any).requests || (response as any).data || [];
-          setStats({
-            stat1: reqs.filter((r: any) => r.status === 'APPROVED').length,
-            stat2: reqs.filter((r: any) => r.status === 'REJECTED').length,
-            stat3: reqs.filter((r: any) => r.status !== 'APPROVED' && r.status !== 'REJECTED').length,
-          });
+          setStats(countStats(reqs));
         }
       }
     } catch (error) {
