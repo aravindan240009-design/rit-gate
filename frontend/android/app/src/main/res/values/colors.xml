@@ -1,7 +1,8 @@
 <resources>
-  <color name="splashscreen_background">#06B6D4</color>
-  <color name="iconBackground">#06B6D4</color>
+  <!-- Deep navy — matches app primary color -->
+  <color name="splashscreen_background">#023c69</color>
+  <color name="iconBackground">#023c69</color>
   <color name="colorPrimary">#023c69</color>
-  <color name="colorPrimaryDark">#06B6D4</color>
+  <color name="colorPrimaryDark">#012d50</color>
   <color name="notification_icon_color">#06B6D4</color>
 </resources>

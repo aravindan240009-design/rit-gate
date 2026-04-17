@@ -1,6 +1,23 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!-- Deep navy background -->
   <item android:drawable="@color/splashscreen_background"/>
-  <item>
-    <bitmap android:gravity="center" android:src="@drawable/splashscreen_logo"/>
+
+  <!-- Subtle glow circle behind logo -->
+  <item
+    android:gravity="center"
+    android:width="280dp"
+    android:height="280dp">
+    <shape android:shape="oval">
+      <solid android:color="#0A4A7A"/>
+    </shape>
   </item>
+
+  <!-- Centered app logo -->
+  <item>
+    <bitmap
+      android:gravity="center"
+      android:src="@drawable/splashscreen_logo"/>
+  </item>
+
 </layer-list>

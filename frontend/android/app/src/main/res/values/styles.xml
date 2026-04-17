@@ -32,6 +32,7 @@
     <item name="android:windowBackground">@drawable/ic_launcher_background</item>
     <item name="android:statusBarColor">@color/splashscreen_background</item>
     <item name="android:navigationBarColor">@color/splashscreen_background</item>
+    <!-- Dark background → white status/nav bar icons -->
     <item name="android:windowLightStatusBar" tools:targetApi="23">false</item>
     <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
   </style>
