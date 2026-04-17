@@ -42,6 +42,7 @@ const NTFDashboardContainer: React.FC<NTFDashboardContainerProps> = ({ ntf, onLo
         <ProfileScreen
           user={ntf as any}
           userType="STAFF"
+          userSubType="NTF"
           onBack={() => setActiveTab('DASHBOARD')}
           onLogout={onLogout}
           showBottomNav={true}

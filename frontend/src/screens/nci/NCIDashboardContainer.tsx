@@ -42,6 +42,7 @@ const NCIDashboardContainer: React.FC<NCIDashboardContainerProps> = ({ nci, onLo
         <ProfileScreen
           user={nci as any}
           userType="STAFF"
+          userSubType="NCI"
           onBack={() => setActiveTab('DASHBOARD')}
           onLogout={onLogout}
           showBottomNav={true}

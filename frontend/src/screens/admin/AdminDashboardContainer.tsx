@@ -38,7 +38,7 @@ const AdminDashboardContainer: React.FC<AdminDashboardContainerProps> = ({ admin
   };
 
   if (activeTab === 'PROFILE') {
-    return <ProfileScreen user={admin as any} userType="STAFF" onBack={() => setActiveTab('DASHBOARD')} onLogout={onLogout} />;
+    return <ProfileScreen user={admin as any} userType="STAFF" userSubType="ADMIN" onBack={() => setActiveTab('DASHBOARD')} onLogout={onLogout} />;
   }
   if (activeTab === 'NEW_PASS') {
     return <AdminSinglePassScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} />;

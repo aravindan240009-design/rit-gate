@@ -33,6 +33,8 @@ import { StatsSkeleton, ProfileSkeleton } from '../../components/SkeletonCard';
 interface ProfileScreenProps {
   user: any;
   userType: 'STUDENT' | 'STAFF' | 'HOD' | 'HR' | 'SECURITY' | 'student' | 'staff' | 'hod' | 'hr' | 'security';
+  /** Distinguishes NCI/NTF/Admin within the STAFF userType */
+  userSubType?: 'NCI' | 'NTF' | 'ADMIN' | 'STAFF';
   onBack: () => void;
   onLogout: () => void;
   showBottomNav?: boolean;
@@ -42,6 +44,7 @@ interface ProfileScreenProps {
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ 
   user, 
   userType, 
+  userSubType,
   onBack, 
   onLogout,
   showBottomNav = false,
@@ -151,13 +154,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           setStats(countStats(reqs));
         }
       } else if (type === 'STAFF') {
-        // Covers STAFF, NCI, NTF, Admin — all have staffCode
+        // Distinguish NCI / NTF / Admin / regular STAFF
         const staffCode = user.staffCode || user.hrCode;
-        const response = await apiService.getStaffOwnGatePassRequests(staffCode);
-        if (response.success) {
-          const reqs: any[] = (response as any).requests || (response as any).data || [];
-          setStats(countStats(reqs));
+        let reqs: any[] = [];
+        if (userSubType === 'NCI') {
+          const response = await apiService.getNonClassInchargeOwnRequests(staffCode);
+          if (response.success) reqs = (response as any).requests || (response as any).data || [];
+        } else if (userSubType === 'NTF') {
+          const response = await apiService.getNTFOwnGatePassRequests(staffCode);
+          if (response.success) reqs = (response as any).requests || (response as any).data || [];
+        } else {
+          // Regular STAFF or Admin — both use the same endpoint
+          const response = await apiService.getStaffOwnGatePassRequests(staffCode);
+          if (response.success) reqs = (response as any).requests || (response as any).data || [];
         }
+        setStats(countStats(reqs));
       } else if (type === 'HOD') {
         const response = await apiService.getHODMyGatePassRequests(user.hodCode);
         if (response.success) {
