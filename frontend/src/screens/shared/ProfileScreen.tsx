@@ -386,26 +386,28 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <ThemedText style={[styles.userRole, { color: theme.textSecondary }]}>{getRole()} | Dept: {getDept()}</ThemedText>
         </View>
 
+        {userType.toUpperCase() !== 'SECURITY' && (
         <View style={[styles.statsCard, { backgroundColor: theme.surface }]}>
           {loadingStats ? <StatsSkeleton /> : (
             <>
               <View style={styles.statItem}>
                 <ThemedText style={[styles.statNumber, { color: theme.primary }]}>{stats.stat1}</ThemedText>
-                <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>{userType.toUpperCase() === 'SECURITY' ? 'ACTIVE' : 'APPROVED'}</ThemedText>
+                <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>APPROVED</ThemedText>
               </View>
               <View style={[styles.verticalDivider, { backgroundColor: theme.border }]} />
               <View style={styles.statItem}>
                 <ThemedText style={[styles.statNumber, { color: theme.primary }]}>{stats.stat2}</ThemedText>
-                <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>{userType.toUpperCase() === 'SECURITY' ? 'EXITED' : 'REJECTED'}</ThemedText>
+                <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>REJECTED</ThemedText>
               </View>
               <View style={[styles.verticalDivider, { backgroundColor: theme.border }]} />
               <View style={styles.statItem}>
                 <ThemedText style={[styles.statNumber, { color: theme.primary }]}>{stats.stat3}</ThemedText>
-                <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>{userType.toUpperCase() === 'SECURITY' ? 'TOTAL' : 'PENDING'}</ThemedText>
+                <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>PENDING</ThemedText>
               </View>
             </>
           )}
         </View>
+        )}
 
         <View style={styles.sectionHeaderContainer}>
           <ThemedText style={[styles.sectionHeader, { color: theme.text }]}>INTERFACE THEME</ThemedText>
