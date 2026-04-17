@@ -108,8 +108,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         }
       } else if (type === 'STUDENT') {
         const response = await apiService.getStudentGatePassRequests(user.regNo);
-        if (response.success && response.requests) {
-          const reqs = response.requests;
+        if (response.success) {
+          const reqs: any[] = response.requests || (response as any).data || [];
           setStats({
             stat1: reqs.filter((r: any) => r.status === 'APPROVED').length,
             stat2: reqs.filter((r: any) => r.status === 'REJECTED').length,
@@ -117,9 +117,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           });
         }
       } else if (type === 'STAFF') {
-        const response = await apiService.getStaffOwnGatePassRequests(user.staffCode);
-        if (response.success && response.data) {
-          const reqs = response.data;
+        // Covers STAFF, NCI, NTF, Admin — all have staffCode
+        const staffCode = user.staffCode || user.hrCode;
+        const response = await apiService.getStaffOwnGatePassRequests(staffCode);
+        if (response.success) {
+          const reqs: any[] = (response as any).requests || (response as any).data || [];
           setStats({
             stat1: reqs.filter((r: any) => r.status === 'APPROVED').length,
             stat2: reqs.filter((r: any) => r.status === 'REJECTED').length,
@@ -128,8 +130,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         }
       } else if (type === 'HOD') {
         const response = await apiService.getHODMyGatePassRequests(user.hodCode);
-        if (response.success && response.requests) {
-          const reqs = response.requests;
+        if (response.success) {
+          const reqs: any[] = (response as any).requests || (response as any).data || [];
           setStats({
             stat1: reqs.filter((r: any) => r.status === 'APPROVED').length,
             stat2: reqs.filter((r: any) => r.status === 'REJECTED').length,
@@ -137,13 +139,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           });
         }
       } else if (type === 'HR') {
-        const response = await apiService.getHRPendingRequests(user.hrCode);
-        if (response.success && response.data) {
-          const reqs = response.data;
+        // HR's OWN gate pass requests (not the ones they approve)
+        const response = await apiService.getStaffOwnGatePassRequests(user.hrCode);
+        if (response.success) {
+          const reqs: any[] = (response as any).requests || (response as any).data || [];
           setStats({
-            stat1: reqs.filter((r: any) => r.hrApproval === 'APPROVED').length,
-            stat2: reqs.filter((r: any) => r.hrApproval === 'REJECTED').length,
-            stat3: reqs.filter((r: any) => r.hrApproval !== 'APPROVED' && r.hrApproval !== 'REJECTED').length,
+            stat1: reqs.filter((r: any) => r.status === 'APPROVED').length,
+            stat2: reqs.filter((r: any) => r.status === 'REJECTED').length,
+            stat3: reqs.filter((r: any) => r.status !== 'APPROVED' && r.status !== 'REJECTED').length,
           });
         }
       }
