@@ -39,6 +39,15 @@ import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import BottomNavBar from '../../components/BottomNavBar';
+
+const HR_DASH_TABS = [
+  { key: 'HOME', label: 'Home', icon: 'home-outline', iconActive: 'home' },
+  { key: 'NEW_PASS', label: 'New Pass', icon: 'add-circle-outline', isAdd: true },
+  { key: 'MY_REQUESTS', label: 'My Requests', icon: 'list-outline', iconActive: 'list' },
+  { key: 'EXITS', label: 'Gate Logs', icon: 'swap-vertical-outline', iconActive: 'swap-vertical' },
+  { key: 'PROFILE', label: 'Profile', icon: 'person-outline', iconActive: 'person' },
+];
 
 
 interface NewHRDashboardProps {
@@ -556,33 +565,18 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
 
 
-      {/* Bottom Navigation — inline like staff/HOD */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('HOME')}>
-          <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
-          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('NEW_PASS'); setShowPassSheet(true); }}>
-          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('MY_REQUESTS'); onNavigate('MY_REQUESTS'); }}>
-          <Ionicons name={bottomTab === 'MY_REQUESTS' ? 'list' : 'list-outline'} size={22} color={bottomTab === 'MY_REQUESTS' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_REQUESTS' && { color: theme.primary }]}>My Requests</ThemedText>
-          {bottomTab === 'MY_REQUESTS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('EXITS'); onNavigate('HR_EXITS'); }}>
-          <Ionicons name={bottomTab === 'EXITS' ? 'swap-vertical' : 'swap-vertical-outline'} size={22} color={bottomTab === 'EXITS' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'EXITS' && { color: theme.primary }]}>Gate Logs</ThemedText>
-          {bottomTab === 'EXITS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
-          <Ionicons name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'} size={22} color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</ThemedText>
-          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Navigation */}
+      <BottomNavBar
+        tabs={HR_DASH_TABS}
+        activeKey={bottomTab === 'NEW_PASS' ? 'HOME' : bottomTab}
+        onPress={(key) => {
+          if (key === 'HOME') setBottomTab('HOME');
+          else if (key === 'NEW_PASS') { setBottomTab('NEW_PASS'); setShowPassSheet(true); }
+          else if (key === 'MY_REQUESTS') { setBottomTab('MY_REQUESTS'); onNavigate('MY_REQUESTS'); }
+          else if (key === 'EXITS') { setBottomTab('EXITS'); onNavigate('HR_EXITS'); }
+          else if (key === 'PROFILE') { setBottomTab('PROFILE'); onNavigate('PROFILE'); }
+        }}
+      />
       </TopRefreshControl>
 
       {/* Pass Type Bottom Sheet */}

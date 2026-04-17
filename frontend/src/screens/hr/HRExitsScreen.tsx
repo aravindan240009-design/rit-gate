@@ -17,6 +17,15 @@ import { VerticalFlatList } from '../../components/navigation/VerticalScrollView
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import TopRefreshControl from '../../components/TopRefreshControl';
+import BottomNavBar from '../../components/BottomNavBar';
+
+const HR_TABS = [
+  { key: 'HOME', label: 'Home', icon: 'home-outline', iconActive: 'home' },
+  { key: 'NEW_PASS', label: 'New Pass', icon: 'add-circle-outline', isAdd: true },
+  { key: 'MY_REQUESTS', label: 'My Requests', icon: 'list-outline', iconActive: 'list' },
+  { key: 'EXITS', label: 'Gate Logs', icon: 'swap-vertical-outline', iconActive: 'swap-vertical' },
+  { key: 'PROFILE', label: 'Profile', icon: 'person-outline', iconActive: 'person' },
+];
 
 interface HRExitsScreenProps {
   hr: HR;
@@ -309,31 +318,14 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, onTabChange }
       <SuccessModal visible={showSuccess} title="Done" message={modalMsg} onClose={() => setShowSuccess(false)} autoClose autoCloseDelay={2500} />
       <ErrorModal visible={showError} type="general" title="Cannot Download" message={modalMsg} onClose={() => setShowError(false)} />
 
-      {/* Bottom Navigation */}
       {onTabChange && (
-        <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
-            <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('NEW_PASS')}>
-            <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('MY_REQUESTS')}>
-            <Ionicons name="list-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>My Requests</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="swap-vertical" size={22} color={theme.primary} />
-            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>Gate Logs</ThemedText>
-            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('PROFILE')}>
-            <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
-          </TouchableOpacity>
-        </View>
+        <BottomNavBar tabs={HR_TABS} activeKey="EXITS" onPress={(key) => {
+          if (key === 'HOME') onTabChange('HOME');
+          else if (key === 'NEW_PASS') onTabChange('NEW_PASS');
+          else if (key === 'MY_REQUESTS') onTabChange('MY_REQUESTS');
+          else if (key === 'PROFILE') onTabChange('PROFILE');
+          else if (key === 'EXITS') onTabChange('EXITS');
+        }} />
       )}
     </SafeAreaView>
   );

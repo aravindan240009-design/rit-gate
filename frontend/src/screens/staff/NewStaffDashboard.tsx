@@ -24,6 +24,14 @@ import { useActionLock } from '../../context/ActionLockContext';
 import { getRelativeTime, formatDateShort, isToday as isTodayUtil } from '../../utils/dateUtils';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import StaffRequestTimeline from '../../components/StaffRequestTimeline';
+import BottomNavBar from '../../components/BottomNavBar';
+
+const STAFF_DASH_TABS = [
+  { key: 'HOME', label: 'Home', icon: 'home-outline', iconActive: 'home' },
+  { key: 'NEW_PASS', label: 'New Pass', icon: 'add-circle-outline', isAdd: true },
+  { key: 'MY_REQUESTS', label: 'My Requests', icon: 'list-outline', iconActive: 'list' },
+  { key: 'PROFILE', label: 'Profile', icon: 'person-outline', iconActive: 'person' },
+];
 import NotificationDropdown from '../../components/NotificationDropdown';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
@@ -518,69 +526,16 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         )}
       </ScreenContentContainer>
       </TopRefreshControl>
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => setBottomTab('HOME')}
-        >
-          <Ionicons
-            name={bottomTab === 'HOME' ? 'home' : 'home-outline'}
-            size={22}
-            color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary}
-          />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>
-            Home
-          </ThemedText>
-          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('NEW_PASS');
-            setShowPassTypeModal(true);
-          }}
-        >
-          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('MY_REQUESTS');
-            onNavigate('MY_REQUESTS');
-          }}
-        >
-          <Ionicons
-            name={bottomTab === 'MY_REQUESTS' ? 'list' : 'list-outline'}
-            size={22}
-            color={bottomTab === 'MY_REQUESTS' ? theme.primary : theme.textTertiary}
-          />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_REQUESTS' && { color: theme.primary }]}>
-            My Requests
-          </ThemedText>
-          {bottomTab === 'MY_REQUESTS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('PROFILE');
-            onNavigate('PROFILE');
-          }}
-        >
-          <Ionicons
-            name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'}
-            size={22}
-            color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary}
-          />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>
-            Profile
-          </ThemedText>
-          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-      </View>
+      <BottomNavBar
+        tabs={STAFF_DASH_TABS}
+        activeKey={bottomTab === 'NEW_PASS' ? 'HOME' : bottomTab}
+        onPress={(key) => {
+          if (key === 'HOME') setBottomTab('HOME');
+          else if (key === 'NEW_PASS') { setBottomTab('NEW_PASS'); setShowPassTypeModal(true); }
+          else if (key === 'MY_REQUESTS') { setBottomTab('MY_REQUESTS'); onNavigate('MY_REQUESTS'); }
+          else if (key === 'PROFILE') { setBottomTab('PROFILE'); onNavigate('PROFILE'); }
+        }}
+      />
 
       {/* Notification Dropdown */}
       <NotificationDropdown

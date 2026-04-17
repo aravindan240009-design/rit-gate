@@ -19,6 +19,15 @@ import { VerticalFlatList } from '../../components/navigation/VerticalScrollView
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
 import { formatDateTimeShort, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
+import BottomNavBar from '../../components/BottomNavBar';
+import PageHeader from '../../components/PageHeader';
+
+const STAFF_TABS = [
+  { key: 'HOME', label: 'Home', icon: 'home-outline', iconActive: 'home' },
+  { key: 'NEW_PASS', label: 'New Pass', icon: 'add-circle-outline', isAdd: true },
+  { key: 'MY_REQUESTS', label: 'My Requests', icon: 'list-outline', iconActive: 'list' },
+  { key: 'PROFILE', label: 'Profile', icon: 'person-outline', iconActive: 'person' },
+];
 
 
 interface MyRequestsScreenProps {
@@ -195,29 +204,13 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-          <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
-        </View>
+        <PageHeader title="My Requests" />
         <SkeletonList count={5} />
-        <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-          <TouchableOpacity style={styles.navItem} onPress={() => onBack && onBack()}>
-            <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('NEW_PASS')}>
-            <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="list" size={22} color={theme.primary} />
-            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
-            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('PROFILE')}>
-            <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
-          </TouchableOpacity>
-        </View>
+      <BottomNavBar tabs={STAFF_TABS} activeKey="MY_REQUESTS" onPress={(key) => {
+        if (key === 'HOME') onBack();
+        else if (key === 'NEW_PASS') onNavigate && onNavigate('NEW_PASS');
+        else if (key === 'PROFILE') onNavigate && onNavigate('PROFILE');
+      }} />
       </SafeAreaView>
     );
   }
@@ -225,9 +218,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
-      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
-      </View>
+      <PageHeader title="My Requests" />
       <ScreenContentContainer>
         {refreshing ? (
           <SkeletonList count={5} />
@@ -257,25 +248,6 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
       </TopRefreshControl>
 
       {/* Bottom Navigation */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-        <TouchableOpacity style={styles.navItem} onPress={() => onBack && onBack()}>
-          <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('NEW_PASS')}>
-          <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="list" size={22} color={theme.primary} />
-          <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
-          <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('PROFILE')}>
-          <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
-        </TouchableOpacity>
-      </View>
 
       <SinglePassDetailsModal
         visible={showDetailModal}
