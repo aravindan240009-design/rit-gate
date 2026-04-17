@@ -11,6 +11,7 @@ import { useTheme } from '../../context/ThemeContext';
 import ThemedText from '../../components/ThemedText';
 import GatePassQRModal from '../../components/GatePassQRModal';
 import ErrorModal from '../../components/ErrorModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 interface HRSinglePassScreenProps {
   hr: HR;
@@ -27,13 +28,19 @@ const HRSinglePassScreen: React.FC<HRSinglePassScreenProps> = ({ hr, onBack }) =
   const [manualCode, setManualCode] = useState<string | null>(null);
   const [showError, setShowError] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!purpose.trim() || !reason.trim()) {
       setErrorMsg('Please fill in both purpose and reason.');
       setShowError(true);
       return;
     }
+    setShowConfirmSubmit(true);
+  };
+
+  const doSubmit = async () => {
     setSubmitting(true);
     try {
       // Step 1: Submit as NTF (skips HOD, goes straight to HR level)
@@ -81,7 +88,10 @@ const HRSinglePassScreen: React.FC<HRSinglePassScreenProps> = ({ hr, onBack }) =
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => {
+          if (purpose.trim() || reason.trim()) setShowBackConfirm(true);
+          else onBack();
+        }}>
           <Ionicons name="arrow-back" size={22} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>New Gate Pass</ThemedText>
@@ -175,6 +185,25 @@ const HRSinglePassScreen: React.FC<HRSinglePassScreenProps> = ({ hr, onBack }) =
         title="Error"
         message={errorMsg}
         onClose={() => setShowError(false)}
+      />
+      <ConfirmationModal
+        visible={showConfirmSubmit}
+        title="Generate Gate Pass"
+        message="Are you sure you want to generate this gate pass? It will be instantly approved."
+        confirmText="Generate"
+        confirmColor={theme.primary}
+        icon="qr-code-outline"
+        onConfirm={() => { setShowConfirmSubmit(false); doSubmit(); }}
+        onCancel={() => setShowConfirmSubmit(false)}
+      />
+      <ConfirmationModal
+        visible={showBackConfirm}
+        title="Discard Changes"
+        message="You have unsaved changes. Are you sure you want to go back?"
+        confirmText="Discard"
+        icon="arrow-back-outline"
+        onConfirm={() => { setShowBackConfirm(false); onBack(); }}
+        onCancel={() => setShowBackConfirm(false)}
       />
     </SafeAreaView>
   );
