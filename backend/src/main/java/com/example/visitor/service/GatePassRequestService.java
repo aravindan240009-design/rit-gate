@@ -1301,10 +1301,9 @@ public class GatePassRequestService {
         return saved;
     }
     
-    // Get requests for HR approval
+    // Get requests for HR approval — only those with status=PENDING_HR (HOD already approved)
     public List<GatePassRequest> getRequestsForHRApproval(String hrCode) {
-        return gatePassRequestRepository.findByAssignedHrCodeAndHrApprovalOrderByCreatedAtDesc(
-            hrCode, GatePassRequest.ApprovalStatus.PENDING);
+        return gatePassRequestRepository.findPendingHRApprovalByHrCode(hrCode);
     }
     
     // Get all requests for HR
@@ -1314,10 +1313,7 @@ public class GatePassRequestService {
     
     // Get pending counts for HR
     public long getPendingRequestsCountForHR(String hrCode) {
-        List<GatePassRequest> pending = gatePassRequestRepository
-            .findByAssignedHrCodeAndHrApprovalOrderByCreatedAtDesc(
-                hrCode, GatePassRequest.ApprovalStatus.PENDING);
-        return pending.size();
+        return gatePassRequestRepository.findPendingHRApprovalByHrCode(hrCode).size();
     }
     
     // Get requests by HOD (includes both individual and bulk pass requests where HOD is QR owner)

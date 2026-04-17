@@ -46,6 +46,10 @@ public interface GatePassRequestRepository extends JpaRepository<GatePassRequest
     // Find pending requests for HR approval
     List<GatePassRequest> findByAssignedHrCodeAndHrApprovalOrderByCreatedAtDesc(
         String assignedHrCode, ApprovalStatus hrApproval);
+
+    // Find requests that are actually waiting for HR (status = PENDING_HR) — HOD already approved
+    @Query("SELECT r FROM GatePassRequest r WHERE r.assignedHrCode = :hrCode AND r.status = 'PENDING_HR' ORDER BY r.createdAt DESC")
+    List<GatePassRequest> findPendingHRApprovalByHrCode(@Param("hrCode") String hrCode);
     
     // Find by department
     List<GatePassRequest> findByDepartmentOrderByCreatedAtDesc(String department);
