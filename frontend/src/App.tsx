@@ -308,7 +308,7 @@ const App: React.FC = () => {
       console.log('⚠️ Maximum loading timeout - forcing home screen');
       setIsLoading(false);
       setCurrentScreen('HOME');
-    }, 3000);
+    }, 10000); // 10s — enough for Render cold start
 
     checkAuthStatus().finally(() => {
       clearTimeout(minLoadingTime);
@@ -397,8 +397,13 @@ const App: React.FC = () => {
       if (savedStaff) {
         console.log('✅ Found saved staff session:', savedStaff.staffCode);
         // Quick backend role check to catch stale sessions (e.g. HOD stored as STAFF)
+        // Use a 4s timeout — if backend is slow (Render cold start), trust cached session
         try {
-          const actualRole = await apiService.detectRole(savedStaff.staffCode);
+          const rolePromise = apiService.detectRole(savedStaff.staffCode);
+          const timeoutPromise = new Promise<string>((_, reject) =>
+            setTimeout(() => reject(new Error('detectRole timeout')), 4000)
+          );
+          const actualRole = await Promise.race([rolePromise, timeoutPromise]);
           if (actualRole === 'HOD') {
             console.log('⚠️ Staff session is actually HOD — clearing stale session');
             await offlineStorage.clearCurrentStaff();
@@ -423,7 +428,8 @@ const App: React.FC = () => {
             return;
           }
         } catch {
-          // Network error — trust cached session
+          // Network error or timeout — trust cached session
+          console.log('⚠️ detectRole failed/timed out — trusting cached staff session');
           setStaff(savedStaff);
           setUserType('STAFF');
           setCurrentScreen('STAFF_DASHBOARD');
