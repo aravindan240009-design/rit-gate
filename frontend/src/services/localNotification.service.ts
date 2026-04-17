@@ -68,17 +68,12 @@ export async function showLocalNotification(
       android: {
         channelId: CHANNEL_ID,
         importance: AndroidImportance.HIGH,
-        // Small icon (monochrome) shown in status bar
+        // Small icon (white monochrome vectordesign) shown in status bar and notification
         smallIcon: 'notification_icon',
-        // Large icon (RIT logo) shown on the right of the notification — like Snapchat
-        largeIcon: require('../../assets/rit-logo.png'),
         pressAction: { id: 'default' },
         showTimestamp: true,
-        // Explicit vibration pattern
         vibrationPattern: [0, 250, 250, 250],
-        // PUBLIC visibility so notification content shows on lock screen
         visibility: AndroidVisibility.PUBLIC,
-        // Wake the screen when notification arrives
         fullScreenAction: {
           id: 'default',
           launchActivity: 'default',
