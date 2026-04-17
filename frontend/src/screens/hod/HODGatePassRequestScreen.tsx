@@ -40,6 +40,7 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
   const [errorMessage, setErrorMessage] = useState('');
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -91,6 +92,7 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
         attachment?.base64Uri
       );
       if (result.success) {
+        setSubmitted(true);
         setShowSuccessModal(true);
       } else {
         setErrorMessage(result.message || 'Failed to submit request');
@@ -105,10 +107,10 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
   };
 
   const confirmGoBack = () => {
-    if (purpose.trim() || reason.trim() || attachment) {
-      setShowBackConfirm(true);
-    } else {
+    if (submitted || (!purpose.trim() && !reason.trim() && !attachment)) {
       if (onBack) onBack();
+    } else {
+      setShowBackConfirm(true);
     }
   };
 

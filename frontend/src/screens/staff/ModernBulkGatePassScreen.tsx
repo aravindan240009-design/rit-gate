@@ -52,6 +52,7 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
   const [errorMessage, setErrorMessage] = useState('');
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [receiverId, setReceiverId] = useState<string | null>(null);
@@ -67,6 +68,12 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
   const handleGoBack = () => {
+    if (submitted) {
+      // Already submitted — go back directly, no discard prompt
+      if (navigation?.goBack) navigation.goBack();
+      else if (onBack) onBack();
+      return;
+    }
     if (purpose.trim() || reason.trim() || selectedStudents.size > 0) {
       setShowBackConfirm(true);
     } else {
@@ -218,6 +225,7 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
         attachmentUri: attachment?.base64Uri,
       } as any);
       if (response.success) {
+        setSubmitted(true);
         setShowSuccessModal(true);
       } else {
         setErrorMessage(response.message || 'Failed to submit bulk gate pass');

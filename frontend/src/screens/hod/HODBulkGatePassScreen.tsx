@@ -97,6 +97,7 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
   const [errorMessage, setErrorMessage] = useState('');
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [attachment, setAttachment] = useState<{
     name: string;
@@ -123,6 +124,10 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
   const [receiverType, setReceiverType] = useState<'student' | 'staff' | null>(null);
 
   const handleGoBack = () => {
+    if (submitted) {
+      navigation?.goBack ? navigation.goBack() : onBack?.();
+      return;
+    }
     if (purpose.trim() || reason.trim() || selectedStudents.size > 0 || selectedStaff.size > 0) {
       setShowBackConfirm(true);
     } else {
@@ -271,6 +276,7 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
         attachmentUri: attachment?.base64Uri,
       } as any);
       if (response.success !== false) {
+        setSubmitted(true);
         setShowSuccessModal(true);
       } else {
         setErrorMessage(response.message || 'Failed to submit bulk gate pass');

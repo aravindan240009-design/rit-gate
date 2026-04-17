@@ -45,6 +45,7 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
   const [errorMessage, setErrorMessage] = useState('');
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const isImageAttachment = !!attachment?.name?.toLowerCase?.().match(/\.(jpg|jpeg|png|gif|webp)$/);
 
@@ -65,10 +66,10 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
   };
 
   const confirmGoBack = () => {
-    if (purpose.trim() || reason.trim() || attachment) {
-      setShowBackConfirm(true);
-    } else {
+    if (submitted || (!purpose.trim() && !reason.trim() && !attachment)) {
       handleGoBack();
+    } else {
+      setShowBackConfirm(true);
     }
   };
 
@@ -152,7 +153,7 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
         } else {
           response = (isStaff || isHOD) ? await apiService.submitStaffGatePassRequest(payload as any) : await apiService.submitGatePassRequest(payload as any);
         }
-        if (response.success) setShowSuccessModal(true);
+        if (response.success) { setSubmitted(true); setShowSuccessModal(true); }
         else { setErrorMessage(response.message || 'Failed to submit.'); setShowErrorModal(true); }
       } catch (error: any) { setErrorMessage(error.message || 'Error occurred.'); setShowErrorModal(true); }
     }, 'Submitting request...');
