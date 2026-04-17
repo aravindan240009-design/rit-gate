@@ -72,6 +72,13 @@ public class BulkGatePassService {
                 log.warn("No students found for staff '{}' (code: {}) in dept '{}'", staffName, staffCode, department);
             }
             
+            // First-year rule: staff bulk passes cannot include semester 1-2 students
+            // (those students belong to S&H HOD for bulk pass routing)
+            students = students.stream()
+                .filter(s -> s.getSemester() == null || s.getSemester() >= 3)
+                .collect(java.util.stream.Collectors.toList());
+            log.info("After first-year filter (sem>=3): {} students", students.size());
+            
             // Convert to simple map
             List<Map<String, String>> studentList = new ArrayList<>();
             for (Student s : students) {
@@ -182,8 +189,17 @@ public class BulkGatePassService {
                 students.add(student);
             }
             
-            // Find HOD for the department
-            String hodCode = departmentLookupService.findHODForDepartment(department);
+            // Find HOD for the department — apply first-year rule:
+            // If ANY student in the bulk pass is semester 1 or 2, route to S&H HOD
+            boolean hasFirstYearStudents = students.stream()
+                .anyMatch(s -> s.getSemester() != null && (s.getSemester() == 1 || s.getSemester() == 2));
+            String hodCode;
+            if (hasFirstYearStudents) {
+                hodCode = departmentLookupService.findHODForDepartment(department, 1); // semester=1 triggers S&H HOD
+                log.info("Bulk pass contains first-year students → routing to S&H HOD: {}", hodCode);
+            } else {
+                hodCode = departmentLookupService.findHODForDepartment(department);
+            }
             
             // Determine bulk type
             String bulkType = includeStaffFlag ? "BULK_INCLUDE_STAFF" : "BULK_EXCLUDE_STAFF";
