@@ -7,6 +7,7 @@
 import notifee, {
   AndroidImportance,
   AndroidVisibility,
+  AndroidColor,
   EventType,
 } from '@notifee/react-native';
 
@@ -18,18 +19,24 @@ let channelCreated = false;
 /** Create the notification channel once (Android 8+). */
 export async function ensureChannel() {
   if (channelCreated) return;
-  // Delete existing channel first so lights/settings update takes effect
-  // (Android channels are immutable after creation)
+  // Delete existing channel first so settings update takes effect
+  // (Android channels are immutable after creation — delete forces recreation)
   try { await notifee.deleteChannel(CHANNEL_ID); } catch {}
   await notifee.createChannel({
     id: CHANNEL_ID,
     name: CHANNEL_NAME,
     importance: AndroidImportance.HIGH,
     visibility: AndroidVisibility.PUBLIC,
-    vibration: true,
+    // Sound — plays in normal mode, silent in DND/silent (Android handles this automatically)
     sound: 'default',
-    // Lights help wake the screen on devices that support it
+    // Vibration — plays in vibration mode and normal mode
+    vibration: true,
+    vibrationPattern: [0, 250, 250, 250], // off 0ms, on 250ms, off 250ms, on 250ms
+    // Wake screen on notification arrival
     lights: true,
+    lightColor: AndroidColor.RED,
+    // Do NOT bypass DND — respect silent mode
+    bypassDnd: false,
   });
   channelCreated = true;
 }
@@ -64,14 +71,15 @@ export async function showLocalNotification(
         smallIcon: 'notification_icon',
         pressAction: { id: 'default' },
         showTimestamp: true,
-        // Wake the screen when notification arrives
-        // fullScreenAction launches MainActivity which turns on the screen
+        // Explicit vibration pattern — works in vibration mode and normal mode
+        vibrationPattern: [0, 250, 250, 250],
+        // PUBLIC visibility so notification content shows on lock screen
+        visibility: AndroidVisibility.PUBLIC,
+        // Wake the screen when notification arrives (foreground/background)
         fullScreenAction: {
           id: 'default',
           launchActivity: 'default',
         },
-        // PUBLIC visibility so notification content shows on lock screen
-        visibility: AndroidVisibility.PUBLIC,
       },
     });
   } catch (e) {
