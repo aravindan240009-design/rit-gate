@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -37,16 +37,6 @@ const isQRString = (val: string) => {
          v.startsWith('VG|') || v.startsWith('HD|');
 };
 
-/** Format remaining time as HH:MM:SS */
-const formatCountdown = (ms: number): string => {
-  if (ms <= 0) return '00:00:00';
-  const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-};
-
 const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
   visible,
   onClose,
@@ -62,31 +52,6 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
 }) => {
   const { theme } = useTheme();
   const qrRef = useRef<any>(null);
-  const [countdown, setCountdown] = useState<string>('');
-  const [isExpired, setIsExpired] = useState(false);
-
-  // Live countdown ticker
-  useEffect(() => {
-    if (!visible || !qrExpiresAt) {
-      setCountdown('');
-      setIsExpired(false);
-      return;
-    }
-    const expiryMs = new Date(qrExpiresAt).getTime();
-    const tick = () => {
-      const remaining = expiryMs - Date.now();
-      if (remaining <= 0) {
-        setCountdown('00:00:00');
-        setIsExpired(true);
-      } else {
-        setCountdown(formatCountdown(remaining));
-        setIsExpired(false);
-      }
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  }, [visible, qrExpiresAt]);
 
   const exportQrPng = async (): Promise<string | null> => {
     if (!qrRef.current?.toDataURL) return null;
@@ -122,7 +87,7 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
   // Determine "Valid Until" label
   const validUntilLabel = (() => {
     if (validUntil) return validUntil;
-    if (qrExpiresAt) return 'Midnight today (one-time use)';
+    if (qrExpiresAt) return 'Today';
     return 'One time';
   })();
 
@@ -148,31 +113,8 @@ const GatePassQRModal: React.FC<GatePassQRModalProps> = ({
             <ThemedText style={[styles.personName, { color: theme.text }]}>{personName.toUpperCase()}</ThemedText>
             <ThemedText style={[styles.personId, { color: theme.textSecondary }]}>{personId}</ThemedText>
 
-            {/* Expiry countdown banner */}
-            {qrExpiresAt && (
-              <View style={[
-                styles.expiryBanner,
-                { backgroundColor: isExpired ? theme.error + '22' : theme.warning + '18', borderColor: isExpired ? theme.error : theme.warning },
-              ]}>
-                <Ionicons
-                  name={isExpired ? 'close-circle-outline' : 'time-outline'}
-                  size={16}
-                  color={isExpired ? theme.error : theme.warning}
-                />
-                {isExpired ? (
-                  <ThemedText style={[styles.expiryText, { color: theme.error }]}>
-                    QR Expired — valid only on the day of approval
-                  </ThemedText>
-                ) : (
-                  <ThemedText style={[styles.expiryText, { color: theme.warning }]}>
-                    Expires at midnight · {countdown} remaining
-                  </ThemedText>
-                )}
-              </View>
-            )}
-
             {/* QR Code */}
-            <View style={[styles.qrCard, { backgroundColor: '#FFFFFF', opacity: isExpired ? 0.35 : 1 }]}>
+            <View style={[styles.qrCard, { backgroundColor: '#FFFFFF' }]}>
               {qrCodeData ? (
                 isQRString(qrCodeData) ? (
                   <QRCode
