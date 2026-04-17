@@ -51,7 +51,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
   }
 }
 
-/** Display a single OS notification. Wakes the screen via fullScreenAction. */
+/** Display a single OS notification. */
 export async function showLocalNotification(
   id: string,
   title: string,
@@ -68,14 +68,17 @@ export async function showLocalNotification(
       android: {
         channelId: CHANNEL_ID,
         importance: AndroidImportance.HIGH,
+        // Small icon (monochrome) shown in status bar
         smallIcon: 'notification_icon',
+        // Large icon (RIT logo) shown on the right of the notification — like Snapchat
+        largeIcon: require('../../assets/rit-logo.png'),
         pressAction: { id: 'default' },
         showTimestamp: true,
-        // Explicit vibration pattern — works in vibration mode and normal mode
+        // Explicit vibration pattern
         vibrationPattern: [0, 250, 250, 250],
         // PUBLIC visibility so notification content shows on lock screen
         visibility: AndroidVisibility.PUBLIC,
-        // Wake the screen when notification arrives (foreground/background)
+        // Wake the screen when notification arrives
         fullScreenAction: {
           id: 'default',
           launchActivity: 'default',
