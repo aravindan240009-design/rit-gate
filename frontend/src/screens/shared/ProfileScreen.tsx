@@ -115,6 +115,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   }, [isEditing, profileData]);
 
   const fetchStats = async () => {
+    if (userType.toUpperCase() === 'SECURITY') {
+      // No stats shown for security — skip fetch entirely
+      setLoadingStats(false);
+      setInitialLoading(false);
+      setRefreshing(false);
+      return;
+    }
     if (!refreshing) setLoadingStats(true);
     try {
       const type = userType.toUpperCase();
@@ -139,15 +146,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         };
       };
 
-      if (type === 'SECURITY') {
-        const response = await apiService.getActivePersons();
-        if (response.success && response.data) {
-          const validPersons = response.data.filter((person: any) => person.name && !person.name.startsWith('QR Not Found') && !person.name.includes('Unknown'));
-          const active = validPersons.filter((p: any) => p.status === 'PENDING').length;
-          const exited = validPersons.filter((p: any) => p.status === 'EXITED').length;
-          setStats({ stat1: active, stat2: exited, stat3: validPersons.length });
-        }
-      } else if (type === 'STUDENT') {
+      if (type === 'STUDENT') {
         const response = await apiService.getStudentGatePassRequests(user.regNo);
         if (response.success) {
           const reqs: any[] = response.requests || (response as any).data || [];
