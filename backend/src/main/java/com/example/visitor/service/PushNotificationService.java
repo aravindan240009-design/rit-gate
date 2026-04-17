@@ -252,8 +252,13 @@ public class PushNotificationService {
         String pemBody = privateKeyPem
             .replace("-----BEGIN PRIVATE KEY-----", "")
             .replace("-----END PRIVATE KEY-----", "")
-            .replace("\\n", "")
-            .replaceAll("\\s+", "");
+            .replace("\\\\n", "")   // double-escaped: \\n → remove
+            .replace("\\n", "")     // escaped newline: \n → remove
+            .replace("\n", "")      // actual newline char → remove
+            .replace("\r", "")      // carriage return → remove
+            .replaceAll("[^A-Za-z0-9+/=]", ""); // strip any remaining non-base64 chars
+        
+        log.debug("🔑 PEM body length after cleanup: {}", pemBody.length());
 
         byte[] keyBytes = Base64.getDecoder().decode(pemBody);
         java.security.spec.PKCS8EncodedKeySpec spec = new java.security.spec.PKCS8EncodedKeySpec(keyBytes);
