@@ -368,8 +368,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
-      {/* Header */}
+      {/* Header — fixed, outside TopRefreshControl */}
       <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
@@ -397,6 +396,9 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Scrollable content with pull-to-refresh — header and bottom nav are outside */}
+      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
 
       {bottomTab === 'HOME' && (
         <>
@@ -582,7 +584,19 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       />
       </TopRefreshControl>
 
-      {/* Pass Type Bottom Sheet */}
+      {/* Bottom Navigation — fixed outside TopRefreshControl */}
+      <BottomNavBar
+        tabs={HR_DASH_TABS}
+        activeKey={bottomTab === 'NEW_PASS' ? 'HOME' : bottomTab}
+        onPress={(key) => {
+          if (key === 'HOME') setBottomTab('HOME');
+          else if (key === 'NEW_PASS') { setBottomTab('NEW_PASS'); setShowPassSheet(true); }
+          else if (key === 'MY_REQUESTS') { setBottomTab('MY_REQUESTS'); onNavigate('MY_REQUESTS'); }
+          else if (key === 'EXITS') { setBottomTab('EXITS'); onNavigate('HR_EXITS'); }
+          else if (key === 'PROFILE') { setBottomTab('PROFILE'); onNavigate('PROFILE'); }
+        }}
+      />
+
       <PassTypeBottomSheet
         visible={showPassSheet}
         onClose={() => { setShowPassSheet(false); setBottomTab('HOME'); }}
