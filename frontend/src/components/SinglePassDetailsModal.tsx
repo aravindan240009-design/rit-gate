@@ -349,7 +349,6 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
         title="Approve Request"
         message="Are you sure you want to approve this gate pass request?"
         confirmText="Approve"
-        confirmColor={theme.success}
         icon="checkmark-circle-outline"
         onConfirm={() => { setShowApproveConfirm(false); if (onApprove) onApprove(request.id, remark); }}
         onCancel={() => setShowApproveConfirm(false)}

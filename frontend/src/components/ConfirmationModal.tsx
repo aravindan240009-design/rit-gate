@@ -35,7 +35,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onCancel,
 }) => {
   const { theme } = useTheme();
-  const resolvedConfirmColor = confirmColor ?? theme.error;
+  const resolvedConfirmColor = confirmColor ?? theme.primary;
   const animation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {

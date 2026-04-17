@@ -371,7 +371,6 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
         title="Approve Bulk Pass"
         message="Are you sure you want to approve this bulk gate pass request?"
         confirmText="Approve"
-        confirmColor={theme.success}
         icon="checkmark-circle-outline"
         onConfirm={() => { setShowApproveConfirm(false); if (onApprove) onApprove(requestId, remark); }}
         onCancel={() => setShowApproveConfirm(false)}
