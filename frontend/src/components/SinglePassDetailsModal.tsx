@@ -55,6 +55,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [showRemarkError, setShowRemarkError] = useState(false);
 
   useEffect(() => { if (visible) setRemark(''); }, [visible, request?.id]);
 
@@ -273,7 +274,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
             <View style={[styles.footer, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
               <TextInput
                 style={[styles.remarkInput, { backgroundColor: theme.inputBackground, borderColor: theme.border, color: theme.text }]}
-                placeholder="Add review notes (optional)..."
+                placeholder="Add review notes (required for rejection)..."
                 placeholderTextColor={theme.textTertiary}
                 value={remark}
                 onChangeText={setRemark}
@@ -283,7 +284,14 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
               />
               <View style={styles.actionRow}>
                 {onReject && (
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.error }, processing && { opacity: 0.5 }]} onPress={() => { Keyboard.dismiss(); setShowRejectConfirm(true); }} disabled={processing}>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.error }, processing && { opacity: 0.5 }]} onPress={() => {
+                    Keyboard.dismiss();
+                    if (!remark.trim()) {
+                      setShowRemarkError(true);
+                    } else {
+                      setShowRejectConfirm(true);
+                    }
+                  }} disabled={processing}>
                     <Ionicons name="close-circle" size={20} color="#FFF" />
                     <ThemedText style={styles.actionBtnText}>Reject</ThemedText>
                   </TouchableOpacity>
@@ -323,6 +331,18 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
         </View>
       </Modal>
 
+      {/* Remark required error */}
+      <ConfirmationModal
+        visible={showRemarkError}
+        title="Remark Required"
+        message="Please add a reason for rejection in the review notes before rejecting."
+        confirmText="OK"
+        cancelText=""
+        confirmColor={theme.error}
+        icon="alert-circle-outline"
+        onConfirm={() => setShowRemarkError(false)}
+        onCancel={() => setShowRemarkError(false)}
+      />
       {/* Approve confirmation */}
       <ConfirmationModal
         visible={showApproveConfirm}

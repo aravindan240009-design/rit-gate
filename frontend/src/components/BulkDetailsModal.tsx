@@ -55,6 +55,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
   const [participants, setParticipants] = useState<any[]>([]);
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
+  const [showRemarkError, setShowRemarkError] = useState(false);
 
   useEffect(() => {
     if (visible && requestId) {
@@ -277,7 +278,14 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
                 {onReject && (
                   <TouchableOpacity
                     style={[styles.actionBtn, { backgroundColor: theme.error }, processing && { opacity: 0.5 }]}
-                    onPress={() => { Keyboard.dismiss(); setShowRejectConfirm(true); }}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      if (!remark.trim()) {
+                        setShowRemarkError(true);
+                      } else {
+                        setShowRejectConfirm(true);
+                      }
+                    }}
                     disabled={processing}
                   >
                     <Ionicons name="close-circle" size={20} color="#FFF" />
@@ -345,6 +353,18 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
         </Modal>
       </SafeAreaView>
 
+      {/* Remark required error */}
+      <ConfirmationModal
+        visible={showRemarkError}
+        title="Remark Required"
+        message="Please add a reason for rejection in the review notes before rejecting."
+        confirmText="OK"
+        cancelText=""
+        confirmColor={theme.error}
+        icon="alert-circle-outline"
+        onConfirm={() => setShowRemarkError(false)}
+        onCancel={() => setShowRemarkError(false)}
+      />
       {/* Approve confirmation */}
       <ConfirmationModal
         visible={showApproveConfirm}
