@@ -148,11 +148,14 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       }
 
       if (singleResult.success && singleResult.data) {
-        const singleRequests = singleResult.data.map((req: any) => ({
-          ...req,
-          requestType: 'SINGLE',
-          hrApproval: req.hrApproval || 'PENDING',
-        }));
+        const singleRequests = singleResult.data
+          // Only show requests that have reached HR (not still waiting for HOD)
+          .filter((req: any) => req.status !== 'PENDING_HOD' && req.status !== 'PENDING_STAFF')
+          .map((req: any) => ({
+            ...req,
+            requestType: 'SINGLE',
+            hrApproval: req.hrApproval || (req.status === 'PENDING_HR' ? 'PENDING_HR' : req.hrApproval),
+          }));
         allRequests = [...allRequests, ...singleRequests];
       }
 
@@ -174,7 +177,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
         return isToday(reqDate);
       });
       const pending = todayOnly.filter((r: any) =>
-        r.requestType === 'VISITOR' ? r.status === 'PENDING' : (r.hrApproval === 'PENDING_HR' || r.hrApproval === 'PENDING' || !r.hrApproval)
+        r.requestType === 'VISITOR' ? r.status === 'PENDING' : (r.hrApproval === 'PENDING_HR' || r.status === 'PENDING_HR')
       ).length;
       const approved = todayOnly.filter((r: any) =>
         r.requestType === 'VISITOR' ? r.status === 'APPROVED' : r.hrApproval === 'APPROVED'
@@ -272,7 +275,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
     if (activeTab === 'PENDING') {
       matchesTab = request.requestType === 'VISITOR'
         ? request.status === 'PENDING'
-        : (request.hrApproval === 'PENDING_HR' || request.hrApproval === 'PENDING' || !request.hrApproval);
+        : (request.hrApproval === 'PENDING_HR' || request.status === 'PENDING_HR');
     } else if (activeTab === 'APPROVED') {
       matchesTab = request.requestType === 'VISITOR'
         ? request.status === 'APPROVED'
@@ -603,7 +606,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
         requesterInfo={selectedBulkRequester}
         onApprove={(id, remark) => handleApprove(id, remark)}
         onReject={(id, remark) => handleReject(id, remark)}
-        showActions={selectedRequest && (selectedRequest.hrApproval === 'PENDING_HR' || selectedRequest.hrApproval === 'PENDING' || !selectedRequest.hrApproval)}
+        showActions={selectedRequest && (selectedRequest.hrApproval === 'PENDING_HR' || selectedRequest.status === 'PENDING_HR')}
         currentUserId={hr.hrCode}
         processing={processing}
       />
@@ -616,7 +619,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
         request={selectedRequest}
         onApprove={(id, remark) => handleApprove(id, remark)}
         onReject={(id, remark) => handleReject(id, remark)}
-        showActions={selectedRequest && (selectedRequest.hrApproval === 'PENDING_HR' || selectedRequest.hrApproval === 'PENDING' || !selectedRequest.hrApproval || (selectedRequest.requestType === 'VISITOR' && selectedRequest.status === 'PENDING'))}
+        showActions={selectedRequest && (selectedRequest.hrApproval === 'PENDING_HR' || selectedRequest.status === 'PENDING_HR' || (selectedRequest.requestType === 'VISITOR' && selectedRequest.status === 'PENDING'))}
         processing={processing}
       />
 
