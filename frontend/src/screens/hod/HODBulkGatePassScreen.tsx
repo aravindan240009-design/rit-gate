@@ -8,7 +8,8 @@ import {
   ActivityIndicator,
   Image,
   Modal,
-  Linking
+  Linking,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -134,6 +135,15 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
       navigation?.goBack ? navigation.goBack() : onBack?.();
     }
   };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      handleGoBack();
+      return true;
+    };
+    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => subscription.remove();
+  }, [purpose, reason, selectedStudents, selectedStaff, submitted]);
 
   useEffect(() => { loadParticipants(); }, []);
 

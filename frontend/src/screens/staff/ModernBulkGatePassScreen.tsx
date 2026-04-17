@@ -8,7 +8,8 @@ import {
   ActivityIndicator,
   Image,
   Linking,
-  Platform
+  Platform,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -81,6 +82,15 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
       else if (onBack) onBack();
     }
   };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      handleGoBack();
+      return true;
+    };
+    const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => subscription.remove();
+  }, [purpose, reason, selectedStudents, submitted]);
 
   useEffect(() => { loadStudents(); }, []);
 
