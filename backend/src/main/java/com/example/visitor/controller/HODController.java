@@ -403,13 +403,22 @@ public class HODController {
             boolean isSHHod = hodDepts.stream()
                 .anyMatch(d -> d.equalsIgnoreCase("S & H") || d.equalsIgnoreCase("S&H"));
 
-            List<Map<String, Object>> students = hodDepts.stream()
-                .flatMap(dept -> studentRepository.findByDepartment(dept).stream())
+            List<com.example.visitor.entity.Student> rawStudents;
+            if (isSHHod) {
+                // S&H HOD sees ALL first-year students (semester 1-2) across every department
+                rawStudents = studentRepository.findFirstYearStudents();
+                log.info("S&H HOD {} → fetching all first-year students (sem 1-2): {} found", hodCode, rawStudents.size());
+            } else {
+                // Other HODs see only their department students with semester >= 3
+                rawStudents = hodDepts.stream()
+                    .flatMap(dept -> studentRepository.findByDepartment(dept).stream())
+                    .filter(s -> s != null && s.getIsActive())
+                    .filter(s -> s.getSemester() == null || s.getSemester() >= 3)
+                    .collect(Collectors.toList());
+            }
+
+            List<Map<String, Object>> students = rawStudents.stream()
                 .filter(s -> s != null && s.getIsActive())
-                // First-year rule:
-                // - S&H HOD sees ALL students (including first-years)
-                // - All other HODs see only semester >= 3 (NOT first-years)
-                .filter(s -> isSHHod || (s.getSemester() == null || s.getSemester() >= 3))
                 .map(s -> {
                     Map<String, Object> m = new HashMap<>();
                     m.put("id", s.getRegNo());
@@ -428,7 +437,7 @@ public class HODController {
                 })
                 .collect(Collectors.toList());
 
-            log.info("Fetched {} students for HOD {} across depts: {} (isSHHod={})", students.size(), hodCode, hodDepts, isSHHod);
+            log.info("Fetched {} students for HOD {} (isSHHod={})", students.size(), hodCode, isSHHod);
             return ResponseEntity.ok(Map.of("success", true, "students", students, "count", students.size()));
         } catch (Exception e) {
             log.error("Error fetching HOD students", e);
