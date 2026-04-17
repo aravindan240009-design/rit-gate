@@ -57,6 +57,7 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
             if (tab === 'HOME') setActiveTab('DASHBOARD');
             else if (tab === 'REQUESTS') setActiveTab('MY_REQUESTS');
             else if (tab === 'NEW_PASS') openPassSheet();
+            else if (tab === 'EXITS') setActiveTab('EXITS');
           }}
         />
       );
@@ -85,6 +86,8 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
             if (screen === 'HOME') setActiveTab('DASHBOARD');
             else if (screen === 'PROFILE') setActiveTab('PROFILE');
             else if (screen === 'NEW_PASS') openPassSheet();
+            else if (screen === 'EXITS') setActiveTab('EXITS');
+            else if (screen === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
           }}
         />
       );

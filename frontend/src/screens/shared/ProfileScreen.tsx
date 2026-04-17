@@ -247,6 +247,34 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       );
     }
     // Staff / HOD / HR / NCI / NTF
+    const isHR = userType.toUpperCase() === 'HR';
+    if (isHR) {
+      return (
+        <>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HOME')}>
+            <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('NEW_PASS')}>
+            <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('REQUESTS')}>
+            <Ionicons name="list-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>My Requests</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('EXITS')}>
+            <Ionicons name="swap-vertical-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Gate Logs</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="person" size={22} color={theme.primary} />
+            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>Profile</ThemedText>
+            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+          </TouchableOpacity>
+        </>
+      );
+    }
     return (
       <>
         <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HOME')}>
@@ -394,12 +422,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       </VerticalScrollView>
       </ScreenContentContainer>
 
+      </TopRefreshControl>
       {showBottomNav && onTabChange && (
         <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
           {renderBottomNav(onTabChange)}
         </View>
       )}
-      </TopRefreshControl>
       <ConfirmationModal visible={showLogoutModal} title="Logout" message="Are you sure you want to log out?" confirmText="Logout" onConfirm={onLogout} onCancel={() => setShowLogoutModal(false)} icon="log-out-outline" confirmColor={theme.error}/>
       <SuccessModal
         visible={showSuccessModal}

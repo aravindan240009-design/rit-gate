@@ -19,7 +19,7 @@ import { formatDateTimeShort, getRelativeTime, isToday as isTodayUtil } from '..
 interface HRMyRequestsScreenProps {
   hr: HR;
   onBack: () => void;
-  onNavigate?: (screen: 'HOME' | 'NEW_PASS' | 'PROFILE') => void;
+  onNavigate?: (screen: 'HOME' | 'NEW_PASS' | 'MY_REQUESTS' | 'EXITS' | 'PROFILE') => void;
 }
 
 const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onNavigate }) => {
@@ -111,6 +111,10 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
             <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
             <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
           </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('EXITS')}>
+            <Ionicons name="swap-vertical-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Gate Logs</ThemedText>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('PROFILE')}>
             <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
             <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
@@ -199,7 +203,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
         </ScreenContentContainer>
       </TopRefreshControl>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation — 5 tabs for HR */}
       <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
         <TouchableOpacity style={styles.navItem} onPress={onBack}>
           <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
@@ -213,6 +217,10 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
           <Ionicons name="list" size={22} color={theme.primary} />
           <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>My Requests</ThemedText>
           <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('EXITS')}>
+          <Ionicons name="swap-vertical-outline" size={22} color={theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Gate Logs</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => onNavigate && onNavigate('PROFILE')}>
           <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
@@ -247,11 +255,11 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
   headerTitle: { fontSize: 17, fontWeight: '700' },
-  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
-  navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
-  navLabel: { fontSize: 11, marginTop: 3, fontWeight: '500' },
+  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
+  navItem: { flex: 1, alignItems: 'center', paddingVertical: 8, position: 'relative' },
+  navLabel: { fontSize: 12, marginTop: 4, fontWeight: '500' },
   activeIndicator: { position: 'absolute', bottom: 0, width: 28, height: 3, borderRadius: 2 },
-  listContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 },
+  listContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 120 },
   card: { borderRadius: 16, padding: 16, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3 },
   cardTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 12 },
   avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
