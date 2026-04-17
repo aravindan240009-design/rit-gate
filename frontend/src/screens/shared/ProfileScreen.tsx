@@ -56,6 +56,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     phone: user.contactNo || user.phone || '',
   });
 
+  // Reset profileData when user changes
+  useEffect(() => {
+    setProfileData({
+      email: user.email || '',
+      phone: user.contactNo || user.phone || '',
+    });
+  }, [user?.regNo, user?.staffCode, user?.hodCode, user?.hrCode, user?.securityId]);
+
   const [loadingStats, setLoadingStats] = useState(true);
   const insets = useSafeAreaInsets();
   const [initialLoading, setInitialLoading] = useState(true);
@@ -83,8 +91,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   }, [onBack]);
 
   useEffect(() => {
+    // Reset stats when user changes, then fetch fresh data
+    setStats({ stat1: 0, stat2: 0, stat3: 0 });
+    setInitialLoading(true);
     fetchStats();
-  }, []);
+  }, [
+    // Re-fetch whenever the logged-in user changes
+    user?.regNo,
+    user?.staffCode,
+    user?.hodCode,
+    user?.hrCode,
+    user?.securityId,
+  ]);
 
   useEffect(() => {
     if (isEditing) {
