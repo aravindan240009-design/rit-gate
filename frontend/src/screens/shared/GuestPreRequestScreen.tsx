@@ -19,6 +19,7 @@ import { apiService } from '../../services/api';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ErrorModal from '../../components/ErrorModal';
 import GatePassQRModal from '../../components/GatePassQRModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import { useTheme } from '../../context/ThemeContext';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
@@ -54,6 +55,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [showErr, setShowErr] = useState(false);
   const [errMsg, setErrMsg] = useState('');
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [qrCode, setQrCode] = useState('');
   const [manualCode, setManualCode] = useState('');
   const [showQRModal, setShowQRModal] = useState(false);
@@ -144,7 +146,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
     Clipboard.setString(manualCode);
   };
 
-  const submit = async () => {
+  const handleSubmit = () => {
     if (!visitorName.trim() || !phone.trim() || phone.replace(/\D/g, '').length < 10) {
       setErrMsg('Enter valid guest name and phone (min 10 digits).');
       setShowErr(true);
@@ -155,8 +157,10 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
       setShowErr(true);
       return;
     }
+    setShowConfirmSubmit(true);
+  };
 
-    const people = Math.max(1, parseInt(numberOfPeople, 10) || 1);
+  const submit = async () => {
 
     setSubmitting(true);
     try {
@@ -259,7 +263,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
           {!qrCode ? (
             <TouchableOpacity
               style={[styles.primaryBtn, { backgroundColor: theme.primary }]}
-              onPress={submit}
+              onPress={handleSubmit}
               disabled={submitting || loadingCreator}
             >
               {submitting ? (
@@ -310,6 +314,16 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
         title="Could not register"
         message={errMsg}
         onClose={() => setShowErr(false)}
+      />
+      <ConfirmationModal
+        visible={showConfirmSubmit}
+        title="Register Guest Pass"
+        message={`Register guest pass for ${visitorName || 'guest'}? An approved QR code will be generated immediately.`}
+        confirmText="Register"
+        confirmColor={theme.primary}
+        icon="person-add-outline"
+        onConfirm={() => { setShowConfirmSubmit(false); submit(); }}
+        onCancel={() => setShowConfirmSubmit(false)}
       />
     </SafeAreaView>
   );

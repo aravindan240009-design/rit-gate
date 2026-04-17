@@ -19,6 +19,7 @@ import { apiService } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 
@@ -37,6 +38,8 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -75,7 +78,10 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
       setShowErrorModal(true);
       return;
     }
+    setShowConfirmSubmit(true);
+  };
 
+  const doSubmit = async () => {
     setLoading(true);
     try {
       const result = await apiService.submitHODGatePassRequest(
@@ -98,6 +104,14 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
     }
   };
 
+  const confirmGoBack = () => {
+    if (purpose.trim() || reason.trim() || attachment) {
+      setShowBackConfirm(true);
+    } else {
+      if (onBack) onBack();
+    }
+  };
+
   const getInitials = (name: string) =>
     name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'H';
 
@@ -107,7 +121,7 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
 
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]} onPress={onBack}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]} onPress={confirmGoBack}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>New Gate Pass Request</ThemedText>
@@ -217,6 +231,25 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
         title="Submission Failed"
         message={errorMessage}
         onClose={() => setShowErrorModal(false)}
+      />
+      <ConfirmationModal
+        visible={showConfirmSubmit}
+        title="Submit Gate Pass Request"
+        message="Are you sure you want to submit this gate pass request?"
+        confirmText="Submit"
+        confirmColor={theme.primary}
+        icon="send-outline"
+        onConfirm={() => { setShowConfirmSubmit(false); doSubmit(); }}
+        onCancel={() => setShowConfirmSubmit(false)}
+      />
+      <ConfirmationModal
+        visible={showBackConfirm}
+        title="Discard Changes"
+        message="You have unsaved changes. Are you sure you want to go back?"
+        confirmText="Discard"
+        icon="arrow-back-outline"
+        onConfirm={() => { setShowBackConfirm(false); if (onBack) onBack(); }}
+        onCancel={() => setShowBackConfirm(false)}
       />
     </SafeAreaView>
   );

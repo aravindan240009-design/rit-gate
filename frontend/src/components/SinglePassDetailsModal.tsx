@@ -20,6 +20,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import { formatDateTime } from '../utils/dateUtils';
 import ThemedText from './ThemedText';
+import ConfirmationModal from './ConfirmationModal';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -52,6 +53,8 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
   const { theme, isDark } = useTheme();
   const [remark, setRemark] = useState('');
   const [showFullscreen, setShowFullscreen] = useState(false);
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
   useEffect(() => { if (visible) setRemark(''); }, [visible, request?.id]);
 
@@ -280,13 +283,13 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
               />
               <View style={styles.actionRow}>
                 {onReject && (
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.error }, processing && { opacity: 0.5 }]} onPress={() => { Keyboard.dismiss(); onReject(request.id, remark); }} disabled={processing}>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.error }, processing && { opacity: 0.5 }]} onPress={() => { Keyboard.dismiss(); setShowRejectConfirm(true); }} disabled={processing}>
                     <Ionicons name="close-circle" size={20} color="#FFF" />
                     <ThemedText style={styles.actionBtnText}>Reject</ThemedText>
                   </TouchableOpacity>
                 )}
                 {onApprove && (
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.success }, processing && { opacity: 0.5 }]} onPress={() => { Keyboard.dismiss(); onApprove(request.id, remark); }} disabled={processing}>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: theme.success }, processing && { opacity: 0.5 }]} onPress={() => { Keyboard.dismiss(); setShowApproveConfirm(true); }} disabled={processing}>
                     {processing ? <ActivityIndicator size="small" color="#FFF" /> : <Ionicons name="checkmark-circle" size={20} color="#FFF" />}
                     <ThemedText style={styles.actionBtnText}>{processing ? 'Processing...' : 'Approve'}</ThemedText>
                   </TouchableOpacity>
@@ -319,6 +322,28 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
           {attachmentUri && !isPdfAttachment && <Image source={{ uri: attachmentUri }} style={styles.fullscreenImage} resizeMode="contain" />}
         </View>
       </Modal>
+
+      {/* Approve confirmation */}
+      <ConfirmationModal
+        visible={showApproveConfirm}
+        title="Approve Request"
+        message="Are you sure you want to approve this gate pass request?"
+        confirmText="Approve"
+        confirmColor={theme.success}
+        icon="checkmark-circle-outline"
+        onConfirm={() => { setShowApproveConfirm(false); if (onApprove) onApprove(request.id, remark); }}
+        onCancel={() => setShowApproveConfirm(false)}
+      />
+      {/* Reject confirmation */}
+      <ConfirmationModal
+        visible={showRejectConfirm}
+        title="Reject Request"
+        message="Are you sure you want to reject this gate pass request?"
+        confirmText="Reject"
+        icon="close-circle-outline"
+        onConfirm={() => { setShowRejectConfirm(false); if (onReject) onReject(request.id, remark); }}
+        onCancel={() => setShowRejectConfirm(false)}
+      />
     </Modal>
   );
 };
@@ -384,3 +409,5 @@ const styles = StyleSheet.create({
 });
 
 export default SinglePassDetailsModal;
+
+// Confirmation modals are rendered inside the component — see showApproveConfirm / showRejectConfirm state

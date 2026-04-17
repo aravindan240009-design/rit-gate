@@ -18,6 +18,7 @@ import { HOD } from '../../types';
 import { apiService } from '../../services/api';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import { useTheme } from '../../context/ThemeContext';
@@ -94,6 +95,8 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [attachment, setAttachment] = useState<{
     name: string;
@@ -119,7 +122,13 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
   const [receiverId, setReceiverId] = useState<string | null>(null);
   const [receiverType, setReceiverType] = useState<'student' | 'staff' | null>(null);
 
-  const handleGoBack = () => navigation?.goBack ? navigation.goBack() : onBack?.();
+  const handleGoBack = () => {
+    if (purpose.trim() || reason.trim() || selectedStudents.size > 0 || selectedStaff.size > 0) {
+      setShowBackConfirm(true);
+    } else {
+      navigation?.goBack ? navigation.goBack() : onBack?.();
+    }
+  };
 
   useEffect(() => { loadParticipants(); }, []);
 
@@ -234,12 +243,15 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!purpose.trim()) { setErrorMessage('Please enter a purpose'); setShowErrorModal(true); return; }
     if (!reason.trim()) { setErrorMessage('Please enter a reason'); setShowErrorModal(true); return; }
     if (totalSelected === 0) { setErrorMessage('Please select at least one participant'); setShowErrorModal(true); return; }
     if (!includeHOD && !receiverId) { setErrorMessage('Please select a receiver for the QR code'); setShowErrorModal(true); return; }
+    setShowConfirmSubmit(true);
+  };
 
+  const doSubmit = async () => {
     setIsSubmitting(true);
     try {
       const participants = [
@@ -484,7 +496,7 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
         visible={showSuccessModal}
         title="Bulk Pass Submitted"
         message={`Gate pass request submitted for ${totalSelected} participant${totalSelected !== 1 ? 's' : ''}. Awaiting HR approval.`}
-        onClose={() => { setShowSuccessModal(false); handleGoBack(); }}
+        onClose={() => { setShowSuccessModal(false); navigation?.goBack ? navigation.goBack() : onBack?.(); }}
         autoClose={true}
         autoCloseDelay={2500}
       />
@@ -494,6 +506,25 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
         title="Submission Failed"
         message={errorMessage}
         onClose={() => setShowErrorModal(false)}
+      />
+      <ConfirmationModal
+        visible={showConfirmSubmit}
+        title="Submit Bulk Gate Pass"
+        message={`Submit bulk gate pass for ${totalSelected} participant${totalSelected !== 1 ? 's' : ''}? This will be sent for approval.`}
+        confirmText="Submit"
+        confirmColor={theme.primary}
+        icon="send-outline"
+        onConfirm={() => { setShowConfirmSubmit(false); doSubmit(); }}
+        onCancel={() => setShowConfirmSubmit(false)}
+      />
+      <ConfirmationModal
+        visible={showBackConfirm}
+        title="Discard Changes"
+        message="You have unsaved changes. Are you sure you want to go back?"
+        confirmText="Discard"
+        icon="arrow-back-outline"
+        onConfirm={() => { setShowBackConfirm(false); navigation?.goBack ? navigation.goBack() : onBack?.(); }}
+        onCancel={() => setShowBackConfirm(false)}
       />
     </SafeAreaView>
   );

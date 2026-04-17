@@ -18,6 +18,7 @@ import { Staff } from '../../types';
 import { apiService } from '../../services/api';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import { formatDateGB, formatTime } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
@@ -49,6 +50,8 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+  const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [availableStudents, setAvailableStudents] = useState<Student[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [receiverId, setReceiverId] = useState<string | null>(null);
@@ -64,8 +67,12 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
   const handleGoBack = () => {
-    if (navigation?.goBack) navigation.goBack();
-    else if (onBack) onBack();
+    if (purpose.trim() || reason.trim() || selectedStudents.size > 0) {
+      setShowBackConfirm(true);
+    } else {
+      if (navigation?.goBack) navigation.goBack();
+      else if (onBack) onBack();
+    }
   };
 
   useEffect(() => { loadStudents(); }, []);
@@ -188,12 +195,15 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!purpose.trim()) { setErrorMessage('Please enter a purpose'); setShowErrorModal(true); return; }
     if (!reason.trim()) { setErrorMessage('Please describe the reason'); setShowErrorModal(true); return; }
     if (selectedStudents.size === 0) { setErrorMessage('Please select at least one student'); setShowErrorModal(true); return; }
     if (!includeStaff && !receiverId) { setErrorMessage('Please select a receiver (student who will hold the QR code)'); setShowErrorModal(true); return; }
+    setShowConfirmSubmit(true);
+  };
 
+  const doSubmit = async () => {
     setIsSubmitting(true);
     try {
       const response = await apiService.createBulkGatePass({
@@ -524,6 +534,25 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
         title="Submission Failed"
         message={errorMessage}
         onClose={() => setShowErrorModal(false)}
+      />
+      <ConfirmationModal
+        visible={showConfirmSubmit}
+        title="Submit Bulk Gate Pass"
+        message={`Submit bulk gate pass for ${selectedStudents.size} student${selectedStudents.size !== 1 ? 's' : ''}? This will be sent to HOD for approval.`}
+        confirmText="Submit"
+        confirmColor={theme.primary}
+        icon="send-outline"
+        onConfirm={() => { setShowConfirmSubmit(false); doSubmit(); }}
+        onCancel={() => setShowConfirmSubmit(false)}
+      />
+      <ConfirmationModal
+        visible={showBackConfirm}
+        title="Discard Changes"
+        message="You have unsaved changes. Are you sure you want to go back?"
+        confirmText="Discard"
+        icon="arrow-back-outline"
+        onConfirm={() => { setShowBackConfirm(false); if (navigation?.goBack) navigation.goBack(); else if (onBack) onBack(); }}
+        onCancel={() => setShowBackConfirm(false)}
       />
     </SafeAreaView>
   );

@@ -23,6 +23,7 @@ import { formatDateTime, formatDateShort } from '../utils/dateUtils';
 import ParticipantsScreen from '../screens/shared/ParticipantsScreen';
 import GatePassQRModal from './GatePassQRModal';
 import ThemedText from './ThemedText';
+import ConfirmationModal from './ConfirmationModal';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -52,6 +53,8 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
   const [showParticipants, setShowParticipants] = useState(false);
   const [showFullscreenAttachment, setShowFullscreenAttachment] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
+  const [showRejectConfirm, setShowRejectConfirm] = useState(false);
 
   useEffect(() => {
     if (visible && requestId) {
@@ -274,7 +277,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
                 {onReject && (
                   <TouchableOpacity
                     style={[styles.actionBtn, { backgroundColor: theme.error }, processing && { opacity: 0.5 }]}
-                    onPress={() => { Keyboard.dismiss(); onReject(requestId, remark); }}
+                    onPress={() => { Keyboard.dismiss(); setShowRejectConfirm(true); }}
                     disabled={processing}
                   >
                     <Ionicons name="close-circle" size={20} color="#FFF" />
@@ -284,7 +287,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
                 {onApprove && (
                   <TouchableOpacity
                     style={[styles.actionBtn, { backgroundColor: theme.success }, processing && { opacity: 0.5 }]}
-                    onPress={() => { Keyboard.dismiss(); onApprove(requestId, remark); }}
+                    onPress={() => { Keyboard.dismiss(); setShowApproveConfirm(true); }}
                     disabled={processing}
                   >
                     {processing
@@ -341,6 +344,28 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
           </View>
         </Modal>
       </SafeAreaView>
+
+      {/* Approve confirmation */}
+      <ConfirmationModal
+        visible={showApproveConfirm}
+        title="Approve Bulk Pass"
+        message="Are you sure you want to approve this bulk gate pass request?"
+        confirmText="Approve"
+        confirmColor={theme.success}
+        icon="checkmark-circle-outline"
+        onConfirm={() => { setShowApproveConfirm(false); if (onApprove) onApprove(requestId, remark); }}
+        onCancel={() => setShowApproveConfirm(false)}
+      />
+      {/* Reject confirmation */}
+      <ConfirmationModal
+        visible={showRejectConfirm}
+        title="Reject Bulk Pass"
+        message="Are you sure you want to reject this bulk gate pass request?"
+        confirmText="Reject"
+        icon="close-circle-outline"
+        onConfirm={() => { setShowRejectConfirm(false); if (onReject) onReject(requestId, remark); }}
+        onCancel={() => setShowRejectConfirm(false)}
+      />
     </Modal>
   );
 };
