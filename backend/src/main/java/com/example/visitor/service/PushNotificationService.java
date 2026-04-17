@@ -124,7 +124,9 @@ public class PushNotificationService {
                 "    \"sound\":\"default\"," +
                 "    \"notification_priority\":\"PRIORITY_MAX\"," +
                 "    \"visibility\":\"PUBLIC\"," +
-                "    \"default_vibrate_timings\":true," +
+                "    \"vibrate_timings\":[\"0s\",\"0.25s\",\"0.25s\",\"0.25s\"]," +
+                "    \"default_vibrate_timings\":false," +
+                "    \"default_sound\":true," +
                 "    \"default_light_settings\":true," +
                 "    \"tag\":\"%s\"" +
                 "  }" +
