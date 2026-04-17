@@ -3,7 +3,7 @@ import {
   View, StyleSheet, TouchableOpacity, Modal, ScrollView,
   ActivityIndicator, StatusBar, BackHandler, Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { HR } from '../../types';
@@ -21,13 +21,16 @@ import TopRefreshControl from '../../components/TopRefreshControl';
 interface HRExitsScreenProps {
   hr: HR;
   onBack: () => void;
+  /** Called when a bottom nav tab is tapped */
+  onTabChange?: (tab: 'HOME' | 'NEW_PASS' | 'MY_REQUESTS' | 'EXITS' | 'PROFILE') => void;
 }
 
 const getInitials = (name: string) =>
   (name || 'NA').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
-const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
+const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, onTabChange }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [gateLogs, setGateLogs] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -117,9 +120,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-          <Ionicons name="arrow-back" size={22} color={theme.text} />
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Gate Logs</ThemedText>
         <View style={{ width: 40 }} />
       </View>
@@ -152,7 +153,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
         <VerticalFlatList
           data={gateLogs}
           keyExtractor={(item) => `log-${item.id}`}
-          contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
+          contentContainerStyle={[styles.listContent, { paddingBottom: onTabChange ? 120 : 40 }]}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
           renderItem={({ item }) => {
@@ -307,6 +308,33 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack }) => {
 
       <SuccessModal visible={showSuccess} title="Done" message={modalMsg} onClose={() => setShowSuccess(false)} autoClose autoCloseDelay={2500} />
       <ErrorModal visible={showError} type="general" title="Cannot Download" message={modalMsg} onClose={() => setShowError(false)} />
+
+      {/* Bottom Navigation */}
+      {onTabChange && (
+        <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
+          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
+            <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('NEW_PASS')}>
+            <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('MY_REQUESTS')}>
+            <Ionicons name="list-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>My Requests</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="swap-vertical" size={22} color={theme.primary} />
+            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>Gate Logs</ThemedText>
+            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('PROFILE')}>
+            <Ionicons name="person-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -338,6 +366,10 @@ const styles = StyleSheet.create({
   cardDetails: { paddingHorizontal: 14, paddingVertical: 10, gap: 6 },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   detailText: { fontSize: 13, flex: 1 },
+  bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
+  navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
+  navLabel: { fontSize: 11, marginTop: 3, fontWeight: '500' },
+  activeIndicator: { position: 'absolute', bottom: 0, width: 28, height: 3, borderRadius: 2 },
 });
 
 export default HRExitsScreen;

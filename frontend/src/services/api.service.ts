@@ -403,6 +403,15 @@ class ApiService {
     } catch (e: any) { return { success: false, message: e.message || 'Failed', data: [] }; }
   }
 
+  async getAllHRRequests(hrCode: string): Promise<ApiResponse<GatePassRequest[]>> {
+    // Backend: GET /api/hr/gate-pass/all?hrCode=...  returns all requests (pending + approved + rejected)
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/hr/gate-pass/all?hrCode=${encodeURIComponent(hrCode)}`, { method: 'GET' });
+      const ok = data.status === 'SUCCESS' || data.success !== false;
+      return { success: ok, message: data.message || 'OK', data: data.requests || [] };
+    } catch (e: any) { return { success: false, message: e.message || 'Failed', data: [] }; }
+  }
+
   async approveGatePassByHR(hrCode: string, requestId: number): Promise<ApiResponse> {
     // Backend: POST /api/hr/gate-pass/{id}/approve  (hrCode in body)
     try {

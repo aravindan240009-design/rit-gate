@@ -123,7 +123,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
       const [bulkResult, singleResult, visitorRequests] = await Promise.all([
         apiService.getHRPendingBulkPasses(),
-        apiService.getHRPendingRequests(hrCode),
+        apiService.getAllHRRequests(hrCode),
         apiService.getHRVisitorRequests(hrCode),
       ]);
 
