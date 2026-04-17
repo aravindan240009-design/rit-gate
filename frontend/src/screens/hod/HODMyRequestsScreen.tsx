@@ -273,6 +273,11 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
       </TopRefreshControl>
 
       {/* Bottom Navigation */}
+      <BottomNavBar tabs={HOD_TABS} activeKey="MY_REQUESTS" onPress={(key) => {
+        if (key === 'HOME') onBack && onBack();
+        else if (key === 'NEW_PASS') onNavigate && onNavigate('NEW_PASS');
+        else if (key === 'PROFILE') onNavigate && onNavigate('PROFILE');
+      }} />
 
       {/* Detail — full-screen */}
       <SinglePassDetailsModal
