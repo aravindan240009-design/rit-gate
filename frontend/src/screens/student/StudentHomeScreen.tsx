@@ -246,58 +246,97 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
       {/* Scrollable content with pull-to-refresh */}
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary}>
-      <ScreenContentContainer>
-          <View style={styles.staticHeaderContainer}>
-            {(() => {
-              const gatePassDisabled = isStudentPassDisabled();
-              return (
-                <TouchableOpacity
-                  style={[styles.requestCard, { backgroundColor: theme.cardBackground }]}
-                  onPress={gatePassDisabled ? undefined : onRequestGatePass}
-                  activeOpacity={gatePassDisabled ? 1 : 0.8}
-                >
-                  <View style={[styles.requestCardTop, { backgroundColor: gatePassDisabled ? '#9ca3af' : theme.primary }]}>
-                    <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.7)" />
-                  </View>
-                  <View style={[styles.requestCardBottom, { backgroundColor: theme.cardBackground }]}>
-                    <View style={styles.requestCardContent}>
-                      <ThemedText style={[styles.requestCardTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
-                      {gatePassDisabled && (
-                        <ThemedText style={[styles.disabledHint, { color: theme.error }]}>
-                          Not available after 3:00 PM
-                        </ThemedText>
-                      )}
-                    </View>
-                    {gatePassDisabled ? (
-                      <View style={[styles.applyButton, { backgroundColor: '#e5e7eb', justifyContent: 'center', alignItems: 'center' }]}>
-                        <ProhibitionIcon size={22} />
-                      </View>
-                    ) : (
-                      <TouchableOpacity style={[styles.applyButton, { backgroundColor: theme.primary }]} onPress={onRequestGatePass}>
-                        <ThemedText style={styles.applyButtonText}>Apply Now</ThemedText>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              );
-            })()}
-
-            <View style={styles.sectionHeader}>
-              <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>RECENT REQUESTS</ThemedText>
-            </View>
-          </View>
-
+      <ScreenContentContainer style={{ flex: 1 }}>
           {(requestsLoading && !refreshing) ? (
-            <SkeletonList count={3} />
+            <>
+              <View style={styles.staticHeaderContainer}>
+                {(() => {
+                  const gatePassDisabled = isStudentPassDisabled();
+                  return (
+                    <TouchableOpacity
+                      style={[styles.requestCard, { backgroundColor: theme.cardBackground }]}
+                      onPress={gatePassDisabled ? undefined : onRequestGatePass}
+                      activeOpacity={gatePassDisabled ? 1 : 0.8}
+                    >
+                      <View style={[styles.requestCardTop, { backgroundColor: gatePassDisabled ? '#9ca3af' : theme.primary }]}>
+                        <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.7)" />
+                      </View>
+                      <View style={[styles.requestCardBottom, { backgroundColor: theme.cardBackground }]}>
+                        <View style={styles.requestCardContent}>
+                          <ThemedText style={[styles.requestCardTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
+                          {gatePassDisabled && (
+                            <ThemedText style={[styles.disabledHint, { color: theme.error }]}>
+                              Not available after 3:00 PM
+                            </ThemedText>
+                          )}
+                        </View>
+                        {gatePassDisabled ? (
+                          <View style={[styles.applyButton, { backgroundColor: '#e5e7eb', justifyContent: 'center', alignItems: 'center' }]}>
+                            <ProhibitionIcon size={22} />
+                          </View>
+                        ) : (
+                          <TouchableOpacity style={[styles.applyButton, { backgroundColor: theme.primary }]} onPress={onRequestGatePass}>
+                            <ThemedText style={styles.applyButtonText}>Apply Now</ThemedText>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })()}
+                <View style={styles.sectionHeader}>
+                  <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>RECENT REQUESTS</ThemedText>
+                </View>
+              </View>
+              <SkeletonList count={3} />
+            </>
           ) : (
           <VerticalFlatList
             style={styles.content}
-            scrollEnabled={false}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
             data={recentRequests}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.scrollContent}
+            ListHeaderComponent={
+              <View style={styles.staticHeaderContainer}>
+                {(() => {
+                  const gatePassDisabled = isStudentPassDisabled();
+                  return (
+                    <TouchableOpacity
+                      style={[styles.requestCard, { backgroundColor: theme.cardBackground }]}
+                      onPress={gatePassDisabled ? undefined : onRequestGatePass}
+                      activeOpacity={gatePassDisabled ? 1 : 0.8}
+                    >
+                      <View style={[styles.requestCardTop, { backgroundColor: gatePassDisabled ? '#9ca3af' : theme.primary }]}>
+                        <Ionicons name="shield-checkmark" size={40} color="rgba(255,255,255,0.7)" />
+                      </View>
+                      <View style={[styles.requestCardBottom, { backgroundColor: theme.cardBackground }]}>
+                        <View style={styles.requestCardContent}>
+                          <ThemedText style={[styles.requestCardTitle, { color: theme.text }]}>Request Gate Pass</ThemedText>
+                          {gatePassDisabled && (
+                            <ThemedText style={[styles.disabledHint, { color: theme.error }]}>
+                              Not available after 3:00 PM
+                            </ThemedText>
+                          )}
+                        </View>
+                        {gatePassDisabled ? (
+                          <View style={[styles.applyButton, { backgroundColor: '#e5e7eb', justifyContent: 'center', alignItems: 'center' }]}>
+                            <ProhibitionIcon size={22} />
+                          </View>
+                        ) : (
+                          <TouchableOpacity style={[styles.applyButton, { backgroundColor: theme.primary }]} onPress={onRequestGatePass}>
+                            <ThemedText style={styles.applyButtonText}>Apply Now</ThemedText>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })()}
+                <View style={styles.sectionHeader}>
+                  <ThemedText style={[styles.sectionTitle, { color: theme.textSecondary }]}>RECENT REQUESTS</ThemedText>
+                </View>
+              </View>
+            }
             renderItem={({ item: request }) => (
             <TouchableOpacity style={[styles.requestItem, { backgroundColor: theme.cardBackground }]} onPress={() => handleRequestClick(request)}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>

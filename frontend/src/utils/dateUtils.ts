@@ -11,9 +11,16 @@ const IST: Intl.DateTimeFormatOptions = { timeZone: 'Asia/Kolkata' };
 const toDate = (d: Date | string | null | undefined): Date => {
   if (!d) return new Date();
   if (typeof d === 'string') {
-    // If the string has no timezone info (no Z, no +, no offset after time part), treat as UTC
+    // Backend sends LocalDateTime strings WITHOUT timezone suffix (e.g. "2026-04-16T10:50:00").
+    // The backend runs in IST (Asia/Kolkata, UTC+5:30), so bare strings are IST.
+    // We convert to UTC by subtracting 5h30m (19800 seconds).
     const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(d.trim());
-    return new Date(bare ? d.trim() + 'Z' : d);
+    if (bare) {
+      // Parse as if UTC, then subtract 5.5h to get actual UTC equivalent
+      const asUTC = new Date(d.trim() + 'Z');
+      return new Date(asUTC.getTime() - 5.5 * 60 * 60 * 1000);
+    }
+    return new Date(d);
   }
   return d;
 };
