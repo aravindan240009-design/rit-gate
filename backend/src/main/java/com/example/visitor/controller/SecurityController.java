@@ -539,10 +539,10 @@ public class SecurityController {
                                 visitorRepository.save(visitor);
                                 System.out.println("✅ Visitor entry time recorded: " + visitor.getName());
 
-                                // Notify the staff member that their visitor has arrived
+                                // Notify the staff member that their visitor/vendor has arrived
                                 try {
                                     if (visitor.getStaffCode() != null && !visitor.getStaffCode().isBlank()) {
-                                        notificationService.notifyStaffOfVisitorArrival(visitor.getStaffCode(), visitor.getName());
+                                        notificationService.notifyStaffOfVisitorArrival(visitor.getStaffCode(), visitor.getName(), visitor.getRole());
                                     }
                                 } catch (Exception ne) {
                                     System.err.println("⚠️ Could not send visitor arrival notification: " + ne.getMessage());

@@ -99,8 +99,8 @@ public class VisitorGatepassService {
 
             notificationService.createUserNotification(
                 staffId,
-                "New Visitor Request",
-                "New visitor request from " + savedRequest.getName() + ". Please review and approve.",
+                "New " + (savedRequest.getRole() != null && savedRequest.getRole().equalsIgnoreCase("VENDOR") ? "Vendor" : "Visitor") + " Request",
+                "New " + (savedRequest.getRole() != null && savedRequest.getRole().equalsIgnoreCase("VENDOR") ? "vendor" : "visitor") + " request from " + savedRequest.getName() + ". Please review and approve.",
                 "GATE_PASS",
                 "HIGH"
             );

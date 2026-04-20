@@ -353,8 +353,15 @@ public class NotificationService {
     /** Notify staff when their visitor physically arrives (entry scan) */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyStaffOfVisitorArrival(String staffCode, String visitorName) {
+        notifyStaffOfVisitorArrival(staffCode, visitorName, "Visitor");
+    }
+
+    /** Notify staff when their visitor/vendor physically arrives (entry scan) — role-aware */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyStaffOfVisitorArrival(String staffCode, String visitorName, String role) {
         try {
-            save(staffCode, "Your Visitor Has Arrived",
+            String label = (role != null && role.equalsIgnoreCase("VENDOR")) ? "Vendor" : "Visitor";
+            save(staffCode, "Your " + label + " Has Arrived",
                 visitorName + " has entered the premises and is on their way to meet you.",
                 Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.URGENT,
                 "/staff/visitor-requests");
