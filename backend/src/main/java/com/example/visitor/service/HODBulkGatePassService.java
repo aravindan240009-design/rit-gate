@@ -311,9 +311,9 @@ public class HODBulkGatePassService {
             requestData.put("hrRemark", request.getRejectionReason());
             
             // Fetch manual entry code from QRTable
-            Optional<QRTable> qrOpt = qrTableRepository.findByPassRequestId(request.getId());
-            if (qrOpt.isPresent()) {
-                requestData.put("manualCode", qrOpt.get().getManualEntryCode());
+            List<QRTable> qrList = qrTableRepository.findByPassRequestId(request.getId());
+            if (!qrList.isEmpty()) {
+                requestData.put("manualCode", qrList.get(0).getManualEntryCode());
             }
             
             response.put("success", true);

@@ -21,7 +21,8 @@ public interface QRTableRepository extends JpaRepository<QRTable, Long> {
     }
     
     // New methods for bulk pass system
-    Optional<QRTable> findByPassRequestId(Long passRequestId);
+    // Use List to avoid NonUniqueResultException when multiple QR rows share the same pass_request_id
+    List<QRTable> findByPassRequestId(Long passRequestId);
     Optional<QRTable> findByQrString(String qrString);
     Optional<QRTable> findByManualEntryCode(String manualEntryCode);
     

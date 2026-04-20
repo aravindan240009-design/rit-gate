@@ -398,7 +398,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         visible={showManualModal}
         animationType="none"
         transparent={true}
-        onShow={openManualSheet}
+        onShow={() => { setManualCode(''); openManualSheet(); }}
         onRequestClose={() => setShowManualModal(false)}
         statusBarTranslucent={true}
       >
@@ -435,6 +435,10 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
                 onChangeText={setManualCode}
                 autoCapitalize="none"
                 autoCorrect={false}
+                autoComplete="off"
+                importantForAutofill="no"
+                textContentType="none"
+                keyboardType="default"
               />
 
               <TouchableOpacity

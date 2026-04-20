@@ -393,9 +393,9 @@ public class BulkGatePassService {
             requestData.put("hodRemark", request.getHodRemark());
             
             if (bulkQrReleased) {
-                Optional<QRTable> qrOpt = qrTableRepository.findByPassRequestId(request.getId());
-                if (qrOpt.isPresent()) {
-                    requestData.put("manualCode", qrOpt.get().getManualEntryCode());
+                List<QRTable> qrList = qrTableRepository.findByPassRequestId(request.getId());
+                if (!qrList.isEmpty()) {
+                    requestData.put("manualCode", qrList.get(0).getManualEntryCode());
                 }
             } else {
                 requestData.put("manualCode", null);
