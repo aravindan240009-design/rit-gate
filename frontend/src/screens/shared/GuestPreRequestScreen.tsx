@@ -8,7 +8,8 @@ import {
   ActivityIndicator,
   StatusBar,
   Linking,
-  Platform
+  Platform,
+  BackHandler,
 } from 'react-native';
 import Share from 'react-native-share';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -56,9 +57,33 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
   const [showErr, setShowErr] = useState(false);
   const [errMsg, setErrMsg] = useState('');
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [qrCode, setQrCode] = useState('');
   const [manualCode, setManualCode] = useState('');
   const [showQRModal, setShowQRModal] = useState(false);
+
+  // Show discard confirmation if form has data or QR was generated
+  const hasUnsavedData = visitorName.trim() !== '' || phone.trim() !== '' || qrCode !== '';
+
+  const handleBack = () => {
+    if (hasUnsavedData) {
+      setShowDiscardConfirm(true);
+    } else {
+      onBack();
+    }
+  };
+
+  // Intercept hardware back button
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (hasUnsavedData) {
+        setShowDiscardConfirm(true);
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [hasUnsavedData]);
 
   useEffect(() => {
     // When we already know the department from the authenticated user, skip directory lookup.
@@ -197,7 +222,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" />
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={handleBack}>
           <Ionicons name="arrow-back" size={22} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Pre-register guest</ThemedText>
@@ -324,6 +349,16 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
         icon="person-add-outline"
         onConfirm={() => { setShowConfirmSubmit(false); submit(); }}
         onCancel={() => setShowConfirmSubmit(false)}
+      />
+      <ConfirmationModal
+        visible={showDiscardConfirm}
+        title="Discard Changes"
+        message="You have unsaved changes. Are you sure you want to go back?"
+        confirmText="← Discard"
+        confirmColor="#EF4444"
+        icon="arrow-back"
+        onConfirm={() => { setShowDiscardConfirm(false); onBack(); }}
+        onCancel={() => setShowDiscardConfirm(false)}
       />
     </SafeAreaView>
   );
