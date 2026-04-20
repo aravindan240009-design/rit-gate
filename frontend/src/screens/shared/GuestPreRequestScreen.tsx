@@ -172,7 +172,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
         // Backend sets personToMeet = staffCode for instant guests.
         staffCode: creatorStaffCode,
         purpose: 'Pre-request visitor',
-        numberOfPeople: people,
+        numberOfPeople: parseInt(numberOfPeople, 10) || 1,
         vehicleNumber: undefined,
         creatorStaffCode,
         creatorRole,

@@ -75,7 +75,18 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
       let combined: any[] = [];
       if (singleResult.success) combined = [...((singleResult as any).requests || singleResult.data || [])];
       if (bulkResult.success) combined = [...combined, ...(bulkResult.requests || [])];
-      const sorted = combined
+      
+      // Deduplicate by id (bulk passes appear in both endpoints)
+      const uniqueMap = new Map();
+      for (const req of combined) {
+        if (!uniqueMap.has(req.id) || req.staffCount != null) {
+          // Prefer the version with staffCount (from bulk endpoint)
+          uniqueMap.set(req.id, req);
+        }
+      }
+      const unique = Array.from(uniqueMap.values());
+      
+      const sorted = unique
         .filter((request) => !isUsedRequest(request))
         .filter((request) => isToday(getRequestDate(request)))
         .sort((a, b) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
