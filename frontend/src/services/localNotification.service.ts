@@ -31,7 +31,7 @@ export async function ensureChannel() {
     sound: 'default',
     // Vibration — plays in vibration mode and normal mode
     vibration: true,
-    vibrationPattern: [0, 250, 250, 250], // off 0ms, on 250ms, off 250ms, on 250ms
+    vibrationPattern: [300, 500], // off 300ms, on 500ms — must be even number of positive values
     // Wake screen on notification arrival
     lights: true,
     lightColor: AndroidColor.RED,
@@ -72,7 +72,7 @@ export async function showLocalNotification(
         smallIcon: 'notification_icon',
         pressAction: { id: 'default' },
         showTimestamp: true,
-        vibrationPattern: [0, 250, 250, 250],
+        vibrationPattern: [300, 500],
         visibility: AndroidVisibility.PUBLIC,
         fullScreenAction: {
           id: 'default',
