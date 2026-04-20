@@ -25,7 +25,12 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({
   const getStepStatus = (step: number) => {
     if (status === 'REJECTED') {
       if (step === 1) return 'completed';
-      if (step === 2 && staffApproval === 'REJECTED') return 'rejected';
+      // Staff approved but HOD rejected — staff step should show completed
+      if (step === 2) {
+        if (staffApproval === 'REJECTED') return 'rejected';
+        if (staffApproval === 'APPROVED') return 'completed';
+        return 'pending';
+      }
       if (step === 3 && hodApproval === 'REJECTED') return 'rejected';
       return 'pending';
     }

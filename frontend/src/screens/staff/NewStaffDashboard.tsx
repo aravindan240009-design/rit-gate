@@ -176,10 +176,10 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
         (r.requestType === 'VISITOR' && (r.staffApproval === 'PENDING' || r.staffApproval === 'PENDING_STAFF'))
       ).length;
       const assignedApproved = todayAssigned.filter((r: any) =>
-        r.staffApproval === 'APPROVED' || r.status === 'APPROVED'
+        r.staffApproval === 'APPROVED'
       ).length;
       const assignedRejected = todayAssigned.filter((r: any) =>
-        r.staffApproval === 'REJECTED' || r.status === 'REJECTED'
+        r.staffApproval === 'REJECTED'
       ).length;
       setStats({ pending: assignedPending, approved: assignedApproved, rejected: assignedRejected });
     } catch (error) {
@@ -215,9 +215,12 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
       matchesTab = request.status === 'PENDING_STAFF' ||
         (request.requestType === 'VISITOR' && (request.staffApproval === 'PENDING' || request.staffApproval === 'PENDING_STAFF'));
     } else if (activeTab === 'APPROVED') {
-      matchesTab = request.staffApproval === 'APPROVED' || request.status === 'APPROVED';
+      // Staff approved — includes requests still pending HOD or fully approved
+      matchesTab = request.staffApproval === 'APPROVED';
     } else if (activeTab === 'REJECTED') {
-      matchesTab = request.staffApproval === 'REJECTED' || request.status === 'REJECTED';
+      // Only show requests that STAFF rejected (not HOD-rejected after staff approved)
+      matchesTab = request.staffApproval === 'REJECTED' ||
+        (request.requestType === 'VISITOR' && request.staffApproval === 'REJECTED');
     }
 
     const passes = matchesSearch && matchesTab;
