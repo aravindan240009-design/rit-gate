@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Modal from 'react-native-modal';
 import LinearGradient from 'react-native-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import ThemedText from './ThemedText';
 
@@ -44,6 +45,7 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
   onSelectGuest,
 }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const passDisabled = isStaffPassDisabled();
 
   return (
@@ -59,7 +61,7 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
       backdropOpacity={0.5}
       useNativeDriver={true}
     >
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.container, { backgroundColor: theme.background, paddingBottom: Math.max(insets.bottom, 20) }]}>
         {/* Handle Bar */}
         <View style={styles.handleBar}>
           <View style={[styles.handle, { backgroundColor: theme.textSecondary + '40' }]} />
@@ -235,7 +237,6 @@ const styles = StyleSheet.create({
   container: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingBottom: 40,
     paddingHorizontal: 20,
   },
   handleBar: {

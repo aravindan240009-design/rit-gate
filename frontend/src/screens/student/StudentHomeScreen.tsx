@@ -357,7 +357,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
       <Modal visible={showDetailModal} animationType="none" transparent={true} onShow={openDetailSheet} onRequestClose={() => setShowDetailModal(false)}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowDetailModal(false)}>
           <Animated.View
-            style={[styles.detailModalContainer, { backgroundColor: theme.surface, transform: [{ translateY: detailSheetY }] }]}
+            style={[styles.detailModalContainer, { backgroundColor: theme.surface, paddingBottom: Math.max(insets.bottom, 20), transform: [{ translateY: detailSheetY }] }]}
             {...detailPanHandlers}
           >
             <View style={[styles.modalHandle, { backgroundColor: theme.border }]} />
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   navLabel: { fontSize: 12, marginTop: 4, fontWeight: '500' },
   activeIndicator: { position: 'absolute', bottom: 0, width: 32, height: 3, borderRadius: 2 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.5)', justifyContent: 'flex-end' },
-  detailModalContainer: { borderTopLeftRadius: 30, borderTopRightRadius: 30, maxHeight: '90%', paddingBottom: 20 },
+  detailModalContainer: { borderTopLeftRadius: 30, borderTopRightRadius: 30, maxHeight: '90%' },
   modalHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 8 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1 },
   modalTitle: { fontSize: 20, fontWeight: '700' },

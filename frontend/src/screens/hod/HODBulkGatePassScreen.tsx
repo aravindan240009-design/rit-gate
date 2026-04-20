@@ -11,7 +11,7 @@ import {
   Linking,
   BackHandler,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as DocumentPicker from '../../shims/expoDocumentPicker';
 import * as FileSystem from '../../shims/expoFileSystem';
@@ -56,6 +56,7 @@ const Dropdown = ({ label, value, options, onSelect, placeholder }: {
 }) => {
   const [open, setOpen] = useState(false);
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <View style={dd.wrap}>
       <ThemedText style={[dd.label, { color: theme.text }]}>{label}</ThemedText>
@@ -65,7 +66,7 @@ const Dropdown = ({ label, value, options, onSelect, placeholder }: {
       </TouchableOpacity>
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <TouchableOpacity style={dd.overlay} activeOpacity={1} onPress={() => setOpen(false)}>
-          <View style={[dd.sheet, { backgroundColor: theme.surface }]}>
+          <View style={[dd.sheet, { backgroundColor: theme.surface, paddingBottom: Math.max(insets.bottom, 20) }]}>
             <ThemedText style={[dd.sheetTitle, { color: theme.text }]}>{label}</ThemedText>
             <VerticalScrollView>
               <TouchableOpacity style={[dd.option, { borderBottomColor: theme.border }]} onPress={() => { onSelect(''); setOpen(false); }}>
