@@ -85,6 +85,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
           {/* Buttons */}
           <View style={styles.btnRow}>
+            {!!cancelText && (
             <TouchableOpacity
               style={[styles.btn, styles.cancelBtn, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}
               onPress={() => dismiss(onCancel)}
@@ -92,6 +93,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             >
               <ThemedText style={[styles.cancelText, { color: theme.textSecondary }]}>{cancelText}</ThemedText>
             </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={[styles.btn, styles.confirmBtn, { backgroundColor: resolvedConfirmColor }]}
