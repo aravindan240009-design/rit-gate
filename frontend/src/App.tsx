@@ -130,7 +130,7 @@ const App: React.FC = () => {
   const [batteryGateChecked, setBatteryGateChecked] = React.useState(false);
   const [batteryOptimizationOK, setBatteryOptimizationOK] = React.useState(false);
 
-  // Double-back-to-exit tracking
+  const [studentInitialTab, setStudentInitialTab] = React.useState<'HOME' | 'REQUESTS' | 'HISTORY' | 'PROFILE' | 'NEW_REQUEST' | undefined>(undefined);
   const lastBackPress = useRef<number>(0);
   const [showExitToast, setShowExitToast] = React.useState(false);
   const exitToastTimer = useRef<NodeJS.Timeout | null>(null);
@@ -154,7 +154,7 @@ const App: React.FC = () => {
     const ut = userTypeRef.current;
     // My requests / own gate pass
     if (r.includes('my-requests') || r.includes('my_requests')) {
-      if (ut === 'STUDENT') setCurrentScreen('REQUESTS');
+      if (ut === 'STUDENT') { setStudentInitialTab('REQUESTS'); setCurrentScreen('DASHBOARD'); }
       else if (ut === 'STAFF') setCurrentScreen('MY_REQUESTS');
       else if (ut === 'HOD') setCurrentScreen('HOD_MY_REQUESTS');
       else if (ut === 'HR') setCurrentScreen('HR_MY_REQUESTS');
@@ -180,7 +180,7 @@ const App: React.FC = () => {
     }
     // Gate pass approved — go to my requests (QR is there)
     else if (r.includes('approved') || r.includes('qr-code') || r.includes('qr_code')) {
-      if (ut === 'STUDENT') setCurrentScreen('REQUESTS');
+      if (ut === 'STUDENT') { setStudentInitialTab('REQUESTS'); setCurrentScreen('DASHBOARD'); }
       else if (ut === 'STAFF') setCurrentScreen('MY_REQUESTS');
       else if (ut === 'HOD') setCurrentScreen('HOD_MY_REQUESTS');
       else if (ut === 'HR') setCurrentScreen('HR_MY_REQUESTS');
@@ -911,6 +911,8 @@ const App: React.FC = () => {
                 student={student}
                 onLogout={handleLogout}
                 onNavigate={navigateToScreen}
+                initialTab={studentInitialTab}
+                key={studentInitialTab || 'HOME'}
               />
             );
           case 'PROFILE':

@@ -12,6 +12,7 @@ interface StudentDashboardContainerProps {
   student: Student;
   onLogout: () => void;
   onNavigate: (screen: any) => void;
+  initialTab?: TabType;
 }
 
 type TabType = 'HOME' | 'REQUESTS' | 'HISTORY' | 'PROFILE' | 'NEW_REQUEST';
@@ -20,8 +21,9 @@ const StudentDashboardContainer: React.FC<StudentDashboardContainerProps> = ({
   student,
   onLogout,
   onNavigate,
+  initialTab,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('HOME');
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'HOME');
   const { loadNotifications } = useNotifications();
 
   useEffect(() => {
