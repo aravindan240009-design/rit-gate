@@ -74,8 +74,18 @@ export async function initPushNotifications(userId: string, userType: string): P
   try {
     await ensureChannel();
     await requestFCMPermission();
-    const token = await getFCMToken();
-    if (!token) return;
+
+    // Retry up to 3 times with 1s delay — permission dialog may not have resolved yet
+    let token: string | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      token = await getFCMToken();
+      if (token) break;
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    if (!token) {
+      console.warn('⚠️ Could not get FCM token after 3 attempts for', userId);
+      return;
+    }
 
     const sessionKey = `${userId}:${token}`;
 

@@ -296,6 +296,12 @@ const App: React.FC = () => {
     console.log('🚀 App mounted - starting initialization');
     // Start offline queue (Feature 2)
     offlineQueue.start();
+    // Request FCM + notifee permission early (before login) so token is available immediately
+    import('./services/pushNotification.service').then(({ requestFCMPermission }) => requestFCMPermission()).catch(() => {});
+    import('./services/localNotification.service').then(({ ensureChannel, requestNotificationPermission }) => {
+      ensureChannel().catch(() => {});
+      requestNotificationPermission().catch(() => {});
+    }).catch(() => {});
     // Log device info and run notification onboarding (battery opt + OEM auto-launch)
     logDeviceNotificationInfo();
     runNotificationOnboarding();
