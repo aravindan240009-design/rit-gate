@@ -126,15 +126,17 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       });
       setRequests(sorted);
 
-      // Stats: only today's incoming requests
+      // Stats: only incoming requests (not HOD's own)
+      // Gate pass: today only. Visitor/vendor: all pending regardless of date
       const incomingOnly = sorted.filter((r: any) => {
         if (r.userType === 'HOD' || r.requestedByStaffCode === hod.hodCode || r.regNo === hod.hodCode) return false;
+        if (r.passType === 'VISITOR' || r.sourceType === 'VISITOR') return true;
         const reqDate = r.requestDate || r.createdAt || r.visitDate || r.exitDateTime;
         return isToday(reqDate);
       });
 
       const pending = incomingOnly.filter((r: any) =>
-        r.status === 'PENDING_HOD' || (r.passType === 'VISITOR' && r.status === 'PENDING')
+        r.status === 'PENDING_HOD' || ((r.passType === 'VISITOR' || r.sourceType === 'VISITOR') && r.status === 'PENDING')
       ).length;
 
       const approved = incomingOnly.filter((r: any) =>
@@ -168,9 +170,11 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       (request.regNo && request.regNo === hod.hodCode);
     if (isOwnRequest) return false;
 
-    // Only show today's requests
-    const reqDate = request.requestDate || request.createdAt || request.visitDate || request.exitDateTime;
-    if (!isToday(reqDate)) return false;
+    // Gate pass requests: only show today's. Visitor/vendor: show all pending
+    if (request.passType !== 'VISITOR' && request.sourceType !== 'VISITOR') {
+      const reqDate = request.requestDate || request.createdAt || request.visitDate || request.exitDateTime;
+      if (!isToday(reqDate)) return false;
+    }
 
     const matchesSearch = searchQuery === '' ||
       request.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -179,9 +183,8 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
 
     let matchesTab = false;
     if (activeTab === 'PENDING') {
-      // Show gate pass requests waiting for HOD, AND pending visitor requests
       matchesTab = request.status === 'PENDING_HOD' ||
-        (request.passType === 'VISITOR' && request.status === 'PENDING');
+        ((request.passType === 'VISITOR' || request.sourceType === 'VISITOR') && request.status === 'PENDING');
     } else if (activeTab === 'APPROVED') {
       matchesTab = request.status === 'APPROVED';
     } else if (activeTab === 'REJECTED') {

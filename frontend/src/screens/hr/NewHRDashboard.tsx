@@ -171,18 +171,19 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
       setRequests(sorted);
 
-      // Stats: only today's requests
-      const todayOnly = sorted.filter((r: any) => {
+      // Stats: gate pass = today only, visitor/vendor = all pending
+      const statsBase = sorted.filter((r: any) => {
+        if (r.requestType === 'VISITOR') return true;
         const reqDate = r.requestDate || r.createdAt || r.visitDate || r.exitDateTime || r.timestamp;
         return isToday(reqDate);
       });
-      const pending = todayOnly.filter((r: any) =>
+      const pending = statsBase.filter((r: any) =>
         r.requestType === 'VISITOR' ? r.status === 'PENDING' : (r.hrApproval === 'PENDING_HR' || r.status === 'PENDING_HR')
       ).length;
-      const approved = todayOnly.filter((r: any) =>
+      const approved = statsBase.filter((r: any) =>
         r.requestType === 'VISITOR' ? r.status === 'APPROVED' : r.hrApproval === 'APPROVED'
       ).length;
-      const rejected = todayOnly.filter((r: any) =>
+      const rejected = statsBase.filter((r: any) =>
         r.requestType === 'VISITOR' ? r.status === 'REJECTED' : r.hrApproval === 'REJECTED'
       ).length;
 
@@ -260,9 +261,11 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   };
 
   const filteredRequests = requests.filter(request => {
-    // Only show today's requests
-    const reqDate = request.requestDate || request.createdAt || request.visitDate || request.exitDateTime || request.timestamp;
-    if (!isToday(reqDate)) return false;
+    // Gate pass requests: only show today's. Visitor/vendor: show all pending
+    if (request.requestType !== 'VISITOR') {
+      const reqDate = request.requestDate || request.createdAt || request.visitDate || request.exitDateTime || request.timestamp;
+      if (!isToday(reqDate)) return false;
+    }
 
     const matchesSearch = searchQuery === '' ||
       request.purpose?.toLowerCase().includes(searchQuery.toLowerCase()) ||

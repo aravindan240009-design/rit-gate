@@ -165,21 +165,23 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
       setRequests(uniqueRequests);
 
-      // Stats: today's assigned (non-own) requests
-      const todayAssigned = uniqueRequests.filter((r: any) => {
+      // Stats: assigned (non-own) requests
+      // Gate pass: today only. Visitor/vendor: all pending regardless of date
+      const assignedRequests = uniqueRequests.filter((r: any) => {
         if (r.isOwnRequest) return false;
+        if (r.requestType === 'VISITOR') return true; // always include visitor/vendor
         const reqDate = r.requestDate || r.createdAt || r.visitDate;
         return isToday(reqDate);
       });
-      const assignedPending = todayAssigned.filter((r: any) =>
+      const assignedPending = assignedRequests.filter((r: any) =>
         r.status === 'PENDING_STAFF' ||
-        (r.requestType === 'VISITOR' && (r.staffApproval === 'PENDING' || r.staffApproval === 'PENDING_STAFF'))
+        (r.requestType === 'VISITOR' && (r.staffApproval === 'PENDING' || r.staffApproval === 'PENDING_STAFF' || r.status === 'PENDING'))
       ).length;
-      const assignedApproved = todayAssigned.filter((r: any) =>
-        r.staffApproval === 'APPROVED'
+      const assignedApproved = assignedRequests.filter((r: any) =>
+        r.staffApproval === 'APPROVED' || (r.requestType === 'VISITOR' && r.status === 'APPROVED')
       ).length;
-      const assignedRejected = todayAssigned.filter((r: any) =>
-        r.staffApproval === 'REJECTED'
+      const assignedRejected = assignedRequests.filter((r: any) =>
+        r.staffApproval === 'REJECTED' || (r.requestType === 'VISITOR' && r.status === 'REJECTED')
       ).length;
       setStats({ pending: assignedPending, approved: assignedApproved, rejected: assignedRejected });
     } catch (error) {
@@ -201,9 +203,12 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     // EXCLUDE staff's own requests from home page - they only appear in "My Requests" page
     if (request.isOwnRequest) return false;
 
-    // Only show today's requests
-    const reqDate = request.requestDate || request.createdAt || request.visitDate;
-    if (!isToday(reqDate)) return false;
+    // For gate pass requests: only show today's requests
+    // For visitor/vendor requests: show all pending ones (they need action regardless of date)
+    if (request.requestType !== 'VISITOR') {
+      const reqDate = request.requestDate || request.createdAt || request.visitDate;
+      if (!isToday(reqDate)) return false;
+    }
 
     const matchesSearch = searchQuery === '' ||
       request.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -213,19 +218,20 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     let matchesTab = false;
     if (activeTab === 'PENDING') {
       matchesTab = request.status === 'PENDING_STAFF' ||
-        (request.requestType === 'VISITOR' && (request.staffApproval === 'PENDING' || request.staffApproval === 'PENDING_STAFF'));
+        (request.requestType === 'VISITOR' && (
+          request.staffApproval === 'PENDING' ||
+          request.staffApproval === 'PENDING_STAFF' ||
+          request.status === 'PENDING'
+        ));
     } else if (activeTab === 'APPROVED') {
-      // Staff approved — includes requests still pending HOD or fully approved
-      matchesTab = request.staffApproval === 'APPROVED';
+      matchesTab = request.staffApproval === 'APPROVED' ||
+        (request.requestType === 'VISITOR' && request.status === 'APPROVED');
     } else if (activeTab === 'REJECTED') {
-      // Only show requests that STAFF rejected (not HOD-rejected after staff approved)
       matchesTab = request.staffApproval === 'REJECTED' ||
-        (request.requestType === 'VISITOR' && request.staffApproval === 'REJECTED');
+        (request.requestType === 'VISITOR' && (request.staffApproval === 'REJECTED' || request.status === 'REJECTED'));
     }
 
-    const passes = matchesSearch && matchesTab;
-
-    return passes;
+    return matchesSearch && matchesTab;
   });
 
   const getInitials = (name: string) => {
