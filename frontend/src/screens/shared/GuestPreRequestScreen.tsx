@@ -310,7 +310,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
                 <Ionicons name="qr-code-outline" size={18} color="#fff" />
                 <ThemedText style={styles.viewQRBtnText}>View &amp; Share QR</ThemedText>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.doneBtnNew, { backgroundColor: theme.inputBackground, marginTop: 8 }]} onPress={onBack}>
+              <TouchableOpacity style={[styles.doneBtnNew, { backgroundColor: theme.inputBackground, marginTop: 8 }]} onPress={handleBack}>
                 <ThemedText style={[styles.doneBtnNewText, { color: theme.textSecondary }]}>Done</ThemedText>
               </TouchableOpacity>
             </View>
