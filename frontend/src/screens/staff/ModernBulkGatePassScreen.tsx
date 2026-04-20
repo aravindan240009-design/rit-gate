@@ -523,16 +523,10 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
           onPress={handleSubmit}
           disabled={isSubmitting || selectedStudents.size === 0}
         >
-          {isSubmitting ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <>
-              <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-              <ThemedText style={styles.submitButtonText}>
-                Submit for {selectedStudents.size} Student{selectedStudents.size !== 1 ? 's' : ''}
-              </ThemedText>
-            </>
-          )}
+          <Ionicons name="checkmark-circle" size={20} color="#FFF" />
+          <ThemedText style={styles.submitButtonText}>
+            Submit for {selectedStudents.size} Student{selectedStudents.size !== 1 ? 's' : ''}
+          </ThemedText>
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
@@ -572,6 +566,17 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
         onConfirm={() => { setShowBackConfirm(false); if (navigation?.goBack) navigation.goBack(); else if (onBack) onBack(); }}
         onCancel={() => setShowBackConfirm(false)}
       />
+
+      {/* Loading overlay */}
+      <Modal visible={isSubmitting} transparent animationType="fade" statusBarTranslucent>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 32, alignItems: 'center', gap: 14, minWidth: 200, elevation: 8 }}>
+            <ActivityIndicator size="large" color="#06B6D4" />
+            <ThemedText style={{ fontSize: 16, fontWeight: '700', color: '#1E293B' }}>Submitting request...</ThemedText>
+            <ThemedText style={{ fontSize: 13, color: '#64748B' }}>Please wait...</ThemedText>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

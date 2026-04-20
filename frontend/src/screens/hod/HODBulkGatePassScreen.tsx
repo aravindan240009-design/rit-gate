@@ -504,8 +504,7 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
         <TouchableOpacity style={[s.submitBtn, { backgroundColor: theme.success }, totalSelected === 0 && s.submitBtnDisabled]} onPress={handleSubmit} disabled={totalSelected === 0 || isSubmitting}>
           <Ionicons name="checkmark-circle" size={20} color="#FFF" />
           <ThemedText style={s.submitBtnText}>Submit for {totalSelected} Participant{totalSelected !== 1 ? 's' : ''}</ThemedText>
-        </TouchableOpacity>
-        <View style={{ height: 40 }} />
+        </TouchableOpacity>        <View style={{ height: 40 }} />
       </VerticalScrollView>
 
       <SuccessModal
@@ -542,6 +541,17 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
         onConfirm={() => { setShowBackConfirm(false); navigation?.goBack ? navigation.goBack() : onBack?.(); }}
         onCancel={() => setShowBackConfirm(false)}
       />
+
+      {/* Loading overlay */}
+      <Modal visible={isSubmitting} transparent animationType="fade" statusBarTranslucent>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 32, alignItems: 'center', gap: 14, minWidth: 200, elevation: 8 }}>
+            <ActivityIndicator size="large" color="#06B6D4" />
+            <ThemedText style={{ fontSize: 16, fontWeight: '700', color: '#1E293B' }}>Submitting request...</ThemedText>
+            <ThemedText style={{ fontSize: 13, color: '#64748B' }}>Please wait...</ThemedText>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };

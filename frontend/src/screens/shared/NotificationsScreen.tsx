@@ -185,9 +185,6 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
           </View>
 
           <View style={styles.headerActions}>
-            <TouchableOpacity onPress={markAllAsRead} style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}>
-              <Ionicons name="checkmark-done-outline" size={20} color={theme.primary} />
-            </TouchableOpacity>
             <TouchableOpacity onPress={clearAllNotifications} style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}>
               <Ionicons name="trash-outline" size={20} color={theme.error} />
             </TouchableOpacity>
