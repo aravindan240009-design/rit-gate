@@ -91,19 +91,31 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
 
     try {
       let response;
-      // Use unified scan endpoint (scanQREntry/scanQRExit are the same)
-      console.log('🚀 [MODERN] Calling apiService.scanQREntry (unified handler)');
-      console.log('👤 [MODERN] Security ID:', security.securityId);
-      
-      response = await apiService.scanQREntry(data, security.securityId);
+      // Route based on code format:
+      // - QR codes (contain / or |) or 6-digit manual codes → unified scan endpoint
+      // - Plain ID card barcodes (reg no / staff code) → late entry endpoint
+      const isQRFormat = data.includes('/') || data.includes('|');
+      const is6DigitCode = /^\d{6}$/.test(data.trim());
+
+      if (isQRFormat || is6DigitCode) {
+        console.log('🚀 [MODERN] Calling apiService.scanQREntry (unified handler)');
+        console.log('👤 [MODERN] Security ID:', security.securityId);
+        response = await apiService.scanQREntry(data, security.securityId);
+      } else {
+        // Plain reg no / staff code from ID card barcode → late entry
+        console.log('🚀 [MODERN] Calling apiService.scanLateEntry (ID card barcode)');
+        console.log('👤 [MODERN] Security ID:', security.securityId);
+        response = await apiService.scanLateEntry(data.trim(), security.securityId);
+      }
 
       console.log('📥 [MODERN] API Response:', JSON.stringify(response));
 
-      if (response.success) {
+      if (response.success || (response as any).status === 'SUCCESS' || (response as any).status === 'APPROVED') {
         // Backend tells us if it was entry or exit via scanLocation or type
         const data_resp = response.data || response;
         const isExit = (data_resp?.scanLocation || '').toLowerCase().includes('exit');
-        const scanLabel = isExit ? 'Exit' : 'Entry';
+        const isLateEntry = !isExit && (isQRFormat === false && is6DigitCode === false);
+        const scanLabel = isExit ? 'Exit' : isLateEntry ? 'Late Entry' : 'Entry';
         setModalTitle(`✅ ${scanLabel} Recorded`);
         setModalMessage(response.message || `${scanLabel} recorded successfully`);
         setShowSuccessModal(true);
@@ -112,10 +124,10 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         // Map technical messages to user-friendly ones
         const rawMsg = response.message || '';
         let friendlyMsg = rawMsg;
-        if (rawMsg.toLowerCase().includes('not found in system') || rawMsg.toLowerCase().includes('qr not found')) {
-          friendlyMsg = 'QR code not found. It may have already been used or is invalid.';
-        } else if (rawMsg.toLowerCase().includes('already scanned') || rawMsg.toLowerCase().includes('daily limit')) {
-          friendlyMsg = 'This QR code has already been used today.';
+        if (rawMsg.toLowerCase().includes('not found in system') || rawMsg.toLowerCase().includes('qr not found') || rawMsg.toLowerCase().includes('not found with')) {
+          friendlyMsg = 'User not found in system. Please verify the ID.';
+        } else if (rawMsg.toLowerCase().includes('already scanned') || rawMsg.toLowerCase().includes('daily limit') || rawMsg.toLowerCase().includes('already recorded')) {
+          friendlyMsg = 'Late entry already recorded for today.';
         } else if (rawMsg.toLowerCase().includes('entry mismatch') || rawMsg.toLowerCase().includes('does not match entry')) {
           friendlyMsg = 'Invalid QR code for entry. Please scan the correct code.';
         } else if (rawMsg.toLowerCase().includes('exit mismatch') || rawMsg.toLowerCase().includes('does not match exit')) {
