@@ -122,19 +122,19 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
   const handleMessage = async (phone: string) => {
     try {
       const cleanPhone = phone.replace(/\D/g, '');
+      // Try WhatsApp first, fall back to native SMS
       const whatsappUrl = `whatsapp://send?phone=91${cleanPhone}`;
-      const canOpen = await Linking.canOpenURL(whatsappUrl);
-      
-      if (canOpen) {
+      const canOpenWhatsApp = await Linking.canOpenURL(whatsappUrl);
+
+      if (canOpenWhatsApp) {
         await Linking.openURL(whatsappUrl);
       } else {
-        setErrorMessage('Please install WhatsApp to send messages to HODs.');
-        setShowErrorModal(true);
+        // Fall back to native SMS
+        const smsUrl = Platform.OS === 'ios' ? `sms:${cleanPhone}` : `sms:${cleanPhone}`;
+        await Linking.openURL(smsUrl);
       }
     } catch (error) {
-      console.error('Error opening WhatsApp:', error);
-      setErrorMessage('Failed to open WhatsApp');
-      setShowErrorModal(true);
+      console.error('Error opening messaging app:', error);
     }
   };
 
