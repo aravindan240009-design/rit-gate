@@ -22,7 +22,7 @@ import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useActionLock } from '../../context/ActionLockContext';
-import { formatDateShort, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { formatDateShort, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
 import { notificationService } from '../../services/NotificationService';
 import NotificationDropdown from '../../components/NotificationDropdown';
 import BulkDetailsModal from '../../components/BulkDetailsModal';
@@ -495,7 +495,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                       </ThemedText>
                     </View>
                     <View style={styles.timeAgoContainer}>
-                      <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</ThemedText>
+                      <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>{getRelativeTime(request.requestDate || request.createdAt)}</ThemedText>
                     </View>
                   </View>
 

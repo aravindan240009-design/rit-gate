@@ -37,7 +37,7 @@ import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
-import { formatDateShort, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { formatDateShort, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 
@@ -395,7 +395,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
                   </ThemedText>
                 </View>
                 <View style={styles.timeAgoContainer}>
-                  <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>{request.requestDate ? '2h ago' : ''}</ThemedText>
+                  <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>{getRelativeTime(request.requestDate || request.createdAt)}</ThemedText>
                 </View>
               </View>
 

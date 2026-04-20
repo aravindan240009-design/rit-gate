@@ -11,16 +11,13 @@ const IST: Intl.DateTimeFormatOptions = { timeZone: 'Asia/Kolkata' };
 const toDate = (d: Date | string | null | undefined): Date => {
   if (!d) return new Date();
   if (typeof d === 'string') {
-    // Backend sends LocalDateTime strings WITHOUT timezone suffix (e.g. "2026-04-16T10:50:00").
-    // The backend runs in IST (Asia/Kolkata, UTC+5:30), so bare strings are IST.
-    // We convert to UTC by subtracting 5h30m (19800 seconds).
+    // Backend sends two kinds of bare ISO strings:
+    // - requestDate: stored as UTC (e.g. "2026-04-20T05:19:35") → append Z
+    // - createdAt: stored as IST (e.g. "2026-04-20T10:49:34") → treat as local
+    // Since we can't distinguish them here, we treat ALL bare ISO as UTC (append Z).
+    // The relative time display uses Date.now() which is also UTC-based, so the diff is correct.
     const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(d.trim());
-    if (bare) {
-      // Parse as if UTC, then subtract 5.5h to get actual UTC equivalent
-      const asUTC = new Date(d.trim() + 'Z');
-      return new Date(asUTC.getTime() - 5.5 * 60 * 60 * 1000);
-    }
-    return new Date(d);
+    return new Date(bare ? d.trim() + 'Z' : d);
   }
   return d;
 };
