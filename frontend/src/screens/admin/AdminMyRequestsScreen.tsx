@@ -12,7 +12,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShort, getRelativeTime } from '../../utils/dateUtils';
+import { formatDateTimeShort, getRelativeTime, isToday } from '../../utils/dateUtils';
 
 interface AdminMyRequestsScreenProps {
   admin: NonTeachingFaculty;
@@ -36,7 +36,7 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
       const all: any[] = (res as any).requests || (res as any).data || [];
       const filtered = all
         .filter(r => r.status !== 'USED' && r.status !== 'EXITED')
-        .filter(r => isTodayUtil(r.requestDate || r.createdAt || ''))
+        .filter(r => isToday(r.requestDate || r.createdAt || ''))
         .sort((a, b) => new Date(b.requestDate || b.createdAt || 0).getTime() - new Date(a.requestDate || a.createdAt || 0).getTime());
       setRequests(filtered);
     } catch (e) { console.error('Admin my requests error:', e); }

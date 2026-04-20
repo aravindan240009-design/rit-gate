@@ -106,7 +106,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
         <PageHeader title="My Requests" />
         <SkeletonList count={5} />
         <BottomNavBar tabs={HR_TABS} activeKey="MY_REQUESTS" onPress={(key) => {
-          if (key === 'HOME') onBack();
+          if (key === 'HOME') onBack && onBack();
           else if (key === 'NEW_PASS') onNavigate && onNavigate('NEW_PASS');
           else if (key === 'EXITS') onNavigate && onNavigate('EXITS');
           else if (key === 'PROFILE') onNavigate && onNavigate('PROFILE');
@@ -194,7 +194,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
 
       {/* Bottom Navigation — 5 tabs for HR */}
       <BottomNavBar tabs={HR_TABS} activeKey="MY_REQUESTS" onPress={(key) => {
-        if (key === 'HOME') onBack();
+        if (key === 'HOME') onBack && onBack();
         else if (key === 'NEW_PASS') onNavigate && onNavigate('NEW_PASS');
         else if (key === 'EXITS') onNavigate && onNavigate('EXITS');
         else if (key === 'PROFILE') onNavigate && onNavigate('PROFILE');
