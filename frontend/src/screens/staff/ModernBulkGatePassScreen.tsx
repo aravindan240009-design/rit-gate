@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Modal,
   Linking,
   Platform,
   BackHandler,
