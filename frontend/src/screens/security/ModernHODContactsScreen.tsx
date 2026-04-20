@@ -122,19 +122,19 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
   const handleMessage = async (phone: string) => {
     try {
       const cleanPhone = phone.replace(/\D/g, '');
-      // Try WhatsApp first, fall back to native SMS
+      // Directly open WhatsApp — skip canOpenURL which fails on Android 11+
+      // due to package visibility restrictions unless declared in manifest queries
       const whatsappUrl = `whatsapp://send?phone=91${cleanPhone}`;
-      const canOpenWhatsApp = await Linking.canOpenURL(whatsappUrl);
-
-      if (canOpenWhatsApp) {
-        await Linking.openURL(whatsappUrl);
-      } else {
-        // Fall back to native SMS
-        const smsUrl = Platform.OS === 'ios' ? `sms:${cleanPhone}` : `sms:${cleanPhone}`;
-        await Linking.openURL(smsUrl);
-      }
+      await Linking.openURL(whatsappUrl);
     } catch (error) {
-      console.error('Error opening messaging app:', error);
+      console.error('Error opening WhatsApp:', error);
+      // Fall back to SMS if WhatsApp truly isn't installed
+      try {
+        const cleanPhone = phone.replace(/\D/g, '');
+        await Linking.openURL(`sms:${cleanPhone}`);
+      } catch (smsError) {
+        console.error('Error opening SMS:', smsError);
+      }
     }
   };
 
