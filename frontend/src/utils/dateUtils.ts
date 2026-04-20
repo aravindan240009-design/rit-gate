@@ -22,6 +22,30 @@ const toDate = (d: Date | string | null | undefined): Date => {
   return d;
 };
 
+/**
+ * Parse a date value treating bare ISO strings as IST (UTC+5:30).
+ * Use this for Visitor/Vendor createdAt fields which the backend stores in IST.
+ */
+const toDateIST = (d: Date | string | null | undefined): Date => {
+  if (!d) return new Date();
+  if (typeof d === 'string') {
+    const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(d.trim());
+    // Append IST offset so the time is interpreted correctly
+    return new Date(bare ? d.trim() + '+05:30' : d);
+  }
+  return d;
+};
+
+/** "15 Jan 2025, 02:30 PM" — for visitor/vendor dates stored as IST in backend */
+export const formatDateTimeIST = (date: Date | string): string => {
+  const d = toDateIST(date);
+  return d.toLocaleString('en-IN', {
+    ...IST,
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  });
+};
+
 /** "15 Jan 2025" */
 export const formatDate = (date: Date | string): string => {
   const d = toDate(date);
