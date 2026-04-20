@@ -3377,6 +3377,8 @@ public class SecurityController {
             String purpose = (String) request.get("purpose");
             String vehicleNumber = (String) request.get("vehicleNumber");
             String vehicleType = (String) request.get("vehicleType");
+            String visitorRole = request.get("role") != null && !request.get("role").toString().isBlank()
+                ? request.get("role").toString().toUpperCase() : "VISITOR";
             Integer numberOfPeople = request.get("numberOfPeople") != null ? 
                 Integer.parseInt(request.get("numberOfPeople").toString()) : 1;
             
@@ -3425,6 +3427,7 @@ public class SecurityController {
             visitor.setVehicleNumber(vehicleNumber);
             visitor.setVehicleType(vehicleType);
             visitor.setRegisteredBy(securityId);
+            visitor.setRole(visitorRole);
             visitor.setStatus("PENDING");
 
             Visitor savedVisitor = visitorRepository.save(visitor);
@@ -3434,8 +3437,8 @@ public class SecurityController {
             try {
                 notificationService.createUserNotification(
                     staffCode,
-                    "New Visitor Request",
-                    "New visitor request from " + visitorName + " registered by security. Please review and approve.",
+                    "New " + ("VENDOR".equals(visitorRole) ? "Vendor" : "Visitor") + " Request",
+                    "New " + ("VENDOR".equals(visitorRole) ? "vendor" : "visitor") + " request from " + visitorName + " registered by security. Please review and approve.",
                     "GATE_PASS",
                     "HIGH"
                 );
