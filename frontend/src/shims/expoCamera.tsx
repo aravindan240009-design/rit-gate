@@ -78,7 +78,11 @@ export const CameraView: React.FC<CameraViewProps> = ({
         showFrame={false}
         allowedBarcodeTypes={mappedTypes as any}
         onReadCode={(event: any) => {
-          const data = event?.nativeEvent?.codeStringValue;
+          const raw = event?.nativeEvent?.codeStringValue;
+          // Trim whitespace/control characters that barcode scanners sometimes append
+          const data = raw ? raw.trim().replace(/[\x00-\x1F\x7F]/g, '') : raw;
+          console.log('📷 [CAMERA-KIT] Raw barcode value:', JSON.stringify(raw));
+          console.log('📷 [CAMERA-KIT] Cleaned barcode value:', JSON.stringify(data));
           if (data && onBarcodeScanned) {
             onBarcodeScanned({ data });
           }

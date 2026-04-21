@@ -97,6 +97,9 @@ public class SecurityController {
     
     @Autowired
     private com.example.visitor.service.LateEntryService lateEntryService;
+
+    @Autowired
+    private com.example.visitor.repository.HRRepository hrRepository;
     
     @Autowired
     private com.example.visitor.service.EmailService emailService;
@@ -229,6 +232,16 @@ public class SecurityController {
             if (hodOpt.isPresent()) {
                 com.example.visitor.service.LateEntryService.LateEntryResponse response = 
                     lateEntryService.recordHODLateEntry(idCode, securityId);
+                return ResponseEntity.ok(response);
+            }
+            
+            // 4b. Check if it's a non-teaching staff (non_teaching_staffs table via HR entity)
+            Optional<com.example.visitor.entity.HR> hrOpt = hrRepository.findByHrCode(idCode);
+            if (hrOpt.isPresent()) {
+                com.example.visitor.entity.HR hr = hrOpt.get();
+                // Record as staff late entry using HR details
+                com.example.visitor.service.LateEntryService.LateEntryResponse response =
+                    lateEntryService.recordNonTeachingStaffLateEntry(idCode, hr.getHrName(), hr.getDepartment(), securityId);
                 return ResponseEntity.ok(response);
             }
             

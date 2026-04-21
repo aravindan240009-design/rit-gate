@@ -367,6 +367,53 @@ public class LateEntryService {
     }
     
     /**
+     * Record non-teaching staff late entry (non_teaching_staffs table)
+     * and notify HR
+     */
+    @Transactional
+    public LateEntryResponse recordNonTeachingStaffLateEntry(String staffCode, String staffName, String department, String securityId) {
+        log.info("Recording non-teaching staff late entry: {}", staffCode);
+
+        if (railwayEntryRepository.existsByUserIdToday(staffCode)) {
+            return LateEntryResponse.builder()
+                .success(false)
+                .message("Late entry already recorded for today")
+                .userType("STAFF")
+                .userId(staffCode)
+                .userName(staffName)
+                .build();
+        }
+
+        RailwayEntry entry = new RailwayEntry();
+        entry.setUserType("STAFF");
+        entry.setUserId(staffCode);
+        entry.setPersonName(staffName);
+        entry.setDepartment(department);
+        entry.setScannedBy(securityId);
+        entry.setScanLocation("Entry Gate - Late Arrival");
+        entry.setTimestamp(LocalDateTime.now());
+
+        RailwayEntry saved = railwayEntryRepository.save(entry);
+        log.info("Non-teaching staff late entry recorded: {} at {}", staffCode, saved.getTimestamp());
+
+        // Notify HR
+        notificationService.notifyHROfLateEntry(staffName, staffCode, "Non-Teaching Staff", department);
+        // Notify the staff themselves
+        notificationService.notifyPersonOfLateEntry(staffCode, staffName, "Staff");
+
+        return LateEntryResponse.builder()
+            .success(true)
+            .message("Late entry recorded for " + staffName)
+            .userType("STAFF")
+            .userId(staffCode)
+            .userName(staffName)
+            .department(department)
+            .entryTime(saved.getTimestamp())
+            .notifiedTo("HR Department")
+            .build();
+    }
+
+    /**
      * Response DTO for late entry recording
      */
     @lombok.Data
