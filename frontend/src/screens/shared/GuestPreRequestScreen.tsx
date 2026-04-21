@@ -355,7 +355,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
         title="Discard Changes"
         message="You have unsaved changes. Are you sure you want to go back?"
         confirmText="Discard"
-        confirmColor="#EF4444"
+        confirmColor={theme.primary}
         icon="arrow-back"
         onConfirm={() => { setShowDiscardConfirm(false); onBack(); }}
         onCancel={() => setShowDiscardConfirm(false)}
