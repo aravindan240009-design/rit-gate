@@ -541,17 +541,24 @@ public class GatePassRequestService {
             
             if (!existingQRs.isEmpty()) {
                 String existingQR = existingQRs.get(0).getQrString();
-                // Check if existing QR uses correct format (SF|, ST|, VG|, or HD|)
-                if (existingQR != null && 
-                    (existingQR.startsWith("SF|") || existingQR.startsWith("ST|") || existingQR.startsWith("VG|") || existingQR.startsWith("HD|"))) {
+                // Determine expected prefix for this request
+                String expectedPrefix = "ST";
+                if (request.getUserType() != null) {
+                    if (request.getUserType().equals("STAFF")) expectedPrefix = "SF";
+                    else if (request.getUserType().equals("HOD")) expectedPrefix = "HD";
+                    else if (request.getUserType().equals("VISITOR")) expectedPrefix = "VG";
+                }
+                // Check if existing QR uses correct format AND matches this request's user type
+                if (existingQR != null && existingQR.startsWith(expectedPrefix + "|")) {
                     log.info("⚠️  QR already exists for request {} with correct format, skipping generation", request.getId());
                     // Update request with existing QR
                     request.setQrCode(existingQR);
                     request.setQrCodeGeneratedAt(existingQRs.get(0).getCreatedAt());
                     return;
                 } else {
-                    // Old format detected, delete and regenerate
-                    log.warn("🔄 Old QR format detected for request {}: {}. Deleting and regenerating...", request.getId(), existingQR);
+                    // Wrong format or wrong user type — delete and regenerate
+                    log.warn("🔄 Wrong QR format for request {} (userType={}): {}. Deleting and regenerating...", 
+                        request.getId(), request.getUserType(), existingQR);
                     qrTableRepository.deleteAll(existingQRs);
                 }
             }
