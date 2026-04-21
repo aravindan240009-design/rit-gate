@@ -12,6 +12,40 @@ export const CameraModule = {
   },
 };
 
+// Map Expo Camera barcode type strings → react-native-camera-kit format strings
+const EXPO_TO_RN_CAMERA_KIT: Record<string, string> = {
+  qr: 'qr',
+  code128: 'code-128',
+  code39: 'code-39',
+  code93: 'code-93',
+  codabar: 'codabar',
+  ean13: 'ean-13',
+  ean8: 'ean-8',
+  itf14: 'itf',
+  'upc_a': 'upc-a',
+  'upc_e': 'upc-e',
+  pdf417: 'pdf-417',
+  aztec: 'aztec',
+  datamatrix: 'data-matrix',
+};
+
+// All barcode types supported by react-native-camera-kit on Android
+const ALL_BARCODE_TYPES = [
+  'qr',
+  'code-128',
+  'code-39',
+  'code-93',
+  'codabar',
+  'ean-13',
+  'ean-8',
+  'itf',
+  'upc-a',
+  'upc-e',
+  'pdf-417',
+  'aztec',
+  'data-matrix',
+];
+
 type CameraViewProps = {
   style?: ViewStyle;
   facing?: 'front' | 'back';
@@ -27,6 +61,14 @@ export const CameraView: React.FC<CameraViewProps> = ({
   barcodeScannerSettings,
   children,
 }) => {
+  // Map Expo-style type strings to react-native-camera-kit format strings
+  // If no types specified, scan everything
+  const mappedTypes = barcodeScannerSettings?.barcodeTypes
+    ? barcodeScannerSettings.barcodeTypes
+        .map(t => EXPO_TO_RN_CAMERA_KIT[t] ?? t)
+        .filter(Boolean)
+    : ALL_BARCODE_TYPES;
+
   return (
     <>
       <RNCameraKit
@@ -34,7 +76,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
         cameraType={facing as any}
         scanBarcode
         showFrame={false}
-        allowedBarcodeTypes={barcodeScannerSettings?.barcodeTypes as any}
+        allowedBarcodeTypes={mappedTypes as any}
         onReadCode={(event: any) => {
           const data = event?.nativeEvent?.codeStringValue;
           if (data && onBarcodeScanned) {
