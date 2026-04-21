@@ -138,21 +138,11 @@ const QRLoginScanner: React.FC<QRLoginScannerProps> = ({ onScanSuccess, onClose 
         
         {/* Scanning Overlay */}
         <View style={styles.overlay}>
-          {/* QR frame — square */}
-          <View style={[styles.scanArea, styles.scanAreaQR]}>
+          <View style={styles.scanArea}>
             <View style={[styles.corner, styles.topLeft]} />
             <View style={[styles.corner, styles.topRight]} />
             <View style={[styles.corner, styles.bottomLeft]} />
             <View style={[styles.corner, styles.bottomRight]} />
-          </View>
-          {/* Barcode frame — wide rectangle below QR frame */}
-          <View style={[styles.scanArea, styles.scanAreaBarcode, { marginTop: 24 }]}>
-            <View style={[styles.corner, styles.topLeft]} />
-            <View style={[styles.corner, styles.topRight]} />
-            <View style={[styles.corner, styles.bottomLeft]} />
-            <View style={[styles.corner, styles.bottomRight]} />
-            {/* Horizontal scan line hint */}
-            <View style={styles.scanLine} />
           </View>
         </View>
 
@@ -269,23 +259,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scanArea: {
+    width: 280,
+    height: 280,
     position: 'relative',
-  },
-  scanAreaQR: {
-    width: 240,
-    height: 240,
-  },
-  scanAreaBarcode: {
-    width: 300,
-    height: 100,
-  },
-  scanLine: {
-    position: 'absolute',
-    top: '50%',
-    left: 8,
-    right: 8,
-    height: 2,
-    backgroundColor: 'rgba(255,255,255,0.5)',
   },
   corner: {
     position: 'absolute',
