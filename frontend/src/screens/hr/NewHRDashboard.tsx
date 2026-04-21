@@ -571,20 +571,6 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
       {bottomTab === 'EXITS' && null}
 
-
-
-      {/* Bottom Navigation */}
-      <BottomNavBar
-        tabs={HR_DASH_TABS}
-        activeKey={bottomTab === 'NEW_PASS' ? 'HOME' : bottomTab}
-        onPress={(key) => {
-          if (key === 'HOME') setBottomTab('HOME');
-          else if (key === 'NEW_PASS') { setBottomTab('NEW_PASS'); setShowPassSheet(true); }
-          else if (key === 'MY_REQUESTS') { setBottomTab('MY_REQUESTS'); onNavigate('MY_REQUESTS'); }
-          else if (key === 'EXITS') { setBottomTab('EXITS'); onNavigate('HR_EXITS'); }
-          else if (key === 'PROFILE') { setBottomTab('PROFILE'); onNavigate('PROFILE'); }
-        }}
-      />
       </TopRefreshControl>
 
       {/* Bottom Navigation — fixed outside TopRefreshControl */}
