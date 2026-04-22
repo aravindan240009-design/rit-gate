@@ -14,6 +14,15 @@ import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
 import { formatDateTimeShort, getRelativeTime, isToday } from '../../utils/dateUtils';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import BottomNavBar from '../../components/BottomNavBar';
+
+const ADMIN_TABS = [
+  { key: 'HOME', label: 'Home', icon: 'home-outline', iconActive: 'home' },
+  { key: 'NEW_PASS', label: 'New Pass', icon: 'add-circle-outline', isAdd: true },
+  { key: 'MY_REQUESTS', label: 'My Requests', icon: 'list-outline', iconActive: 'list' },
+  { key: 'SCAN_HISTORY', label: 'Gate Logs', icon: 'time-outline', iconActive: 'time' },
+  { key: 'PROFILE', label: 'Profile', icon: 'person-outline', iconActive: 'person' },
+];
 
 interface AdminMyRequestsScreenProps {
   admin: NonTeachingFaculty;
@@ -183,32 +192,17 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
       />
 
       {/* Bottom Nav */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('HOME'); onBack(); }}>
-          <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
-          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('NEW_PASS'); setShowPassSheet(true); }}>
-          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('MY_REQUESTS')}>
-          <Ionicons name={bottomTab === 'MY_REQUESTS' ? 'list' : 'list-outline'} size={22} color={bottomTab === 'MY_REQUESTS' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_REQUESTS' && { color: theme.primary }]}>My Requests</ThemedText>
-          {bottomTab === 'MY_REQUESTS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('SCAN_HISTORY'); onNavigate?.('ADMIN_SCAN_HISTORY'); }}>
-          <Ionicons name={bottomTab === 'SCAN_HISTORY' ? 'time' : 'time-outline'} size={22} color={bottomTab === 'SCAN_HISTORY' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'SCAN_HISTORY' && { color: theme.primary }]}>Gate Logs</ThemedText>
-          {bottomTab === 'SCAN_HISTORY' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate?.('PROFILE'); }}>
-          <Ionicons name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'} size={22} color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</ThemedText>
-          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-      </View>
+      <BottomNavBar
+        tabs={ADMIN_TABS}
+        activeKey="MY_REQUESTS"
+        onPress={(key) => {
+          setBottomTab(key as any);
+          if (key === 'HOME') onBack();
+          else if (key === 'NEW_PASS') setShowPassSheet(true);
+          else if (key === 'SCAN_HISTORY') onNavigate?.('ADMIN_SCAN_HISTORY');
+          else if (key === 'PROFILE') onNavigate?.('PROFILE');
+        }}
+      />
 
       <PassTypeBottomSheet
         visible={showPassSheet}
@@ -247,10 +241,6 @@ const styles = StyleSheet.create({
   empty: { paddingVertical: 80, alignItems: 'center' },
   emptyText: { fontSize: 17, fontWeight: '600', marginTop: 16 },
   emptySub: { fontSize: 13, marginTop: 6 },
-  bottomNav: { flexDirection: 'row', borderTopWidth: 1, paddingBottom: 4, paddingTop: 4, height: 60, position: 'absolute', bottom: 0, left: 0, right: 0 },
-  navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4, position: 'relative' },
-  navLabel: { fontSize: 10, marginTop: 2 },
-  activeIndicator: { position: 'absolute', bottom: 0, left: '25%', right: '25%', height: 3, borderRadius: 2 },
 });
 
 export default AdminMyRequestsScreen;
