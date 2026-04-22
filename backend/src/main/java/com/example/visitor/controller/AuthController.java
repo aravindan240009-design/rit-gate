@@ -595,12 +595,13 @@ public class AuthController {
             }
             
             // Check teaching_staffs first, then non_teaching_staffs
-            String staffName, email, department, role;
+            String staffName, email, department, role, phone;
             Optional<Staff> staffOpt = staffRepository.findByStaffCode(staffCode);
             if (staffOpt.isPresent()) {
                 Staff staff = staffOpt.get();
                 staffName = staff.getStaffName(); email = staff.getEmail();
                 department = staff.getDepartment(); role = staff.getRole();
+                phone = staff.getPhone();
             } else {
                 Optional<HR> ntfOpt = hrRepository.findByHrCode(staffCode);
                 if (ntfOpt.isEmpty()) {
@@ -610,12 +611,13 @@ public class AuthController {
                 HR ntf = ntfOpt.get();
                 staffName = ntf.getHrName(); email = ntf.getEmail();
                 department = ntf.getDepartment(); role = ntf.getRole();
+                phone = ntf.getPhone();
             }
             
             ResponseEntity<?> verificationError = verifyOTPWithAttempts(email, otp, staffCode, "STAFF");
             if (verificationError != null) return verificationError;
             
-            UserResponseDTO userDTO = new UserResponseDTO(null, staffCode, staffName, email, null, department, true);
+            UserResponseDTO userDTO = new UserResponseDTO(null, staffCode, staffName, email, phone, department, true);
             userDTO.setStaffName(staffName);
             userDTO.setStaffCode(staffCode);
             userDTO.setRole(role);

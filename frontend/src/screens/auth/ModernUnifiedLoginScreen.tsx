@@ -91,15 +91,17 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
   }, []);
 
   useEffect(() => {
-    if (userId.trim().length > 0) {
-      const role = detectUserRole(userId);
+    const trimmed = userId.trim();
+    if (trimmed.length > 0) {
+      const role = detectUserRole(trimmed);
       setDetectedRole(role);
     } else {
       setDetectedRole(null);
     }
-    // Reset resolved role whenever ID changes
+    // Only reset resolved role if the trimmed ID actually changed
+    // (ignore whitespace-only changes from Gboard autocomplete)
     resolvedRoleRef.current = null;
-  }, [userId]);
+  }, [userId.trim()]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -187,7 +189,7 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
       setLoadingMessage('Sending OTP...');
       const response = await apiService.sendOTP(effectiveUserId, role);
       if (response.success) {
-        setUserId(effectiveUserId);
+        setUserId(effectiveUserId);  // store trimmed version
         setMaskedEmail(response.maskedEmail || response.email || 'm***@institution.edu');
         setDetectedRole(role);
         resolvedRoleRef.current = role;
