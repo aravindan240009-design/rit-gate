@@ -281,7 +281,36 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </>
       );
     }
-    // Staff / HOD / HR / NCI / NTF
+    // Admin Officer (AO) - 5 tabs with Gate Logs
+    const isAdmin = userSubType === 'ADMIN';
+    if (isAdmin) {
+      return (
+        <>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HOME')}>
+            <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('NEW_PASS')}>
+            <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('MY_REQUESTS')}>
+            <Ionicons name="list-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>My Requests</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('SCAN_HISTORY')}>
+            <Ionicons name="time-outline" size={22} color={theme.textTertiary} />
+            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Gate Logs</ThemedText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.navItem}>
+            <Ionicons name="person" size={22} color={theme.primary} />
+            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>Profile</ThemedText>
+            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
+          </TouchableOpacity>
+        </>
+      );
+    }
+    // HR - 5 tabs with Gate Logs
     const isHR = userType.toUpperCase() === 'HR';
     if (isHR) {
       return (
@@ -310,6 +339,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </>
       );
     }
+    // Staff / HOD / NCI / NTF - 4 tabs
     return (
       <>
         <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HOME')}>

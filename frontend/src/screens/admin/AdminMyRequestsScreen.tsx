@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { NonTeachingFaculty } from '../../types';
+import { NonTeachingFaculty, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import ThemedText from '../../components/ThemedText';
@@ -13,14 +13,17 @@ import { VerticalFlatList } from '../../components/navigation/VerticalScrollView
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
 import { formatDateTimeShort, getRelativeTime, isToday } from '../../utils/dateUtils';
+import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 
 interface AdminMyRequestsScreenProps {
   admin: NonTeachingFaculty;
   onBack: () => void;
+  onNavigate?: (screen: ScreenName) => void;
 }
 
-const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, onBack }) => {
+const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, onBack, onNavigate }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,6 +32,8 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
   const [showQR, setShowQR] = useState(false);
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [manualCode, setManualCode] = useState<string | null>(null);
+  const [bottomTab, setBottomTab] = useState<'HOME' | 'NEW_PASS' | 'MY_REQUESTS' | 'SCAN_HISTORY' | 'PROFILE'>('MY_REQUESTS');
+  const [showPassSheet, setShowPassSheet] = useState(false);
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -72,9 +77,7 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-          <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-            <Ionicons name="arrow-back" size={22} color={theme.text} />
-          </TouchableOpacity>
+          <View style={{ width: 40 }} />
           <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
           <View style={{ width: 40 }} />
         </View>
@@ -86,9 +89,7 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-          <Ionicons name="arrow-back" size={22} color={theme.text} />
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>My Requests</ThemedText>
         <View style={{ width: 40 }} />
       </View>
@@ -180,6 +181,41 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
         manualCode={manualCode}
         reason={selectedRequest?.purpose || selectedRequest?.reason}
       />
+
+      {/* Bottom Nav */}
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('HOME'); onBack(); }}>
+          <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
+          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('NEW_PASS'); setShowPassSheet(true); }}>
+          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('MY_REQUESTS')}>
+          <Ionicons name={bottomTab === 'MY_REQUESTS' ? 'list' : 'list-outline'} size={22} color={bottomTab === 'MY_REQUESTS' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_REQUESTS' && { color: theme.primary }]}>My Requests</ThemedText>
+          {bottomTab === 'MY_REQUESTS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('SCAN_HISTORY'); onNavigate?.('ADMIN_SCAN_HISTORY'); }}>
+          <Ionicons name={bottomTab === 'SCAN_HISTORY' ? 'time' : 'time-outline'} size={22} color={bottomTab === 'SCAN_HISTORY' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'SCAN_HISTORY' && { color: theme.primary }]}>Gate Logs</ThemedText>
+          {bottomTab === 'SCAN_HISTORY' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate?.('PROFILE'); }}>
+          <Ionicons name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'} size={22} color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</ThemedText>
+          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+      </View>
+
+      <PassTypeBottomSheet
+        visible={showPassSheet}
+        onClose={() => { setShowPassSheet(false); setBottomTab('MY_REQUESTS'); }}
+        onSelectSingle={() => { setShowPassSheet(false); onNavigate?.('NEW_PASS_REQUEST'); }}
+        onSelectGuest={() => { setShowPassSheet(false); onNavigate?.('GUEST_PRE_REQUEST'); }}
+      />
     </SafeAreaView>
   );
 };
@@ -211,6 +247,10 @@ const styles = StyleSheet.create({
   empty: { paddingVertical: 80, alignItems: 'center' },
   emptyText: { fontSize: 17, fontWeight: '600', marginTop: 16 },
   emptySub: { fontSize: 13, marginTop: 6 },
+  bottomNav: { flexDirection: 'row', borderTopWidth: 1, paddingBottom: 4, paddingTop: 4, height: 60, position: 'absolute', bottom: 0, left: 0, right: 0 },
+  navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4, position: 'relative' },
+  navLabel: { fontSize: 10, marginTop: 2 },
+  activeIndicator: { position: 'absolute', bottom: 0, left: '25%', right: '25%', height: 3, borderRadius: 2 },
 });
 
 export default AdminMyRequestsScreen;

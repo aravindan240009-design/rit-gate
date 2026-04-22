@@ -38,16 +38,31 @@ const AdminDashboardContainer: React.FC<AdminDashboardContainerProps> = ({ admin
   };
 
   if (activeTab === 'PROFILE') {
-    return <ProfileScreen user={admin as any} userType="STAFF" userSubType="ADMIN" onBack={() => setActiveTab('DASHBOARD')} onLogout={onLogout} />;
+    return (
+      <ProfileScreen 
+        user={admin as any} 
+        userType="STAFF" 
+        userSubType="ADMIN" 
+        onBack={() => setActiveTab('DASHBOARD')} 
+        onLogout={onLogout}
+        showBottomNav={true}
+        onTabChange={(tab) => {
+          if (tab === 'HOME') setActiveTab('DASHBOARD');
+          else if (tab === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
+          else if (tab === 'SCAN_HISTORY') setActiveTab('SCAN_HISTORY');
+          else if (tab === 'PROFILE') setActiveTab('PROFILE');
+        }}
+      />
+    );
   }
   if (activeTab === 'NEW_PASS') {
     return <AdminSinglePassScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} />;
   }
   if (activeTab === 'MY_REQUESTS') {
-    return <AdminMyRequestsScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} />;
+    return <AdminMyRequestsScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} onNavigate={handleNavigate} />;
   }
   if (activeTab === 'SCAN_HISTORY') {
-    return <AdminScanHistoryScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} />;
+    return <AdminScanHistoryScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} onNavigate={handleNavigate} />;
   }
   if (activeTab === 'GUEST') {
     return (

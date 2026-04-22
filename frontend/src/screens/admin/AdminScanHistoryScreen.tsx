@@ -3,10 +3,10 @@ import {
   View, StyleSheet, TouchableOpacity, ScrollView,
   ActivityIndicator, StatusBar, BackHandler,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { NonTeachingFaculty } from '../../types';
+import { NonTeachingFaculty, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import { notificationService } from '../../services/NotificationService';
@@ -17,17 +17,20 @@ import { VerticalFlatList } from '../../components/navigation/VerticalScrollView
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import TopRefreshControl from '../../components/TopRefreshControl';
+import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 
 interface AdminScanHistoryScreenProps {
   admin: NonTeachingFaculty;
   onBack: () => void;
+  onNavigate?: (screen: ScreenName) => void;
 }
 
 const getInitials = (name: string) =>
   (name || 'NA').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
-const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, onBack }) => {
+const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, onBack, onNavigate }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [gateLogs, setGateLogs] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -40,6 +43,8 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
   const [showError, setShowError] = useState(false);
   const [modalMsg, setModalMsg] = useState('');
   const [rangeLabel, setRangeLabel] = useState("Today's gate logs");
+  const [bottomTab, setBottomTab] = useState<'HOME' | 'NEW_PASS' | 'MY_REQUESTS' | 'SCAN_HISTORY' | 'PROFILE'>('SCAN_HISTORY');
+  const [showPassSheet, setShowPassSheet] = useState(false);
 
   useEffect(() => {
     loadGateLogs();
@@ -117,9 +122,7 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-          <Ionicons name="arrow-back" size={22} color={theme.text} />
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Gate Logs</ThemedText>
         <View style={{ width: 40 }} />
       </View>
@@ -310,6 +313,41 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
 
       <SuccessModal visible={showSuccess} title="Done" message={modalMsg} onClose={() => setShowSuccess(false)} autoClose autoCloseDelay={2500} />
       <ErrorModal visible={showError} type="general" title="Cannot Download" message={modalMsg} onClose={() => setShowError(false)} />
+
+      {/* Bottom Nav */}
+      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('HOME'); onBack(); }}>
+          <Ionicons name={bottomTab === 'HOME' ? 'home' : 'home-outline'} size={22} color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>Home</ThemedText>
+          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('NEW_PASS'); setShowPassSheet(true); }}>
+          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('MY_REQUESTS'); onNavigate?.('ADMIN_MY_REQUESTS'); }}>
+          <Ionicons name={bottomTab === 'MY_REQUESTS' ? 'list' : 'list-outline'} size={22} color={bottomTab === 'MY_REQUESTS' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_REQUESTS' && { color: theme.primary }]}>My Requests</ThemedText>
+          {bottomTab === 'MY_REQUESTS' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => setBottomTab('SCAN_HISTORY')}>
+          <Ionicons name={bottomTab === 'SCAN_HISTORY' ? 'time' : 'time-outline'} size={22} color={bottomTab === 'SCAN_HISTORY' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'SCAN_HISTORY' && { color: theme.primary }]}>Gate Logs</ThemedText>
+          {bottomTab === 'SCAN_HISTORY' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => { setBottomTab('PROFILE'); onNavigate?.('PROFILE'); }}>
+          <Ionicons name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'} size={22} color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary} />
+          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>Profile</ThemedText>
+          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
+        </TouchableOpacity>
+      </View>
+
+      <PassTypeBottomSheet
+        visible={showPassSheet}
+        onClose={() => { setShowPassSheet(false); setBottomTab('SCAN_HISTORY'); }}
+        onSelectSingle={() => { setShowPassSheet(false); onNavigate?.('NEW_PASS_REQUEST'); }}
+        onSelectGuest={() => { setShowPassSheet(false); onNavigate?.('GUEST_PRE_REQUEST'); }}
+      />
     </SafeAreaView>
   );
 };
@@ -341,6 +379,10 @@ const styles = StyleSheet.create({
   cardDetails: { paddingHorizontal: 14, paddingVertical: 10, gap: 6 },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   detailText: { fontSize: 13, flex: 1 },
+  bottomNav: { flexDirection: 'row', borderTopWidth: 1, paddingBottom: 4, paddingTop: 4, height: 60, position: 'absolute', bottom: 0, left: 0, right: 0 },
+  navItem: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 4, position: 'relative' },
+  navLabel: { fontSize: 10, marginTop: 2 },
+  activeIndicator: { position: 'absolute', bottom: 0, left: '25%', right: '25%', height: 3, borderRadius: 2 },
 });
 
 export default AdminScanHistoryScreen;
