@@ -91,6 +91,26 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
           <View style={{ width: 40 }} />
         </View>
         <SkeletonList count={5} />
+        
+        {/* Bottom Nav - Always visible */}
+        <BottomNavBar
+          tabs={ADMIN_TABS}
+          activeKey="MY_REQUESTS"
+          onPress={(key) => {
+            setBottomTab(key as any);
+            if (key === 'HOME') onBack();
+            else if (key === 'NEW_PASS') setShowPassSheet(true);
+            else if (key === 'SCAN_HISTORY') onNavigate?.('ADMIN_SCAN_HISTORY');
+            else if (key === 'PROFILE') onNavigate?.('PROFILE');
+          }}
+        />
+        
+        <PassTypeBottomSheet
+          visible={showPassSheet}
+          onClose={() => { setShowPassSheet(false); setBottomTab('MY_REQUESTS'); }}
+          onSelectSingle={() => { setShowPassSheet(false); onNavigate?.('NEW_PASS_REQUEST'); }}
+          onSelectGuest={() => { setShowPassSheet(false); onNavigate?.('GUEST_PRE_REQUEST'); }}
+        />
       </SafeAreaView>
     );
   }
