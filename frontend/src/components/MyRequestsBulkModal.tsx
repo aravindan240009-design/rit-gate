@@ -108,6 +108,18 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
       )
     : true;
 
+  // Resolve the receiver's display name from participants
+  const receiverParticipant = details?.qrOwnerId
+    ? participants.find((p: any) => {
+        const pid = String(p.id || p.regNo || p.staffCode || '').trim();
+        return pid === String(details.qrOwnerId).trim();
+      })
+    : null;
+  const receiverName = receiverParticipant
+    ? (receiverParticipant.name || receiverParticipant.studentName || receiverParticipant.fullName || receiverParticipant.staffName || 'N/A')
+    : (requester?.name || details?.requestedByStaffName || 'N/A');
+  const receiverId = String(details?.qrOwnerId || '');
+
   // "Applied by" — shown when the viewer is a receiver but someone else created the pass
   // e.g. class incharge created it and assigned a student/staff as receiver
   const appliedByName = details?.requestedByStaffName || requester?.name || null;
@@ -218,6 +230,19 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
                     <ThemedText style={[styles.appliedByBadgeText, { color: '#FFFFFF' }]}>Organiser</ThemedText>
                   </View>
                 </View>
+              </View>
+            )}
+
+            {/* QR Holder banner — shown to the receiver when pass is approved */}
+            {isApproved && hasQR && viewerIsReceiver && (
+              <View style={[styles.block, { backgroundColor: theme.success + '15', borderWidth: 1, borderColor: theme.success + '40' }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="qr-code" size={18} color={theme.success} />
+                  <ThemedText style={[styles.blockLabel, { color: theme.success, marginBottom: 0 }]}>YOU ARE THE QR HOLDER</ThemedText>
+                </View>
+                <ThemedText style={[styles.reasonText, { color: theme.success, marginTop: 6 }]}>
+                  You have been assigned to carry the QR code for this group. Tap "View QR & Manual Code" below to access it.
+                </ThemedText>
               </View>
             )}
 
@@ -332,8 +357,8 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
         <GatePassQRModal
           visible={showQR}
           onClose={() => setShowQR(false)}
-          personName={requester?.name || details?.requestedByStaffName || 'N/A'}
-          personId={String(details?.qrOwnerId || '')}
+          personName={receiverName}
+          personId={receiverId}
           qrCodeData={details?.qrCode || details?.qrData?.qrString || null}
           manualCode={details?.manualCode || details?.qrData?.manualEntryCode}
           reason={details?.purpose}
