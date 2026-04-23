@@ -405,6 +405,7 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
           qrCodeData={liveQrCode || details?.qrCode || details?.qrData?.qrString || null}
           manualCode={liveManualCode || details?.manualCode || details?.qrData?.manualEntryCode}
           reason={details?.purpose}
+          qrExpiresAt={details?.qrExpiresAt || null}
         />
 
         <Modal visible={showParticipants} animationType="slide" transparent={false} onRequestClose={() => setShowParticipants(false)}>

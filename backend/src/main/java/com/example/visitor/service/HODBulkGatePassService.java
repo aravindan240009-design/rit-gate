@@ -309,6 +309,7 @@ public class HODBulkGatePassService {
             requestData.put("createdAt", request.getCreatedAt());
             requestData.put("attachmentUri", request.getAttachmentUri());
             requestData.put("hrRemark", request.getRejectionReason());
+            requestData.put("qrExpiresAt", request.getQrExpiresAt());
             
             // Fetch manual entry code from QRTable
             List<QRTable> qrList = qrTableRepository.findByPassRequestId(request.getId());
@@ -361,14 +362,18 @@ public class HODBulkGatePassService {
         qrTable.setExit(token);
         qrTable.setCreatedAt(LocalDateTime.now());
         qrTable.setUpdatedAt(LocalDateTime.now());
+        // Expiry = midnight (00:00:00) of the next day (end of today)
+        LocalDateTime midnight = LocalDateTime.now().toLocalDate().plusDays(1).atStartOfDay();
+        qrTable.setQrExpiresAt(midnight);
 
         qrTableRepository.save(qrTable);
 
         request.setQrCode(qrString);
         request.setManualCode(qrTable.getManualEntryCode());
         request.setQrCodeGeneratedAt(LocalDateTime.now());
+        request.setQrExpiresAt(midnight);
 
-        log.info("✅ QR generated for HOD bulk pass {} — manual: {}", request.getId(), qrTable.getManualEntryCode());
+        log.info("✅ QR generated for HOD bulk pass {} — manual: {} — expires: {}", request.getId(), qrTable.getManualEntryCode(), midnight);
     }
 
     private String generateUniqueToken() {

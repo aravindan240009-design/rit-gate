@@ -391,6 +391,7 @@ public class BulkGatePassService {
             requestData.put("createdAt", request.getCreatedAt());
             requestData.put("attachmentUri", request.getAttachmentUri());
             requestData.put("hodRemark", request.getHodRemark());
+            requestData.put("qrExpiresAt", bulkQrReleased ? request.getQrExpiresAt() : null);
             
             if (bulkQrReleased) {
                 List<QRTable> qrList = qrTableRepository.findByPassRequestId(request.getId());
