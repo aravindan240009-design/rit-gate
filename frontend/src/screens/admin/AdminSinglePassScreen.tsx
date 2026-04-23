@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, StyleSheet, TouchableOpacity, TextInput,
-  StatusBar, ActivityIndicator, ScrollView,
+  StatusBar, ActivityIndicator, ScrollView, BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -30,6 +30,25 @@ const AdminSinglePassScreen: React.FC<AdminSinglePassScreenProps> = ({ admin, on
   const [errorMsg, setErrorMsg] = useState('');
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
+
+  const isDirty = purpose.trim().length > 0 || reason.trim().length > 0;
+
+  const handleBack = () => {
+    if (isDirty) setShowBackConfirm(true);
+    else onBack();
+  };
+
+  // Intercept hardware back button
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (isDirty) {
+        setShowBackConfirm(true);
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [isDirty]);
 
   const handleSubmit = () => {
     if (!purpose.trim() || !reason.trim()) {
@@ -87,10 +106,7 @@ const AdminSinglePassScreen: React.FC<AdminSinglePassScreenProps> = ({ admin, on
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => {
-          if (purpose.trim() || reason.trim()) setShowBackConfirm(true);
-          else onBack();
-        }}>
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={handleBack}>
           <Ionicons name="arrow-back" size={22} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>New Gate Pass</ThemedText>
@@ -188,9 +204,11 @@ const AdminSinglePassScreen: React.FC<AdminSinglePassScreenProps> = ({ admin, on
       <ConfirmationModal
         visible={showBackConfirm}
         title="Discard Changes"
-        message="You have unsaved changes. Are you sure you want to go back?"
+        message="You have unsaved changes. Going back will discard them."
         confirmText="Discard"
-        icon="arrow-back-outline"
+        cancelText="Keep editing"
+        confirmColor="#DC2626"
+        icon="trash-outline"
         onConfirm={() => { setShowBackConfirm(false); onBack(); }}
         onCancel={() => setShowBackConfirm(false)}
       />
