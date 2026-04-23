@@ -44,9 +44,17 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
   const [showParticipants, setShowParticipants] = useState(false);
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
+  const [qrFetching, setQrFetching] = useState(false);
+  const [liveQrCode, setLiveQrCode] = useState<string | null>(null);
+  const [liveManualCode, setLiveManualCode] = useState<string | null>(null);
 
   useEffect(() => {
-    if (visible && requestId) { loadDetails(); setShowQR(false); }
+    if (visible && requestId) {
+      loadDetails();
+      setShowQR(false);
+      setLiveQrCode(null);
+      setLiveManualCode(null);
+    }
   }, [visible, requestId]);
 
   const loadDetails = async () => {
@@ -71,6 +79,46 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch QR on demand — handles cases where qrCode wasn't stored on the entity
+  const handleViewQR = async () => {
+    // Use already-loaded QR if available
+    const existingQr = details?.qrCode || details?.qrData?.qrString || liveQrCode;
+    const existingManual = details?.manualCode || details?.qrData?.manualEntryCode || liveManualCode;
+    if (existingQr) {
+      setLiveQrCode(existingQr);
+      setLiveManualCode(existingManual || null);
+      setShowQR(true);
+      return;
+    }
+    // Fetch from API
+    setQrFetching(true);
+    try {
+      const identifier = currentUserId || '';
+      const result = await apiService.getGatePassQRCode(requestId, identifier, true);
+      if (result.success && result.qrCode) {
+        setLiveQrCode(result.qrCode);
+        setLiveManualCode(result.manualCode || null);
+        setShowQR(true);
+      } else {
+        // Fallback: try with the qrOwnerId directly
+        const fallback = await apiService.getGatePassQRCode(
+          requestId,
+          details?.qrOwnerId || identifier,
+          true
+        );
+        if (fallback.success && fallback.qrCode) {
+          setLiveQrCode(fallback.qrCode);
+          setLiveManualCode(fallback.manualCode || null);
+          setShowQR(true);
+        }
+      }
+    } catch (_) {
+      // silently fail — QR modal won't open
+    } finally {
+      setQrFetching(false);
     }
   };
 
@@ -333,10 +381,18 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
         {!loading && !error && (
           <View style={[styles.footer, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
             {/* View QR — above View Participants, only for the QR owner */}
-            {isApproved && hasQR && isQROwner && (
-              <TouchableOpacity style={[styles.footerBtn, { backgroundColor: theme.success, marginBottom: 10 }]} onPress={() => setShowQR(true)}>
-                <Ionicons name="qr-code" size={20} color="#FFF" />
-                <ThemedText style={styles.footerBtnText}>View QR & Manual Code</ThemedText>
+            {isApproved && isQROwner && (
+              <TouchableOpacity
+                style={[styles.footerBtn, { backgroundColor: theme.success, marginBottom: 10 }]}
+                onPress={handleViewQR}
+                disabled={qrFetching}
+              >
+                {qrFetching
+                  ? <ActivityIndicator size="small" color="#FFF" />
+                  : <Ionicons name="qr-code" size={20} color="#FFF" />}
+                <ThemedText style={styles.footerBtnText}>
+                  {qrFetching ? 'Loading QR…' : 'View QR & Manual Code'}
+                </ThemedText>
               </TouchableOpacity>
             )}
             {participants.length > 0 && (
@@ -359,8 +415,8 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
           onClose={() => setShowQR(false)}
           personName={receiverName}
           personId={receiverId}
-          qrCodeData={details?.qrCode || details?.qrData?.qrString || null}
-          manualCode={details?.manualCode || details?.qrData?.manualEntryCode}
+          qrCodeData={liveQrCode || details?.qrCode || details?.qrData?.qrString || null}
+          manualCode={liveManualCode || details?.manualCode || details?.qrData?.manualEntryCode}
           reason={details?.purpose}
         />
 
