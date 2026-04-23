@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { apiService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
-import { formatDateTime, formatDateShort } from '../utils/dateUtils';
+import { formatDateTime, formatDateShort, formatDateTimeIST } from '../utils/dateUtils';
 import ParticipantsScreen from '../screens/shared/ParticipantsScreen';
 import GatePassQRModal from './GatePassQRModal';
 import ThemedText from './ThemedText';
@@ -124,7 +124,7 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
 
   const formatDate = (d: string) => {
     if (!d) return 'N/A';
-    return formatDateTime(d);
+    return formatDateTimeIST(d);
   };
 
   const getInitials = (name: string) =>
@@ -278,19 +278,6 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
                     <ThemedText style={[styles.appliedByBadgeText, { color: '#FFFFFF' }]}>Organiser</ThemedText>
                   </View>
                 </View>
-              </View>
-            )}
-
-            {/* QR Holder banner — shown to the receiver when pass is approved */}
-            {isApproved && hasQR && viewerIsReceiver && (
-              <View style={[styles.block, { backgroundColor: theme.success + '15', borderWidth: 1, borderColor: theme.success + '40' }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Ionicons name="qr-code" size={18} color={theme.success} />
-                  <ThemedText style={[styles.blockLabel, { color: theme.success, marginBottom: 0 }]}>YOU ARE THE QR HOLDER</ThemedText>
-                </View>
-                <ThemedText style={[styles.reasonText, { color: theme.success, marginTop: 6 }]}>
-                  You have been assigned to carry the QR code for this group. Tap "View QR & Manual Code" below to access it.
-                </ThemedText>
               </View>
             )}
 
