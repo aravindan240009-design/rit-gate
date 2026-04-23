@@ -18,7 +18,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShort, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { formatDateTimeShort, formatDateTimeIST, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
 import BottomNavBar from '../../components/BottomNavBar';
 import PageHeader from '../../components/PageHeader';
 
@@ -118,8 +118,8 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
     return { text: 'PENDING', color: '#FFFFFF', bgColor: theme.warning };
   };
 
-  const formatDate = (dateString: string) => {
-    return formatDateTimeShort(dateString);
+  const formatDate = (dateString: string, isBulk = false) => {
+    return isBulk ? formatDateTimeIST(dateString) : formatDateTimeShort(dateString);
   };
 
   const handleViewQR = async (request: any, isBulk: boolean = false) => {
@@ -181,7 +181,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
           </View>
           <View style={styles.infoBoxRow}>
             <Ionicons name="calendar-outline" size={16} color={theme.textSecondary} />
-            <ThemedText style={[styles.infoBoxText, { color: theme.text }]}>{formatDate(dateStr)}</ThemedText>
+            <ThemedText style={[styles.infoBoxText, { color: theme.text }]}>{formatDate(dateStr, isBulk)}</ThemedText>
           </View>
           {isBulk && (
             <View style={styles.infoBoxRow}>

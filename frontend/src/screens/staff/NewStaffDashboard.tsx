@@ -166,10 +166,18 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
       setRequests(uniqueRequests);
 
       // Stats: assigned (non-own) requests
-      // Gate pass: today only. Visitor/vendor: all pending regardless of date
+      // Gate pass: today only. Visitor/vendor: within last 24 hours
+      const isWithin24h = (dateValue?: string) => {
+        if (!dateValue) return false;
+        const d = new Date(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(dateValue) && !dateValue.endsWith('Z') && !dateValue.includes('+') ? dateValue + 'Z' : dateValue);
+        return Date.now() - d.getTime() < 24 * 60 * 60 * 1000;
+      };
       const assignedRequests = uniqueRequests.filter((r: any) => {
         if (r.isOwnRequest) return false;
-        if (r.requestType === 'VISITOR') return true; // always include visitor/vendor
+        if (r.requestType === 'VISITOR') {
+          const d = r.requestDate || r.createdAt || r.visitDate;
+          return isWithin24h(d);
+        }
         const reqDate = r.requestDate || r.createdAt || r.visitDate;
         return isToday(reqDate);
       });
@@ -204,10 +212,14 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     if (request.isOwnRequest) return false;
 
     // For gate pass requests: only show today's requests
-    // For visitor/vendor requests: show all pending ones (they need action regardless of date)
+    // For visitor/vendor requests: only show within last 24 hours
     if (request.requestType !== 'VISITOR') {
       const reqDate = request.requestDate || request.createdAt || request.visitDate;
       if (!isToday(reqDate)) return false;
+    } else {
+      const d = request.requestDate || request.createdAt || request.visitDate;
+      const parsed = d ? new Date(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(d) && !d.endsWith('Z') && !d.includes('+') ? d + 'Z' : d) : null;
+      if (!parsed || Date.now() - parsed.getTime() >= 24 * 60 * 60 * 1000) return false;
     }
 
     const matchesSearch = searchQuery === '' ||

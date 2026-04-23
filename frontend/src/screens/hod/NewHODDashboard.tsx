@@ -127,10 +127,18 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       setRequests(sorted);
 
       // Stats: only incoming requests (not HOD's own)
-      // Gate pass: today only. Visitor/vendor: all pending regardless of date
+      // Gate pass: today only. Visitor/vendor: within last 24 hours
+      const isWithin24h = (dateValue?: string) => {
+        if (!dateValue) return false;
+        const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(dateValue) && !dateValue.endsWith('Z') && !dateValue.includes('+');
+        const d = new Date(bare ? dateValue + 'Z' : dateValue);
+        return Date.now() - d.getTime() < 24 * 60 * 60 * 1000;
+      };
       const incomingOnly = sorted.filter((r: any) => {
         if (r.userType === 'HOD' || r.requestedByStaffCode === hod.hodCode || r.regNo === hod.hodCode) return false;
-        if (r.passType === 'VISITOR' || r.sourceType === 'VISITOR') return true;
+        if (r.passType === 'VISITOR' || r.sourceType === 'VISITOR') {
+          return isWithin24h(r.requestDate || r.createdAt || r.visitDate);
+        }
         const reqDate = r.requestDate || r.createdAt || r.visitDate || r.exitDateTime;
         return isToday(reqDate);
       });
@@ -170,10 +178,15 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       (request.regNo && request.regNo === hod.hodCode);
     if (isOwnRequest) return false;
 
-    // Gate pass requests: only show today's. Visitor/vendor: show all pending
+    // Gate pass requests: only show today's. Visitor/vendor: within last 24 hours
     if (request.passType !== 'VISITOR' && request.sourceType !== 'VISITOR') {
       const reqDate = request.requestDate || request.createdAt || request.visitDate || request.exitDateTime;
       if (!isToday(reqDate)) return false;
+    } else {
+      const d = request.requestDate || request.createdAt || request.visitDate;
+      const bare = d && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(d) && !d.endsWith('Z') && !d.includes('+');
+      const parsed = d ? new Date(bare ? d + 'Z' : d) : null;
+      if (!parsed || Date.now() - parsed.getTime() >= 24 * 60 * 60 * 1000) return false;
     }
 
     const matchesSearch = searchQuery === '' ||
