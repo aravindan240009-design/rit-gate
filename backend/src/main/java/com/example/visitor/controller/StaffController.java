@@ -294,6 +294,26 @@ public class StaffController {
             // Get all bulk pass requests where this staff is the creator
             List<GatePassRequest> requests = gatePassRequestRepository
                 .findByRequestedByStaffCodeAndPassTypeOrderByCreatedAtDesc(staffCode, "BULK");
+
+            // Also include bulk passes where this staff is the assigned QR receiver
+            List<GatePassRequest> receiverPasses = gatePassRequestRepository
+                .findByQrOwnerIdOrderByCreatedAtDesc(staffCode);
+            for (GatePassRequest rp : receiverPasses) {
+                if ("BULK".equals(rp.getPassType()) &&
+                    requests.stream().noneMatch(r -> r.getId().equals(rp.getId()))) {
+                    requests = new java.util.ArrayList<>(requests);
+                    requests.add(rp);
+                }
+            }
+            // Re-sort combined list by createdAt desc
+            requests.sort((a, b) -> {
+                java.time.LocalDateTime ta = a.getCreatedAt() != null ? a.getCreatedAt() : a.getRequestDate();
+                java.time.LocalDateTime tb = b.getCreatedAt() != null ? b.getCreatedAt() : b.getRequestDate();
+                if (ta == null && tb == null) return 0;
+                if (ta == null) return 1;
+                if (tb == null) return -1;
+                return tb.compareTo(ta);
+            });
             
             System.out.println("✅ Found " + requests.size() + " bulk pass requests for staff " + staffCode);
             
