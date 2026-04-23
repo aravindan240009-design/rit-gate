@@ -135,7 +135,7 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
 
   const isReceiver = (p: any) =>
     details?.qrOwnerId
-      ? String(details.qrOwnerId).trim() === String(p.id || p.regNo || p.staffCode).trim()
+      ? String(details.qrOwnerId).trim().toLowerCase() === String(p.id || p.regNo || p.staffCode).trim().toLowerCase()
       : false;
 
   const statusStr = details?.status != null ? String(details.status) : null;
@@ -147,20 +147,20 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
   const hasQR = !!(details?.qrCode || details?.qrData?.qrString);
   const isQROwner = currentUserId
     ? (
-        // Explicit qrOwnerId match
-        String(currentUserId).trim() === String(details?.qrOwnerId || '').trim() ||
+        // Explicit qrOwnerId match — case-insensitive
+        String(currentUserId).trim().toLowerCase() === String(details?.qrOwnerId || '').trim().toLowerCase() ||
         // Staff who created the pass is always an owner when includeStaff=true
-        (details?.includeStaff && String(currentUserId).trim() === String(details?.requestedByStaffCode || details?.staffCode || '').trim()) ||
+        (details?.includeStaff && String(currentUserId).trim().toLowerCase() === String(details?.requestedByStaffCode || details?.staffCode || '').trim().toLowerCase()) ||
         // If no qrOwnerId set, the requester owns it
-        (!details?.qrOwnerId && String(currentUserId).trim() === String(details?.requestedByStaffCode || details?.staffCode || '').trim())
+        (!details?.qrOwnerId && String(currentUserId).trim().toLowerCase() === String(details?.requestedByStaffCode || details?.staffCode || '').trim().toLowerCase())
       )
     : true;
 
   // Resolve the receiver's display name from participants
   const receiverParticipant = details?.qrOwnerId
     ? participants.find((p: any) => {
-        const pid = String(p.id || p.regNo || p.staffCode || '').trim();
-        return pid === String(details.qrOwnerId).trim();
+        const pid = String(p.id || p.regNo || p.staffCode || '').trim().toLowerCase();
+        return pid === String(details.qrOwnerId).trim().toLowerCase();
       })
     : null;
   const receiverName = receiverParticipant
@@ -172,7 +172,7 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
   // e.g. class incharge created it and assigned a student/staff as receiver
   const appliedByName = details?.requestedByStaffName || requester?.name || null;
   const viewerIsReceiver = currentUserId
-    ? String(currentUserId).trim() === String(details?.qrOwnerId || '').trim()
+    ? String(currentUserId).trim().toLowerCase() === String(details?.qrOwnerId || '').trim().toLowerCase()
     : false;
   // Show "Applied by" only when viewer is the receiver AND the requester is someone else
   const showAppliedBy = viewerIsReceiver && appliedByName &&
