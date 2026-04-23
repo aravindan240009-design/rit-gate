@@ -78,9 +78,15 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
       const res = await apiService.getVisitorRequestsForStaff(nci.staffCode);
       if (myFetchId !== fetchIdRef.current) return;
       const all: any[] = res.requests || [];
+      const within24h = (r: any) => {
+        const d = r.createdAt || r.visitDate || r.requestDate;
+        if (!d) return true;
+        const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(d) && !d.endsWith('Z') && !d.includes('+');
+        return Date.now() - new Date(bare ? d + 'Z' : d).getTime() < 24 * 60 * 60 * 1000;
+      };
       const websiteOnly = all.filter((r: any) => {
         const rb = (r.registeredBy || r.registered_by || '').toString();
-        return rb === 'WEBSITE' || rb.toUpperCase().startsWith('WEB-');
+        return (rb === 'WEBSITE' || rb.toUpperCase().startsWith('WEB-')) && within24h(r);
       });
       setAllRequests(websiteOnly);
     } catch (e) {
