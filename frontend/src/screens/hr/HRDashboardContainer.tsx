@@ -98,6 +98,7 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
         hr={hr}
         onLogout={onLogout}
         onNavigate={handleNavigate}
+        onOpenPassSheet={openPassSheet}
       />
     );
   };

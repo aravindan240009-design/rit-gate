@@ -124,6 +124,62 @@ export const StatsSkeleton: React.FC = () => {
   );
 };
 
+/** Skeleton for a gate log card (avatar + name/sub + badge, then detail rows) */
+export const GateLogSkeleton: React.FC = () => {
+  const { isDark } = useTheme();
+  const bg = isDark ? '#2A2A2A' : '#E8E8E8';
+  const highlight = isDark ? '#3A3A3A' : '#F5F5F5';
+  return (
+    <SkeletonPlaceholder backgroundColor={bg} highlightColor={highlight} speed={900} borderRadius={8}>
+      <View style={gateLogStyles.card}>
+        {/* Top row: avatar + name block + badge */}
+        <View style={gateLogStyles.topRow}>
+          <View style={gateLogStyles.avatar} />
+          <View style={gateLogStyles.nameBlock}>
+            <View style={gateLogStyles.nameLine} />
+            <View style={gateLogStyles.subLine} />
+          </View>
+          <View style={gateLogStyles.badge} />
+        </View>
+        {/* Detail rows */}
+        <View style={gateLogStyles.detailBox}>
+          <View style={gateLogStyles.detailRow}>
+            <View style={gateLogStyles.detailIcon} />
+            <View style={gateLogStyles.detailText} />
+          </View>
+          <View style={gateLogStyles.detailRow}>
+            <View style={gateLogStyles.detailIcon} />
+            <View style={gateLogStyles.detailTextShort} />
+          </View>
+        </View>
+      </View>
+    </SkeletonPlaceholder>
+  );
+};
+
+export const GateLogSkeletonList: React.FC<{ count?: number }> = ({ count = 6 }) => (
+  <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+    {Array.from({ length: count }).map((_, i) => (
+      <GateLogSkeleton key={i} />
+    ))}
+  </View>
+);
+
+const gateLogStyles = StyleSheet.create({
+  card: { borderRadius: 14, marginBottom: 12, overflow: 'hidden' },
+  topRow: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
+  avatar: { width: 44, height: 44, borderRadius: 22, flexShrink: 0 },
+  nameBlock: { flex: 1, gap: 8 },
+  nameLine: { width: '55%', height: 14, borderRadius: 7 },
+  subLine: { width: '38%', height: 11, borderRadius: 6 },
+  badge: { width: 52, height: 24, borderRadius: 8 },
+  detailBox: { paddingHorizontal: 14, paddingVertical: 10, gap: 8 },
+  detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  detailIcon: { width: 13, height: 13, borderRadius: 4 },
+  detailText: { width: '70%', height: 12, borderRadius: 6 },
+  detailTextShort: { width: '40%', height: 12, borderRadius: 6 },
+});
+
 const styles = StyleSheet.create({
   list: { paddingHorizontal: 20, paddingTop: 16, gap: 12 },
   card: {

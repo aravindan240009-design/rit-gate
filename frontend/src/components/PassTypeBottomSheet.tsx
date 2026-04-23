@@ -58,8 +58,10 @@ const PassTypeBottomSheet: React.FC<PassTypeBottomSheetProps> = ({
       style={styles.modal}
       animationIn="slideInUp"
       animationOut="slideOutDown"
-      backdropOpacity={0.5}
+      backdropOpacity={0.4}
+      backdropColor="#000000"
       useNativeDriver={true}
+      statusBarTranslucent={true}
     >
       <View style={[styles.container, { backgroundColor: theme.background, paddingBottom: Math.max(insets.bottom, 20) }]}>
         {/* Handle Bar */}

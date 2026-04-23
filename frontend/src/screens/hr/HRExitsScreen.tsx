@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, StyleSheet, TouchableOpacity, Modal, ScrollView,
-  ActivityIndicator, StatusBar, BackHandler, Animated,
+  StatusBar, BackHandler, RefreshControl,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
@@ -16,7 +16,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
-import TopRefreshControl from '../../components/TopRefreshControl';
+import { GateLogSkeletonList } from '../../components/SkeletonCard';
 import BottomNavBar from '../../components/BottomNavBar';
 
 const HR_TABS = [
@@ -43,6 +43,7 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, onTabChange }
   const [gateLogs, setGateLogs] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [rangeModalVisible, setRangeModalVisible] = useState(false);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -53,6 +54,9 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, onTabChange }
   const [modalMsg, setModalMsg] = useState('');
   const [rangeLabel, setRangeLabel] = useState("Today's gate logs");
 
+  // Sequence ref to discard stale responses when a newer fetch starts
+  const fetchSeqRef = React.useRef(0);
+
   useEffect(() => {
     loadGateLogs();
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { onBack(); return true; });
@@ -60,19 +64,35 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, onTabChange }
   }, []);
 
   const loadGateLogs = async (rangeFrom?: string, rangeTo?: string) => {
+    const seq = ++fetchSeqRef.current;
+    setLoading(true);
+    setFetchError(null);
     try {
       const response = await apiService.getGateLogs(rangeFrom, rangeTo);
-      if (response.success) setGateLogs(response.logs || []);
-    } catch (e) {
+      if (seq !== fetchSeqRef.current) return;
+      if (response.success) {
+        setGateLogs(response.logs || []);
+      } else {
+        setFetchError(response.message || 'Failed to load gate logs. Pull down to retry.');
+        console.error('Gate logs fetch returned success:false', response.message);
+      }
+    } catch (e: any) {
+      if (seq !== fetchSeqRef.current) return;
+      setFetchError(e?.message || 'Network error. Pull down to retry.');
       console.error('Error loading gate logs:', e);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (seq === fetchSeqRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   };
 
   const onRefresh = () => {
-    console.log('🔄 [REFRESH] HR/Exits'); setRefreshing(true); loadGateLogs(fromDate || undefined, toDate || undefined); };
+    console.log('🔄 [REFRESH] HR/Exits');
+    setRefreshing(true);
+    loadGateLogs(fromDate || undefined, toDate || undefined);
+  };
 
   const exportPdf = async () => {
     if (gateLogs.length === 0) {
@@ -133,8 +153,6 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, onTabChange }
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Gate Logs</ThemedText>
         <View style={{ width: 40 }} />
       </View>
-      <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
-
       <ScreenContentContainer style={{ flex: 1 }}>
         <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
           <ThemedText style={[styles.hint, { color: theme.textSecondary }]}>
@@ -159,12 +177,37 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, onTabChange }
           </View>
         </View>
 
+        {fetchError ? (
+          <TouchableOpacity
+            style={[styles.errorBanner, { backgroundColor: theme.error + '18', borderColor: theme.error + '40' }]}
+            onPress={onRefresh}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="alert-circle-outline" size={16} color={theme.error} />
+            <ThemedText style={[styles.errorBannerText, { color: theme.error }]} numberOfLines={2}>
+              {fetchError}
+            </ThemedText>
+            <Ionicons name="refresh-outline" size={16} color={theme.error} />
+          </TouchableOpacity>
+        ) : null}
+
+        {loading ? (
+          <GateLogSkeletonList count={6} />
+        ) : (
         <VerticalFlatList
           data={gateLogs}
-          keyExtractor={(item) => `log-${item.id}`}
+          keyExtractor={(item, index) => `log-${item.id ?? item.userId ?? ''}-${item.scanType ?? ''}-${index}`}
           contentContainerStyle={[styles.listContent, { paddingBottom: onTabChange ? 120 : 40 }]}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.primary]}
+              tintColor={theme.primary}
+            />
+          }
           renderItem={({ item }) => {
             const entry = isEntry(item);
             const badgeColor = entry ? theme.success : theme.error;
@@ -200,25 +243,19 @@ const HRExitsScreen: React.FC<HRExitsScreenProps> = ({ hr, onBack, onTabChange }
             );
           }}
           ListEmptyComponent={
-            !loading ? (
-              <View style={styles.emptyCard}>
-                <View style={[styles.emptyIconWrap, { backgroundColor: theme.border + '40' }]}>
-                  <Ionicons name="swap-vertical-outline" size={40} color={theme.textTertiary} />
-                </View>
-                <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>No gate log records</ThemedText>
-                <ThemedText style={[styles.emptySub, { color: theme.textSecondary }]}>
-                  No entry or exit records found for the selected period.{'\n'}Use Date Range to filter by a specific date.
-                </ThemedText>
+            <View style={styles.emptyCard}>
+              <View style={[styles.emptyIconWrap, { backgroundColor: theme.border + '40' }]}>
+                <Ionicons name="swap-vertical-outline" size={40} color={theme.textTertiary} />
               </View>
-            ) : (
-              <View style={styles.centered}>
-                <ActivityIndicator size="large" color={theme.primary} />
-              </View>
-            )
+              <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>No gate log records</ThemedText>
+              <ThemedText style={[styles.emptySub, { color: theme.textSecondary }]}>
+                No entry or exit records found for the selected period.{'\n'}Use Date Range to filter by a specific date.
+              </ThemedText>
+            </View>
           }
         />
+        )}
       </ScreenContentContainer>
-      </TopRefreshControl>
       {/* Date Range Picker — full screen Skyscanner style */}
       {rangeModalVisible && (
         <View style={[StyleSheet.absoluteFillObject, { backgroundColor: '#ffffff', zIndex: 999 }]}>
@@ -358,6 +395,8 @@ const styles = StyleSheet.create({
   cardDetails: { paddingHorizontal: 14, paddingVertical: 10, gap: 6 },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   detailText: { fontSize: 13, flex: 1 },
+  errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 12, padding: 12, borderRadius: 10, borderWidth: 1 },
+  errorBannerText: { flex: 1, fontSize: 13, fontWeight: '500' },
   bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
   navLabel: { fontSize: 11, marginTop: 3, fontWeight: '500' },

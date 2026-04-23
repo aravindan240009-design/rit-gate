@@ -38,7 +38,6 @@ import { VerticalFlatList, VerticalScrollView } from '../../components/navigatio
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
-import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import BottomNavBar from '../../components/BottomNavBar';
 
 const HR_DASH_TABS = [
@@ -54,12 +53,14 @@ interface NewHRDashboardProps {
   hr: HR;
   onLogout: () => void;
   onNavigate: (screen: ScreenName) => void;
+  onOpenPassSheet?: () => void;
 }
 
 const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   hr,
   onLogout,
   onNavigate,
+  onOpenPassSheet,
 }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -68,7 +69,6 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'PENDING' | 'APPROVED' | 'REJECTED'>('PENDING');
   const [bottomTab, setBottomTab] = useState<'HOME' | 'NEW_PASS' | 'MY_REQUESTS' | 'EXITS' | 'PROFILE'>('HOME');
-  const [showPassSheet, setShowPassSheet] = useState(false);
   const [exitLogs, setExitLogs] = useState<any[]>([]);
   const [rangeModalVisible, setRangeModalVisible] = useState(false);
   const [fromDate, setFromDate] = useState('');
@@ -579,18 +579,11 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
         activeKey={bottomTab === 'NEW_PASS' ? 'HOME' : bottomTab}
         onPress={(key) => {
           if (key === 'HOME') setBottomTab('HOME');
-          else if (key === 'NEW_PASS') { setBottomTab('NEW_PASS'); setShowPassSheet(true); }
+          else if (key === 'NEW_PASS') { setBottomTab('HOME'); onOpenPassSheet?.(); }
           else if (key === 'MY_REQUESTS') { setBottomTab('MY_REQUESTS'); onNavigate('MY_REQUESTS'); }
           else if (key === 'EXITS') { setBottomTab('EXITS'); onNavigate('HR_EXITS'); }
           else if (key === 'PROFILE') { setBottomTab('PROFILE'); onNavigate('PROFILE'); }
         }}
-      />
-
-      <PassTypeBottomSheet
-        visible={showPassSheet}
-        onClose={() => { setShowPassSheet(false); setBottomTab('HOME'); }}
-        onSelectSingle={() => { setShowPassSheet(false); onNavigate('NEW_PASS_REQUEST'); }}
-        onSelectGuest={() => { setShowPassSheet(false); onNavigate('GUEST_PRE_REQUEST'); }}
       />
 
       {/* Notification Dropdown */}
