@@ -14,6 +14,8 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class GatePassRequestService {
+    private static final String TOKEN_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int TOKEN_LENGTH = 6;
     
     private final GatePassRequestRepository gatePassRequestRepository;
     private final StudentRepository studentRepository;
@@ -593,7 +595,7 @@ public class GatePassRequestService {
             qrTable.setPassRequestId(request.getId());
             qrTable.setRequestedByStaffCode(request.getAssignedStaffCode() != null ? request.getAssignedStaffCode() : "SYSTEM");
             qrTable.setQrString(qrString);
-            qrTable.setManualEntryCode(token);
+            qrTable.setManualEntryCode(generateUniqueManualCode());
             qrTable.setPassType("SINGLE");
             qrTable.setIncludeStaff(false);
             qrTable.setStudentCount(1);
@@ -761,11 +763,23 @@ public class GatePassRequestService {
         return token;
     }
     
-    // Generate random 6-digit numeric token
+    // Generate random 6-character alphanumeric token
     private String generateRandomToken() {
         SecureRandom random = new SecureRandom();
-        int code = 100000 + random.nextInt(900000); // 100000–999999
-        return String.valueOf(code);
+        StringBuilder token = new StringBuilder(TOKEN_LENGTH);
+        for (int i = 0; i < TOKEN_LENGTH; i++) {
+            token.append(TOKEN_CHARS.charAt(random.nextInt(TOKEN_CHARS.length())));
+        }
+        return token.toString();
+    }
+
+    // Generate unique manual entry code (6-digit numeric)
+    private String generateUniqueManualCode() {
+        String manualCode;
+        do {
+            manualCode = generateManualCode();
+        } while (qrTableRepository.findByManualEntryCode(manualCode).isPresent());
+        return manualCode;
     }
     
     // Generate manual entry code (6-digit numeric)
