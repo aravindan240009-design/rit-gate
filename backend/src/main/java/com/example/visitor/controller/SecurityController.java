@@ -997,6 +997,35 @@ public class SecurityController {
             
             System.out.println("📋 Total participants: " + participants.size());
             
+            // Enforce one-time exit per participant per day (same rule as single ST/SF/HD passes)
+            // If ANY participant has already exited today, deny the whole bulk scan.
+            java.util.List<java.util.Map<String, String>> alreadyExited = new java.util.ArrayList<>();
+            for (String participant : participants) {
+                String[] participantParts = participant.split(":");
+                String participantType = participantParts[0];
+                String participantId = participantParts.length > 1 ? participantParts[1] : "";
+                String normalizedId = participantId != null ? participantId.trim() : "";
+                
+                if (!normalizedId.isEmpty() && railwayExitLogRepository.existsByUserIdToday(normalizedId)) {
+                    java.util.Map<String, String> info = new java.util.HashMap<>();
+                    info.put("type", participantType);
+                    info.put("id", normalizedId);
+                    alreadyExited.add(info);
+                }
+            }
+            
+            if (!alreadyExited.isEmpty()) {
+                System.out.println("❌ Bulk pass denied — some participants already exited today: " + alreadyExited.size());
+                return ResponseEntity.status(403).body(new java.util.HashMap<String, Object>() {{
+                    put("qrCode", qrCode);
+                    put("status", "DENIED");
+                    put("message", "One or more participants already exited today");
+                    put("accessGranted", false);
+                    put("type", "BULK_PASS");
+                    put("alreadyExited", alreadyExited);
+                }});
+            }
+            
             // Create exit logs for all participants BEFORE deleting QR
             LocalDateTime exitTime = LocalDateTime.now();
             java.util.List<java.util.Map<String, String>> participantDetails = new java.util.ArrayList<>();
@@ -1004,7 +1033,7 @@ public class SecurityController {
             for (String participant : participants) {
                 String[] participantParts = participant.split(":");
                 String participantType = participantParts[0];
-                String participantId = participantParts[1];
+                String participantId = participantParts[1].trim();
                 
                 // Create exit log
                 RailwayExitLog exitLog = new RailwayExitLog();
