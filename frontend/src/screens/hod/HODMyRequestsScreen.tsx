@@ -19,7 +19,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShort, formatDateTimeIST, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { formatDateTimeShortLocal, formatDateTimeIST, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import BottomNavBar from '../../components/BottomNavBar';
 import PageHeader from '../../components/PageHeader';
 
@@ -57,7 +57,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
       : (request.requestDate || request.createdAt);
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    return isTodayUtil(dateValue);
+    return isTodayLocal(dateValue);
   };
   const isUsedRequest = (request: any) =>
     request.qrUsed === true || request.status === 'USED' || request.status === 'EXITED';
@@ -73,7 +73,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
       const sorted = combined
         .filter((request) => !isUsedRequest(request))
         .filter((request) => isToday(getRequestDate(request)))
-        .sort((a, b) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
+        .sort((a, b) => toTimestampLocal(getRequestDate(b)) - toTimestampLocal(getRequestDate(a)));
       setAllRequests(sorted);
     } catch (error) {
       if (myFetchId !== fetchIdRef.current) return;
@@ -112,7 +112,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
     }
   };
 
-  const formatDate = (dateString: string, isBulk = false) => isBulk ? formatDateTimeIST(dateString) : formatDateTimeShort(dateString);
+  const formatDate = (dateString: string, isBulk = false) => isBulk ? formatDateTimeIST(dateString) : formatDateTimeShortLocal(dateString);
 
   const handleViewQR = async (request: any, isBulk: boolean = false) => {
     if (request.status !== 'APPROVED') return;
@@ -150,7 +150,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
     }
   };
 
-  const getTimeAgo = (dateString: string) => getRelativeTime(dateString);
+  const getTimeAgo = (dateString: string) => getRelativeTimeLocal(dateString);
 
   const renderRequestCard = (request: any) => {
     const badge = getStatusBadge(request.status);

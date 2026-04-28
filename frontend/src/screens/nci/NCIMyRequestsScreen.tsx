@@ -13,7 +13,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShort, formatDateTimeIST, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { formatDateTimeShortLocal, formatDateTimeIST, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import BottomNavBar from '../../components/BottomNavBar';
 import PageHeader from '../../components/PageHeader';
 
@@ -48,7 +48,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    return isTodayUtil(dateValue);
+    return isTodayLocal(dateValue);
   };
   const getRequestDate = (r: any) =>
     r.passType === 'BULK' ? (r.exitDateTime || r.createdAt || r.requestDate) : (r.requestDate || r.createdAt);
@@ -65,7 +65,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
       const filtered = all
         .filter(r => !isUsedRequest(r))
         .filter(r => isToday(r.requestDate || r.createdAt || 0))
-        .sort((a, b) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
+        .sort((a, b) => toTimestampLocal(getRequestDate(b)) - toTimestampLocal(getRequestDate(a)));
       setAllRequests(filtered);
     } catch (e) {
       if (myFetchId !== fetchIdRef.current) return;
@@ -92,8 +92,8 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
     return { text: 'PENDING', bgColor: theme.warning };
   };
 
-  const formatDate = (d: string, isBulk = false) => isBulk ? formatDateTimeIST(d) : formatDateTimeShort(d);
-  const getTimeAgo = (d: string) => getRelativeTime(d);
+  const formatDate = (d: string, isBulk = false) => isBulk ? formatDateTimeIST(d) : formatDateTimeShortLocal(d);
+  const getTimeAgo = (d: string) => getRelativeTimeLocal(d);
 
   const handleViewQR = async (req: any) => {
     setSelectedRequest(req);

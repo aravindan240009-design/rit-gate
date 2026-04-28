@@ -17,7 +17,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
-import { formatDateTime } from '../../utils/dateUtils';
+import { formatDateTimeLocal, toTimestampLocal } from '../../utils/dateUtils';
 
 
 interface StudentHistoryScreenProps {
@@ -108,7 +108,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
           });
       }
 
-      combinedHistory.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      combinedHistory.sort((a, b) => toTimestampLocal(b.timestamp) - toTimestampLocal(a.timestamp));
       setHistoryData(combinedHistory);
       setEntriesCount(combinedHistory.filter(i => i.type === 'ENTRY' || i.type === 'LATE_ENTRY').length);
       setExitsCount(combinedHistory.filter(i => i.type === 'EXIT').length);
@@ -159,7 +159,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
     }
   };
 
-  const formatTimestamp = (timestamp: string) => formatDateTime(timestamp);
+  const formatTimestamp = (timestamp: string) => formatDateTimeLocal(timestamp);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>

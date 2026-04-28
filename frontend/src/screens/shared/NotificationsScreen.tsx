@@ -16,6 +16,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
+import { getRelativeTimeLocal, isWithinLast24HoursLocal, formatDateShortLocal } from '../../utils/dateUtils';
 
 
 interface Notification {
@@ -44,10 +45,7 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
 
   const isRecent = (value?: string) => {
     if (!value) return false;
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return false;
-    const diff = Date.now() - d.getTime();
-    return diff >= 0 && diff < 24 * 60 * 60 * 1000;
+    return isWithinLast24HoursLocal(value);
   };
 
   const fetchNotifications = async () => {
@@ -138,23 +136,10 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
   };
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-    });
+    if (!timestamp) return '';
+    const relative = getRelativeTimeLocal(timestamp);
+    if (relative === 'Just now' || /^[0-9]+[mhd] ago$/.test(relative)) return relative;
+    return formatDateShortLocal(timestamp);
   };
 
   if (loading) {

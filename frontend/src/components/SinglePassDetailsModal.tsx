@@ -18,7 +18,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
-import { formatDateTime, formatDateTimeIST } from '../utils/dateUtils';
+import { formatDateTimeIST } from '../utils/dateUtils';
 import ThemedText from './ThemedText';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -64,9 +64,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
 
   const formatDate = (d: string) => {
     if (!d) return 'N/A';
-    // Visitor/vendor dates are stored as IST in the backend — use IST parser
-    if (request.requestType === 'VISITOR') return formatDateTimeIST(d);
-    return formatDateTime(d);
+    return formatDateTimeIST(d);
   };
 
   const getInitials = (name: string) =>

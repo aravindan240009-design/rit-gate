@@ -11,7 +11,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { API_CONFIG } from '../config/api.config';
 import { useNotifications } from '../context/NotificationContext';
-import { getRelativeTime, formatDateShort, isToday as isTodayUtil } from '../utils/dateUtils';
+import { getRelativeTimeLocal, isTodayLocal } from '../utils/dateUtils';
 import ThemedText from './ThemedText';
 
 interface Notification {
@@ -47,7 +47,7 @@ export default function NotificationDropdown({
 
   const isToday = (value?: string) => {
     if (!value) return false;
-    return isTodayUtil(value);
+    return isTodayLocal(value);
   };
 
   useEffect(() => {
@@ -130,7 +130,7 @@ export default function NotificationDropdown({
 
   const formatTime = (dateStr: string) => {
     if (!dateStr) return '';
-    return getRelativeTime(dateStr);
+    return getRelativeTimeLocal(dateStr);
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;

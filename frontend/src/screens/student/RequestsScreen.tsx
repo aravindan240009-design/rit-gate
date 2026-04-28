@@ -20,7 +20,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDate as formatDateUtil, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { formatDate as formatDateUtil, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 
 
 const TypedModal = Modal as any;
@@ -95,7 +95,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    return isTodayUtil(dateValue);
+    return isTodayLocal(dateValue);
   };
 
   const isUsedRequest = (request: any) =>
@@ -111,7 +111,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
         const todayOnly = response.requests
           .filter((request: any) => !isUsedRequest(request))
           .filter((request: any) => isToday(getRequestDate(request)))
-          .sort((a: any, b: any) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
+          .sort((a: any, b: any) => toTimestampLocal(getRequestDate(b)) - toTimestampLocal(getRequestDate(a)));
         setRequests(todayOnly);
       }
     } catch (error) {

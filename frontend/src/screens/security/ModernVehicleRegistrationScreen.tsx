@@ -20,6 +20,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import SearchableDropdown from '../../components/SearchableDropdown';
 import { useTheme } from '../../context/ThemeContext';
+import { formatDateLocal } from '../../utils/dateUtils';
 
 interface ModernVehicleRegistrationScreenProps {
   security: SecurityPersonnel;
@@ -160,12 +161,7 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
 
   const formatDate = (dateString: string) => {
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
+      return formatDateLocal(dateString);
     } catch (error) {
       return dateString;
     }

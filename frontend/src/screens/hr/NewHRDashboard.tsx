@@ -22,7 +22,7 @@ import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useActionLock } from '../../context/ActionLockContext';
-import { formatDateShort, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { formatDateShortLocal, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import { notificationService } from '../../services/NotificationService';
 import NotificationDropdown from '../../components/NotificationDropdown';
 import BulkDetailsModal from '../../components/BulkDetailsModal';
@@ -120,7 +120,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    return isTodayUtil(dateValue);
+    return isTodayLocal(dateValue);
   };
 
   const fetchIdRef = React.useRef(0);
@@ -161,8 +161,8 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
       allRequests = [...allRequests, ...visitorRequests];
       const sorted = allRequests.sort((a: any, b: any) => {
-        const dateB = new Date(b.requestDate || b.createdAt || b.timestamp || b.visitDate || 0).getTime();
-        const dateA = new Date(a.requestDate || a.createdAt || a.timestamp || a.visitDate || 0).getTime();
+        const dateB = toTimestampLocal(b.requestDate || b.createdAt || b.timestamp || b.visitDate);
+        const dateA = toTimestampLocal(a.requestDate || a.createdAt || a.timestamp || a.visitDate);
         if (dateB !== dateA) return dateB - dateA;
         const idB = parseInt(b.id?.toString().split('-')[1]) || parseInt(b.id) || 0;
         const idA = parseInt(a.id?.toString().split('-')[1]) || parseInt(a.id) || 0;
@@ -171,17 +171,8 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
       setRequests(sorted);
 
-      // Stats: gate pass = today only, visitor/vendor = within last 24 hours
-      const isWithin24h = (dateValue?: string) => {
-        if (!dateValue) return false;
-        const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(dateValue) && !dateValue.endsWith('Z') && !dateValue.includes('+');
-        const d = new Date(bare ? dateValue + 'Z' : dateValue);
-        return Date.now() - d.getTime() < 24 * 60 * 60 * 1000;
-      };
+      // Stats: today only
       const statsBase = sorted.filter((r: any) => {
-        if (r.requestType === 'VISITOR') {
-          return isWithin24h(r.requestDate || r.createdAt || r.visitDate);
-        }
         const reqDate = r.requestDate || r.createdAt || r.visitDate || r.exitDateTime || r.timestamp;
         return isToday(reqDate);
       });
@@ -247,7 +238,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
           name: r.name || '-',
           department: r.department || '-',
           purpose: r.purpose || '-',
-          time: formatDateShort(r.time),
+          time: formatDateShortLocal(r.time),
         })),
       });
       if (result.success) {
@@ -269,16 +260,9 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
   };
 
   const filteredRequests = requests.filter(request => {
-    // Gate pass requests: only show today's. Visitor/vendor: within last 24 hours
-    if (request.requestType !== 'VISITOR') {
-      const reqDate = request.requestDate || request.createdAt || request.visitDate || request.exitDateTime || request.timestamp;
-      if (!isToday(reqDate)) return false;
-    } else {
-      const d = request.requestDate || request.createdAt || request.visitDate;
-      const bare = d && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(d) && !d.endsWith('Z') && !d.includes('+');
-      const parsed = d ? new Date(bare ? d + 'Z' : d) : null;
-      if (!parsed || Date.now() - parsed.getTime() >= 24 * 60 * 60 * 1000) return false;
-    }
+    // Show only today's requests
+    const reqDate = request.requestDate || request.createdAt || request.visitDate || request.exitDateTime || request.timestamp;
+    if (!isToday(reqDate)) return false;
 
     const matchesSearch = searchQuery === '' ||
       request.purpose?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -511,7 +495,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                       </ThemedText>
                     </View>
                     <View style={styles.timeAgoContainer}>
-                      <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>{getRelativeTime(request.requestDate || request.createdAt)}</ThemedText>
+                      <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>{getRelativeTimeLocal(request.requestDate || request.createdAt)}</ThemedText>
                     </View>
                   </View>
 
@@ -523,7 +507,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                     <View style={styles.detailItem}>
                       <Ionicons name="calendar" size={16} color={theme.textSecondary} />
                       <ThemedText style={[styles.detailText, { color: theme.text }]}>
-                        Exit: {formatDateShort(request.exitDateTime || request.requestDate)}
+                        Exit: {formatDateShortLocal(request.exitDateTime || request.requestDate)}
                       </ThemedText>
                     </View>
                     {request.requestType === 'BULK' && (

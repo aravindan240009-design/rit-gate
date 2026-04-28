@@ -15,7 +15,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SecurityPersonnel, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import SecurityBottomNav from '../../components/SecurityBottomNav';
-import { formatDateTime } from '../../utils/dateUtils';
+import { formatDateTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import { notificationService } from '../../services/NotificationService';
 import { Calendar } from 'react-native-calendars';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
@@ -186,20 +186,18 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       vehicle.licensePlate?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       vehicle.vehicleType?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const eventDate = new Date(vehicle.createdAt || '');
+    const eventDate = vehicle.createdAt || '';
     const inRange = (() => {
       if (!vehicleRangeMode) {
-        const now = new Date();
-        return eventDate.getFullYear() === now.getFullYear()
-          && eventDate.getMonth() === now.getMonth()
-          && eventDate.getDate() === now.getDate();
+        return !!eventDate && isTodayLocal(eventDate);
       }
       if (!vehicleFromDate && !vehicleToDate) return true;
       const fd = vehicleFromDate ?? new Date('1970-01-01');
       const td = vehicleToDate ?? new Date('2999-12-31');
       const from = new Date(fd.getFullYear(), fd.getMonth(), fd.getDate(), 0, 0, 0, 0);
       const to   = new Date(td.getFullYear(), td.getMonth(), td.getDate(), 23, 59, 59, 999);
-      return eventDate >= from && eventDate <= to;
+      const ts = toTimestampLocal(eventDate);
+      return ts >= from.getTime() && ts <= to.getTime();
     })();
 
     const hasExited = vehicle.updatedAt && vehicle.updatedAt !== vehicle.createdAt;
@@ -212,19 +210,17 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
   const filteredScans = scans.filter(scan => {
     const inRange = (() => {
-      const eventDate = new Date(scan.outTime || scan.inTime || scan.entryTime || scan.exitTime || '');
+      const eventDate = scan.outTime || scan.inTime || scan.entryTime || scan.exitTime || '';
       if (!rangeMode) {
-        const now = new Date();
-        return eventDate.getFullYear() === now.getFullYear()
-          && eventDate.getMonth() === now.getMonth()
-          && eventDate.getDate() === now.getDate();
+        return !!eventDate && isTodayLocal(eventDate);
       }
       if (!fromDate && !toDate) return true;
       const fd = fromDate ?? new Date('1970-01-01');
       const td = toDate ?? new Date('2999-12-31');
       const from = new Date(fd.getFullYear(), fd.getMonth(), fd.getDate(), 0, 0, 0, 0);
       const to   = new Date(td.getFullYear(), td.getMonth(), td.getDate(), 23, 59, 59, 999);
-      return eventDate >= from && eventDate <= to;
+      const ts = toTimestampLocal(eventDate);
+      return ts >= from.getTime() && ts <= to.getTime();
     })();
 
     const matchesSearch = searchQuery === '' ||
@@ -389,7 +385,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   const formatTime = (timeString?: string) => {
     if (!timeString) return 'N/A';
     try {
-      return formatDateTime(timeString);
+      return formatDateTimeLocal(timeString);
     } catch (error) {
       return timeString;
     }

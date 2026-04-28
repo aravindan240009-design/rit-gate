@@ -46,7 +46,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShort, formatDateTime, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { formatDateTimeShortLocal, formatDateTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 
 
 interface StudentHomeScreenProps {
@@ -92,7 +92,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    return isTodayUtil(dateValue);
+    return isTodayLocal(dateValue);
   };
 
   const loadData = async () => {
@@ -101,7 +101,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
       if (response.success && response.requests) {
         const recent = response.requests
           .filter((r: any) => isToday(r.requestDate || r.createdAt))
-          .sort((a: any, b: any) => new Date(b.requestDate).getTime() - new Date(a.requestDate).getTime())
+          .sort((a: any, b: any) => toTimestampLocal(b.requestDate || b.createdAt) - toTimestampLocal(a.requestDate || a.createdAt))
           .slice(0, 10);
         setRecentRequests(recent);
       }
@@ -131,7 +131,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
     return 'GOOD EVENING,';
   };
 
-  const formatDate = (dateString: string) => formatDateTimeShort(dateString);
+  const formatDate = (dateString: string) => formatDateTimeShortLocal(dateString);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -379,7 +379,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
                     <View style={[styles.statusModalHeader, { borderBottomColor: theme.border }]}>
                       <View style={{ flex: 1 }}>
                         <ThemedText style={[styles.statusModalPurpose, { color: theme.text }]}>{selectedRequest.purpose || selectedRequest.reason || 'Gate Pass Request'}</ThemedText>
-                        <ThemedText style={[styles.statusModalDate, { color: theme.textSecondary }]}>{formatDateTime(selectedRequest.requestDate)}</ThemedText>
+                        <ThemedText style={[styles.statusModalDate, { color: theme.textSecondary }]}>{formatDateTimeLocal(selectedRequest.requestDate)}</ThemedText>
                       </View>
                     </View>
                     <RequestTimeline status={selectedRequest.status} staffApproval={selectedRequest.staffApproval || 'PENDING'} hodApproval={selectedRequest.hodApproval || 'PENDING'} requestDate={selectedRequest.requestDate} staffRemark={selectedRequest.staffRemark} hodRemark={selectedRequest.hodRemark}/>

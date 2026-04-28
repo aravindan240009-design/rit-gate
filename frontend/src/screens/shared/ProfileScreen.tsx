@@ -23,6 +23,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
+import { isTodayLocal } from '../../utils/dateUtils';
 
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
@@ -129,12 +130,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       // Helper: is the request from today?
       const isToday = (dateValue?: string) => {
         if (!dateValue) return false;
-        // Bare ISO strings from backend have no timezone — treat as UTC
-        const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test((dateValue || '').trim());
-        const d = new Date(bare ? dateValue.trim() + 'Z' : dateValue);
-        const now = new Date();
-        const todayStr = now.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
-        return d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) === todayStr;
+        return isTodayLocal(dateValue);
       };
 
       const countStats = (reqs: any[]) => {

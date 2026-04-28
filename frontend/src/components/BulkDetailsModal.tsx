@@ -19,7 +19,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { apiService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
-import { formatDateTime, formatDateShort } from '../utils/dateUtils';
+import { formatDateShort, formatDateTimeIST } from '../utils/dateUtils';
 import ParticipantsScreen from '../screens/shared/ParticipantsScreen';
 import GatePassQRModal from './GatePassQRModal';
 import ThemedText from './ThemedText';
@@ -122,6 +122,11 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
     setShowFullscreenAttachment(true);
   };
 
+  const formatDate = (d: string) => {
+    if (!d) return 'N/A';
+    return formatDateTimeIST(d);
+  };
+
   return (
     <Modal visible={visible} animationType="slide" transparent={false} statusBarTranslucent onRequestClose={() => !processing && onClose()}>
       <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
@@ -194,7 +199,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
               <View style={styles.infoCell}>
                 <ThemedText style={[styles.infoLabel, { color: theme.textTertiary }]}>DATE</ThemedText>
                 <ThemedText style={[styles.infoValue, { color: theme.text }]} numberOfLines={2}>
-                  {formatDateShort(details?.exitDateTime || details?.requestDate || '')}
+                  {formatDate(details?.exitDateTime || details?.requestDate || '')}
                 </ThemedText>
               </View>
             </View>

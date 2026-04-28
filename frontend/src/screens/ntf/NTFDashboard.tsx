@@ -11,7 +11,7 @@ import { useNotifications } from '../../context/NotificationContext';
 import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
-import { getRelativeTime, formatDateShort } from '../../utils/dateUtils';
+import { getRelativeTimeLocal, formatDateShortLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import ErrorModal from '../../components/ErrorModal';
 import SuccessModal from '../../components/SuccessModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
@@ -72,15 +72,14 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
       const res = await apiService.getVisitorRequestsForStaff(ntf.staffCode);
       if (myFetchId !== fetchIdRef.current) return;
       const all: any[] = res.requests || [];
-      const within24h = (r: any) => {
+      const isTodayRequest = (r: any) => {
         const d = r.createdAt || r.visitDate || r.requestDate;
-        if (!d) return true;
-        const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(d) && !d.endsWith('Z') && !d.includes('+');
-        return Date.now() - new Date(bare ? d + 'Z' : d).getTime() < 24 * 60 * 60 * 1000;
+        if (!d) return false;
+        return isTodayLocal(d);
       };
       const websiteOnly = all.filter((r: any) => {
         const rb = (r.registeredBy || r.registered_by || '').toString();
-        return (rb === 'WEBSITE' || rb.toUpperCase().startsWith('WEB-')) && within24h(r);
+        return (rb === 'WEBSITE' || rb.toUpperCase().startsWith('WEB-')) && isTodayRequest(r);
       });
       setAllRequests(websiteOnly);
     } catch (e) {
@@ -105,7 +104,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
       || (r.visitorEmail || '').toLowerCase().includes(q)
       || (r.visitorPhone || '').toLowerCase().includes(q);
     return matchesTab && matchesSearch;
-  }).sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  }).sort((a, b) => toTimestampLocal(b.createdAt || b.requestDate) - toTimestampLocal(a.createdAt || a.requestDate));
 
   const stats = {
     pending: allRequests.filter(r => r.status === 'PENDING').length,
@@ -248,7 +247,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
                       <View style={styles.timeAgoContainer}>
                         <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>
-                          {getRelativeTime(req.createdAt)}
+                          {getRelativeTimeLocal(req.createdAt)}
                         </ThemedText>
                       </View>
                     </View>
@@ -265,7 +264,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                         <ThemedText style={[styles.detailText, { color: theme.text }]}>
                           {req.visitDate
                             ? `${req.visitDate}${req.visitTime ? ` at ${req.visitTime}` : ''}`
-                            : formatDateShort(req.createdAt)}
+                            : formatDateShortLocal(req.createdAt)}
                         </ThemedText>
                       </View>
                     </View>

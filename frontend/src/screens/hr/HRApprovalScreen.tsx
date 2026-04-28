@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { apiService } from '../../services/api';
 import { Staff, GatePassRequest } from '../../types';
-import { formatDateTime } from '../../utils/dateUtils';
+import { formatDateTimeIST } from '../../utils/dateUtils';
 import { THEME } from '../../config/api.config';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
@@ -159,7 +159,7 @@ const HRApprovalScreen: React.FC<HRApprovalScreenProps> = ({ user, request, onBa
               <View style={styles.infoRow}>
                 <ThemedText style={[styles.infoLabel, { color: theme.textSecondary }]}>Exit Schedule:</ThemedText>
                 <ThemedText style={[styles.infoValue, { color: theme.text }]}>
-                  {formatDateTime(request.requestDate)}
+                  {formatDateTimeIST(request.exitDateTime || request.requestDate)}
                 </ThemedText>
               </View>
             </View>

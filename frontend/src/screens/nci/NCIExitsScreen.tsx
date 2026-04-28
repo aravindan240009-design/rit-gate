@@ -10,7 +10,7 @@ import { NonTeachingFaculty } from '../../types';
 import { apiService } from '../../services/api.service';
 import { useTheme } from '../../context/ThemeContext';
 import { notificationService } from '../../services/NotificationService';
-import { formatDateShort } from '../../utils/dateUtils';
+import { formatDateShortLocal } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
@@ -93,7 +93,7 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
           name: r.name || '-',
           department: r.department || '-',
           purpose: r.purpose || '-',
-          time: formatDateShort(r.time),
+          time: formatDateShortLocal(r.time),
         })),
       });
       if (result.success) {
@@ -182,7 +182,7 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
                     ) : null}
                     <View style={styles.detailRow}>
                       <Ionicons name="time-outline" size={13} color={badgeColor} />
-                      <ThemedText style={[styles.detailText, { color: badgeColor }]}>{formatDateShort(item.time)}</ThemedText>
+                      <ThemedText style={[styles.detailText, { color: badgeColor }]}>{formatDateShortLocal(item.time)}</ThemedText>
                     </View>
                   </View>
                 </View>

@@ -9,9 +9,9 @@ export const currentISOTime = (): string => new Date().toISOString();
 /** IANA timezone string from the device (e.g. "Asia/Kolkata"). */
 export const deviceTimezone = (): string => {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   } catch {
-    return 'Asia/Kolkata';
+    return 'UTC';
   }
 };
 

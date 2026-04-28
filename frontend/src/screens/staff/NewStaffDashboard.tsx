@@ -21,7 +21,7 @@ import { useTheme } from '../../context/ThemeContext';
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
 import { useActionLock } from '../../context/ActionLockContext';
-import { getRelativeTime, formatDateShort, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { getRelativeTimeLocal, formatDateShortLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import StaffRequestTimeline from '../../components/StaffRequestTimeline';
 import BottomNavBar from '../../components/BottomNavBar';
@@ -94,7 +94,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    return isTodayUtil(dateValue);
+    return isTodayLocal(dateValue);
   };
 
   const fetchIdRef = React.useRef(0);
@@ -155,8 +155,8 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
       const uniqueRequests = allRequests.filter((req, index, self) =>
         index === self.findIndex((r) => r.id === req.id)
       ).sort((a: any, b: any) => {
-        const dateB = new Date(b.requestDate || b.createdAt).getTime();
-        const dateA = new Date(a.requestDate || a.createdAt).getTime();
+        const dateB = toTimestampLocal(b.requestDate || b.createdAt);
+        const dateA = toTimestampLocal(a.requestDate || a.createdAt);
         if (dateB !== dateA) return dateB - dateA;
         const idB = parseInt(b.id?.toString().split('-')[1]) || 0;
         const idA = parseInt(a.id?.toString().split('-')[1]) || 0;
@@ -165,19 +165,9 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
       setRequests(uniqueRequests);
 
-      // Stats: assigned (non-own) requests
-      // Gate pass: today only. Visitor/vendor: within last 24 hours
-      const isWithin24h = (dateValue?: string) => {
-        if (!dateValue) return false;
-        const d = new Date(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(dateValue) && !dateValue.endsWith('Z') && !dateValue.includes('+') ? dateValue + 'Z' : dateValue);
-        return Date.now() - d.getTime() < 24 * 60 * 60 * 1000;
-      };
+      // Stats: assigned (non-own) requests from today only
       const assignedRequests = uniqueRequests.filter((r: any) => {
         if (r.isOwnRequest) return false;
-        if (r.requestType === 'VISITOR') {
-          const d = r.requestDate || r.createdAt || r.visitDate;
-          return isWithin24h(d);
-        }
         const reqDate = r.requestDate || r.createdAt || r.visitDate;
         return isToday(reqDate);
       });
@@ -211,16 +201,9 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     // EXCLUDE staff's own requests from home page - they only appear in "My Requests" page
     if (request.isOwnRequest) return false;
 
-    // For gate pass requests: only show today's requests
-    // For visitor/vendor requests: only show within last 24 hours
-    if (request.requestType !== 'VISITOR') {
-      const reqDate = request.requestDate || request.createdAt || request.visitDate;
-      if (!isToday(reqDate)) return false;
-    } else {
-      const d = request.requestDate || request.createdAt || request.visitDate;
-      const parsed = d ? new Date(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(d) && !d.endsWith('Z') && !d.includes('+') ? d + 'Z' : d) : null;
-      if (!parsed || Date.now() - parsed.getTime() >= 24 * 60 * 60 * 1000) return false;
-    }
+    // Show only today's requests
+    const reqDate = request.requestDate || request.createdAt || request.visitDate;
+    if (!isToday(reqDate)) return false;
 
     const matchesSearch = searchQuery === '' ||
       request.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -485,7 +468,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
                 <View style={styles.timeAgoContainer}>
                   <ThemedText style={[styles.timeAgoText, { color: theme.textTertiary }]}>
-                    {getRelativeTime(request.requestDate || request.createdAt)}
+                    {getRelativeTimeLocal(request.requestDate || request.createdAt)}
                   </ThemedText>
                 </View>
               </View>
@@ -500,7 +483,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                   <ThemedText style={[styles.detailText, { color: theme.text }]}>
                     {request.requestType === 'VISITOR' && request.visitDate
                       ? `${request.visitDate}${request.visitTime ? ` at ${request.visitTime}` : ''}`
-                      : formatDateShort(request.requestDate || request.createdAt)}
+                      : formatDateShortLocal(request.requestDate || request.createdAt)}
                   </ThemedText>
                 </View>
                 {request.passType === 'BULK' && (

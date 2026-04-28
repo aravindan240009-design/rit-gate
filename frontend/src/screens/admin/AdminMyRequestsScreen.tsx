@@ -12,7 +12,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShort, getRelativeTime, isToday } from '../../utils/dateUtils';
+import { formatDateTimeShortLocal, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import BottomNavBar from '../../components/BottomNavBar';
 
@@ -50,8 +50,8 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
       const all: any[] = (res as any).requests || (res as any).data || [];
       const filtered = all
         .filter(r => r.status !== 'USED' && r.status !== 'EXITED')
-        .filter(r => isToday(r.requestDate || r.createdAt || ''))
-        .sort((a, b) => new Date(b.requestDate || b.createdAt || 0).getTime() - new Date(a.requestDate || a.createdAt || 0).getTime());
+        .filter(r => isTodayLocal(r.requestDate || r.createdAt || ''))
+        .sort((a, b) => toTimestampLocal(b.requestDate || b.createdAt) - toTimestampLocal(a.requestDate || a.createdAt));
       setRequests(filtered);
     } catch (e) { console.error('Admin my requests error:', e); }
     finally { setLoading(false); setRefreshing(false); }
@@ -77,8 +77,8 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
     return { text: 'PENDING', bg: theme.warning };
   };
 
-  const formatDate = (d: string) => formatDateTimeShort(d);
-  const getTimeAgo = (d: string) => getRelativeTime(d);
+  const formatDate = (d: string) => formatDateTimeShortLocal(d);
+  const getTimeAgo = (d: string) => getRelativeTimeLocal(d);
 
   const initials = (admin.staffName || admin.name || 'AO').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 

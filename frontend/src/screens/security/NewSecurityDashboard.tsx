@@ -26,7 +26,7 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
-import { formatTime as fmtTime, getRelativeTimeShort } from '../../utils/dateUtils';
+import { formatTimeLocal as fmtTime, getRelativeTimeLocal } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
@@ -426,7 +426,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                         <View style={styles.timeAgoContainer}>
                           <Ionicons name="time-outline" size={12} color={theme.error} />
                           <ThemedText style={[styles.timeAgoText, { color: theme.error }]}>
-                            {getRelativeTimeShort(visitor.escalationTime || visitor.createdAt)}
+                            {getRelativeTimeLocal(visitor.escalationTime || visitor.createdAt)}
                           </ThemedText>
                         </View>
                       </View>

@@ -13,7 +13,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Student } from '../../types';
 import { apiService } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
-import { getRelativeTime, formatDateTimeShort, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { getRelativeTimeLocal, formatDateTimeShortLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import MyRequestsBulkModal from '../../components/MyRequestsBulkModal';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import { useErrorModal } from '../../hooks/useErrorModal';
@@ -61,7 +61,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
   const getRequestDate = (request: any) => request.requestDate || request.createdAt || request.exitDateTime;
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    return isTodayUtil(dateValue);
+    return isTodayLocal(dateValue);
   };
   const isUsedRequest = (request: any) =>
     request.qrUsed === true || request.status === 'USED' || request.status === 'EXITED';
@@ -77,7 +77,7 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
         const sorted = response.requests
           .filter((r: any) => !isUsedRequest(r))
           .filter((r: any) => isToday(getRequestDate(r)))
-          .sort((a: any, b: any) => new Date(getRequestDate(b)).getTime() - new Date(getRequestDate(a)).getTime());
+          .sort((a: any, b: any) => toTimestampLocal(getRequestDate(b)) - toTimestampLocal(getRequestDate(a)));
         setRequests(sorted);
       }
     } catch (error) {
@@ -111,9 +111,9 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
     return { text: 'AWAITING STAFF', color: theme.warning, bg: theme.warning + '22' };
   };
 
-  const getTimeAgo = (dateString: string) => getRelativeTime(dateString);
+  const getTimeAgo = (dateString: string) => getRelativeTimeLocal(dateString);
 
-  const formatDate = (dateString: string) => formatDateTimeShort(dateString);
+  const formatDate = (dateString: string) => formatDateTimeShortLocal(dateString);
 
   // derive initials from student name
   const name = student.fullName || `${student.firstName} ${student.lastName}`.trim() || student.regNo || 'S';

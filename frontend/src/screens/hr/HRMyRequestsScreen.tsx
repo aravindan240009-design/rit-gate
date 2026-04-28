@@ -14,7 +14,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShort, getRelativeTime, isToday as isTodayUtil } from '../../utils/dateUtils';
+import { formatDateTimeShortLocal, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import BottomNavBar from '../../components/BottomNavBar';
 import PageHeader from '../../components/PageHeader';
 
@@ -49,7 +49,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
-    return isTodayUtil(dateValue);
+    return isTodayLocal(dateValue);
   };
 
   const fetchRequests = useCallback(async () => {
@@ -61,7 +61,7 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
       const filtered = all
         .filter(r => r.status !== 'USED' && r.status !== 'EXITED')
         .filter(r => isToday(r.requestDate || r.createdAt))
-        .sort((a, b) => new Date(b.requestDate || b.createdAt || 0).getTime() - new Date(a.requestDate || a.createdAt || 0).getTime());
+        .sort((a, b) => toTimestampLocal(b.requestDate || b.createdAt) - toTimestampLocal(a.requestDate || a.createdAt));
       setRequests(filtered);
     } catch (e) {
       if (myFetchId !== fetchIdRef.current) return;
@@ -95,8 +95,8 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
     return { text: 'PENDING', bg: theme.warning };
   };
 
-  const formatDate = (d: string) => formatDateTimeShort(d);
-  const getTimeAgo = (d: string) => getRelativeTime(d);
+  const formatDate = (d: string) => formatDateTimeShortLocal(d);
+  const getTimeAgo = (d: string) => getRelativeTimeLocal(d);
 
   const initials = (hr.hrName || hr.name || 'HR').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 

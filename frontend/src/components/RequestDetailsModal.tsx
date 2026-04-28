@@ -11,7 +11,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import QRCode from 'react-native-qrcode-svg';
 import RequestTimeline from './RequestTimeline';
 import ThemedText from './ThemedText';
-import { formatDateTime } from '../utils/dateUtils';
+import { formatDateTimeIST } from '../utils/dateUtils';
 
 interface RequestDetailsModalProps {
   visible: boolean;
@@ -49,7 +49,7 @@ const RequestDetailsModal: React.FC<RequestDetailsModalProps> = ({
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
-    return formatDateTime(dateString);
+    return formatDateTimeIST(dateString);
   };
 
   return (

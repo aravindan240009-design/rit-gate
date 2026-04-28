@@ -1,5 +1,12 @@
-// All date/time formatting uses IST (Asia/Kolkata, UTC+5:30)
-const IST: Intl.DateTimeFormatOptions = { timeZone: 'Asia/Kolkata' };
+// All date/time formatting uses the device's current local timezone.
+const LOCAL_TZ = (() => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return undefined;
+  }
+})();
+const LOCAL_TZ_OPTS: Intl.DateTimeFormatOptions = LOCAL_TZ ? { timeZone: LOCAL_TZ } : {};
 
 /**
  * Parse a date value to a JS Date.
@@ -12,12 +19,25 @@ const toDate = (d: Date | string | null | undefined): Date => {
   if (!d) return new Date();
   if (typeof d === 'string') {
     // Backend sends two kinds of bare ISO strings:
-    // - requestDate: stored as UTC (e.g. "2026-04-20T05:19:35") → append Z
-    // - createdAt: stored as IST (e.g. "2026-04-20T10:49:34") → treat as local
+    // - requestDate: stored as UTC (e.g. "2026-04-20T05:19:35") -> append Z
+    // - createdAt: stored as IST (e.g. "2026-04-20T10:49:34") -> treat as local
     // Since we can't distinguish them here, we treat ALL bare ISO as UTC (append Z).
     // The relative time display uses Date.now() which is also UTC-based, so the diff is correct.
     const bare = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(d.trim());
     return new Date(bare ? d.trim() + 'Z' : d);
+  }
+  return d;
+};
+
+/**
+ * Parse a date value treating bare ISO strings as local wall-clock time on the
+ * device. Use this for request card timestamps where the backend returns
+ * LocalDateTime values without timezone information.
+ */
+const toDateLocal = (d: Date | string | null | undefined): Date => {
+  if (!d) return new Date();
+  if (typeof d === 'string') {
+    return new Date(d.trim());
   }
   return d;
 };
@@ -40,7 +60,7 @@ const toDateIST = (d: Date | string | null | undefined): Date => {
 export const formatDateTimeIST = (date: Date | string): string => {
   const d = toDateIST(date);
   return d.toLocaleString('en-IN', {
-    ...IST,
+    ...LOCAL_TZ_OPTS,
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit', hour12: true,
   });
@@ -49,20 +69,42 @@ export const formatDateTimeIST = (date: Date | string): string => {
 /** "15 Jan 2025" */
 export const formatDate = (date: Date | string): string => {
   const d = toDate(date);
-  return d.toLocaleDateString('en-IN', { ...IST, year: 'numeric', month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-IN', { ...LOCAL_TZ_OPTS, year: 'numeric', month: 'short', day: 'numeric' });
+};
+
+/** "15 Jan 2025" using local wall-clock parsing for bare timestamps */
+export const formatDateLocal = (date: Date | string): string => {
+  const d = toDateLocal(date);
+  return d.toLocaleDateString('en-IN', { ...LOCAL_TZ_OPTS, year: 'numeric', month: 'short', day: 'numeric' });
 };
 
 /** "02:30 PM" */
 export const formatTime = (date: Date | string): string => {
   const d = toDate(date);
-  return d.toLocaleTimeString('en-IN', { ...IST, hour: '2-digit', minute: '2-digit', hour12: true });
+  return d.toLocaleTimeString('en-IN', { ...LOCAL_TZ_OPTS, hour: '2-digit', minute: '2-digit', hour12: true });
+};
+
+/** "02:30 PM" using local wall-clock parsing for bare timestamps */
+export const formatTimeLocal = (date: Date | string): string => {
+  const d = toDateLocal(date);
+  return d.toLocaleTimeString('en-IN', { ...LOCAL_TZ_OPTS, hour: '2-digit', minute: '2-digit', hour12: true });
 };
 
 /** "15 Jan 2025, 02:30 PM" */
 export const formatDateTime = (date: Date | string): string => {
   const d = toDate(date);
   return d.toLocaleString('en-IN', {
-    ...IST,
+    ...LOCAL_TZ_OPTS,
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  });
+};
+
+/** "15 Jan 2025, 02:30 PM" using local wall-clock parsing for bare timestamps */
+export const formatDateTimeLocal = (date: Date | string): string => {
+  const d = toDateLocal(date);
+  return d.toLocaleString('en-IN', {
+    ...LOCAL_TZ_OPTS,
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit', hour12: true,
   });
@@ -72,7 +114,17 @@ export const formatDateTime = (date: Date | string): string => {
 export const formatDateTimeShort = (date: Date | string): string => {
   const d = toDate(date);
   return d.toLocaleString('en-IN', {
-    ...IST,
+    ...LOCAL_TZ_OPTS,
+    month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit', hour12: true,
+  });
+};
+
+/** "15 Jan, 2:30 PM" using local wall-clock parsing for bare timestamps */
+export const formatDateTimeShortLocal = (date: Date | string): string => {
+  const d = toDateLocal(date);
+  return d.toLocaleString('en-IN', {
+    ...LOCAL_TZ_OPTS,
     month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit', hour12: true,
   });
@@ -81,13 +133,19 @@ export const formatDateTimeShort = (date: Date | string): string => {
 /** "15/01/2025" */
 export const formatDateGB = (date: Date | string): string => {
   const d = toDate(date);
-  return d.toLocaleDateString('en-GB', { ...IST, day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString('en-GB', { ...LOCAL_TZ_OPTS, day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 /** "15 Jan" */
 export const formatDateShort = (date: Date | string): string => {
   const d = toDate(date);
-  return d.toLocaleDateString('en-IN', { ...IST, month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-IN', { ...LOCAL_TZ_OPTS, month: 'short', day: 'numeric' });
+};
+
+/** "15 Jan" using local wall-clock parsing for bare timestamps */
+export const formatDateShortLocal = (date: Date | string): string => {
+  const d = toDateLocal(date);
+  return d.toLocaleDateString('en-IN', { ...LOCAL_TZ_OPTS, month: 'short', day: 'numeric' });
 };
 
 /** "2m ago", "3h ago", "2d ago" */
@@ -104,6 +162,20 @@ export const getRelativeTime = (date: Date | string): string => {
   return formatDate(d);
 };
 
+/** Relative time using local wall-clock parsing for bare timestamps */
+export const getRelativeTimeLocal = (date: Date | string): string => {
+  const d = toDateLocal(date);
+  const diffMs = Date.now() - d.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString('en-IN', { ...LOCAL_TZ_OPTS, year: 'numeric', month: 'short', day: 'numeric' });
+};
+
 /** "2m", "3h" — ultra-compact for badges */
 export const getRelativeTimeShort = (date: Date | string): string => {
   const d = toDate(date);
@@ -116,8 +188,28 @@ export const getRelativeTimeShort = (date: Date | string): string => {
 
 export const isToday = (date: Date | string): boolean => {
   const d = toDate(date);
-  const todayStr = new Date().toLocaleDateString('en-IN', IST);
-  return d.toLocaleDateString('en-IN', IST) === todayStr;
+  const todayStr = new Date().toLocaleDateString('en-IN', LOCAL_TZ_OPTS);
+  return d.toLocaleDateString('en-IN', LOCAL_TZ_OPTS) === todayStr;
+};
+
+/** Is today using local wall-clock parsing for bare timestamps */
+export const isTodayLocal = (date: Date | string): boolean => {
+  const d = toDateLocal(date);
+  const todayStr = new Date().toLocaleDateString('en-IN', LOCAL_TZ_OPTS);
+  return d.toLocaleDateString('en-IN', LOCAL_TZ_OPTS) === todayStr;
+};
+
+/** Numeric timestamp using local wall-clock parsing for bare timestamps */
+export const toTimestampLocal = (date: Date | string | null | undefined): number => {
+  const d = toDateLocal(date);
+  return d.getTime();
+};
+
+/** Within last 24 hours using local wall-clock parsing for bare timestamps */
+export const isWithinLast24HoursLocal = (date: Date | string | null | undefined): boolean => {
+  if (!date) return false;
+  const diff = Date.now() - toTimestampLocal(date);
+  return diff >= 0 && diff < 24 * 60 * 60 * 1000;
 };
 
 export const isThisWeek = (date: Date | string): boolean => {
