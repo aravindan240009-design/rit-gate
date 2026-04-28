@@ -94,8 +94,12 @@ public class DepartmentController {
             );
             String hodStaffCode = deptRows.isEmpty() ? null : (String) deptRows.get(0).get("staff_code");
 
-            List<com.example.visitor.entity.Staff> teachingStaff = staffRepository.findByDepartment(searchDept);
-            List<com.example.visitor.entity.HR> nonTeachingStaff = hrRepository.findByDepartment(searchDept);
+            List<com.example.visitor.entity.Staff> teachingStaff = staffRepository.findAll().stream()
+                .filter(staff -> DepartmentMapper.isSameDepartment(staff.getDepartment(), departmentCode))
+                .collect(Collectors.toList());
+            List<com.example.visitor.entity.HR> nonTeachingStaff = hrRepository.findAll().stream()
+                .filter(hr -> DepartmentMapper.isSameDepartment(hr.getDepartment(), departmentCode))
+                .collect(Collectors.toList());
 
             List<Map<String, Object>> staffData = new java.util.ArrayList<>();
 

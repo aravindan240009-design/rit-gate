@@ -6,6 +6,7 @@ import com.example.visitor.entity.Staff;
 import com.example.visitor.repository.GatePassRequestRepository;
 import com.example.visitor.repository.HRRepository;
 import com.example.visitor.repository.StaffRepository;
+import com.example.visitor.util.DepartmentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -102,8 +103,12 @@ public class StaffController {
     @GetMapping("/department/{departmentCode}")
     public ResponseEntity<List<Map<String, Object>>> getStaffByDepartmentCode(@PathVariable String departmentCode) {
         try {
-            List<Staff> teachingStaff = staffRepository.findByDepartment(departmentCode);
-            List<HR> nonTeachingStaff = hrRepository.findByDepartment(departmentCode);
+            List<Staff> teachingStaff = staffRepository.findAll().stream()
+                .filter(staff -> DepartmentMapper.isSameDepartment(staff.getDepartment(), departmentCode))
+                .collect(Collectors.toList());
+            List<HR> nonTeachingStaff = hrRepository.findAll().stream()
+                .filter(staff -> DepartmentMapper.isSameDepartment(staff.getDepartment(), departmentCode))
+                .collect(Collectors.toList());
 
             List<Map<String, Object>> staffDTOs = teachingStaff.stream()
                 .filter(staff -> staff.getIsActive())
