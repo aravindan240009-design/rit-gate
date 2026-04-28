@@ -68,16 +68,14 @@ export async function showLocalNotification(
       android: {
         channelId: CHANNEL_ID,
         importance: AndroidImportance.HIGH,
+        // Make notification heads-up and wake lock screen (device/OEM policy permitting)
+        lightUpScreen: true,
         // Small icon (white monochrome vectordesign) shown in status bar and notification
         smallIcon: 'notification_icon',
         pressAction: { id: 'default' },
         showTimestamp: true,
         vibrationPattern: [300, 500],
         visibility: AndroidVisibility.PUBLIC,
-        fullScreenAction: {
-          id: 'default',
-          launchActivity: 'default',
-        },
       },
     });
   } catch (e) {

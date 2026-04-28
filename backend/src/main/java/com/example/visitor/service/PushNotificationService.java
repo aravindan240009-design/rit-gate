@@ -108,17 +108,16 @@ public class PushNotificationService {
                 : String.format(",\"data\":{\"title\":\"%s\",\"body\":\"%s\"%s}",
                     escapeJson(title), escapeJson(body), nidField);
 
-            // Include "notification" field so FCM shows it natively in killed/background state.
-            // In foreground, FCM suppresses the notification and our foreground handler shows it via notifee.
-            // The background handler must NOT call showLocalNotification to avoid duplicates.
-            // notification_priority: MAX + visibility: public wakes the screen on lock screen.
+            // Send DATA payload only and let the app render via notifee on all app states.
+            // This gives one consistent code path (foreground/background/killed) and allows
+            // Android wake-screen flags (lightUpScreen) to be applied uniformly.
             String json = String.format(
                 "{\"message\":{" +
                 "\"token\":\"%s\"," +
-                "\"notification\":{\"title\":\"%s\",\"body\":\"%s\"}," +
                 "\"android\":{" +
                 "  \"priority\":\"high\"," +
                 "  \"ttl\":\"86400s\"," +
+                "  \"direct_boot_ok\":true," +
                 "  \"notification\":{" +
                 "    \"channel_id\":\"ritgate_main\"," +
                 "    \"sound\":\"default\"," +
@@ -134,7 +133,6 @@ public class PushNotificationService {
                 "%s" +
                 "}}",
                 fcmToken,
-                escapeJson(title), escapeJson(body),
                 notificationId != null ? String.valueOf(notificationId) : "ritgate",
                 dataJson
             );

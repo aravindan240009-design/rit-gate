@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
@@ -10,6 +9,8 @@ import {
   Modal,
   Linking,
   BackHandler,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -89,6 +90,7 @@ const Dropdown = ({ label, value, options, onSelect, placeholder }: {
 
 const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, navigation, onBack }) => {
   const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [viewMode, setViewMode] = useState<ViewMode>('students');
   const [purpose, setPurpose] = useState('');
   const [reason, setReason] = useState('');
@@ -169,21 +171,16 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
     [...new Set(allStudents.map(s => s.year).filter(Boolean))].sort(), [allStudents]);
 
   const deptOptions = useMemo(() => {
-    let src = allStudents;
-    if (filterYear) src = src.filter(s => s.year === filterYear);
-    return [...new Set(src.map(s => s.department).filter(Boolean))].sort();
-  }, [allStudents, filterYear]);
+    return [...new Set(allStudents.map(s => s.department).filter(Boolean))].sort();
+  }, [allStudents]);
 
   const sectionOptions = useMemo(() => {
-    let src = allStudents;
-    if (filterYear) src = src.filter(s => s.year === filterYear);
-    if (filterDept) src = src.filter(s => s.department === filterDept);
-    return [...new Set(src.map(s => s.section).filter(Boolean))].sort();
-  }, [allStudents, filterYear, filterDept]);
+    return [...new Set(allStudents.map(s => s.section).filter(Boolean))].sort();
+  }, [allStudents]);
 
-  // Reset downstream filters when upstream changes
-  const handleYearChange = (v: string) => { setFilterYear(v); setFilterDept(''); setFilterSection(''); };
-  const handleDeptChange = (v: string) => { setFilterDept(v); setFilterSection(''); };
+  // Allow independent filter selection order and preserve existing selections
+  const handleYearChange = (v: string) => { setFilterYear(v); };
+  const handleDeptChange = (v: string) => { setFilterDept(v); };
 
   const filteredStudents = useMemo(() => {
     let s = allStudents;
@@ -317,7 +314,17 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
         <ThemedText style={[s.infoBannerText, { color: theme.primary }]}>Bulk passes — no HR approval required</ThemedText>
       </View>
 
-      <VerticalScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 24}
+      >
+      <VerticalScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 140, 180) }}
+      >
         {/* Summary */}
         <View style={[s.card, { backgroundColor: theme.surface }]}>
           <View style={s.summaryRow}>
@@ -507,6 +514,7 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
           <ThemedText style={s.submitBtnText}>Submit for {totalSelected} Participant{totalSelected !== 1 ? 's' : ''}</ThemedText>
         </TouchableOpacity>        <View style={{ height: 40 }} />
       </VerticalScrollView>
+      </KeyboardAvoidingView>
 
       <SuccessModal
         visible={showSuccessModal}

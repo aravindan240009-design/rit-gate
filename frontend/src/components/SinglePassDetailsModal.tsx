@@ -15,7 +15,7 @@ import {
   Keyboard,
   Linking
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import { formatDateTime, formatDateTimeIST } from '../utils/dateUtils';
@@ -51,6 +51,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
   onViewQR, timelineSteps,
 }) => {
   const { theme, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
   const [remark, setRemark] = useState('');
   const [showFullscreen, setShowFullscreen] = useState(false);
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
@@ -124,6 +125,11 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
           </View>
         </View>
 
+        <KeyboardAvoidingView
+          style={styles.contentWrap}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {/* Profile Row */}
           <View style={[styles.profileRow, { backgroundColor: theme.surface }]}>
@@ -272,8 +278,16 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
 
         {/* Footer */}
         {showActions ? (
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={[styles.footer, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
+            <View
+              style={[
+                styles.footer,
+                {
+                  backgroundColor: theme.surface,
+                  borderTopColor: theme.border,
+                  paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 10) : Math.max(insets.bottom, 12),
+                },
+              ]}
+            >
               <TextInput
                 style={[styles.remarkInput, { backgroundColor: theme.inputBackground, borderColor: theme.border, color: theme.text }]}
                 placeholder="Add review notes (required for rejection)..."
@@ -306,7 +320,6 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
                 )}
               </View>
             </View>
-          </KeyboardAvoidingView>
         ) : (
           <View style={[styles.footer, { backgroundColor: theme.surface, borderTopColor: theme.border }]}>
             {isApproved && onViewQR ? (
@@ -321,6 +334,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
             )}
           </View>
         )}
+        </KeyboardAvoidingView>
       </SafeAreaView>
 
       {/* Fullscreen */}
@@ -377,7 +391,8 @@ const styles = StyleSheet.create({
   statusPill: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
   statusPillText: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
   scrollView: { flex: 1 },
-  scrollContent: { paddingBottom: 8 },
+  contentWrap: { flex: 1 },
+  scrollContent: { paddingBottom: 20 },
   profileRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 14, borderRadius: 16, padding: 14, gap: 14, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
   avatar: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   avatarText: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
