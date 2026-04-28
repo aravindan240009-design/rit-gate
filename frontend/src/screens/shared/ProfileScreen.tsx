@@ -11,6 +11,7 @@ import {
   Image,
   BackHandler,
   Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -52,7 +53,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onTabChange,
 }) => {
   const { theme, isDark, toggleTheme, resetTheme } = useTheme();
-  const { profileImage, captureImage } = useProfile();
+  const { profileImage, captureImage, clearProfileImage } = useProfile();
   const { lockSwipe, unlockSwipe } = useActionLock();
 
   const [profileData, setProfileData] = useState({
@@ -81,6 +82,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [outerScrollEnabled, setOuterScrollEnabled] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
 
   useEffect(() => {
     const onBackPress = () => {
@@ -198,16 +200,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   };
 
   const pickAvatar = () => {
-    Alert.alert(
-      'Profile Photo',
-      'Choose a photo source',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Take Photo', onPress: () => captureImage('camera') },
-        { text: 'Choose from Gallery', onPress: () => captureImage('gallery') },
-      ],
-      { cancelable: true }
-    );
+    setShowPhotoOptions(true);
   };
 
   // Notification preferences removed from UI (requested).
@@ -498,6 +491,66 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         message="Your profile has been updated successfully."
         onClose={() => setShowSuccessModal(false)}
       />
+      <Modal
+        visible={showPhotoOptions}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowPhotoOptions(false)}
+      >
+        <TouchableOpacity
+          style={styles.photoOptionsOverlay}
+          activeOpacity={1}
+          onPress={() => setShowPhotoOptions(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={[styles.photoOptionsCard, { backgroundColor: theme.surface }]}
+          >
+            <ThemedText style={[styles.photoOptionsTitle, { color: theme.text }]}>Profile Photo</ThemedText>
+            <ThemedText style={[styles.photoOptionsSubtitle, { color: theme.textSecondary }]}>Choose a photo source</ThemedText>
+
+            <TouchableOpacity
+              style={styles.photoOptionButton}
+              onPress={() => {
+                setShowPhotoOptions(false);
+                captureImage('camera');
+              }}
+            >
+              <ThemedText style={[styles.photoOptionText, { color: theme.primary }]}>Take Photo</ThemedText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.photoOptionButton}
+              onPress={() => {
+                setShowPhotoOptions(false);
+                captureImage('gallery');
+              }}
+            >
+              <ThemedText style={[styles.photoOptionText, { color: theme.primary }]}>Choose from Gallery</ThemedText>
+            </TouchableOpacity>
+
+            {profileImage && (
+              <TouchableOpacity
+                style={styles.photoOptionButton}
+                onPress={() => {
+                  setShowPhotoOptions(false);
+                  clearProfileImage();
+                }}
+              >
+                <ThemedText style={[styles.photoOptionText, { color: theme.error }]}>Remove Photo</ThemedText>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              style={styles.photoOptionButton}
+              onPress={() => setShowPhotoOptions(false)}
+            >
+              <ThemedText style={[styles.photoOptionText, { color: theme.textSecondary }]}>Cancel</ThemedText>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -514,6 +567,7 @@ const styles = StyleSheet.create({
   avatarImage: { width: 86, height: 86, borderRadius: 43 },
   avatarText: { fontSize: 36, fontWeight: 'bold' },
   cameraBadge: { position: 'absolute', bottom: 0, right: 0, width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 3, elevation: 2 },
+  removePhotoText: { fontSize: 13, fontWeight: '600', marginBottom: 10 },
   userName: { fontSize: 22, fontWeight: '800', marginBottom: 4, textAlign: 'center' },
   userRole: { fontSize: 14, fontWeight: '600', textAlign: 'center', opacity: 0.8 },
   statsCard: { flexDirection: 'row', borderRadius: 16, paddingVertical: 20, paddingHorizontal: 10, marginBottom: 32, elevation: 4 },
@@ -541,6 +595,12 @@ const styles = StyleSheet.create({
   prefLabel: { fontSize: 15, fontWeight: '600' },
   logoutButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 16, borderWidth: 1, marginBottom: 30, elevation: 2 },
   logoutText: { fontSize: 16, fontWeight: '700' },
+  photoOptionsOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', paddingHorizontal: 24 },
+  photoOptionsCard: { borderRadius: 16, paddingHorizontal: 20, paddingVertical: 18, elevation: 8 },
+  photoOptionsTitle: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
+  photoOptionsSubtitle: { fontSize: 14, marginBottom: 12 },
+  photoOptionButton: { paddingVertical: 14 },
+  photoOptionText: { fontSize: 16, fontWeight: '600' },
   bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 8, position: 'relative' },
   navLabel: { fontSize: 12, marginTop: 4, fontWeight: '500' },
