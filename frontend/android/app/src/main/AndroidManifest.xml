@@ -90,7 +90,8 @@
         tools:replace="android:resource"/>
     <meta-data
         android:name="com.google.firebase.messaging.default_notification_channel_id"
-        android:value="ritgate_main"/>
+        android:value="ritgate_main"
+        tools:replace="android:value"/>
 
     <activity
         android:name=".MainActivity"
