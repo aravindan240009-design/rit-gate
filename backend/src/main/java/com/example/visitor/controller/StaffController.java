@@ -1,8 +1,10 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.entity.GatePassRequest;
+import com.example.visitor.entity.HR;
 import com.example.visitor.entity.Staff;
 import com.example.visitor.repository.GatePassRequestRepository;
+import com.example.visitor.repository.HRRepository;
 import com.example.visitor.repository.StaffRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,9 @@ public class StaffController {
     
     @Autowired
     private StaffRepository staffRepository;
+
+    @Autowired
+    private HRRepository hrRepository;
     
     @Autowired
     private com.example.visitor.repository.StudentRepository studentRepository;
@@ -97,8 +102,10 @@ public class StaffController {
     @GetMapping("/department/{departmentCode}")
     public ResponseEntity<List<Map<String, Object>>> getStaffByDepartmentCode(@PathVariable String departmentCode) {
         try {
-            List<Staff> staffList = staffRepository.findByDepartment(departmentCode);
-            List<Map<String, Object>> staffDTOs = staffList.stream()
+            List<Staff> teachingStaff = staffRepository.findByDepartment(departmentCode);
+            List<HR> nonTeachingStaff = hrRepository.findByDepartment(departmentCode);
+
+            List<Map<String, Object>> staffDTOs = teachingStaff.stream()
                 .filter(staff -> staff.getIsActive())
                 .map(staff -> {
                     Map<String, Object> map = new HashMap<>();
@@ -112,6 +119,20 @@ public class StaffController {
                     return map;
                 })
                 .collect(Collectors.toList());
+
+            nonTeachingStaff.stream()
+                .filter(staff -> staff.getIsActive())
+                .forEach(staff -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", staff.getHrCode());
+                    map.put("staffId", staff.getHrCode());
+                    map.put("name", staff.getHrName());
+                    map.put("role", staff.getRole() != null && !staff.getRole().isBlank() ? staff.getRole() : "Non-Teaching Staff");
+                    map.put("phone", staff.getPhone());
+                    map.put("email", staff.getEmail());
+                    map.put("department", staff.getDepartment());
+                    staffDTOs.add(map);
+                });
             
             System.out.println("Fetching " + staffDTOs.size() + " staff members for department: " + departmentCode);
             return ResponseEntity.ok(staffDTOs);

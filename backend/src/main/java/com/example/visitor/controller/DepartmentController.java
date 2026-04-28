@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.repository.StaffRepository;
+import com.example.visitor.repository.HRRepository;
 import com.example.visitor.repository.StudentRepository;
 import com.example.visitor.util.DepartmentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class DepartmentController {
 
     @Autowired
     private StaffRepository staffRepository;
+
+    @Autowired
+    private HRRepository hrRepository;
 
     @Autowired
     private StudentRepository studentRepository;
@@ -90,9 +94,12 @@ public class DepartmentController {
             );
             String hodStaffCode = deptRows.isEmpty() ? null : (String) deptRows.get(0).get("staff_code");
 
-            List<com.example.visitor.entity.Staff> staffList = staffRepository.findByDepartment(searchDept);
+            List<com.example.visitor.entity.Staff> teachingStaff = staffRepository.findByDepartment(searchDept);
+            List<com.example.visitor.entity.HR> nonTeachingStaff = hrRepository.findByDepartment(searchDept);
 
-            List<Map<String, Object>> staffData = staffList.stream()
+            List<Map<String, Object>> staffData = new java.util.ArrayList<>();
+
+            teachingStaff.stream()
                 .map(staff -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("id", staff.getStaffCode());
@@ -106,7 +113,22 @@ public class DepartmentController {
                     map.put("role", role);
                     return map;
                 })
-                .collect(Collectors.toList());
+                .forEach(staffData::add);
+
+            nonTeachingStaff.stream()
+                .filter(hr -> hr.getHrCode() != null && !hr.getHrCode().isBlank())
+                .map(hr -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", hr.getHrCode());
+                    map.put("staffCode", hr.getHrCode());
+                    map.put("name", hr.getHrName());
+                    map.put("email", hr.getEmail());
+                    map.put("phone", hr.getPhone());
+                    map.put("department", hr.getDepartment());
+                    map.put("role", hr.getRole() != null && !hr.getRole().isBlank() ? hr.getRole() : "Non-Teaching Staff");
+                    return map;
+                })
+                .forEach(staffData::add);
 
             System.out.println("Found " + staffData.size() + " staff members in department " + searchDept);
             return ResponseEntity.ok(staffData);

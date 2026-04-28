@@ -42,4 +42,7 @@ public interface HRRepository extends JpaRepository<HR, String> {
 
     // Find by designation
     List<HR> findByRole(String role);
+
+    // Find non-teaching staff by department
+    List<HR> findByDepartment(String department);
 }
