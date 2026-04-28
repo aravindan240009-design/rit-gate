@@ -105,6 +105,7 @@ public class EmailService {
             "<div style=\"font-size:22px;line-height:1.2;color:#ffffff;font-weight:800;\">Your Login Code</div>" +
             "</td></tr>" +
             "<tr><td style=\"padding:26px 24px 22px 24px;color:#1f2937;\">" +
+            "<div style=\"font-size:16px;line-height:1.45;color:#111827;font-weight:700;margin-bottom:10px;\">Hi " + safeName + ",</div>" +
             "<div style=\"font-size:16px;line-height:1.55;color:#374151;margin-bottom:18px;\">Use the code below to sign in to your RIT Gate account. This code is valid for <b>5 minutes</b>.</div>" +
             "<div style=\"max-width:360px;margin:0 auto 18px auto;border:2px solid #e5e7eb;border-radius:14px;padding:16px 16px;text-align:center;\">" +
             "<div style=\"font-size:56px;line-height:1;font-weight:900;letter-spacing:12px;color:#111827;\">" + safeOtp + "</div>" +
