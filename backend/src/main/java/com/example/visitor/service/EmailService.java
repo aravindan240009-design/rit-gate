@@ -100,18 +100,17 @@ public class EmailService {
             "<html><body style=\"margin:0;padding:0;background:#f2f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;\">" +
             "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"padding:24px 12px;\">" +
             "<tr><td align=\"center\">" +
-            "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:640px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;\">" +
-            "<tr><td style=\"background:#172b4d;padding:26px 28px;\">" +
-            "<div style=\"font-size:46px;line-height:1;color:#ffffff;font-weight:800;\">RIT Gate</div>" +
+            "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:780px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;\">" +
+            "<tr><td style=\"background:#172b4d;padding:28px 44px;\">" +
+            "<div style=\"font-size:52px;line-height:1;color:#ffffff;font-weight:800;\">Your Login Code</div>" +
             "</td></tr>" +
-            "<tr><td style=\"padding:30px 28px 18px 28px;color:#1f2937;\">" +
-            "<div style=\"font-size:42px;line-height:1.2;font-weight:800;margin:0 0 20px 0;color:#111827;\">Your Login Code</div>" +
-            "<div style=\"font-size:28px;line-height:1.45;color:#374151;margin-bottom:24px;\">Hi " + safeName + ", use the code below to sign in to your RIT Gate account. This code is valid for <b>5 minutes</b>.</div>" +
-            "<div style=\"border:2px solid #e5e7eb;border-radius:22px;padding:24px 18px;text-align:center;margin-bottom:22px;\">" +
-            "<div style=\"font-size:64px;line-height:1;font-weight:900;letter-spacing:20px;color:#111827;\">" + safeOtp + "</div>" +
+            "<tr><td style=\"padding:44px 44px 30px 44px;color:#1f2937;\">" +
+            "<div style=\"font-size:54px;line-height:1.18;font-weight:700;margin:0 0 24px 0;color:#111827;\">Hi " + safeName + ", use the code below to sign in to your RIT Gate account. This code is valid for <b>5 minutes</b>.</div>" +
+            "<div style=\"max-width:430px;margin:0 auto 24px auto;border:2px solid #e5e7eb;border-radius:18px;padding:22px 20px;text-align:center;\">" +
+            "<div style=\"font-size:72px;line-height:1;font-weight:900;letter-spacing:18px;color:#111827;\">" + safeOtp + "</div>" +
             "</div>" +
-            "<div style=\"font-size:24px;line-height:1.5;color:#6b7280;margin-bottom:10px;\">If you didn't request this code, you can safely ignore this email.</div>" +
-            "<div style=\"font-size:22px;color:#9ca3af;font-weight:600;\">Requested at: " + requestedAt + "</div>" +
+            "<div style=\"font-size:22px;line-height:1.5;color:#6b7280;margin-bottom:10px;\">If you didn't request this code, you can safely ignore this email.</div>" +
+            "<div style=\"font-size:18px;color:#9ca3af;font-weight:600;\">Requested at: " + requestedAt + "</div>" +
             "</td></tr>" +
             "</table>" +
             "</td></tr></table></body></html>";
