@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 interface LandingPageProps {
   onGetStarted: () => void;
-  onShowFeatures?: () => void;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onShowFeatures }) => {
-  const [hoveredCard, setHoveredCard] = useState<string>('');
+const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -49,10 +47,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onShowFeatures 
           <img src="/logo.png" alt="RIT Gate" style={{ width: 36, height: 36, objectFit: 'contain' }} />
           <span style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>RIT Gate</span>
         </div>
-        <div style={{ display: 'flex', gap: 32 }}>
-          <a href="#how-it-works" className="nav-link">How it works</a>
-          <a href="#features" className="nav-link" onClick={(e) => { if (onShowFeatures) { e.preventDefault(); onShowFeatures(); } }}>Features</a>
-        </div>
+        <div style={{ display: 'flex', gap: 32 }} />
         <button className="cta-btn" style={{ padding: '10px 24px', fontSize: 14, animation: 'none' }} onClick={onGetStarted}>Register Visit</button>
       </nav>
 
@@ -71,52 +66,6 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted, onShowFeatures 
             <span style={{ fontSize: 20 }}>&#9998;</span>
             Register Your Visit
             <span style={{ fontSize: 20 }}>&#8594;</span>
-          </button>
-          <div className="hero-stats" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 48, marginTop: 64, flexWrap: 'wrap', animation: 'fadeIn 1s 0.5s ease both' }}>
-            {[{ num: '5000+', label: 'Visitors Registered' }, { num: '< 2 min', label: 'Avg Registration Time' }, { num: '24/7', label: 'System Availability' }].map((s, i) => (
-              <React.Fragment key={s.label}>
-                {i > 0 && <div className="stat-divider" style={{ width: 1, height: 48, background: '#cbd5e1' }} />}
-                <div style={{ textAlign: 'center' }}>
-                  <div className="stat-num">{s.num}</div>
-                  <div style={{ fontSize: 13, color: '#64748b', fontWeight: 500, marginTop: 4 }}>{s.label}</div>
-                </div>
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section id="how-it-works" style={{ padding: '80px 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ display: 'inline-block', background: 'rgba(0,188,212,0.08)', color: '#0097A7', fontSize: 13, fontWeight: 700, letterSpacing: 1, padding: '6px 16px', borderRadius: 50, marginBottom: 16 }}>HOW IT WORKS</div>
-            <h2 style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 800, color: '#0f172a', letterSpacing: -1 }}>Three simple steps</h2>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 28 }}>
-            {[
-              { icon: '&#128221;', title: 'Fill the Form', desc: 'Provide your basic details and purpose of visit in our simple, guided form.' },
-              { icon: '&#9889;', title: 'Instant Approval', desc: 'Your request is sent to the relevant staff. Get notified the moment it is approved.' },
-              { icon: '&#128241;', title: 'Show & Enter', desc: 'Present your QR code at the gate for quick, contactless, secure entry.' },
-            ].map((f, i) => (
-              <div key={f.title} className="feature-card" onMouseEnter={() => setHoveredCard('step' + i)} onMouseLeave={() => setHoveredCard('')}>
-                <div className="step-num">{i + 1}</div>
-                <div style={{ fontSize: 48, marginBottom: 16 }} dangerouslySetInnerHTML={{ __html: f.icon }} />
-                <h3 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a', marginBottom: 10 }}>{f.title}</h3>
-                <p style={{ fontSize: 15, color: '#64748b', lineHeight: 1.6 }}>{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Banner */}
-      <section style={{ padding: '80px 24px', background: 'linear-gradient(135deg, #006064 0%, #00838F 50%, #00BCD4 100%)', textAlign: 'center' }}>
-        <div style={{ maxWidth: 600, margin: '0 auto' }}>
-          <h2 style={{ fontSize: 'clamp(28px,4vw,40px)', fontWeight: 800, color: '#fff', marginBottom: 16, letterSpacing: -1 }}>Ready to visit our campus?</h2>
-          <p style={{ fontSize: 18, color: 'rgba(255,255,255,0.85)', marginBottom: 36, lineHeight: 1.6 }}>Register now and get your digital pass in minutes.</p>
-          <button className="cta-btn" style={{ background: '#fff', color: '#0097A7', boxShadow: '0 8px 32px rgba(0,0,0,0.2)', animation: 'none' }} onClick={onGetStarted} onMouseEnter={() => setHoveredCard('cta2')} onMouseLeave={() => setHoveredCard('')}>
-            <span style={{ fontSize: 20 }}>&#9998;</span>Register Your Visit<span style={{ fontSize: 20 }}>&#8594;</span>
           </button>
         </div>
       </section>
