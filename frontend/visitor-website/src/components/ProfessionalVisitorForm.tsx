@@ -12,7 +12,7 @@ interface Department {
 }
 
 const VISITOR_SESSION_KEY = 'ritgate_visitor_session_v1';
-const API_BASE = process.env.REACT_APP_API_URL || 'https://ritgate-backend.onrender.com/api';
+const API_BASE = process.env.REACT_APP_API_URL || 'https://rit-gate.onrender.com/api';
 
 interface StoredVisitorSession {
   requestId: number;
