@@ -64,13 +64,8 @@ public class GatePassRequestController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            // Parse request date
-            LocalDateTime requestDate;
-            try {
-                requestDate = LocalDateTime.parse(requestDateStr, DateTimeFormatter.ISO_DATE_TIME);
-            } catch (Exception e) {
-                requestDate = LocalDateTime.now();
-            }
+            // Always use server time (IST) — frontend sends UTC ISO which would be stored incorrectly
+            LocalDateTime requestDate = LocalDateTime.now();
             
             // Submit the request
             GatePassRequest gatePassRequest = gatePassRequestService.submitStudentRequest(
@@ -114,9 +109,8 @@ public class GatePassRequestController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            LocalDateTime requestDate;
-            try { requestDate = LocalDateTime.parse(requestDateStr, DateTimeFormatter.ISO_DATE_TIME); }
-            catch (Exception e) { requestDate = LocalDateTime.now(); }
+            // Always use server time (IST) — frontend sends UTC ISO which would be stored incorrectly
+            LocalDateTime requestDate = LocalDateTime.now();
 
             GatePassRequest gatePassRequest = gatePassRequestService.submitNTFRequest(
                 staffCode, purpose, reason, requestDate, attachmentUri);
@@ -159,9 +153,8 @@ public class GatePassRequestController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            LocalDateTime requestDate;
-            try { requestDate = LocalDateTime.parse(requestDateStr, DateTimeFormatter.ISO_DATE_TIME); }
-            catch (Exception e) { requestDate = LocalDateTime.now(); }
+            // Always use server time (IST) — frontend sends UTC ISO which would be stored incorrectly
+            LocalDateTime requestDate = LocalDateTime.now();
 
             GatePassRequest gatePassRequest = gatePassRequestService.submitNCIRequest(
                 staffCode, purpose, reason, requestDate, attachmentUri, designation);
@@ -227,13 +220,8 @@ public class GatePassRequestController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            // Parse request date
-            LocalDateTime requestDate;
-            try {
-                requestDate = LocalDateTime.parse(requestDateStr, DateTimeFormatter.ISO_DATE_TIME);
-            } catch (Exception e) {
-                requestDate = LocalDateTime.now();
-            }
+            // Always use server time (IST) — frontend sends UTC ISO which would be stored incorrectly
+            LocalDateTime requestDate = LocalDateTime.now();
             
             // Submit the staff request
             GatePassRequest gatePassRequest = gatePassRequestService.submitStaffRequest(

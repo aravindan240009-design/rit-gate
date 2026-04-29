@@ -18,7 +18,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
-import { formatDateTimeIST } from '../utils/dateUtils';
+import { formatDateTimeLocal } from '../utils/dateUtils';
 import ThemedText from './ThemedText';
 import ConfirmationModal from './ConfirmationModal';
 
@@ -64,7 +64,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
 
   const formatDate = (d: string) => {
     if (!d) return 'N/A';
-    return formatDateTimeIST(d);
+    return formatDateTimeLocal(d);
   };
 
   const getInitials = (name: string) =>

@@ -13,7 +13,7 @@ import QRCode from 'react-native-qrcode-svg';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { useTheme } from '../context/ThemeContext';
 import ThemedText from './ThemedText';
-import { formatDateTime } from '../utils/dateUtils';
+import { formatDateTimeLocal } from '../utils/dateUtils';
 
 const TypedModal = Modal as any;
 
@@ -45,7 +45,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
 
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
-    return formatDateTime(dateString);
+    return formatDateTimeLocal(dateString);
   };
 
   return (

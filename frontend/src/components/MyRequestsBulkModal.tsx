@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { apiService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
-import { formatDateTime, formatDateShort, formatDateTimeIST } from '../utils/dateUtils';
+import { formatDateTimeLocal, formatDateShort } from '../utils/dateUtils';
 import ParticipantsScreen from '../screens/shared/ParticipantsScreen';
 import GatePassQRModal from './GatePassQRModal';
 import ThemedText from './ThemedText';
@@ -124,7 +124,7 @@ const MyRequestsBulkModal: React.FC<MyRequestsBulkModalProps> = ({
 
   const formatDate = (d: string) => {
     if (!d) return 'N/A';
-    return formatDateTimeIST(d);
+    return formatDateTimeLocal(d);
   };
 
   const getInitials = (name: string) =>

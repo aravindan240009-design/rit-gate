@@ -19,7 +19,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { apiService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
-import { formatDateShort, formatDateTimeIST } from '../utils/dateUtils';
+import { formatDateShort, formatDateTimeLocal } from '../utils/dateUtils';
 import ParticipantsScreen from '../screens/shared/ParticipantsScreen';
 import GatePassQRModal from './GatePassQRModal';
 import ThemedText from './ThemedText';
@@ -124,7 +124,7 @@ const BulkDetailsModal: React.FC<BulkDetailsModalProps> = ({
 
   const formatDate = (d: string) => {
     if (!d) return 'N/A';
-    return formatDateTimeIST(d);
+    return formatDateTimeLocal(d);
   };
 
   return (
