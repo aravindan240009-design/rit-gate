@@ -12,6 +12,7 @@ interface Department {
 }
 
 const VISITOR_SESSION_KEY = 'ritgate_visitor_session_v1';
+const API_BASE = process.env.REACT_APP_API_URL || 'https://ritgate-backend.onrender.com/api';
 
 interface StoredVisitorSession {
   requestId: number;
@@ -41,6 +42,10 @@ function writeStoredSession(s: StoredVisitorSession) {
 
 function clearStoredSession() {
   localStorage.removeItem(VISITOR_SESSION_KEY);
+}
+
+function normalizeDept(text: string): string {
+  return text.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBack }) => {
@@ -153,8 +158,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
     const fetchDepartments = async () => {
       try {
         setLoadingDepartments(true);
-        const apiBase = process.env.REACT_APP_API_URL || 'https://ritgate-backend.onrender.com/api';
-        const response = await fetch(`${apiBase}/departments`);
+        const response = await fetch(`${API_BASE}/departments`);
         if (!response.ok) throw new Error('Failed to fetch departments');
         const data = await response.json();
         // Backend returns array or { departments: [...] }
@@ -198,10 +202,33 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
     if (dept.code) {
       setLoadingStaff(true);
       try {
-        const apiBase = process.env.REACT_APP_API_URL || 'https://ritgate-backend.onrender.com/api';
-        const response = await fetch(`${apiBase}/departments/${encodeURIComponent(dept.code)}/staff-list`);
-        if (!response.ok) throw new Error('Failed to fetch staff');
-        const staff: Staff[] = await response.json();
+        const primaryResponse = await fetch(`${API_BASE}/departments/${encodeURIComponent(dept.code)}/staff-list`);
+        if (!primaryResponse.ok) throw new Error('Failed to fetch staff');
+        let staff: Staff[] = await primaryResponse.json();
+
+        // Fallback for environments where department staff-list misses ADMIN/NTF mappings.
+        if (!Array.isArray(staff) || staff.length === 0) {
+          const fallbackResponse = await fetch(`${API_BASE}/staff/department/${encodeURIComponent(dept.code)}`);
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            if (Array.isArray(fallbackData)) {
+              staff = fallbackData.map((member: any) => {
+                const effectiveCode = member.staffCode || member.staffId || member.id || '';
+                return {
+                  id: member.id || effectiveCode,
+                  staffId: member.staffId || effectiveCode,
+                  staffCode: effectiveCode,
+                  name: member.name || '',
+                  role: member.role || 'Staff',
+                  phone: member.phone || '',
+                  email: member.email || '',
+                  department: member.department || dept.name,
+                } as Staff;
+              });
+            }
+          }
+        }
+
         setStaffMembers(staff);
         setFilteredStaff(staff);
       } catch (err) {
@@ -212,9 +239,31 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
       }
     }
   };
+
+  const resolveDepartment = (rawValue: string): Department | null => {
+    const value = rawValue.trim();
+    if (!value) return null;
+    const normalized = normalizeDept(value);
+    const aliasMap: Record<string, string[]> = {
+      admin: ['admin', 'administration', 'nonteachingadmin', 'nonteaching'],
+    };
+    const inputAliases = aliasMap[normalized] || [normalized];
+
+    return departments.find((dept) => {
+      const deptTokens = [normalizeDept(dept.name), normalizeDept(dept.code || '')];
+      const deptAlias = aliasMap[normalizeDept(dept.name)] || [];
+      const pool = [...deptTokens, ...deptAlias];
+      return inputAliases.some((token) => pool.some((p) => p === token || p.includes(token) || token.includes(p)));
+    }) || null;
+  };
   
   const handleDepartmentInputChange = (value: string) => {
     setSelectedDepartment(value);
+    setSelectedDepartmentCode('');
+    setSelectedStaff('');
+    setSelectedStaffId('');
+    setStaffMembers([]);
+    setFilteredStaff([]);
     const filtered = departments.filter(dept => 
       dept.name.toLowerCase().includes(value.toLowerCase())
     );
@@ -292,8 +341,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
 
     try {
       // Use unified visitor endpoint that generates manual codes
-      const apiBase = process.env.REACT_APP_API_URL || 'https://ritgate-backend.onrender.com/api';
-      const response = await fetch(`${apiBase}/unified-visitors/register`, {
+      const response = await fetch(`${API_BASE}/unified-visitors/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -370,11 +418,10 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
   useEffect(() => {
     if (!showSuccess || !registeredVisitor?.id) return;
 
-    const apiBase = process.env.REACT_APP_API_URL || 'https://ritgate-backend.onrender.com/api';
     const tick = async () => {
       try {
         const resp = await fetch(
-          `${apiBase}/unified-visitors/status/${registeredVisitor.id}?machineId=${encodeURIComponent(machineId)}`
+          `${API_BASE}/unified-visitors/status/${registeredVisitor.id}?machineId=${encodeURIComponent(machineId)}`
         );
         if (!resp.ok) return;
         const data = await resp.json();
@@ -1170,6 +1217,14 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
                     }}
                     onBlur={() => {
                       setFocusedField('');
+                      if (!selectedDepartmentCode && selectedDepartment.trim()) {
+                        const match = resolveDepartment(selectedDepartment);
+                        if (match) {
+                          handleDepartmentChange(match);
+                        } else {
+                          setError('Please select a valid department from the list.');
+                        }
+                      }
                       setTimeout(() => setShowDepartmentDropdown(false), 200);
                     }}
                     style={styles.input(focusedField === 'department', false)}
@@ -1251,6 +1306,13 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+                    {!loadingStaff && selectedDepartmentCode && showStaffDropdown && filteredStaff.length === 0 && (
+                      <div style={styles.dropdownMenu}>
+                        <div style={styles.dropdownItem(false, false)}>
+                          No staff found for this department
+                        </div>
                       </div>
                     )}
                   </div>
