@@ -88,10 +88,12 @@ public class DepartmentController {
             System.out.println("Fetching staff for department: " + departmentCode);
             String searchDept = DepartmentMapper.toStaffDeptFormat(departmentCode);
 
-            // Get HOD staff_code from departments table
+            // Get HOD staff_code from departments table using normalized department matching.
             List<Map<String, Object>> deptRows = jdbcTemplate.queryForList(
-                "SELECT staff_code FROM departments WHERE name = ?", searchDept
-            );
+                "SELECT name, staff_code FROM departments WHERE name IS NOT NULL AND name != ''"
+            ).stream()
+                .filter(row -> DepartmentMapper.isSameDepartment((String) row.get("name"), departmentCode))
+                .collect(Collectors.toList());
             String hodStaffCode = deptRows.isEmpty() ? null : (String) deptRows.get(0).get("staff_code");
 
             List<com.example.visitor.entity.Staff> teachingStaff = staffRepository.findAll().stream()
@@ -112,7 +114,7 @@ public class DepartmentController {
                     map.put("email", staff.getEmail());
                     map.put("phone", staff.getPhone());
                     map.put("department", staff.getDepartment());
-                    String role = staff.getStaffCode().equals(hodStaffCode) ? "HOD"
+                    String role = hodStaffCode != null && staff.getStaffCode().equals(hodStaffCode) ? "HOD"
                         : (staff.getRole() != null && !staff.getRole().isBlank() ? staff.getRole() : "Faculty");
                     map.put("role", role);
                     return map;
@@ -120,11 +122,13 @@ public class DepartmentController {
                 .forEach(staffData::add);
 
             nonTeachingStaff.stream()
-                .filter(hr -> hr.getHrCode() != null && !hr.getHrCode().isBlank())
                 .map(hr -> {
+                    String hrCode = hr.getHrCode();
+                    String fallbackId = "NTF-" + Integer.toHexString((hr.getHrName() + "|" + hr.getEmail() + "|" + hr.getDepartment()).hashCode());
+                    String effectiveId = (hrCode != null && !hrCode.isBlank()) ? hrCode : fallbackId;
                     Map<String, Object> map = new HashMap<>();
-                    map.put("id", hr.getHrCode());
-                    map.put("staffCode", hr.getHrCode());
+                    map.put("id", effectiveId);
+                    map.put("staffCode", effectiveId);
                     map.put("name", hr.getHrName());
                     map.put("email", hr.getEmail());
                     map.put("phone", hr.getPhone());
