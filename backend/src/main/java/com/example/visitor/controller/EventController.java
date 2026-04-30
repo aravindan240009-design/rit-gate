@@ -4,6 +4,7 @@ import com.example.visitor.entity.Event;
 import com.example.visitor.entity.EventCoordinator;
 import com.example.visitor.entity.EventPass;
 import com.example.visitor.repository.EventPassRepository;
+import com.example.visitor.repository.StaffRepository;
 import com.example.visitor.service.EventCsvService;
 import com.example.visitor.service.EventCsvService.EventPassRowDTO;
 import com.example.visitor.service.EventService;
@@ -30,6 +31,7 @@ public class EventController {
     private final EventCsvService eventCsvService;
     private final EventPassRepository eventPassRepository;
     private final NotificationService notificationService;
+    private final StaffRepository staffRepository;
 
     // ── HOD: Create event ──────────────────────────────────────────────────────
 
@@ -329,6 +331,11 @@ public class EventController {
         m.put("staffCode", c.getStaffCode());
         m.put("assignedBy", c.getAssignedBy());
         m.put("assignedAt", c.getAssignedAt() != null ? c.getAssignedAt().toString() : null);
+        // Include staff name for display
+        String staffName = staffRepository.findByStaffCode(c.getStaffCode())
+            .map(s -> s.getStaffName())
+            .orElse(c.getStaffCode());
+        m.put("staffName", staffName);
         return m;
     }
 

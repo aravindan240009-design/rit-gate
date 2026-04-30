@@ -111,14 +111,17 @@ const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) =>
             <View style={[styles.section, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
               <ThemedText style={styles.sectionTitle}>Assigned Coordinators</ThemedText>
               {coordinators.map(c => {
-                const staffInfo = allStaff.find(s => s.staffCode === c.staffCode);
-                const displayName = staffInfo?.staffName || staffInfo?.name || c.staffCode;
+                const displayName = (c as any).staffName || c.staffCode;
                 return (
                   <View key={c.id} style={styles.coordRow}>
-                    <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+                    <View style={[styles.coordAvatar, { backgroundColor: theme.primary + '20' }]}>
+                      <ThemedText style={[styles.coordAvatarText, { color: theme.primary }]}>
+                        {displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
+                      </ThemedText>
+                    </View>
                     <View style={{ flex: 1 }}>
-                      <ThemedText style={[styles.coordText, { color: theme.text }]}>{displayName}</ThemedText>
-                      <ThemedText style={[styles.staffCode, { color: theme.textSecondary }]}>{c.staffCode}</ThemedText>
+                      <ThemedText style={[styles.coordName, { color: theme.text }]}>{displayName}</ThemedText>
+                      <ThemedText style={[styles.coordCode, { color: theme.textSecondary }]}>{c.staffCode}</ThemedText>
                     </View>
                     <TouchableOpacity onPress={() => confirmRemove(c.staffCode)} style={styles.removeBtn}>
                       <Ionicons name="trash-outline" size={18} color="#dc2626" />
@@ -161,7 +164,7 @@ const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) =>
                     {(isAssigned || isSelected) && <Ionicons name="checkmark" size={14} color="#fff" />}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <ThemedText style={styles.staffName}>{item.staffName || item.name || code}</ThemedText>
+                    <ThemedText style={styles.staffName}>{item.fullName || item.staffName || item.name || code}</ThemedText>
                     <ThemedText style={[styles.staffCode, { color: theme.textSecondary }]}>{code} · {item.department || ''}</ThemedText>
                   </View>
                   {isAssigned && (
@@ -217,7 +220,11 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   section: { margin: 16, borderRadius: 12, padding: 14, borderWidth: 1 },
   sectionTitle: { fontSize: 13, fontWeight: '700', marginBottom: 10, opacity: 0.7 },
-  coordRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6 },
+  coordRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+  coordAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  coordAvatarText: { fontSize: 13, fontWeight: '800' },
+  coordName: { fontSize: 14, fontWeight: '700' },
+  coordCode: { fontSize: 12, marginTop: 1 },
   coordText: { flex: 1, fontSize: 14, fontWeight: '600' },
   removeBtn: { padding: 4 },
   searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 8, borderRadius: 10, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10 },
