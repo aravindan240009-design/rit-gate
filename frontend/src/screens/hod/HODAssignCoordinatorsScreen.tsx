@@ -97,9 +97,9 @@ const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) =>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <ThemedText style={styles.headerTitle}>Assign Coordinators</ThemedText>
-          <ThemedText style={[styles.headerSub, { color: theme.textSecondary }]}>{event.eventName}</ThemedText>
+        <View style={{ flex: 1, minWidth: 0 }}>
+          <ThemedText style={styles.headerTitle} numberOfLines={1}>Assign Coordinators</ThemedText>
+          <ThemedText style={[styles.headerSub, { color: theme.textSecondary }]} numberOfLines={1}>{event.eventName}</ThemedText>
         </View>
       </View>
 
@@ -110,15 +110,22 @@ const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) =>
           {coordinators.length > 0 && (
             <View style={[styles.section, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
               <ThemedText style={styles.sectionTitle}>Assigned Coordinators</ThemedText>
-              {coordinators.map(c => (
-                <View key={c.id} style={styles.coordRow}>
-                  <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-                  <ThemedText style={[styles.coordText, { color: theme.text }]}>{c.staffCode}</ThemedText>
-                  <TouchableOpacity onPress={() => confirmRemove(c.staffCode)} style={styles.removeBtn}>
-                    <Ionicons name="trash-outline" size={18} color="#dc2626" />
-                  </TouchableOpacity>
-                </View>
-              ))}
+              {coordinators.map(c => {
+                const staffInfo = allStaff.find(s => s.staffCode === c.staffCode);
+                const displayName = staffInfo?.staffName || staffInfo?.name || c.staffCode;
+                return (
+                  <View key={c.id} style={styles.coordRow}>
+                    <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+                    <View style={{ flex: 1 }}>
+                      <ThemedText style={[styles.coordText, { color: theme.text }]}>{displayName}</ThemedText>
+                      <ThemedText style={[styles.staffCode, { color: theme.textSecondary }]}>{c.staffCode}</ThemedText>
+                    </View>
+                    <TouchableOpacity onPress={() => confirmRemove(c.staffCode)} style={styles.removeBtn}>
+                      <Ionicons name="trash-outline" size={18} color="#dc2626" />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
             </View>
           )}
 
@@ -204,7 +211,7 @@ const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) =>
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
-  backBtn: { padding: 4, marginRight: 8 },
+  backBtn: { padding: 4, marginRight: 8, flexShrink: 0 },
   headerTitle: { fontSize: 17, fontWeight: '700' },
   headerSub: { fontSize: 13 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },

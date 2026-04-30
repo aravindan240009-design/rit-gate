@@ -227,8 +227,9 @@ public class EmailService {
             "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Venue</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + safeVenue + "</td></tr>" +
             "</table>" +
             "<div style=\"background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;padding:16px;text-align:center;margin-bottom:16px;\">" +
-            "<div style=\"font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px;letter-spacing:1px;\">YOUR QR CODE STRING</div>" +
-            "<div style=\"font-size:14px;font-family:monospace;color:#111827;word-break:break-all;\">" + safeQr + "</div>" +
+            "<div style=\"font-size:12px;font-weight:700;color:#15803d;margin-bottom:10px;letter-spacing:1px;\">YOUR QR CODE</div>" +
+            "<img src=\"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + java.net.URLEncoder.encode(qrString, java.nio.charset.StandardCharsets.UTF_8) + "\" " +
+            "alt=\"QR Code\" width=\"200\" height=\"200\" style=\"display:block;margin:0 auto;border-radius:8px;\" />" +
             "</div>" +
             "<div style=\"background:#eff6ff;border:2px solid #3b82f6;border-radius:12px;padding:14px;text-align:center;\">" +
             "<div style=\"font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:6px;letter-spacing:1px;\">MANUAL ENTRY CODE</div>" +

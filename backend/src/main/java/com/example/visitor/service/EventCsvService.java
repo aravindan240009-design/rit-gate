@@ -255,8 +255,8 @@ public class EventCsvService {
     }
 
     private String generateManualCode() {
-        // 6-char alphanumeric manual code (uppercase)
-        return generateToken(6);
+        // 6-digit numeric code (100000–999999) — consistent with student/staff/HOD passes
+        return String.format("%06d", 100000 + new java.security.SecureRandom().nextInt(900000));
     }
 
     private String getCol(String[] cols, Map<String, Integer> colIndex, String name) {
