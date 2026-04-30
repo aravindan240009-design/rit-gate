@@ -1898,8 +1898,12 @@ public class SecurityController {
                 if (n != null) alreadyAddedNames.add(n.toLowerCase().trim());
             });
 
+            java.time.LocalDate istToday = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata"));
+            java.time.LocalDateTime istTodayStart = istToday.atStartOfDay();
+            java.time.LocalDateTime istTodayEnd   = istToday.atTime(java.time.LocalTime.MAX);
             visitorRepository.findAll().stream()
                 .filter(v -> v.getEntryTime() != null)
+                .filter(v -> !v.getEntryTime().isBefore(istTodayStart) && !v.getEntryTime().isAfter(istTodayEnd))
                 .filter(v -> v.getExitTime() == null)
                 .filter(v -> !"EXITED".equals(v.getStatus()) && !"REJECTED".equals(v.getStatus()))
                 .filter(v -> v.getName() != null && !alreadyAddedNames.contains(v.getName().toLowerCase().trim()))
@@ -2128,7 +2132,7 @@ public class SecurityController {
     // Scan History Endpoint - Grouped by person with status
     @GetMapping("/scan-history")
     public ResponseEntity<List<java.util.Map<String, Object>>> getScanHistory(
-            @RequestParam(required = false, defaultValue = "200") Integer limit) {
+            @RequestParam(required = false, defaultValue = "1000") Integer limit) {
         try {
             List<java.util.Map<String, Object>> scanHistory = new java.util.ArrayList<>();
 
@@ -2332,6 +2336,7 @@ public class SecurityController {
                         } catch (Exception ignored) {}
                     }
                 }
+                if ("AUTO_EXIT".equals(resolvedPurpose)) resolvedPurpose = "Auto Exit";
                 rec.put("purpose", resolvedPurpose != null ? resolvedPurpose : "Gate Pass Exit");
                 rec.put("reason",      "");
                 // Resolve department — prefer stored, fallback to user table
@@ -2372,9 +2377,12 @@ public class SecurityController {
                             rec.put("phone",      ep.getPhone());
                             rec.put("email",      ep.getEmail());
                             rec.put("isEventPass", true);
-                            // Resolve event name for purpose if not already set
+                            // Resolve event name for purpose if not already set (or was Auto Exit)
                             String storedPurpose = (String) rec.get("purpose");
-                            if (storedPurpose == null || storedPurpose.isBlank() || "Gate Pass Exit".equals(storedPurpose)) {
+                            if (storedPurpose == null || storedPurpose.isBlank()
+                                    || "Gate Pass Exit".equals(storedPurpose)
+                                    || "AUTO_EXIT".equals(storedPurpose)
+                                    || "Auto Exit".equals(storedPurpose)) {
                                 try {
                                     eventRepository.findById(ep.getEventId()).ifPresent(evt ->
                                         rec.put("purpose", evt.getEventName())
@@ -3425,7 +3433,8 @@ public class SecurityController {
     @GetMapping("/stats")
     public ResponseEntity<?> getDashboardStats() {
         try {
-            java.time.LocalDate today = java.time.LocalDate.now();
+            java.time.ZoneId ist = java.time.ZoneId.of("Asia/Kolkata");
+            java.time.LocalDate today = java.time.LocalDate.now(ist);
             java.time.LocalDateTime startOfDay = today.atStartOfDay();
             java.time.LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
 

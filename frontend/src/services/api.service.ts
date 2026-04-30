@@ -704,6 +704,7 @@ class ApiService {
     } catch (e: any) { return { success: false, message: e.message }; }
   }
 
+
   // ── Security scan entry/exit ──────────────────────────────────────────────
   // Both entry and exit use the same /security/scan endpoint
   async scanQREntry(qrData: string, securityId: string): Promise<ApiResponse> {

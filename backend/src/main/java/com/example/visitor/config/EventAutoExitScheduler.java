@@ -30,6 +30,7 @@ public class EventAutoExitScheduler {
     private final RailwayExitLogRepository railwayExitLogRepository;
     private final RailwayEntryRepository railwayEntryRepository;
     private final EventRepository eventRepository;
+    private final VisitorRepository visitorRepository;
 
     // Fires at 00:01:00 IST every day (after QRExpiryScheduler at 00:00:30)
     @Scheduled(cron = "0 1 0 * * *", zone = "Asia/Kolkata")
@@ -107,7 +108,7 @@ public class EventAutoExitScheduler {
         }
     }
 
-    // ── 2. All other user types: Entry record yesterday, no Exit_logs record ──
+    // ── 2. All user types (including EVENT fallback): Entry record yesterday, no Exit_logs record ──
     private void autoExitEntryUsers(LocalDateTime dayStart, LocalDateTime dayEnd) {
         try {
             List<RailwayEntry> yesterdayEntries =
@@ -119,9 +120,6 @@ public class EventAutoExitScheduler {
                 String utype = entry.getUserType();
                 if (uid == null || uid.isBlank()) continue;
 
-                // Skip EVENT type — handled separately above via EventPass
-                if ("EVENT".equalsIgnoreCase(utype)) continue;
-
                 // Check if an exit record already exists for this user on that day
                 boolean hasExit = railwayExitLogRepository
                     .findByUserIdOrderByExitTimeDesc(uid)
@@ -132,6 +130,36 @@ public class EventAutoExitScheduler {
 
                 if (hasExit) continue;
 
+                // Resolve a human-readable purpose (event name for EVENT, AUTO_EXIT for others)
+                String purpose = "AUTO_EXIT";
+                String personName = entry.getPersonName();
+                String department = entry.getDepartment();
+
+                if ("EVENT".equalsIgnoreCase(utype)) {
+                    // Resolve event name from EventPass → Event
+                    try {
+                        Long passId = Long.parseLong(uid);
+                        Optional<EventPass> passOpt = eventPassRepository.findById(passId);
+                        if (passOpt.isPresent()) {
+                            EventPass pass = passOpt.get();
+                            if (personName == null || personName.isBlank()) personName = pass.getFullName();
+                            if (department == null || department.isBlank())
+                                department = pass.getDepartment() != null ? pass.getDepartment() : pass.getCollegeName();
+                            try {
+                                Optional<Event> evtOpt = eventRepository.findById(pass.getEventId());
+                                if (evtOpt.isPresent()) purpose = evtOpt.get().getEventName();
+                            } catch (Exception ignored) {}
+                            // Also mark EventPass as EXITED if it hasn't been already
+                            if (!"EXITED".equals(pass.getStatus())) {
+                                pass.setStatus("EXITED");
+                                pass.setExitScannedAt(dayEnd);
+                                pass.setExitReason("AUTO_EXIT");
+                                eventPassRepository.save(pass);
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+
                 RailwayExitLog exitLog = new RailwayExitLog();
                 exitLog.setUserId(uid);
                 exitLog.setUserType(utype);
@@ -140,13 +168,27 @@ public class EventAutoExitScheduler {
                 exitLog.setLocation("AUTO");
                 exitLog.setScanLocation("AUTO");
                 exitLog.setAccessGranted(true);
-                exitLog.setPurpose("AUTO_EXIT");
-                exitLog.setPersonName(entry.getPersonName());
-                exitLog.setDepartment(entry.getDepartment());
+                exitLog.setPurpose(purpose);
+                exitLog.setPersonName(personName);
+                exitLog.setDepartment(department);
                 railwayExitLogRepository.save(exitLog);
+
+                // For VISITORs: also update the Visitor entity so active-persons stays consistent
+                if ("VISITOR".equalsIgnoreCase(utype)) {
+                    try {
+                        Long visitorId = Long.parseLong(uid);
+                        visitorRepository.findById(visitorId).ifPresent(v -> {
+                            if (v.getExitTime() == null) {
+                                v.setExitTime(dayEnd);
+                                v.setStatus("EXITED");
+                                visitorRepository.save(v);
+                            }
+                        });
+                    } catch (Exception ignored) {}
+                }
                 count++;
             }
-            log.info("✅ [AutoExitScheduler] Other users auto-exited: {}", count);
+            log.info("✅ [AutoExitScheduler] Entry-based auto-exit complete: {} records", count);
         } catch (Exception e) {
             log.error("❌ [AutoExitScheduler] Entry-based auto-exit error: {}", e.getMessage(), e);
         }

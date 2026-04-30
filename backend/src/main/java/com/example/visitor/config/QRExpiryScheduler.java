@@ -21,7 +21,7 @@ public class QRExpiryScheduler {
      * Fires at 00:00:30 every day (30 seconds past midnight to avoid boundary races).
      * Cron: second minute hour day month weekday
      */
-    @Scheduled(cron = "30 0 0 * * *")
+    @Scheduled(cron = "30 0 0 * * *", zone = "Asia/Kolkata")
     public void expireQRCodesAtMidnight() {
         log.info("⏰ [QRExpiryScheduler] Midnight cleanup — expiring today's QR codes...");
         try {
