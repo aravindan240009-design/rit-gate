@@ -343,4 +343,63 @@ export type ScreenName =
   | 'NCI_EXITS'
   | 'ADMIN_DASHBOARD'
   | 'ADMIN_MY_REQUESTS'
-  | 'ADMIN_SCAN_HISTORY';
+  | 'ADMIN_SCAN_HISTORY'
+  | 'HOD_EVENT_LIST'
+  | 'HOD_CREATE_EVENT'
+  | 'HOD_ASSIGN_COORDINATORS'
+  | 'STAFF_EVENT_LIST'
+  | 'STAFF_CSV_UPLOAD'
+  | 'STAFF_CSV_PREVIEW'
+  | 'STAFF_EVENT_PASS_RESULT';
+
+// ── Event Feature Types ──────────────────────────────────────────────────────
+
+export interface RITGateEvent {
+  id: number;
+  eventName: string;
+  eventDate: string;
+  venue?: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  createdByHod: string;
+  createdAt?: string;
+}
+
+export interface EventCoordinator {
+  id: number;
+  eventId: number;
+  staffCode: string;
+  assignedBy: string;
+  assignedAt?: string;
+  staffName?: string;
+}
+
+export interface EventPassRow {
+  rowIndex: number;
+  fullName: string;
+  email: string;
+  collegeName: string;
+  phone: string;
+  studentId?: string;
+  department?: string;
+  course?: string;
+  valid: boolean;
+  errorMessage?: string;
+}
+
+export interface EventPass {
+  id: number;
+  eventId: number;
+  fullName: string;
+  email: string;
+  collegeName: string;
+  phone: string;
+  studentId?: string;
+  department?: string;
+  course?: string;
+  status: 'ACTIVE' | 'ENTERED' | 'EXITED' | 'EXPIRED' | 'EMAIL_FAILED';
+  manualEntryCode?: string;
+  entryScannedAt?: string;
+  exitScannedAt?: string;
+  exitReason?: string;
+  qrExpiresAt?: string;
+}

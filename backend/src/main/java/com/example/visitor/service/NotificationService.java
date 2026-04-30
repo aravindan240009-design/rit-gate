@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -470,6 +471,40 @@ public class NotificationService {
 
     public List<Notification> getNotificationsBySecurityId(String securityId) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(securityId);
+    }
+
+    // ==================== EVENT NOTIFICATIONS ====================
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyStaffOfCoordinatorAssignment(String staffCode, String eventName, java.time.LocalDate eventDate, String venue) {
+        try {
+            String title = "Event Coordinator Assignment";
+            String message = String.format(
+                "You have been assigned as Event Coordinator for \"%s\" on %s at %s. Please upload the participant CSV.",
+                eventName, eventDate.toString(), venue != null ? venue : "TBD"
+            );
+            save(staffCode, title, message,
+                Notification.NotificationType.INFO, Notification.NotificationPriority.HIGH,
+                "/staff/events");
+        } catch (Exception e) {
+            log.error("Error notifying staff of coordinator assignment", e);
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyCoordinatorOfUploadConfirmation(String staffCode, String eventName, int issuedCount) {
+        try {
+            String title = "Event Passes Issued";
+            String message = String.format(
+                "%d QR passes have been generated and emailed for event \"%s\".",
+                issuedCount, eventName
+            );
+            save(staffCode, title, message,
+                Notification.NotificationType.INFO, Notification.NotificationPriority.NORMAL,
+                "/staff/events");
+        } catch (Exception e) {
+            log.error("Error notifying coordinator of upload confirmation", e);
+        }
     }
 
     // ==================== PRIVATE HELPER ====================

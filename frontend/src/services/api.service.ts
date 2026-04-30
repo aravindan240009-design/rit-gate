@@ -841,6 +841,86 @@ class ApiService {
       return { success: ok, qrCode: data.qrCode, manualCode: data.manualCode, message: data.message };
     } catch (e: any) { return { success: false, message: e.message }; }
   }
+  // ── Event Management ─────────────────────────────────────────────────────────
+
+  async createEvent(hodCode: string, eventName: string, eventDate: string, venue: string): Promise<{ success: boolean; eventId?: number; event?: any; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events`, { method: 'POST', body: JSON.stringify({ hodCode, eventName, eventDate, venue }) });
+      return { success: data.status === 'SUCCESS', eventId: data.eventId, event: data.event, message: data.message };
+    } catch (e: any) { return { success: false, message: e.message }; }
+  }
+
+  async getHODEvents(hodCode: string): Promise<{ success: boolean; events: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events/hod/${encodeURIComponent(hodCode)}`, { method: 'GET' });
+      return { success: data.status === 'SUCCESS', events: data.events || [] };
+    } catch (e: any) { return { success: false, events: [], message: e.message }; }
+  }
+
+  async assignCoordinators(eventId: number, hodCode: string, staffCodes: string[]): Promise<{ success: boolean; assigned?: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events/${eventId}/coordinators`, { method: 'POST', body: JSON.stringify({ hodCode, staffCodes }) });
+      return { success: data.status === 'SUCCESS', assigned: data.assigned, message: data.message };
+    } catch (e: any) { return { success: false, message: e.message }; }
+  }
+
+  async removeCoordinator(eventId: number, staffCode: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events/${eventId}/coordinators/${encodeURIComponent(staffCode)}`, { method: 'DELETE' });
+      return { success: data.status === 'SUCCESS', message: data.message };
+    } catch (e: any) { return { success: false, message: e.message }; }
+  }
+
+  async getEventCoordinators(eventId: number): Promise<{ success: boolean; coordinators: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events/${eventId}/coordinators`, { method: 'GET' });
+      return { success: data.status === 'SUCCESS', coordinators: data.coordinators || [] };
+    } catch (e: any) { return { success: false, coordinators: [], message: e.message }; }
+  }
+
+  async getStaffEvents(staffCode: string): Promise<{ success: boolean; events: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events/coordinator/${encodeURIComponent(staffCode)}`, { method: 'GET' });
+      return { success: data.status === 'SUCCESS', events: data.events || [] };
+    } catch (e: any) { return { success: false, events: [], message: e.message }; }
+  }
+
+  async uploadEventCsvPreview(eventId: number, staffCode: string, fileUri: string, fileName: string): Promise<{ success: boolean; rows?: any[]; validCount?: number; invalidCount?: number; totalCount?: number; message?: string }> {
+    try {
+      const formData = new FormData();
+      formData.append('file', { uri: fileUri, type: 'text/csv', name: fileName } as any);
+      formData.append('staffCode', staffCode);
+      const url = `${this.baseURL}/events/${eventId}/csv/preview`;
+      const response = await fetch(url, { method: 'POST', body: formData });
+      const data = await response.json();
+      return { success: data.status === 'SUCCESS', rows: data.rows, validCount: data.validCount, invalidCount: data.invalidCount, totalCount: data.totalCount, message: data.message };
+    } catch (e: any) { return { success: false, message: e.message }; }
+  }
+
+  async confirmEventCsvUpload(eventId: number, staffCode: string, rows: any[]): Promise<{ success: boolean; result?: any; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events/${eventId}/csv/confirm`, { method: 'POST', body: JSON.stringify({ staffCode, rows }) });
+      return { success: data.status === 'SUCCESS', result: data.result, message: data.message };
+    } catch (e: any) { return { success: false, message: e.message }; }
+  }
+
+  async getEventPasses(eventId: number): Promise<{ success: boolean; passes: any[]; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events/${eventId}/passes`, { method: 'GET' });
+      return { success: data.status === 'SUCCESS', passes: data.passes || [] };
+    } catch (e: any) { return { success: false, passes: [], message: e.message }; }
+  }
+
+  getCsvTemplateUrl(): string {
+    return `${this.baseURL}/events/csv-template`;
+  }
+
+  async completeEvent(eventId: number, hodCode: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events/${eventId}/complete`, { method: 'PUT', body: JSON.stringify({ hodCode }) });
+      return { success: data.status === 'SUCCESS', message: data.message };
+    } catch (e: any) { return { success: false, message: e.message }; }
+  }
 }
 
 export const apiService = new ApiService();

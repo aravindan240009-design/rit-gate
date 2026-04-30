@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, BackHandler } from 'react-native';
-import { HOD, ScreenName } from '../../types';
+import { HOD, ScreenName, RITGateEvent } from '../../types';
 import NewHODDashboard from './NewHODDashboard';
 import HODMyRequestsScreen from './HODMyRequestsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import HODEventListScreen from './HODEventListScreen';
+import HODCreateEventScreen from './HODCreateEventScreen';
+import HODAssignCoordinatorsScreen from './HODAssignCoordinatorsScreen';
 
 interface HODDashboardContainerProps {
   hod: HOD;
@@ -12,7 +15,7 @@ interface HODDashboardContainerProps {
   onNavigate: (screen: ScreenName) => void;
 }
 
-type InternalTab = 'DASHBOARD' | 'PROFILE' | 'MY_REQUESTS';
+type InternalTab = 'DASHBOARD' | 'PROFILE' | 'MY_REQUESTS' | 'EVENT_LIST' | 'CREATE_EVENT' | 'ASSIGN_COORDINATORS';
 
 const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
   hod,
@@ -21,10 +24,14 @@ const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<InternalTab>('DASHBOARD');
   const [showPassSheet, setShowPassSheet] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<RITGateEvent | null>(null);
 
   useEffect(() => {
     const onBack = () => {
       if (showPassSheet) { setShowPassSheet(false); return true; }
+      if (activeTab === 'ASSIGN_COORDINATORS') { setActiveTab('EVENT_LIST'); return true; }
+      if (activeTab === 'CREATE_EVENT') { setActiveTab('EVENT_LIST'); return true; }
+      if (activeTab === 'EVENT_LIST') { setActiveTab('DASHBOARD'); return true; }
       if (activeTab !== 'DASHBOARD') { setActiveTab('DASHBOARD'); return true; }
       return false;
     };
@@ -37,6 +44,7 @@ const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
   const handleNavigate = (screen: ScreenName) => {
     if (screen === 'PROFILE') setActiveTab('PROFILE');
     else if ((screen as any) === 'HOD_MY_REQUESTS') setActiveTab('MY_REQUESTS');
+    else if (screen === 'HOD_EVENT_LIST') setActiveTab('EVENT_LIST');
     else onNavigate(screen);
   };
 
@@ -68,6 +76,37 @@ const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
             else if (screen === 'PROFILE') setActiveTab('PROFILE');
             else if (screen === 'NEW_PASS') openPassSheet();
           }}
+        />
+      );
+    }
+
+    if (activeTab === 'EVENT_LIST') {
+      return (
+        <HODEventListScreen
+          hod={hod}
+          onBack={() => setActiveTab('DASHBOARD')}
+          onCreateEvent={() => setActiveTab('CREATE_EVENT')}
+          onSelectEvent={(event) => { setSelectedEvent(event); setActiveTab('ASSIGN_COORDINATORS'); }}
+        />
+      );
+    }
+
+    if (activeTab === 'CREATE_EVENT') {
+      return (
+        <HODCreateEventScreen
+          hod={hod}
+          onBack={() => setActiveTab('EVENT_LIST')}
+          onCreated={() => setActiveTab('EVENT_LIST')}
+        />
+      );
+    }
+
+    if (activeTab === 'ASSIGN_COORDINATORS' && selectedEvent) {
+      return (
+        <HODAssignCoordinatorsScreen
+          hod={hod}
+          event={selectedEvent}
+          onBack={() => setActiveTab('EVENT_LIST')}
         />
       );
     }

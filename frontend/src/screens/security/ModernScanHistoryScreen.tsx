@@ -46,6 +46,9 @@ interface ScanRecord {
   exitTime?: string;
   status: string;
   isBulkPass?: boolean;
+  isEventPass?: boolean;
+  collegeName?: string;
+  eventName?: string;
   incharge?: string;
   subtype?: string;
   participantCount?: string;
@@ -959,9 +962,9 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     setShowDetailModal(true);
                   }}
                 >
-                  <View style={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}>
-                    <ThemedText style={[styles.scanAvatarText, { color: theme.primary }]}>
-                      {scan.isBulkPass ? 'GP' : getInitials(scan.name)}
+                  <View style={[styles.scanAvatar, { backgroundColor: scan.isEventPass ? '#f59e0b20' : theme.primary + '20' }]}>
+                    <ThemedText style={[styles.scanAvatarText, { color: scan.isEventPass ? '#f59e0b' : theme.primary }]}>
+                      {scan.isBulkPass ? 'GP' : scan.isEventPass ? 'EV' : getInitials(scan.name)}
                     </ThemedText>
                   </View>
                   <View style={styles.scanInfo}>
@@ -973,6 +976,19 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                         </ThemedText>
                         <ThemedText style={[styles.scanPurpose, { color: theme.textSecondary }]} numberOfLines={1}>
                           {scan.purpose || scan.reason}
+                        </ThemedText>
+                      </>
+                    ) : scan.isEventPass ? (
+                      <>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <ThemedText style={[styles.scanName, { color: theme.text }]}>{scan.name}</ThemedText>
+                          <View style={{ backgroundColor: '#f59e0b20', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2, borderWidth: 1, borderColor: '#f59e0b' }}>
+                            <ThemedText style={{ fontSize: 10, fontWeight: '700', color: '#f59e0b' }}>EVENT</ThemedText>
+                          </View>
+                        </View>
+                        <ThemedText style={[styles.scanType, { color: '#f59e0b' }]}>{scan.collegeName || 'Outside College'}</ThemedText>
+                        <ThemedText style={[styles.scanPurpose, { color: theme.textSecondary }]} numberOfLines={1}>
+                          {scan.eventName || scan.purpose}
                         </ThemedText>
                       </>
                     ) : (

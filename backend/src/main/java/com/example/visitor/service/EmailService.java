@@ -187,6 +187,61 @@ public class EmailService {
         sendEmail(visitorEmail, visitorName, subject, body);
     }
 
+    public void sendEventPassEmail(String toEmail, String toName, String eventName, String venue,
+                                   String eventDate, String qrString, String manualCode) {
+        String subject = "Your Event Gate Pass – " + eventName;
+
+        String textBody =
+            "Dear " + toName + ",\n\n" +
+            "You have been registered as a participant for the following event at RIT Chennai:\n\n" +
+            "Event: " + eventName + "\n" +
+            "Date: " + eventDate + "\n" +
+            "Venue: " + (venue != null ? venue : "RIT Chennai") + "\n\n" +
+            "QR CODE: " + qrString + "\n" +
+            "MANUAL ENTRY CODE: " + manualCode + "\n\n" +
+            "Please show this QR code (or the manual code) at the RIT gate for entry.\n\n" +
+            "Best regards,\nRIT Gate – Visitor Management System";
+
+        String safeName    = escapeHtml(toName != null ? toName : "Participant");
+        String safeEvent   = escapeHtml(eventName);
+        String safeVenue   = escapeHtml(venue != null ? venue : "RIT Chennai");
+        String safeDate    = escapeHtml(eventDate);
+        String safeQr      = escapeHtml(qrString);
+        String safeManual  = escapeHtml(manualCode);
+
+        String htmlBody =
+            "<!DOCTYPE html>" +
+            "<html><body style=\"margin:0;padding:0;background:#f2f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;\">" +
+            "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"padding:24px 12px;\">" +
+            "<tr><td align=\"center\">" +
+            "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:560px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;\">" +
+            "<tr><td style=\"background:#172b4d;padding:20px 24px;\">" +
+            "<div style=\"font-size:22px;color:#ffffff;font-weight:800;\">Your Event Gate Pass</div>" +
+            "</td></tr>" +
+            "<tr><td style=\"padding:26px 24px 22px 24px;color:#1f2937;\">" +
+            "<div style=\"font-size:16px;font-weight:700;margin-bottom:10px;\">Hi " + safeName + ",</div>" +
+            "<div style=\"font-size:15px;line-height:1.6;color:#374151;margin-bottom:18px;\">You have been registered for the following event at <b>RIT Chennai</b>. Please present the QR code or manual code at the gate for entry.</div>" +
+            "<table style=\"width:100%;border-collapse:collapse;margin-bottom:20px;\">" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;width:35%;\">Event</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + safeEvent + "</td></tr>" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Date</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + safeDate + "</td></tr>" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Venue</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + safeVenue + "</td></tr>" +
+            "</table>" +
+            "<div style=\"background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;padding:16px;text-align:center;margin-bottom:16px;\">" +
+            "<div style=\"font-size:12px;font-weight:700;color:#15803d;margin-bottom:6px;letter-spacing:1px;\">YOUR QR CODE STRING</div>" +
+            "<div style=\"font-size:14px;font-family:monospace;color:#111827;word-break:break-all;\">" + safeQr + "</div>" +
+            "</div>" +
+            "<div style=\"background:#eff6ff;border:2px solid #3b82f6;border-radius:12px;padding:14px;text-align:center;\">" +
+            "<div style=\"font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:6px;letter-spacing:1px;\">MANUAL ENTRY CODE</div>" +
+            "<div style=\"font-size:32px;font-weight:900;letter-spacing:8px;color:#111827;\">" + safeManual + "</div>" +
+            "</div>" +
+            "<div style=\"font-size:13px;color:#6b7280;margin-top:16px;\">Show this email or the QR code at the RIT gate. The code expires at midnight on the event date.</div>" +
+            "</td></tr>" +
+            "</table>" +
+            "</td></tr></table></body></html>";
+
+        sendEmail(toEmail, toName, subject, textBody, htmlBody);
+    }
+
     public void sendGatePassStatusEmail(String toEmail, String toName, String statusLabel,
                                         String purpose, String detailMessage) {
         String subject = "Gate Pass Update: " + statusLabel + " — RIT Gate";

@@ -293,6 +293,9 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
           </View>
         </View>
         <View style={styles.headerRight}>
+          <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('HOD_EVENT_LIST' as any)}>
+            <Ionicons name="calendar-outline" size={22} color={theme.text} />
+          </TouchableOpacity>
           <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
             <Ionicons name="notifications-outline" size={24} color={theme.text} />
             {unreadCount > 0 && (

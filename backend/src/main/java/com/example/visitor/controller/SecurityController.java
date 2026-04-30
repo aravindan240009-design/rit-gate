@@ -16,6 +16,8 @@ import com.example.visitor.entity.Visitor;
 import com.example.visitor.entity.RailwayExitLog;
 import com.example.visitor.entity.RailwayEntry;
 import com.example.visitor.entity.GatePassRequest;
+import com.example.visitor.entity.EventPass;
+import com.example.visitor.entity.Event;
 import com.example.visitor.repository.PersonRepository;
 import com.example.visitor.util.DepartmentMapper;
 import com.example.visitor.repository.VehicleRegistrationRepository;
@@ -109,7 +111,13 @@ public class SecurityController {
 
     @Autowired
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
-    
+
+    @Autowired
+    private com.example.visitor.repository.EventPassRepository eventPassRepository;
+
+    @Autowired
+    private com.example.visitor.repository.EventRepository eventRepository;
+
     // Parse new QR code format: user_type/user_id/random_qr_number
     private Optional<Person> parseAndFindPerson(String qrCode) {
         // Check if QR code uses new format (contains /)
@@ -164,7 +172,7 @@ public class SecurityController {
         }
         
         String userType = parts[0].toUpperCase();
-        return userType.equals("ST") || userType.equals("SF") || userType.equals("VG") || userType.equals("GP") || userType.equals("HD");
+        return userType.equals("ST") || userType.equals("SF") || userType.equals("VG") || userType.equals("GP") || userType.equals("HD") || userType.equals("EV");
     }
     
     // QR Code Scanning Endpoints - POST version to avoid URL encoding issues
@@ -688,8 +696,149 @@ public class SecurityController {
                         put("type", "VISITOR");
                     }});
                 }
+            } else if ("EV".equals(userType)) {
+                // EV: Event pass — entry/exit flow (same pattern as VG)
+                Optional<com.example.visitor.entity.EventPass> evPassOpt = eventPassRepository.findByQrString(qrCode);
+                if (evPassOpt.isEmpty()) {
+                    return ResponseEntity.status(403).body(new java.util.HashMap<String, Object>() {{
+                        put("qrCode", qrCode);
+                        put("status", "DENIED");
+                        put("message", "Event pass not found.");
+                        put("accessGranted", false);
+                        put("name", "Not Found");
+                        put("type", "EVENT");
+                    }});
+                }
+                com.example.visitor.entity.EventPass evPass = evPassOpt.get();
+
+                // Fetch event details
+                String eventName = "Unknown Event";
+                String eventVenue = "";
+                String eventDateStr = "";
+                Optional<com.example.visitor.entity.Event> evtOpt = eventRepository.findById(evPass.getEventId());
+                if (evtOpt.isPresent()) {
+                    com.example.visitor.entity.Event evt = evtOpt.get();
+                    eventName    = evt.getEventName();
+                    eventVenue   = evt.getVenue() != null ? evt.getVenue() : "";
+                    eventDateStr = evt.getEventDate().toString();
+                }
+
+                final String finalEventName  = eventName;
+                final String finalEventVenue = eventVenue;
+                final String finalEventDate  = eventDateStr;
+
+                if (qrTable.getEntry() != null && qrTable.getExit() == null) {
+                    // Entry scan
+                    if (randomNumber != null && randomNumber.equals(qrTable.getEntry())) {
+                        accessGranted = true;
+                        scanLocation = "Entry Gate";
+
+                        qrTable.setExit(qrTable.getEntry());
+                        qrTable.setEntry(null);
+                        qrTableRepository.save(qrTable);
+
+                        evPass.setStatus("ENTERED");
+                        evPass.setEntryScannedAt(LocalDateTime.now());
+                        eventPassRepository.save(evPass);
+
+                        System.out.println("✅ EV ENTRY APPROVED — " + evPass.getFullName());
+
+                        return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
+                            put("qrCode", qrCode);
+                            put("status", "APPROVED");
+                            put("success", true);
+                            put("accessGranted", true);
+                            put("scanType", "ENTRY");
+                            put("passType", "EVENT");
+                            put("name", evPass.getFullName());
+                            put("collegeName", evPass.getCollegeName());
+                            put("phone", evPass.getPhone());
+                            put("email", evPass.getEmail());
+                            put("type", "EVENT");
+                            put("eventName", finalEventName);
+                            put("eventDate", finalEventDate);
+                            put("venue", finalEventVenue);
+                            put("message", "Entry recorded for " + evPass.getFullName());
+                        }});
+                    } else {
+                        return ResponseEntity.status(403).body(new java.util.HashMap<String, Object>() {{
+                            put("qrCode", qrCode);
+                            put("status", "DENIED");
+                            put("message", "QR token mismatch.");
+                            put("accessGranted", false);
+                            put("name", "Token Mismatch");
+                            put("type", "EVENT");
+                        }});
+                    }
+                } else if (qrTable.getEntry() == null && qrTable.getExit() != null) {
+                    // Exit scan
+                    if (randomNumber != null && randomNumber.equals(qrTable.getExit())) {
+                        accessGranted = true;
+                        scanLocation = "Exit Gate";
+
+                        evPass.setStatus("EXITED");
+                        evPass.setExitScannedAt(LocalDateTime.now());
+                        eventPassRepository.save(evPass);
+
+                        // Write exit log
+                        RailwayExitLog exitLog = new RailwayExitLog();
+                        exitLog.setUserId(evPass.getId().toString());
+                        exitLog.setUserType("EVENT");
+                        exitLog.setExitTime(LocalDateTime.now());
+                        exitLog.setVerifiedBy("Security Guard");
+                        exitLog.setLocation("Exit Gate");
+                        exitLog.setQrCode(qrCode);
+                        exitLog.setScanLocation("Exit Gate");
+                        exitLog.setAccessGranted(true);
+                        exitLog.setPurpose(finalEventName);
+                        railwayExitLogRepository.save(exitLog);
+
+                        qrTableRepository.delete(qrTable);
+
+                        System.out.println("✅ EV EXIT APPROVED — " + evPass.getFullName());
+
+                        final String entryTimeStr = evPass.getEntryScannedAt() != null
+                            ? evPass.getEntryScannedAt().toString() : null;
+
+                        return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
+                            put("qrCode", qrCode);
+                            put("status", "APPROVED");
+                            put("success", true);
+                            put("accessGranted", true);
+                            put("scanType", "EXIT");
+                            put("passType", "EVENT");
+                            put("name", evPass.getFullName());
+                            put("collegeName", evPass.getCollegeName());
+                            put("phone", evPass.getPhone());
+                            put("email", evPass.getEmail());
+                            put("type", "EVENT");
+                            put("eventName", finalEventName);
+                            put("entryTime", entryTimeStr);
+                            put("message", "Exit recorded for " + evPass.getFullName());
+                        }});
+                    } else {
+                        return ResponseEntity.status(403).body(new java.util.HashMap<String, Object>() {{
+                            put("qrCode", qrCode);
+                            put("status", "DENIED");
+                            put("message", "QR token mismatch on exit.");
+                            put("accessGranted", false);
+                            put("name", "Token Mismatch");
+                            put("type", "EVENT");
+                        }});
+                    }
+                } else {
+                    System.out.println("❌ EV — already exited or invalid state: " + qrCode);
+                    return ResponseEntity.status(403).body(new java.util.HashMap<String, Object>() {{
+                        put("qrCode", qrCode);
+                        put("status", "DENIED");
+                        put("message", "This event pass has already been used for exit.");
+                        put("accessGranted", false);
+                        put("name", "Already Exited");
+                        put("type", "EVENT");
+                    }});
+                }
             }
-            
+
             // Step 6: Fetch detailed information from students/staff tables
             java.util.Map<String, Object> detailedInfo = new java.util.HashMap<>();
             detailedInfo.put("qrCode", qrCode);
@@ -2106,6 +2255,42 @@ public class SecurityController {
                     }
                 }
                 scanHistory.add(rec);
+            }
+
+            // ── Part 3: Event passes (ENTERED or EXITED) ──────────────────────────────
+            try {
+                List<com.example.visitor.entity.EventPass> evPasses = eventPassRepository.findAll();
+                for (com.example.visitor.entity.EventPass ep : evPasses) {
+                    if (!"ENTERED".equals(ep.getStatus()) && !"EXITED".equals(ep.getStatus())) continue;
+                    String eventName = "Event";
+                    try {
+                        eventRepository.findById(ep.getEventId()).ifPresent(evt -> {});
+                        Optional<com.example.visitor.entity.Event> evtOpt = eventRepository.findById(ep.getEventId());
+                        if (evtOpt.isPresent()) eventName = evtOpt.get().getEventName();
+                    } catch (Exception ignored) {}
+                    java.util.Map<String, Object> rec = new java.util.HashMap<>();
+                    rec.put("id",        ep.getId().toString());
+                    rec.put("name",      ep.getFullName());
+                    rec.put("type",      "EVENT");
+                    rec.put("collegeName", ep.getCollegeName());
+                    rec.put("eventName", eventName);
+                    rec.put("isBulkPass", false);
+                    rec.put("isEventPass", true);
+                    rec.put("purpose",   eventName);
+                    rec.put("department","");
+                    if ("ENTERED".equals(ep.getStatus())) {
+                        rec.put("status",    "ENTERED");
+                        rec.put("entryTime", ep.getEntryScannedAt() != null ? ep.getEntryScannedAt().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME) : null);
+                        rec.put("exitTime",  null);
+                    } else {
+                        rec.put("status",    "EXITED");
+                        rec.put("entryTime", ep.getEntryScannedAt() != null ? ep.getEntryScannedAt().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME) : null);
+                        rec.put("exitTime",  ep.getExitScannedAt() != null ? ep.getExitScannedAt().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME) : null);
+                    }
+                    scanHistory.add(rec);
+                }
+            } catch (Exception evEx) {
+                System.err.println("⚠️ Could not load event passes for scan history: " + evEx.getMessage());
             }
 
             // ── Deduplicate: for visitors with an exit record, remove the separate entry record ──
