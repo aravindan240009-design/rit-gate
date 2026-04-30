@@ -30,7 +30,6 @@ public class EventAutoExitScheduler {
     private final RailwayExitLogRepository railwayExitLogRepository;
     private final RailwayEntryRepository railwayEntryRepository;
     private final EventRepository eventRepository;
-    private final VisitorRepository visitorRepository;
 
     // Fires at 00:01:00 IST every day (after QRExpiryScheduler at 00:00:30)
     @Scheduled(cron = "0 1 0 * * *", zone = "Asia/Kolkata")
@@ -84,7 +83,7 @@ public class EventAutoExitScheduler {
                         exitLog.setQrCode(pass.getQrString());
                         exitLog.setScanLocation("AUTO");
                         exitLog.setAccessGranted(true);
-                        exitLog.setPurpose(eventName);           // event name, not "AUTO_EXIT"
+                        exitLog.setPurpose("AUTO_EXIT");
                         exitLog.setPersonName(pass.getFullName());
                         exitLog.setDepartment(pass.getDepartment() != null ? pass.getDepartment() : pass.getCollegeName());
                         exitLog.setPhone(pass.getPhone());
@@ -133,9 +132,6 @@ public class EventAutoExitScheduler {
 
                 if (hasExit) continue;
 
-                // Resolve purpose from user type
-                String purpose = resolvePurpose(uid, utype);
-
                 RailwayExitLog exitLog = new RailwayExitLog();
                 exitLog.setUserId(uid);
                 exitLog.setUserType(utype);
@@ -144,7 +140,7 @@ public class EventAutoExitScheduler {
                 exitLog.setLocation("AUTO");
                 exitLog.setScanLocation("AUTO");
                 exitLog.setAccessGranted(true);
-                exitLog.setPurpose(purpose);
+                exitLog.setPurpose("AUTO_EXIT");
                 exitLog.setPersonName(entry.getPersonName());
                 exitLog.setDepartment(entry.getDepartment());
                 railwayExitLogRepository.save(exitLog);
@@ -154,18 +150,5 @@ public class EventAutoExitScheduler {
         } catch (Exception e) {
             log.error("❌ [AutoExitScheduler] Entry-based auto-exit error: {}", e.getMessage(), e);
         }
-    }
-
-    private String resolvePurpose(String uid, String utype) {
-        if ("VISITOR".equalsIgnoreCase(utype)) {
-            try {
-                Long visitorId = Long.parseLong(uid);
-                return visitorRepository.findById(visitorId)
-                    .map(v -> v.getPurpose() != null ? v.getPurpose() : "Visitor Visit")
-                    .orElse("Visitor Visit");
-            } catch (Exception ignored) {}
-            return "Visitor Visit";
-        }
-        return "Late Entry";
     }
 }
