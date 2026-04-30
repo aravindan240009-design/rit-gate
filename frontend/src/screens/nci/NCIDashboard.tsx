@@ -66,7 +66,12 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
   const getInitials = (name: string) =>
     (name || 'NF').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
-  useEffect(() => { loadData(); loadNotifications(nci.staffCode, 'staff'); }, []);
+  useEffect(() => {
+    loadData();
+    loadNotifications(nci.staffCode, 'staff');
+    const interval = setInterval(loadData, 10000);
+    return () => clearInterval(interval);
+  }, []);
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
   const fetchIdRef = React.useRef(0);

@@ -49,7 +49,11 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
     return () => sub.remove();
   }, [onTabChange]);
 
-  useEffect(() => { loadRequests(); }, []);
+  useEffect(() => {
+    loadRequests();
+    const interval = setInterval(loadRequests, 5000);
+    return () => clearInterval(interval);
+  }, []);
   useEffect(() => {
     const now = new Date();
     const nextMidnight = new Date(now);

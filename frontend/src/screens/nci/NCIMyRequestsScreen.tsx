@@ -77,7 +77,11 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
     }
   };
 
-  useEffect(() => { fetchRequests(); }, []);
+  useEffect(() => {
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const onRefresh = useCallback(() => {
     console.log('🔄 [REFRESH] NCI/MyRequests');

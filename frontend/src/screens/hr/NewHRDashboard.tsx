@@ -103,6 +103,8 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
     loadRequests();
     loadNotifications(hr.hrCode, 'hr');
     loadExitLogs();
+    const interval = setInterval(() => { loadRequests(); loadExitLogs(); }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => { if (refreshCount > 0) { loadRequests(); loadExitLogs(); } }, [refreshCount]);

@@ -37,6 +37,8 @@ const StaffEventListScreen: React.FC<Props> = ({ staff, onBack, onUploadCsv }) =
   useEffect(() => {
     setLoading(true);
     loadEvents().finally(() => setLoading(false));
+    const interval = setInterval(loadEvents, 30000);
+    return () => clearInterval(interval);
   }, [loadEvents]);
 
   const onRefresh = async () => { setRefreshing(true); await loadEvents(); setRefreshing(false); };

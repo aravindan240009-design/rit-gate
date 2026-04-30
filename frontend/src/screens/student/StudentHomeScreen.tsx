@@ -86,6 +86,8 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
   useEffect(() => {
     loadData();
+    const interval = setInterval(loadData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);

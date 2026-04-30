@@ -66,7 +66,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout, onNavi
   const getInitials = (name: string) =>
     (name || 'AO').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
-  useEffect(() => { loadData(); loadNotifications(admin.staffCode, 'staff'); }, []);
+  useEffect(() => {
+    loadData();
+    loadNotifications(admin.staffCode, 'staff');
+    const interval = setInterval(loadData, 10000);
+    return () => clearInterval(interval);
+  }, []);
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
   const loadData = async () => {

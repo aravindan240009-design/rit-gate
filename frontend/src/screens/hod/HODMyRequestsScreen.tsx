@@ -87,6 +87,8 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
 
   useEffect(() => {
     fetchRequests();
+    const interval = setInterval(fetchRequests, 5000);
+    return () => clearInterval(interval);
   }, []);
   useEffect(() => {
     const now = new Date();

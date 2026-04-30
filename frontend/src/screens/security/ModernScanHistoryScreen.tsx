@@ -120,6 +120,11 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   useEffect(() => {
     loadScanHistory();
     loadVehicleHistory();
+    const interval = setInterval(() => {
+      loadScanHistory();
+      loadVehicleHistory();
+    }, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadScanHistory = async () => {

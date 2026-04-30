@@ -41,6 +41,8 @@ const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSel
   useEffect(() => {
     setLoading(true);
     loadEvents().finally(() => setLoading(false));
+    const interval = setInterval(loadEvents, 30000);
+    return () => clearInterval(interval);
   }, [loadEvents]);
 
   const onRefresh = async () => {

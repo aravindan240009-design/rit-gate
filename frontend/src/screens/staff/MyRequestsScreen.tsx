@@ -101,7 +101,11 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
     }
   };
 
-  useEffect(() => { fetchRequests(); }, []);
+  useEffect(() => {
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 5000);
+    return () => clearInterval(interval);
+  }, []);
   useEffect(() => {
     const now = new Date();
     const nextMidnight = new Date(now);

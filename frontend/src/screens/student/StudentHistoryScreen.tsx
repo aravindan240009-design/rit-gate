@@ -58,6 +58,8 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
 
   useEffect(() => {
     loadHistory();
+    const interval = setInterval(loadHistory, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadHistory = async () => {

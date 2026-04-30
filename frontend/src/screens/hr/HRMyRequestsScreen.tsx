@@ -73,7 +73,11 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
     }
   }, [hr.hrCode]);
 
-  useEffect(() => { fetchRequests(); }, []);
+  useEffect(() => {
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 5000);
+    return () => clearInterval(interval);
+  }, []);
   const onRefresh = () => {
     console.log('🔄 [REFRESH] HR/MyRequests'); setRefreshing(true); fetchRequests(); };
 

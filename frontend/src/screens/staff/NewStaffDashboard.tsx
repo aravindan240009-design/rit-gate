@@ -88,6 +88,8 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   useEffect(() => {
     loadRequests();
     loadNotifications(staff.staffCode, 'staff');
+    const interval = setInterval(loadRequests, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);

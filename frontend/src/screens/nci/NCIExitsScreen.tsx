@@ -44,7 +44,8 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
   useEffect(() => {
     loadGateLogs();
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { onBack(); return true; });
-    return () => sub.remove();
+    const interval = setInterval(() => loadGateLogs(fromDate || undefined, toDate || undefined), 30000);
+    return () => { sub.remove(); clearInterval(interval); };
   }, []);
 
   const loadGateLogs = async (rangeFrom?: string, rangeTo?: string) => {

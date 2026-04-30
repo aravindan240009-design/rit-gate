@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, StyleSheet, TouchableOpacity, ScrollView,
-  StatusBar, BackHandler, RefreshControl,
+  StatusBar, BackHandler, RefreshControl, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Calendar } from 'react-native-calendars';
@@ -62,7 +62,8 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
   useEffect(() => {
     loadGateLogs();
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { onBack(); return true; });
-    return () => sub.remove();
+    const interval = setInterval(() => loadGateLogs(fromDate || undefined, toDate || undefined), 30000);
+    return () => { sub.remove(); clearInterval(interval); };
   }, []);
 
   const loadGateLogs = async (rangeFrom?: string, rangeTo?: string) => {

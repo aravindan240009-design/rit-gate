@@ -57,7 +57,11 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
     finally { setLoading(false); setRefreshing(false); }
   }, [admin.staffCode]);
 
-  useEffect(() => { fetchRequests(); }, []);
+  useEffect(() => {
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 5000);
+    return () => clearInterval(interval);
+  }, []);
   const onRefresh = () => {
     console.log('🔄 [REFRESH] Admin/MyRequests'); setRefreshing(true); fetchRequests(); };
 
