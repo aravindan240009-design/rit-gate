@@ -3429,24 +3429,33 @@ public class SecurityController {
             java.time.LocalDateTime startOfDay = today.atStartOfDay();
             java.time.LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
 
-            // ACTIVE = visitors who have entered (entryTime set) but not yet exited (exitTime null)
-            // These are visitors currently on campus
-            long active = visitorRepository.findAll().stream()
-                .filter(v -> v.getEntryTime() != null && v.getExitTime() == null)
-                .count();
-
-            // ENTRIES = total entries today from Entry table (students + staff + visitors)
+            // ENTRIES = total entries today from Entry table (all user types)
             long entries = railwayEntryRepository.countTodaysEntries();
 
-            // EXITED = total exits today from Exit_logs table (students + staff + visitors)
+            // EXITED = total exits today from Exit_logs table (all user types)
             long exited = railwayExitLogRepository.findByExitTimeBetweenOrderByExitTimeDesc(startOfDay, endOfDay)
                 .stream()
                 .filter(e -> Boolean.TRUE.equals(e.getAccessGranted()))
                 .count();
 
+            // ACTIVE = people who entered today but have no exit record yet (all user types)
+            // Uses Entry table as source of truth — consistent with active-persons endpoint
+            java.util.Set<String> exitedTodayIds = new java.util.HashSet<>();
+            railwayExitLogRepository.findByExitTimeBetweenOrderByExitTimeDesc(startOfDay, endOfDay)
+                .stream()
+                .filter(e -> Boolean.TRUE.equals(e.getAccessGranted()) && e.getUserId() != null)
+                .forEach(e -> exitedTodayIds.add(e.getUserType() + ":" + e.getUserId()));
+
+            long active = railwayEntryRepository.findByTimestampBetweenOrderByTimestampDesc(startOfDay, endOfDay)
+                .stream()
+                .filter(e -> e.getUserId() != null)
+                .filter(e -> !exitedTodayIds.contains(
+                    (e.getUserType() != null ? e.getUserType() : "") + ":" + e.getUserId()))
+                .count();
+
             java.util.Map<String, Object> stats = new java.util.HashMap<>();
-            stats.put("active", active);   // visitors on campus now
-            stats.put("total", entries);   // total entries today (shown as ENTRIES)
+            stats.put("active", active);   // currently inside (entered, not yet exited)
+            stats.put("total",  entries);  // total entries today
             stats.put("exited", exited);   // total exits today
             stats.put("success", true);
             return ResponseEntity.ok(stats);
