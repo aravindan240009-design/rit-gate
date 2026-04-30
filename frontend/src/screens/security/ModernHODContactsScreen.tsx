@@ -45,6 +45,8 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
 
   useEffect(() => {
     fetchHODs();
+    const interval = setInterval(fetchHODs, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

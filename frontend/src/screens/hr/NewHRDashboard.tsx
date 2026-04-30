@@ -103,7 +103,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
     loadRequests();
     loadNotifications(hr.hrCode, 'hr');
     loadExitLogs();
-    const interval = setInterval(() => { loadRequests(); loadExitLogs(); }, 10000);
+    const interval = setInterval(() => { loadRequests(true); loadExitLogs(); }, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -127,7 +127,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
 
   const fetchIdRef = React.useRef(0);
 
-  const loadRequests = async () => {
+  const loadRequests = async (silent = false) => {
     const myFetchId = ++fetchIdRef.current;
     try {
       const hrCode = hr.hrCode;

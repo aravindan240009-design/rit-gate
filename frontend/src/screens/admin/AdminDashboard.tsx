@@ -69,12 +69,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout, onNavi
   useEffect(() => {
     loadData();
     loadNotifications(admin.staffCode, 'staff');
-    const interval = setInterval(loadData, 10000);
+    const interval = setInterval(() => loadData(true), 10000);
     return () => clearInterval(interval);
   }, []);
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
-  const loadData = async () => {
+  const loadData = async (silent = false) => {
     try {
       const res = await apiService.getVisitorRequestsForStaff(admin.staffCode);
       const all: any[] = res.requests || [];

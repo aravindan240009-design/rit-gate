@@ -55,7 +55,11 @@ const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => { fetchVisitors(); }, []);
+  useEffect(() => {
+    fetchVisitors();
+    const interval = setInterval(fetchVisitors, 10000);
+    return () => clearInterval(interval);
+  }, []);
   useEffect(() => { applyFilter(); }, [selectedFilter, visitors]);
 
   const resolvedSecurityId = security.securityId || (security as any).userId || '';

@@ -91,7 +91,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
   useEffect(() => {
     loadRequests();
     loadNotifications(hod.hodCode, 'hod');
-    const interval = setInterval(loadRequests, 10000);
+    const interval = setInterval(() => loadRequests(true), 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -104,9 +104,9 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
 
   const fetchIdRef = React.useRef(0);
 
-  const loadRequests = async () => {
+  const loadRequests = async (silent = false) => {
     const myFetchId = ++fetchIdRef.current;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const [gatePassResponse, visitorRequests] = await Promise.all([
         apiService.getAllHODRequests(hod.hodCode),

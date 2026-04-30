@@ -62,14 +62,14 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
   useEffect(() => {
     loadGateLogs();
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { onBack(); return true; });
-    const interval = setInterval(() => loadGateLogs(fromDate || undefined, toDate || undefined), 30000);
+    const interval = setInterval(() => loadGateLogs(fromDate || undefined, toDate || undefined, true), 30000);
     return () => { sub.remove(); clearInterval(interval); };
   }, []);
 
-  const loadGateLogs = async (rangeFrom?: string, rangeTo?: string) => {
+  const loadGateLogs = async (rangeFrom?: string, rangeTo?: string, silent = false) => {
     // Increment sequence so any in-flight older fetch is ignored
     const seq = ++fetchSeqRef.current;
-    setLoading(true);
+    if (!silent) setLoading(true);
     setFetchError(null);
     try {
       const response = await apiService.getAdminGateLogs(rangeFrom, rangeTo);

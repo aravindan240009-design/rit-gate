@@ -56,9 +56,10 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
 
   const fetchIdRef = React.useRef(0);
 
-  const fetchRequests = async () => {
+  const fetchRequests = async (silent = false) => {
     const myFetchId = ++fetchIdRef.current;
     try {
+      if (!silent) setLoading(true);
       const res = await apiService.getNonClassInchargeOwnRequests(user.staffCode);
       if (myFetchId !== fetchIdRef.current) return;
       const all: any[] = (res as any).requests || res.data || [];
@@ -79,14 +80,13 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
 
   useEffect(() => {
     fetchRequests();
-    const interval = setInterval(fetchRequests, 5000);
+    const interval = setInterval(() => fetchRequests(true), 5000);
     return () => clearInterval(interval);
   }, []);
 
   const onRefresh = useCallback(() => {
     console.log('🔄 [REFRESH] NCI/MyRequests');
     setRefreshing(true);
-    setLoading(true);
     fetchRequests();
   }, []);
 

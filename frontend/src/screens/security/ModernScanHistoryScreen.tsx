@@ -94,7 +94,8 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   const [selectedVehicle, setSelectedVehicle] = useState<any | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [scansLoading, setScansLoading] = useState(true);
+  const [vehiclesLoading, setVehiclesLoading] = useState(true);
   const [rangePickerPage, setRangePickerPage] = useState(false);
   const [fromDate, setFromDate] = useState<Date | null>(null);
   const [toDate, setToDate] = useState<Date | null>(null);
@@ -121,15 +122,15 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
     loadScanHistory();
     loadVehicleHistory();
     const interval = setInterval(() => {
-      loadScanHistory();
-      loadVehicleHistory();
+      loadScanHistory(true);
+      loadVehicleHistory(true);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const loadScanHistory = async () => {
+  const loadScanHistory = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setScansLoading(true);
       const response = await apiService.getScanHistory(security.securityId);
       if (response.success && response.data) {
         const mappedData = response.data.map((scan: any) => {
@@ -138,10 +139,10 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           // For exit-only records (RailwayExitLog), backend sets both entryTime and exitTime
           // to the same value with status="EXITED". Distinguish using status field.
           const isExitOnly = scan.status === 'EXITED' && inTime === outTime;
-          
+
           // Normalize name to handle "Visitor-null" or missing names
           let normalizedName = scan.name || scan.fullName || scan.studentName || scan.staffName;
-          
+
           if (!normalizedName || normalizedName === 'Visitor-null' || normalizedName.includes('-null')) {
             normalizedName = scan.type === 'VISITOR' ? 'Visitor' : (normalizedName || 'User');
           }
@@ -158,14 +159,14 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
     } catch (error) {
       console.error('Error loading scan history:', error);
     } finally {
-      setLoading(false);
+      setScansLoading(false);
       setRefreshing(false);
     }
   };
 
-  const loadVehicleHistory = async () => {
+  const loadVehicleHistory = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setVehiclesLoading(true);
       const response = await apiService.getVehicles();
       if (response.success && response.data) {
         setVehicles(response.data);
@@ -173,7 +174,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
     } catch (error) {
       console.error('Error loading vehicle history:', error);
     } finally {
-      setLoading(false);
+      setVehiclesLoading(false);
       setRefreshing(false);
     }
   };
@@ -948,8 +949,10 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           )}
         </View>
 
+        {activeTab === 'SCANS' && scansLoading && <SkeletonList count={6} />}
+        {activeTab === 'VEHICLES' && vehiclesLoading && <SkeletonList count={6} />}
         <VerticalFlatList
-          style={styles.content}
+          style={[styles.content, { display: (activeTab === 'SCANS' ? scansLoading : vehiclesLoading) ? 'none' : 'flex' }]}
           showsVerticalScrollIndicator={false}
           decelerationRate="normal"
           data={activeTab === 'SCANS' ? filteredScans : filteredVehicles}
@@ -1063,18 +1066,16 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             }
           }}
           ListEmptyComponent={
-            loading ? <SkeletonList count={5} /> : (
             <View style={styles.emptyState}>
-              <Ionicons 
-                name={activeTab === 'SCANS' ? "time-outline" : "car-outline"} 
-                size={64} 
-                color={theme.border} 
+              <Ionicons
+                name={activeTab === 'SCANS' ? "time-outline" : "car-outline"}
+                size={64}
+                color={theme.border}
               />
               <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
                 No {activeTab === 'SCANS' ? 'scan' : 'vehicle'} records found
               </ThemedText>
             </View>
-            )
           }
         />
       </ScreenContentContainer>

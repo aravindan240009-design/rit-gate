@@ -63,16 +63,16 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   useEffect(() => {
     loadData();
     loadNotifications(ntf.staffCode, 'staff');
-    const interval = setInterval(loadData, 10000);
+    const interval = setInterval(() => loadData(true), 10000);
     return () => clearInterval(interval);
   }, []);
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
   const fetchIdRef = React.useRef(0);
 
-  const loadData = async () => {
+  const loadData = async (silent = false) => {
     const myFetchId = ++fetchIdRef.current;
-    setLoading(true);
+    if (!silent) setLoading(true);
     try {
       const res = await apiService.getVisitorRequestsForStaff(ntf.staffCode);
       if (myFetchId !== fetchIdRef.current) return;

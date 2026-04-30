@@ -96,15 +96,15 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
     loadEscalatedVisitors();
     loadNotifications(user.securityId, 'security');
 
-    // Poll for new escalated visitors every 30 seconds
+    // Poll for new escalated visitors every 10 seconds
     const pollInterval = setInterval(() => {
       loadEscalatedVisitors();
-    }, 30000);
+    }, 10000);
 
-    // Refresh stats every 60 seconds (catches gate pass exits)
+    // Refresh stats every 10 seconds (catches gate pass exits)
     const statsInterval = setInterval(() => {
       loadDashboardData();
-    }, 60000);
+    }, 10000);
 
     // Reset at midnight — schedule a reload at next midnight
     const now = new Date();
