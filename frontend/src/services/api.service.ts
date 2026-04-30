@@ -721,11 +721,11 @@ class ApiService {
     catch (e: any) { return { success: false, message: e.message || 'Failed to scan late entry' }; }
   }
 
-  async manualExit(personName: string, scannedBy?: string, userId?: string, scanId?: number, purpose?: string): Promise<ApiResponse> {
+  async manualExit(personName: string, scannedBy?: string, userId?: string, scanId?: number, purpose?: string, userType?: string): Promise<ApiResponse> {
     try {
       const data = await this.makeRequest(`${this.baseURL}/security/manual-exit`, {
         method: 'POST',
-        body: JSON.stringify({ personName, scannedBy, userId, scanId, purpose }),
+        body: JSON.stringify({ personName, scannedBy, userId, scanId, purpose, userType }),
       });
       // Backend returns { status: "SUCCESS", message: "..." } — normalize to { success: true }
       const ok = data.success === true || data.status === 'SUCCESS';

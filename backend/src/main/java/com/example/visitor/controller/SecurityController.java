@@ -35,6 +35,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -1918,6 +1919,71 @@ public class SecurityController {
                 });
 
             System.out.println("Fetched " + activePersons.size() + " active visitors (PENDING only)");
+
+            // ── EVENT passes: entered today but not yet exited ────────────────────────
+            try {
+                LocalDateTime todayStart = java.time.LocalDate.now().atStartOfDay();
+                LocalDateTime todayEnd   = java.time.LocalDate.now().atTime(java.time.LocalTime.MAX);
+
+                // Collect EVENT user IDs that already have an exit record today
+                java.util.Set<String> exitedEventIds = new java.util.HashSet<>();
+                for (com.example.visitor.entity.RailwayExitLog exitLog : railwayExitLogRepository.findAll()) {
+                    if ("EVENT".equalsIgnoreCase(exitLog.getUserType()) && exitLog.getUserId() != null) {
+                        exitedEventIds.add(exitLog.getUserId());
+                    }
+                }
+
+                List<com.example.visitor.entity.RailwayEntry> eventEntries =
+                    railwayEntryRepository.findByTimestampBetweenOrderByTimestampDesc(todayStart, todayEnd)
+                        .stream()
+                        .filter(e -> "EVENT".equalsIgnoreCase(e.getUserType()))
+                        .filter(e -> e.getUserId() != null && !exitedEventIds.contains(e.getUserId()))
+                        .collect(java.util.stream.Collectors.toList());
+
+                for (com.example.visitor.entity.RailwayEntry entry : eventEntries) {
+                    String passIdStr = entry.getUserId();
+                    java.util.Map<String, Object> person = new java.util.HashMap<>();
+                    person.put("id",      passIdStr);
+                    person.put("userId",  passIdStr);
+                    person.put("type",    "EVENT");
+                    person.put("status",  "PENDING");
+                    person.put("inTime",  entry.getTimestamp().toString());
+                    person.put("outTime", null);
+
+                    // Enrich with EventPass details
+                    String personName = entry.getPersonName();
+                    String dept       = entry.getDepartment();
+                    String eventName  = "Event";
+                    try {
+                        Long epId = Long.parseLong(passIdStr);
+                        Optional<com.example.visitor.entity.EventPass> epOpt = eventPassRepository.findById(epId);
+                        if (epOpt.isPresent()) {
+                            com.example.visitor.entity.EventPass ep = epOpt.get();
+                            if (ep.getFullName() != null) personName = ep.getFullName();
+                            if (ep.getDepartment() != null) dept = ep.getDepartment();
+                            else if (ep.getCollegeName() != null) dept = ep.getCollegeName();
+                            person.put("collegeName", ep.getCollegeName());
+                            person.put("phone",       ep.getPhone());
+                            person.put("email",       ep.getEmail());
+                            person.put("isEventPass", true);
+                            // Resolve event name
+                            Optional<com.example.visitor.entity.Event> evtOpt = eventRepository.findById(ep.getEventId());
+                            if (evtOpt.isPresent()) eventName = evtOpt.get().getEventName();
+                        }
+                    } catch (Exception ignored) {}
+
+                    person.put("name",       personName != null ? personName : "Event Participant");
+                    person.put("department", dept != null ? dept : "");
+                    person.put("purpose",    eventName);
+                    person.put("eventName",  eventName);
+                    activePersons.add(person);
+                }
+                System.out.println("Added " + eventEntries.size() + " active EVENT participants");
+            } catch (Exception evEx) {
+                System.err.println("⚠️ Could not load active event participants: " + evEx.getMessage());
+            }
+
+            System.out.println("Fetched " + activePersons.size() + " total active persons (PENDING only)");
             return ResponseEntity.ok(activePersons);
         } catch (Exception e) {
             System.err.println("Error fetching active persons: " + e.getMessage());
@@ -3060,7 +3126,7 @@ public class SecurityController {
         }
     }
     
-    // Manual Exit Endpoint - Record exit manually for a visitor (when exit QR scan was missed)
+    // Manual Exit Endpoint - Record exit manually for a visitor or event participant
     @PostMapping("/manual-exit")
     @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<?> recordManualExit(@RequestBody java.util.Map<String, Object> request) {
@@ -3069,6 +3135,7 @@ public class SecurityController {
             String scannedBy  = (String) request.get("scannedBy");
             Object userIdRaw  = request.get("userId");
             Object scanIdRaw  = request.get("scanId");
+            String userType   = (String) request.get("userType"); // optional hint
 
             if ((personName == null || personName.trim().isEmpty()) && userIdRaw == null && scanIdRaw == null) {
                 return ResponseEntity.badRequest().body(java.util.Map.of(
@@ -3077,7 +3144,99 @@ public class SecurityController {
                 ));
             }
 
-            System.out.println("🚪 Manual exit request - Name: " + personName + ", UserId: " + userIdRaw + ", ScanId: " + scanIdRaw);
+            System.out.println("🚪 Manual exit request - Name: " + personName + ", UserId: " + userIdRaw + ", ScanId: " + scanIdRaw + ", UserType: " + userType);
+
+            // ── EVENT PASS manual exit ────────────────────────────────────────────────
+            // Detect EVENT type: either explicit userType hint, or userId maps to an EventPass row
+            boolean isEvent = "EVENT".equalsIgnoreCase(userType);
+            if (!isEvent && userIdRaw != null) {
+                try {
+                    Long epId = Long.parseLong(userIdRaw.toString());
+                    isEvent = eventPassRepository.existsById(epId)
+                        && railwayEntryRepository.findByTimestampBetweenOrderByTimestampDesc(
+                                java.time.LocalDate.now().atStartOfDay(),
+                                java.time.LocalDate.now().atTime(java.time.LocalTime.MAX))
+                            .stream()
+                            .anyMatch(e -> "EVENT".equalsIgnoreCase(e.getUserType())
+                                && userIdRaw.toString().equals(e.getUserId()));
+                } catch (Exception ignored) {}
+            }
+
+            if (isEvent && userIdRaw != null) {
+                try {
+                    Long epId = Long.parseLong(userIdRaw.toString());
+                    Optional<com.example.visitor.entity.EventPass> epOpt = eventPassRepository.findById(epId);
+                    if (epOpt.isEmpty()) {
+                        return ResponseEntity.status(404).body(java.util.Map.of(
+                            "status", "ERROR",
+                            "message", "Event pass not found"
+                        ));
+                    }
+                    com.example.visitor.entity.EventPass ep = epOpt.get();
+
+                    // Already exited?
+                    if ("EXITED".equals(ep.getStatus())) {
+                        return ResponseEntity.badRequest().body(java.util.Map.of(
+                            "status", "ERROR",
+                            "message", "This event participant has already exited"
+                        ));
+                    }
+
+                    java.time.LocalDateTime exitTime = java.time.LocalDateTime.now();
+
+                    // Update EventPass
+                    ep.setStatus("EXITED");
+                    ep.setExitScannedAt(exitTime);
+                    ep.setExitReason("MANUAL_EXIT");
+                    eventPassRepository.save(ep);
+
+                    // Resolve event name for purpose
+                    String eventName = "Event";
+                    try {
+                        Optional<com.example.visitor.entity.Event> evtOpt = eventRepository.findById(ep.getEventId());
+                        if (evtOpt.isPresent()) eventName = evtOpt.get().getEventName();
+                    } catch (Exception ignored) {}
+
+                    // Write Exit_logs
+                    RailwayExitLog exitLog = new RailwayExitLog();
+                    exitLog.setUserId(epId.toString());
+                    exitLog.setUserType("EVENT");
+                    exitLog.setExitTime(exitTime);
+                    exitLog.setVerifiedBy(scannedBy != null ? scannedBy : "Security Guard (Manual)");
+                    exitLog.setLocation("Exit Gate (Manual)");
+                    exitLog.setScanLocation("Exit Gate (Manual)");
+                    exitLog.setAccessGranted(true);
+                    exitLog.setPurpose(eventName);
+                    exitLog.setPersonName(ep.getFullName());
+                    exitLog.setDepartment(ep.getDepartment() != null ? ep.getDepartment() : ep.getCollegeName());
+                    exitLog.setPhone(ep.getPhone());
+                    exitLog.setEmail(ep.getEmail());
+                    railwayExitLogRepository.save(exitLog);
+
+                    // Clean up QR table row if still present
+                    if (ep.getQrString() != null) {
+                        qrTableRepository.findByQrString(ep.getQrString()).ifPresent(qrTableRepository::delete);
+                    }
+
+                    System.out.println("✅ Manual exit recorded for event participant: " + ep.getFullName());
+
+                    java.util.Map<String, Object> resp = new java.util.HashMap<>();
+                    resp.put("status",     "SUCCESS");
+                    resp.put("success",    true);
+                    resp.put("message",    "Manual exit recorded successfully");
+                    resp.put("personName", ep.getFullName());
+                    resp.put("exitTime",   exitTime.format(java.time.format.DateTimeFormatter.ISO_DATE_TIME));
+                    return ResponseEntity.ok(resp);
+
+                } catch (Exception e) {
+                    System.err.println("❌ Error recording event manual exit: " + e.getMessage());
+                    return ResponseEntity.internalServerError().body(java.util.Map.of(
+                        "status", "ERROR",
+                        "message", "Failed to record event manual exit: " + e.getMessage()
+                    ));
+                }
+            }
+            // ── END EVENT PASS manual exit ────────────────────────────────────────────
 
             // ── Step 1: Find the specific entry record ──────────────────
             ScanLog entryScan = null;

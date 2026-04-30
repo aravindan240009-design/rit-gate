@@ -214,7 +214,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
   const handleManualExit = async (person: ActivePerson) => {
     try {
       lock('Marking exit for ' + person.name + '...');
-      const response = await apiService.manualExit(person.name, user.securityId, person.userId, person.scanId, person.purpose);
+      const response = await apiService.manualExit(person.name, user.securityId, person.userId, person.scanId, person.purpose, person.type);
       if (response.success) {
         // Optimistically remove from list immediately
         setActivePersons(prev => prev.filter(p => p.id !== person.id));
