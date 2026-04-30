@@ -137,13 +137,19 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         r.status === 'PENDING_HOD' || ((r.passType === 'VISITOR' || r.sourceType === 'VISITOR') && r.status === 'PENDING')
       ).length;
 
-      const approved = incomingOnly.filter((r: any) =>
-        r.status === 'APPROVED'
-      ).length;
+      // For gate pass requests, use hodApproval to determine approved/rejected counts
+      // since status moves to PENDING_HR after HOD approves (not APPROVED)
+      const approved = incomingOnly.filter((r: any) => {
+        const isVisitor = r.passType === 'VISITOR' || r.sourceType === 'VISITOR';
+        const effectiveStatus = isVisitor ? r.status : (r.hodApproval || r.status);
+        return effectiveStatus === 'APPROVED';
+      }).length;
 
-      const rejected = incomingOnly.filter((r: any) =>
-        r.status === 'REJECTED'
-      ).length;
+      const rejected = incomingOnly.filter((r: any) => {
+        const isVisitor = r.passType === 'VISITOR' || r.sourceType === 'VISITOR';
+        const effectiveStatus = isVisitor ? r.status : (r.hodApproval || r.status);
+        return effectiveStatus === 'REJECTED' || r.status === 'REJECTED';
+      }).length;
       setStats({ pending, approved, rejected });
     } catch (error) {
       if (myFetchId !== fetchIdRef.current) return;
@@ -177,14 +183,22 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       request.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.id?.toString().includes(searchQuery);
 
+    const isVisitorReq = request.passType === 'VISITOR' || request.sourceType === 'VISITOR';
+    // For gate pass requests, HOD approval is tracked in hodApproval field separately from
+    // the overall status (which moves to PENDING_HR after HOD approves). Use hodApproval
+    // for non-visitor requests so approved/rejected items show up correctly.
+    const effectiveStatus = isVisitorReq
+      ? request.status
+      : (request.hodApproval || request.status);
+
     let matchesTab = false;
     if (activeTab === 'PENDING') {
       matchesTab = request.status === 'PENDING_HOD' ||
-        ((request.passType === 'VISITOR' || request.sourceType === 'VISITOR') && request.status === 'PENDING');
+        (isVisitorReq && request.status === 'PENDING');
     } else if (activeTab === 'APPROVED') {
-      matchesTab = request.status === 'APPROVED';
+      matchesTab = effectiveStatus === 'APPROVED';
     } else if (activeTab === 'REJECTED') {
-      matchesTab = request.status === 'REJECTED';
+      matchesTab = effectiveStatus === 'REJECTED' || request.status === 'REJECTED';
     }
     return matchesSearch && matchesTab;
   });
