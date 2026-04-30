@@ -111,9 +111,11 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
       console.log('📥 [MODERN] API Response:', JSON.stringify(response));
 
       if (response.success || (response as any).status === 'SUCCESS' || (response as any).status === 'APPROVED') {
-        // Backend tells us if it was entry or exit via scanLocation or type
+        // Backend tells us if it was entry or exit via scanType (preferred) or scanLocation
         const data_resp = response.data || response;
-        const isExit = (data_resp?.scanLocation || '').toLowerCase().includes('exit');
+        const scanType = (data_resp?.scanType || '').toUpperCase();
+        const scanLocation = (data_resp?.scanLocation || '').toLowerCase();
+        const isExit = scanType === 'EXIT' || scanLocation.includes('exit');
         const isLateEntry = !isExit && (isQRFormat === false && is6DigitCode === false);
         const scanLabel = isExit ? 'Exit' : isLateEntry ? 'Late Entry' : 'Entry';
         setModalTitle(`✅ ${scanLabel} Recorded`);
@@ -185,7 +187,9 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
 
       if (response.success || (response as any).status === 'SUCCESS' || (response as any).status === 'APPROVED') {
         const data_resp = response.data || response;
-        const isExit = (data_resp?.scanLocation || '').toLowerCase().includes('exit');
+        const scanType = (data_resp?.scanType || '').toUpperCase();
+        const scanLocation = (data_resp?.scanLocation || '').toLowerCase();
+        const isExit = scanType === 'EXIT' || scanLocation.includes('exit');
         const scanLabel = isExit ? 'Exit' : 'Entry';
         setModalTitle(`✅ ${scanLabel} Recorded`);
         setModalMessage(response.message || `${scanLabel} recorded successfully`);
