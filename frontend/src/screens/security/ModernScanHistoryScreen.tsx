@@ -123,7 +123,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
     const interval = setInterval(() => {
       loadScanHistory();
       loadVehicleHistory();
-    }, 30000);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
