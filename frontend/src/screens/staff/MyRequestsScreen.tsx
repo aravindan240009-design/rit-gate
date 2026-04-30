@@ -18,7 +18,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShortLocal, formatDateTimeIST, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
+import { formatDateTimeShortLocal, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import BottomNavBar from '../../components/BottomNavBar';
 import PageHeader from '../../components/PageHeader';
 
@@ -119,7 +119,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
   };
 
   const formatDate = (dateString: string, isBulk = false) => {
-    return isBulk ? formatDateTimeIST(dateString) : formatDateTimeShortLocal(dateString);
+    return formatDateTimeShortLocal(dateString);
   };
 
   const handleViewQR = async (request: any, isBulk: boolean = false) => {

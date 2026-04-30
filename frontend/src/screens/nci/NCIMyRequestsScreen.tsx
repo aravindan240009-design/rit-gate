@@ -13,7 +13,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { formatDateTimeShortLocal, formatDateTimeIST, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
+import { formatDateTimeShortLocal, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import BottomNavBar from '../../components/BottomNavBar';
 import PageHeader from '../../components/PageHeader';
 
@@ -92,7 +92,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
     return { text: 'PENDING', bgColor: theme.warning };
   };
 
-  const formatDate = (d: string, isBulk = false) => isBulk ? formatDateTimeIST(d) : formatDateTimeShortLocal(d);
+  const formatDate = (d: string, isBulk = false) => formatDateTimeShortLocal(d);
   const getTimeAgo = (d: string) => getRelativeTimeLocal(d);
 
   const handleViewQR = async (req: any) => {
