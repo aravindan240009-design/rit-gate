@@ -780,18 +780,8 @@ public class SecurityController {
                         evPass.setExitScannedAt(LocalDateTime.now());
                         eventPassRepository.save(evPass);
 
-                        // Write exit log
-                        RailwayExitLog exitLog = new RailwayExitLog();
-                        exitLog.setUserId(evPass.getId().toString());
-                        exitLog.setUserType("EVENT");
-                        exitLog.setExitTime(LocalDateTime.now());
-                        exitLog.setVerifiedBy("Security Guard");
-                        exitLog.setLocation("Exit Gate");
-                        exitLog.setQrCode(qrCode);
-                        exitLog.setScanLocation("Exit Gate");
-                        exitLog.setAccessGranted(true);
-                        exitLog.setPurpose(finalEventName);
-                        railwayExitLogRepository.save(exitLog);
+                        // Exit is tracked in EventPass table (exitScannedAt + status=EXITED)
+                        // No separate Exit_logs entry needed for event passes.
 
                         qrTableRepository.delete(qrTable);
 
