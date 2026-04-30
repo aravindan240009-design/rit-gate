@@ -539,8 +539,26 @@ public class SecurityController {
                         accessGranted = true;
                         scanLocation = "Entry Gate";
                         
-                        // Create entry record (ScanLog will also save to this table in Step 7)
-                        // Skipping redundant railwayEntryRepository.save here
+                        // Write to Entry table — unified entry log for all user types
+                        // Resolve visitor name/department for the log
+                        final String[] vgEntryName = {"Visitor"};
+                        final String[] vgEntryDept = {null};
+                        try {
+                            Long visitorId = Long.parseLong(userId);
+                            visitorRepository.findById(visitorId).ifPresent(v -> {
+                                vgEntryName[0] = v.getName() != null ? v.getName() : "Visitor";
+                                vgEntryDept[0] = v.getDepartment() != null ? v.getDepartment() : v.getRole();
+                            });
+                        } catch (Exception ignored) {}
+                        RailwayEntry vgEntryLog = new RailwayEntry();
+                        vgEntryLog.setUserType("VISITOR");
+                        vgEntryLog.setUserId(userId);
+                        vgEntryLog.setPersonName(vgEntryName[0]);
+                        vgEntryLog.setDepartment(vgEntryDept[0]);
+                        vgEntryLog.setScannedBy("Security Guard");
+                        vgEntryLog.setScanLocation("Entry Gate");
+                        vgEntryLog.setTimestamp(LocalDateTime.now());
+                        railwayEntryRepository.save(vgEntryLog);
                         
                         System.out.println("✅ VG ENTRY details captured, will save to ScanLog in Step 7");
                         
@@ -741,6 +759,17 @@ public class SecurityController {
                         evPass.setEntryScannedAt(LocalDateTime.now());
                         eventPassRepository.save(evPass);
 
+                        // Write to Entry table — unified entry log for all user types
+                        RailwayEntry evEntryLog = new RailwayEntry();
+                        evEntryLog.setUserType("EVENT");
+                        evEntryLog.setUserId(evPass.getId().toString());
+                        evEntryLog.setPersonName(evPass.getFullName());
+                        evEntryLog.setDepartment(evPass.getDepartment() != null ? evPass.getDepartment() : evPass.getCollegeName());
+                        evEntryLog.setScannedBy("Security Guard");
+                        evEntryLog.setScanLocation("Entry Gate");
+                        evEntryLog.setTimestamp(LocalDateTime.now());
+                        railwayEntryRepository.save(evEntryLog);
+
                         System.out.println("✅ EV ENTRY APPROVED — " + evPass.getFullName());
 
                         return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
@@ -780,8 +809,22 @@ public class SecurityController {
                         evPass.setExitScannedAt(LocalDateTime.now());
                         eventPassRepository.save(evPass);
 
-                        // Exit is tracked in EventPass table (exitScannedAt + status=EXITED)
-                        // No separate Exit_logs entry needed for event passes.
+                        // Write to Exit_logs table — unified exit log for all user types
+                        RailwayExitLog exitLog = new RailwayExitLog();
+                        exitLog.setUserId(evPass.getId().toString());
+                        exitLog.setUserType("EVENT");
+                        exitLog.setExitTime(LocalDateTime.now());
+                        exitLog.setVerifiedBy("Security Guard");
+                        exitLog.setLocation("Exit Gate");
+                        exitLog.setQrCode(qrCode);
+                        exitLog.setScanLocation("Exit Gate");
+                        exitLog.setAccessGranted(true);
+                        exitLog.setPurpose(finalEventName);
+                        exitLog.setPersonName(evPass.getFullName());
+                        exitLog.setDepartment(evPass.getDepartment() != null ? evPass.getDepartment() : evPass.getCollegeName());
+                        exitLog.setPhone(evPass.getPhone());
+                        exitLog.setEmail(evPass.getEmail());
+                        railwayExitLogRepository.save(exitLog);
 
                         qrTableRepository.delete(qrTable);
 
