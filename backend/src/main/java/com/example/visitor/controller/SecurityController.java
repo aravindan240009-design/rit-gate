@@ -2290,57 +2290,66 @@ public class SecurityController {
                 scanHistory.add(rec);
             }
 
-            // ── Part 3: Event passes (ENTERED or EXITED) ──────────────────────────────
+            // ── Part 3: Enrich EVENT records from Entry/Exit_logs with EventPass metadata ──
+            // Entry and Exit_logs are now the single source of truth for EVENT scans.
+            // We enrich them with eventName/collegeName from the EventPass table.
             try {
-                List<com.example.visitor.entity.EventPass> evPasses = eventPassRepository.findAll();
-                for (com.example.visitor.entity.EventPass ep : evPasses) {
-                    if (!"ENTERED".equals(ep.getStatus()) && !"EXITED".equals(ep.getStatus())) continue;
-                    String eventName = "Event";
+                for (java.util.Map<String, Object> rec : scanHistory) {
+                    if (!"EVENT".equals(rec.get("type"))) continue;
+                    String epIdStr = (String) rec.get("id");
+                    if (epIdStr == null || epIdStr.isBlank()) continue;
                     try {
-                        eventRepository.findById(ep.getEventId()).ifPresent(evt -> {});
-                        Optional<com.example.visitor.entity.Event> evtOpt = eventRepository.findById(ep.getEventId());
-                        if (evtOpt.isPresent()) eventName = evtOpt.get().getEventName();
+                        Long epId = Long.parseLong(epIdStr);
+                        eventPassRepository.findById(epId).ifPresent(ep -> {
+                            rec.put("name",       ep.getFullName());
+                            rec.put("collegeName", ep.getCollegeName());
+                            rec.put("phone",      ep.getPhone());
+                            rec.put("email",      ep.getEmail());
+                            rec.put("isEventPass", true);
+                            // Resolve event name for purpose if not already set
+                            String storedPurpose = (String) rec.get("purpose");
+                            if (storedPurpose == null || storedPurpose.isBlank() || "Gate Pass Exit".equals(storedPurpose)) {
+                                try {
+                                    eventRepository.findById(ep.getEventId()).ifPresent(evt ->
+                                        rec.put("purpose", evt.getEventName())
+                                    );
+                                } catch (Exception ignored) {}
+                            }
+                            // For ENTERED records: pull entryTime from EventPass
+                            if ("ENTERED".equals(rec.get("status")) && ep.getEntryScannedAt() != null) {
+                                rec.put("entryTime", ep.getEntryScannedAt().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME));
+                            }
+                            // For EXITED records: pull entryTime from EventPass so both times show
+                            if ("EXITED".equals(rec.get("status")) && ep.getEntryScannedAt() != null) {
+                                rec.put("entryTime", ep.getEntryScannedAt().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME));
+                            }
+                        });
                     } catch (Exception ignored) {}
-                    java.util.Map<String, Object> rec = new java.util.HashMap<>();
-                    rec.put("id",        ep.getId().toString());
-                    rec.put("name",      ep.getFullName());
-                    rec.put("type",      "EVENT");
-                    rec.put("collegeName", ep.getCollegeName());
-                    rec.put("eventName", eventName);
-                    rec.put("isBulkPass", false);
-                    rec.put("isEventPass", true);
-                    rec.put("purpose",   eventName);
-                    rec.put("department","");
-                    if ("ENTERED".equals(ep.getStatus())) {
-                        rec.put("status",    "ENTERED");
-                        rec.put("entryTime", ep.getEntryScannedAt() != null ? ep.getEntryScannedAt().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME) : null);
-                        rec.put("exitTime",  null);
-                    } else {
-                        rec.put("status",    "EXITED");
-                        rec.put("entryTime", ep.getEntryScannedAt() != null ? ep.getEntryScannedAt().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME) : null);
-                        rec.put("exitTime",  ep.getExitScannedAt() != null ? ep.getExitScannedAt().format(java.time.format.DateTimeFormatter.ISO_DATE_TIME) : null);
-                    }
-                    scanHistory.add(rec);
                 }
             } catch (Exception evEx) {
-                System.err.println("⚠️ Could not load event passes for scan history: " + evEx.getMessage());
+                System.err.println("⚠️ Could not enrich event scan history: " + evEx.getMessage());
             }
 
-            // ── Deduplicate: for visitors with an exit record, remove the separate entry record ──
-            // Build a set of visitor IDs that have an exit record
-            java.util.Set<String> exitedVisitorIds = new java.util.HashSet<>();
+            // ── Deduplicate: for users with an exit record, remove the separate entry-only record ──
+            // This applies to VISITOR and EVENT — both now write to Entry on entry and Exit_logs on exit.
+            java.util.Set<String> exitedIds = new java.util.HashSet<>();
             for (java.util.Map<String, Object> rec : scanHistory) {
-                if ("EXITED".equals(rec.get("status")) && "VISITOR".equals(rec.get("type"))) {
-                    String vid = (String) rec.get("id");
-                    if (vid != null && !vid.isBlank()) exitedVisitorIds.add(vid);
+                if ("EXITED".equals(rec.get("status"))) {
+                    String t = (String) rec.get("type");
+                    if ("VISITOR".equals(t) || "EVENT".equals(t)) {
+                        String vid = (String) rec.get("id");
+                        if (vid != null && !vid.isBlank()) exitedIds.add(t + ":" + vid);
+                    }
                 }
             }
-            // Remove entry-only records for those visitor IDs (they are merged into the exit record)
-            scanHistory.removeIf(rec ->
-                "ENTERED".equals(rec.get("status")) &&
-                "VISITOR".equals(rec.get("type")) &&
-                exitedVisitorIds.contains(rec.get("id"))
-            );
+            // Remove entry-only records for those IDs (they are merged into the exit record)
+            scanHistory.removeIf(rec -> {
+                if (!"ENTERED".equals(rec.get("status"))) return false;
+                String t = (String) rec.get("type");
+                if (!"VISITOR".equals(t) && !"EVENT".equals(t)) return false;
+                String vid = (String) rec.get("id");
+                return vid != null && exitedIds.contains(t + ":" + vid);
+            });
 
             // ── Sort newest first ─────────────────────────────────────────────────────
             scanHistory.sort((a, b) -> {
