@@ -393,6 +393,25 @@ public class SecurityController {
                     put("type", "UNKNOWN");
                 }});
             }
+
+            // Step 3.2: For EVENT passes — block use before the event date (not-yet-valid check)
+            // qrExpiresAt = event_date 23:59:59 IST, so valid window is event_date 00:00:00 → 23:59:59
+            if ("EV".equals(userType) && qrTable.getQrExpiresAt() != null) {
+                java.time.ZoneId ist = java.time.ZoneId.of("Asia/Kolkata");
+                java.time.LocalDate eventDay = qrTable.getQrExpiresAt().toLocalDate(); // same date as expiry
+                java.time.LocalDate today    = java.time.LocalDate.now(ist);
+                if (today.isBefore(eventDay)) {
+                    return ResponseEntity.status(403).body(new java.util.HashMap<String, Object>() {{
+                        put("qrCode", qrCode);
+                        put("status", "DENIED");
+                        put("message", "This event pass is not valid yet. It can only be used on " + eventDay + ".");
+                        put("success", false);
+                        put("accessGranted", false);
+                        put("name", "Pass Not Active Yet");
+                        put("type", "EVENT");
+                    }});
+                }
+            }
             if ("VG".equals(userType) && ("null".equals(userId) || userId == null)) {
                 if (qrTable.getPassRequestId() != null) {
                     userId = qrTable.getPassRequestId().toString();
