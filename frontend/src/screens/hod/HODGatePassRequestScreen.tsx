@@ -8,7 +8,9 @@ import {
   StatusBar,
   Animated,
   ActivityIndicator,
-  Image
+  Image,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ImagePicker from '../../utils/safeImagePicker';
@@ -29,9 +31,18 @@ interface HODGatePassRequestScreenProps {
   onBack?: () => void;
 }
 
+const PURPOSE_OPTIONS = [
+  'Medical Appointment',
+  'Family Emergency',
+  'Official Meeting / Conference',
+  'Personal Work',
+  'Pre-Approved Visitor / Campus Visit',
+];
+
 const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ user, onBack }) => {
   const { theme, isDark } = useTheme();
   const [purpose, setPurpose] = useState('');
+  const [showPurposePicker, setShowPurposePicker] = useState(false);
   const [reason, setReason] = useState('');
   const [attachment, setAttachment] = useState<{ name: string; base64Uri: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -152,13 +163,35 @@ const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ use
           {/* Purpose */}
           <View style={styles.formSection}>
             <ThemedText style={[styles.label, { color: theme.textSecondary }]}>PURPOSE</ThemedText>
-            <TextInput
-              style={[styles.purposeInput, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
-              placeholder="e.g. Conference, Official Meeting..."
-              placeholderTextColor={theme.textTertiary}
-              value={purpose}
-              onChangeText={setPurpose}
-            />
+            <TouchableOpacity
+              style={[styles.purposeInput, { backgroundColor: theme.surface, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }]}
+              onPress={() => setShowPurposePicker(true)}
+            >
+              <ThemedText style={[{ flex: 1, fontSize: 14, fontWeight: '500', color: purpose ? theme.text : theme.textTertiary }]}>
+                {purpose || 'Select purpose'}
+              </ThemedText>
+              <Ionicons name="chevron-down" size={18} color={theme.textSecondary} />
+            </TouchableOpacity>
+            <Modal visible={showPurposePicker} transparent animationType="fade" onRequestClose={() => setShowPurposePicker(false)}>
+              <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowPurposePicker(false)}>
+                <View style={[styles.modalSheet, { backgroundColor: theme.surface }]}>
+                  <ThemedText style={[styles.modalTitle, { color: theme.text }]}>Select Purpose</ThemedText>
+                  <FlatList
+                    data={PURPOSE_OPTIONS}
+                    keyExtractor={item => item}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={[styles.modalOption, { borderBottomColor: theme.border }, purpose === item && { backgroundColor: theme.primary + '18' }]}
+                        onPress={() => { setPurpose(item); setShowPurposePicker(false); }}
+                      >
+                        <ThemedText style={[styles.modalOptionText, { color: theme.text }, purpose === item && { color: theme.primary, fontWeight: '700' }]}>{item}</ThemedText>
+                        {purpose === item && <Ionicons name="checkmark" size={18} color={theme.primary} />}
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
+              </TouchableOpacity>
+            </Modal>
           </View>
 
           {/* Reason */}
@@ -285,6 +318,11 @@ const styles = StyleSheet.create({
   btnGradient: { paddingVertical: 15, alignItems: 'center', justifyContent: 'center' },
   btnContent: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   submitText: { color: '#FFF', fontSize: 15, fontWeight: '800', letterSpacing: 0.8 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 16, paddingBottom: 32, maxHeight: '60%' },
+  modalTitle: { fontSize: 14, fontWeight: '700', textAlign: 'center', marginBottom: 8, paddingHorizontal: 16 },
+  modalOption: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
+  modalOptionText: { flex: 1, fontSize: 14 },
 });
 
 export default HODGatePassRequestScreen;

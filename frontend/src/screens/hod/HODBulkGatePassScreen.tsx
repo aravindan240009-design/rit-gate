@@ -88,11 +88,20 @@ const Dropdown = ({ label, value, options, onSelect, placeholder }: {
   );
 };
 
+const PURPOSE_OPTIONS = [
+  'Medical Appointment',
+  'Family Emergency',
+  'Official Meeting / Conference',
+  'Personal Work',
+  'Pre-Approved Visitor / Campus Visit',
+];
+
 const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, navigation, onBack }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [viewMode, setViewMode] = useState<ViewMode>('students');
   const [purpose, setPurpose] = useState('');
+  const [showPurposePicker, setShowPurposePicker] = useState(false);
   const [reason, setReason] = useState('');
   const [includeHOD, setIncludeHOD] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -478,7 +487,32 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
         <View style={[s.card, { backgroundColor: theme.surface }]}>
           <ThemedText style={[s.sectionTitle, { color: theme.text }]}>Gate Pass Details</ThemedText>
           <ThemedText style={[s.fieldLabel, { color: theme.textSecondary }]}>Purpose *</ThemedText>
-          <TextInput style={[s.input, { backgroundColor: theme.inputBackground, borderColor: theme.border, color: theme.text }]} placeholder="Enter purpose" placeholderTextColor={theme.textTertiary} value={purpose} onChangeText={setPurpose} />
+          <TouchableOpacity
+            style={[s.input, { backgroundColor: theme.inputBackground, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }]}
+            onPress={() => setShowPurposePicker(true)}
+          >
+            <ThemedText style={[{ flex: 1, fontSize: 14, color: purpose ? theme.text : theme.textTertiary }]}>
+              {purpose || 'Select purpose'}
+            </ThemedText>
+            <Ionicons name="chevron-down" size={18} color={theme.textSecondary} />
+          </TouchableOpacity>
+          <Modal visible={showPurposePicker} transparent animationType="fade" onRequestClose={() => setShowPurposePicker(false)}>
+            <TouchableOpacity style={s.modalOverlay} activeOpacity={1} onPress={() => setShowPurposePicker(false)}>
+              <View style={[s.modalSheet, { backgroundColor: theme.surface, paddingBottom: Math.max(insets.bottom, 20) }]}>
+                <ThemedText style={[s.modalTitle, { color: theme.text }]}>Select Purpose</ThemedText>
+                {PURPOSE_OPTIONS.map(item => (
+                  <TouchableOpacity
+                    key={item}
+                    style={[s.modalOption, { borderBottomColor: theme.border }, purpose === item && { backgroundColor: theme.primary + '18' }]}
+                    onPress={() => { setPurpose(item); setShowPurposePicker(false); }}
+                  >
+                    <ThemedText style={[s.modalOptionText, { color: theme.text }, purpose === item && { color: theme.primary, fontWeight: '700' }]}>{item}</ThemedText>
+                    {purpose === item && <Ionicons name="checkmark" size={18} color={theme.primary} />}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </Modal>
           <ThemedText style={[s.fieldLabel, { color: theme.textSecondary }]}>Reason *</ThemedText>
           <TextInput style={[s.input, { height: 90, textAlignVertical: 'top', paddingTop: 12, backgroundColor: theme.inputBackground, borderColor: theme.border, color: theme.text }]} placeholder="Describe the reason..." placeholderTextColor={theme.textTertiary} value={reason} onChangeText={setReason} multiline />
           <ThemedText style={[s.fieldLabel, { color: theme.textSecondary }]}>Attachment (Optional)</ThemedText>
@@ -631,6 +665,11 @@ const s = StyleSheet.create({
   submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#10B981', marginHorizontal: 16, marginTop: 16, paddingVertical: 16, borderRadius: 12, gap: 8 },
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 16, maxHeight: '60%' },
+  modalTitle: { fontSize: 14, fontWeight: '700', textAlign: 'center', marginBottom: 8, paddingHorizontal: 16 },
+  modalOption: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
+  modalOptionText: { flex: 1, fontSize: 14 },
 });
 
 export default HODBulkGatePassScreen;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, StyleSheet, TouchableOpacity, TextInput,
-  StatusBar, ActivityIndicator, ScrollView,
+  StatusBar, ActivityIndicator, ScrollView, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -18,9 +18,18 @@ interface HRSinglePassScreenProps {
   onBack: () => void;
 }
 
+const PURPOSE_OPTIONS = [
+  'Medical Appointment',
+  'Family Emergency',
+  'Official Meeting / Conference',
+  'Personal Work',
+  'Pre-Approved Visitor / Campus Visit',
+];
+
 const HRSinglePassScreen: React.FC<HRSinglePassScreenProps> = ({ hr, onBack }) => {
   const { theme } = useTheme();
   const [purpose, setPurpose] = useState('');
+  const [showPurposePicker, setShowPurposePicker] = useState(false);
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
@@ -123,16 +132,33 @@ const HRSinglePassScreen: React.FC<HRSinglePassScreenProps> = ({ hr, onBack }) =
         {/* Purpose */}
         <View style={styles.inputGroup}>
           <ThemedText style={[styles.label, { color: theme.textSecondary }]}>Purpose *</ThemedText>
-          <View style={[styles.inputWrap, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <TouchableOpacity
+            style={[styles.inputWrap, { backgroundColor: theme.surface, borderColor: theme.border }]}
+            onPress={() => setShowPurposePicker(true)}
+          >
             <Ionicons name="document-text-outline" size={18} color={theme.textTertiary} />
-            <TextInput
-              style={[styles.input, { color: theme.text }]}
-              placeholder="Enter purpose of exit"
-              placeholderTextColor={theme.textTertiary}
-              value={purpose}
-              onChangeText={setPurpose}
-            />
-          </View>
+            <ThemedText style={[styles.input, { color: purpose ? theme.text : theme.textTertiary }]}>
+              {purpose || 'Select purpose'}
+            </ThemedText>
+            <Ionicons name="chevron-down" size={18} color={theme.textSecondary} />
+          </TouchableOpacity>
+          <Modal visible={showPurposePicker} transparent animationType="fade" onRequestClose={() => setShowPurposePicker(false)}>
+            <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowPurposePicker(false)}>
+              <View style={[styles.modalSheet, { backgroundColor: theme.surface }]}>
+                <ThemedText style={[styles.modalTitle, { color: theme.text }]}>Select Purpose</ThemedText>
+                {PURPOSE_OPTIONS.map(item => (
+                  <TouchableOpacity
+                    key={item}
+                    style={[styles.modalOption, { borderBottomColor: theme.border }, purpose === item && { backgroundColor: theme.primary + '18' }]}
+                    onPress={() => { setPurpose(item); setShowPurposePicker(false); }}
+                  >
+                    <ThemedText style={[styles.modalOptionText, { color: theme.text }, purpose === item && { color: theme.primary, fontWeight: '700' }]}>{item}</ThemedText>
+                    {purpose === item && <Ionicons name="checkmark" size={18} color={theme.primary} />}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableOpacity>
+          </Modal>
         </View>
 
         {/* Reason */}
@@ -230,6 +256,11 @@ const styles = StyleSheet.create({
   textArea: { fontSize: 15, minHeight: 100 },
   submitBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, borderRadius: 14, marginTop: 8 },
   submitBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  modalSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 16, paddingBottom: 32, maxHeight: '60%' },
+  modalTitle: { fontSize: 14, fontWeight: '700', textAlign: 'center', marginBottom: 8, paddingHorizontal: 16 },
+  modalOption: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
+  modalOptionText: { flex: 1, fontSize: 14 },
 });
 
 export default HRSinglePassScreen;
