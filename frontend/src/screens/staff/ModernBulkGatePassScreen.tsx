@@ -468,31 +468,28 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
           <View style={styles.formGroup}>
             <ThemedText style={[styles.label, { color: theme.textSecondary }]}>Purpose *</ThemedText>
             <TouchableOpacity
-              style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.border, flexDirection: 'row', alignItems: 'center' }]}
-              onPress={() => !isSubmitting && setShowPurposePicker(true)}
+              style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: showPurposePicker ? theme.primary : theme.border, flexDirection: 'row', alignItems: 'center' }]}
+              onPress={() => !isSubmitting && setShowPurposePicker(v => !v)}
             >
               <ThemedText style={[{ flex: 1, fontSize: 14, color: purpose ? theme.text : theme.textTertiary }]}>
                 {purpose || 'Select purpose'}
               </ThemedText>
-              <Ionicons name="chevron-down" size={18} color={theme.textSecondary} />
+              <Ionicons name={showPurposePicker ? 'chevron-up' : 'chevron-down'} size={18} color={theme.textSecondary} />
             </TouchableOpacity>
-            <Modal visible={showPurposePicker} transparent animationType="fade" onRequestClose={() => setShowPurposePicker(false)}>
-              <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowPurposePicker(false)}>
-                <View style={[styles.modalSheet, { backgroundColor: theme.surface }]}>
-                  <ThemedText style={[styles.modalTitle, { color: theme.text }]}>Select Purpose</ThemedText>
-                  {PURPOSE_OPTIONS.map(item => (
-                    <TouchableOpacity
-                      key={item}
-                      style={[styles.modalOption, { borderBottomColor: theme.border }, purpose === item && { backgroundColor: theme.primary + '18' }]}
-                      onPress={() => { setPurpose(item); setShowPurposePicker(false); }}
-                    >
-                      <ThemedText style={[styles.modalOptionText, { color: theme.text }, purpose === item && { color: theme.primary, fontWeight: '700' }]}>{item}</ThemedText>
-                      {purpose === item && <Ionicons name="checkmark" size={18} color={theme.primary} />}
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </TouchableOpacity>
-            </Modal>
+            {showPurposePicker && (
+              <View style={[styles.dropdown, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                {PURPOSE_OPTIONS.map((item, index) => (
+                  <TouchableOpacity
+                    key={item}
+                    style={[styles.dropdownOption, { borderBottomColor: theme.border }, index === PURPOSE_OPTIONS.length - 1 && { borderBottomWidth: 0 }, purpose === item && { backgroundColor: theme.primary + '15' }]}
+                    onPress={() => { setPurpose(item); setShowPurposePicker(false); }}
+                  >
+                    <ThemedText style={[styles.dropdownOptionText, { color: purpose === item ? theme.primary : theme.text }, purpose === item && { fontWeight: '700' }]}>{item}</ThemedText>
+                    {purpose === item && <Ionicons name="checkmark" size={16} color={theme.primary} />}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
 
           <View style={styles.formGroup}>
@@ -677,11 +674,9 @@ const styles = StyleSheet.create({
   submitButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginTop: 20, paddingVertical: 16, borderRadius: 12, gap: 8, elevation: 3 },
   submitButtonDisabled: { opacity: 0.5 },
   submitButtonText: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingTop: 16, paddingBottom: 32, maxHeight: '60%' },
-  modalTitle: { fontSize: 14, fontWeight: '700', textAlign: 'center', marginBottom: 8, paddingHorizontal: 16 },
-  modalOption: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
-  modalOptionText: { flex: 1, fontSize: 14 },
+  dropdown: { borderWidth: 1, borderRadius: 12, marginTop: 4, overflow: 'hidden', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 6 },
+  dropdownOption: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 13, borderBottomWidth: StyleSheet.hairlineWidth },
+  dropdownOptionText: { flex: 1, fontSize: 14, fontWeight: '500' },
 });
 
 export default ModernBulkGatePassScreen;
