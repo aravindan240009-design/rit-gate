@@ -33,7 +33,7 @@ const PURPOSE_OPTIONS = [
   'Family Emergency',
   'Official Meeting / Conference',
   'Personal Work',
-  'Pre-Approved Visitor / Campus Visit',
+  'Others',
 ];
 
 const HODGatePassRequestScreen: React.FC<HODGatePassRequestScreenProps> = ({ user, onBack }) => {

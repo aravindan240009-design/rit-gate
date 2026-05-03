@@ -23,7 +23,7 @@ const PURPOSE_OPTIONS = [
   'Family Emergency',
   'Official Meeting / Conference',
   'Personal Work',
-  'Pre-Approved Visitor / Campus Visit',
+  'Others',
 ];
 
 const HRSinglePassScreen: React.FC<HRSinglePassScreenProps> = ({ hr, onBack }) => {

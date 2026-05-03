@@ -23,7 +23,7 @@ const PURPOSE_OPTIONS = [
   'Family Emergency',
   'Official Meeting / Conference',
   'Personal Work',
-  'Pre-Approved Visitor / Campus Visit',
+  'Others',
 ];
 
 const AdminSinglePassScreen: React.FC<AdminSinglePassScreenProps> = ({ admin, onBack }) => {

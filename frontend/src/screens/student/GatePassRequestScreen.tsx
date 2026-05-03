@@ -38,7 +38,7 @@ const PURPOSE_OPTIONS = [
   'Family Emergency',
   'Official Meeting / Conference',
   'Personal Work',
-  'Pre-Approved Visitor / Campus Visit',
+  'Others',
 ];
 
 const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, navigation, onBack, isNTF = false, isNCI = false }) => {
