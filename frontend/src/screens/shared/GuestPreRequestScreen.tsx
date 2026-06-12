@@ -10,6 +10,7 @@ import {
   Linking,
   Platform,
   BackHandler,
+  Keyboard,
 } from 'react-native';
 import Share from 'react-native-share';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -136,6 +137,8 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
   }, [phone]);
 
   const qrSvgRef = React.useRef<any>(null);
+  const nameInputRef = React.useRef<TextInput>(null);
+  const phoneInputRef = React.useRef<TextInput>(null);
 
   const writeTempQrPng = async () => {
     if (!qrCode) return null;
@@ -172,6 +175,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
   };
 
   const handleSubmit = () => {
+    Keyboard.dismiss();
     if (!visitorName.trim() || !phone.trim() || phone.replace(/\D/g, '').length < 10) {
       setErrMsg('Enter valid guest name and phone (min 10 digits).');
       setShowErr(true);
@@ -261,26 +265,37 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
                 keyboardType="number-pad"
                 placeholder="1"
                 placeholderTextColor={theme.textTertiary}
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => nameInputRef.current?.focus()}
               />
 
               <ThemedText style={[styles.label, { color: theme.textSecondary }]}>Guest name *</ThemedText>
               <TextInput
+                ref={nameInputRef}
                 style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
                 value={visitorName}
                 onChangeText={setVisitorName}
                 placeholder="Full name"
                 placeholderTextColor={theme.textTertiary}
                 autoCapitalize="words"
+                returnKeyType="next"
+                blurOnSubmit={false}
+                onSubmitEditing={() => phoneInputRef.current?.focus()}
               />
 
               <ThemedText style={[styles.label, { color: theme.textSecondary }]}>Phone number *</ThemedText>
               <TextInput
+                ref={phoneInputRef}
                 style={[styles.input, { backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }]}
                 value={phone}
                 onChangeText={setPhone}
                 keyboardType="phone-pad"
                 placeholder="+91..."
                 placeholderTextColor={theme.textTertiary}
+                returnKeyType="done"
+                maxLength={13}
+                onSubmitEditing={() => Keyboard.dismiss()}
               />
             </>
           )}
