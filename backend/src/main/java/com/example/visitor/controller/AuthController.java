@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -1341,11 +1342,10 @@ public class AuthController {
                 detectedRole = "SECURITY";
             } else {
                 // Staff-pattern: do the DB detect
-                Optional<Object[]> result = studentRepository.detectRoleByCode(code);
-                if (result.isPresent()) {
-                    Object[] row = result.get();
-                    String baseRole    = row[0] != null ? row[0].toString() : "";
-                    String designation = row[1] != null ? row[1].toString() : "";
+                String[] detected = detectRoleRow(code);
+                if (detected != null) {
+                    String baseRole    = detected[0];
+                    String designation = detected[1];
                     switch (baseRole) {
                         case "HOD":  detectedRole = "HOD"; break;
                         case "NTF":
@@ -1387,8 +1387,28 @@ public class AuthController {
             }
         } catch (Exception e) {
             log.error("Error in unifiedSendOTP: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().body(createErrorResponse(e.getClass().getSimpleName() + ": " + e.getMessage()));
+            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to send OTP"));
         }
+    }
+
+    /**
+     * Runs the role-detection UNION query and returns {baseRole, designation}.
+     * Handles JPA native-query result shapes: List<Object[]> rows, and the case
+     * where the driver wraps the row in an extra single-element array.
+     * Returns null when the code matches no table.
+     */
+    private String[] detectRoleRow(String code) {
+        List<Object[]> rows = studentRepository.detectRoleByCode(code);
+        if (rows == null || rows.isEmpty()) return null;
+        Object first = rows.get(0);
+        Object[] row = (first instanceof Object[]) ? (Object[]) first : new Object[]{first};
+        // Unwrap one more level if the row itself got wrapped
+        if (row.length == 1 && row[0] instanceof Object[]) {
+            row = (Object[]) row[0];
+        }
+        String baseRole    = (row.length > 0 && row[0] != null) ? row[0].toString() : "";
+        String designation = (row.length > 1 && row[1] != null) ? row[1].toString() : "";
+        return new String[]{baseRole, designation};
     }
 
     /** Injects the detected role into the OTP send response body. */
@@ -1422,14 +1442,13 @@ public class AuthController {
             }
 
             // Single UNION query replaces 5 sequential DB round-trips
-            Optional<Object[]> result = studentRepository.detectRoleByCode(code);
-            if (result.isEmpty()) {
+            String[] detected = detectRoleRow(code);
+            if (detected == null) {
                 return ResponseEntity.ok(Map.of("success", false, "role", "UNKNOWN", "message", "User not found"));
             }
 
-            Object[] row = result.get();
-            String baseRole    = row[0] != null ? row[0].toString() : "";
-            String designation = row[1] != null ? row[1].toString() : "";
+            String baseRole    = detected[0];
+            String designation = detected[1];
 
             switch (baseRole) {
                 case "STUDENT":

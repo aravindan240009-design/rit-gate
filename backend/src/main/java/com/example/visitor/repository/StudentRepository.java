@@ -68,7 +68,7 @@ public interface StudentRepository extends JpaRepository<Student, String> {
         "SELECT 'STAFF', '' FROM teaching_staffs WHERE staff_code = :code " +
         "LIMIT 1",
         nativeQuery = true)
-    Optional<Object[]> detectRoleByCode(@Param("code") String code);
+    List<Object[]> detectRoleByCode(@Param("code") String code);
 
     // HOD is resolved from departments table — these are kept for backward compat
     @Query("SELECT DISTINCT s.department FROM Student s WHERE s.department IS NOT NULL")
