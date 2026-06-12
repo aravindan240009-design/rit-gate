@@ -1386,8 +1386,8 @@ public class AuthController {
                     return addRole(stResp, detectedRole);
             }
         } catch (Exception e) {
-            log.error("Error in unifiedSendOTP: {}", e.getMessage());
-            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to send OTP"));
+            log.error("Error in unifiedSendOTP for userId={}: {} — {}", request.get("userId"), e.getClass().getSimpleName(), e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to send OTP: " + e.getClass().getSimpleName() + ": " + e.getMessage()));
         }
     }
 
