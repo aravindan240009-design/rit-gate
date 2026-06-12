@@ -57,11 +57,45 @@ class ApiService {
 
   async checkBackendStatus(): Promise<boolean> { return true; }
 
+  // ── Offline cache (graceful degradation) ──────────────────────────────────
+  // Successful GET responses are persisted; when offline or the network drops,
+  // screens transparently receive the last known data instead of an error.
+  private static readonly CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+  private static readonly CACHE_MAX_BYTES = 250 * 1024; // skip huge payloads
+
+  private cacheKeyFor(url: string): string {
+    return `@api_cache:${url}`;
+  }
+
+  private async readCache(url: string): Promise<any | null> {
+    try {
+      const { cacheService } = require('./cacheService');
+      const data = await cacheService.getPersistent(this.cacheKeyFor(url));
+      if (data !== null) console.log(`📦 Serving cached response (offline): ${url}`);
+      return data;
+    } catch { return null; }
+  }
+
+  private writeCache(url: string, data: any): void {
+    try {
+      if (!data || typeof data !== 'object') return;
+      const size = JSON.stringify(data).length;
+      if (size > ApiService.CACHE_MAX_BYTES) return;
+      const { cacheService } = require('./cacheService');
+      cacheService.setPersistent(this.cacheKeyFor(url), data, ApiService.CACHE_TTL);
+    } catch { /* cache failures must never break requests */ }
+  }
+
   // ── Core request — up to 2 attempts, 120s timeout ────────────────────────
   private async makeRequest(url: string, options: RequestInit): Promise<any> {
-    // Fail fast when the device is offline — no point waiting out a fetch timeout
+    const method = (options.method || 'GET').toUpperCase();
+    // Fail fast when the device is offline — serve cached data for reads
     const { networkStatus } = require('../utils/networkStatus');
     if (!networkStatus.isOnline) {
+      if (method === 'GET') {
+        const cached = await this.readCache(url);
+        if (cached !== null) return cached;
+      }
       throw new Error('No internet connection. Please check your network and try again.');
     }
     console.log(`📡 ${options.method || 'GET'} ${url}`);
@@ -105,7 +139,9 @@ class ApiService {
 
     // Retry once on network errors / 5xx (not on 4xx)
     try {
-      return await attempt();
+      const data = await attempt();
+      if (method === 'GET') this.writeCache(url, data);
+      return data;
     } catch (err: any) {
       const msg = err?.message || '';
       const isRetryable = msg.includes('502') || msg.includes('503') || msg.includes('504') ||
@@ -113,7 +149,20 @@ class ApiService {
       if (isRetryable && networkStatus.isOnline) {
         console.log(`🔄 Retrying after error: ${msg}`);
         await new Promise(r => setTimeout(r, 1500));
-        return await attempt();
+        try {
+          const data = await attempt();
+          if (method === 'GET') this.writeCache(url, data);
+          return data;
+        } catch (retryErr: any) {
+          err = retryErr; // fall through to the cache fallback below
+        }
+      }
+      // Network died mid-request — degrade gracefully for reads
+      const retryMsg = err?.message || '';
+      const isNetworkError = retryMsg.includes('Network request failed') || retryMsg.includes('Failed to fetch') || !networkStatus.isOnline;
+      if (method === 'GET' && isNetworkError) {
+        const cached = await this.readCache(url);
+        if (cached !== null) return cached;
       }
       throw err;
     }
