@@ -3,20 +3,15 @@ package com.example.visitor.entity;
 import jakarta.persistence.*;
 
 /**
- * departments table columns: id, name, hod, staff_code, student_count, staff_count
- * id         = integer PK
- * name       = department name (e.g. "AI & DS")
+ * departments table columns: name, hod, staff_code, student_count, staff_count
+ * name       = department name (e.g. "AI & DS") — unique, used as the JPA id
  * hod        = HOD's name
- * staff_code = HOD's staff code (login ID) — NOT the PK, just a regular column
+ * staff_code = HOD's staff code (login ID) — NOT unique, multiple depts can share a HOD
  */
 @Entity
 @Table(name = "departments")
 public class HOD {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
-
     @Column(name = "name", length = 100)
     private String department;
 
@@ -31,8 +26,6 @@ public class HOD {
     @Transient private String role = "HOD";
     @Transient private boolean isActive = true;
 
-    public Long getNumericId() { return id; }
-    public void setNumericId(Long id) { this.id = id; }
     // Keep String getId() for compatibility
     public String getId() { return hodCode; }
     public void setId(String id) { this.hodCode = id; }

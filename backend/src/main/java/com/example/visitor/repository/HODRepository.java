@@ -14,7 +14,7 @@ import java.util.Optional;
  * staff_code = HOD's login code (NOT the PK — multiple rows can share the same staff_code)
  */
 @Repository
-public interface HODRepository extends JpaRepository<HOD, Long> {
+public interface HODRepository extends JpaRepository<HOD, String> {
 
     // Find by staff_code — returns ALL departments this HOD manages (can be multiple)
     List<HOD> findByHodCode(String hodCode);
