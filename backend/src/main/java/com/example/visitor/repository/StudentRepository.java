@@ -57,6 +57,19 @@ public interface StudentRepository extends JpaRepository<Student, String> {
     @Query("SELECT COUNT(s) FROM Student s WHERE LOWER(s.classIncharge) LIKE LOWER(CONCAT('%', :name, '%'))")
     long countByClassInchargeContaining(@Param("name") String name);
 
+    // Single-query role detection — replaces 5 sequential queries in detect-role endpoint
+    @Query(value =
+        "SELECT 'STUDENT' AS role, NULL AS designation FROM students WHERE register_no = :code " +
+        "UNION ALL " +
+        "SELECT 'HOD', NULL FROM departments WHERE staff_code = :code " +
+        "UNION ALL " +
+        "SELECT 'NTF', designation FROM non_teaching_staffs WHERE staff_code = :code " +
+        "UNION ALL " +
+        "SELECT 'STAFF', NULL FROM teaching_staffs WHERE staff_code = :code " +
+        "LIMIT 1",
+        nativeQuery = true)
+    Optional<Object[]> detectRoleByCode(@Param("code") String code);
+
     // HOD is resolved from departments table — these are kept for backward compat
     @Query("SELECT DISTINCT s.department FROM Student s WHERE s.department IS NOT NULL")
     List<String> findAllDistinctDepartments();

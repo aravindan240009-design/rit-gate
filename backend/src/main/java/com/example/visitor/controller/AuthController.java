@@ -1331,43 +1331,36 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Staff code required"));
             }
 
-            // 1. Student?
-            if (studentRepository.findByRegNo(code).isPresent()) {
-                return ResponseEntity.ok(Map.of("success", true, "role", "STUDENT"));
+            // Single UNION query replaces 5 sequential DB round-trips
+            Optional<Object[]> result = studentRepository.detectRoleByCode(code);
+            if (result.isEmpty()) {
+                return ResponseEntity.ok(Map.of("success", false, "role", "UNKNOWN", "message", "User not found"));
             }
 
-            // 2. HOD? — check departments table (staff_code column)
-            if (hodRepository.isHOD(code)) {
-                return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
-            }
+            Object[] row = result.get();
+            String baseRole    = row[0] != null ? row[0].toString() : "";
+            String designation = row[1] != null ? row[1].toString() : "";
 
-            // 3. HR or AO? — check non_teaching_staffs by designation
-            Optional<HR> hrOpt = hrRepository.findByHrCode(code);
-            if (hrOpt.isPresent()) {
-                String designation = hrOpt.get().getRole() != null ? hrOpt.get().getRole() : "";
-                if (designation.equalsIgnoreCase("Senior Manager - HR")) {
-                    return ResponseEntity.ok(Map.of("success", true, "role", "HR"));
-                }
-                if (designation.equalsIgnoreCase("Administrative Officer")) {
-                    return ResponseEntity.ok(Map.of("success", true, "role", "ADMIN_OFFICER"));
-                }
-                // Other non-teaching staff → NON_TEACHING
-                return ResponseEntity.ok(Map.of("success", true, "role", "NON_TEACHING"));
+            switch (baseRole) {
+                case "STUDENT":
+                    return ResponseEntity.ok(Map.of("success", true, "role", "STUDENT"));
+                case "HOD":
+                    return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
+                case "NTF":
+                    if (designation.equalsIgnoreCase("Senior Manager - HR")) {
+                        return ResponseEntity.ok(Map.of("success", true, "role", "HR"));
+                    }
+                    if (designation.equalsIgnoreCase("Administrative Officer")) {
+                        return ResponseEntity.ok(Map.of("success", true, "role", "ADMIN_OFFICER"));
+                    }
+                    return ResponseEntity.ok(Map.of("success", true, "role", "NON_TEACHING"));
+                case "STAFF":
+                    // One extra query only for teaching staff — check class incharge
+                    boolean isClassIncharge = staffRepository.isClassIncharge(code);
+                    return ResponseEntity.ok(Map.of("success", true, "role", isClassIncharge ? "STAFF" : "NON_CLASS_INCHARGE"));
+                default:
+                    return ResponseEntity.ok(Map.of("success", false, "role", "UNKNOWN", "message", "User not found"));
             }
-
-            // 4. Teaching staff? — check teaching_staffs table
-            Optional<Staff> staffOpt = staffRepository.findByStaffCode(code);
-            if (staffOpt.isPresent()) {
-                // Is this staff code a class incharge? (appears in students.staff_code)
-                boolean isClassIncharge = staffRepository.isClassIncharge(code);
-                if (isClassIncharge) {
-                    return ResponseEntity.ok(Map.of("success", true, "role", "STAFF"));
-                }
-                // Not a class incharge → NCI
-                return ResponseEntity.ok(Map.of("success", true, "role", "NON_CLASS_INCHARGE"));
-            }
-
-            return ResponseEntity.ok(Map.of("success", false, "role", "UNKNOWN", "message", "User not found"));
 
         } catch (Exception e) {
             log.error("Error detecting role for {}: {}", staffCode, e.getMessage());
