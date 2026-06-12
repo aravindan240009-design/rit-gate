@@ -88,7 +88,11 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   useEffect(() => {
     loadRequests();
     loadNotifications(staff.staffCode, 'staff');
-    const interval = setInterval(() => loadRequests(true), 10000);
+    // Skip the silent poll while offline — nothing to fetch, saves churn
+    const interval = setInterval(() => {
+      const { networkStatus } = require('../../utils/networkStatus');
+      if (networkStatus.isOnline) loadRequests(true);
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -196,7 +200,9 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadRequests();
+    // Watchdog: never let the refresh spinner run forever (e.g. dead connection)
+    const watchdog = setTimeout(() => setRefreshing(false), 15000);
+    Promise.resolve(loadRequests()).finally(() => clearTimeout(watchdog));
   };
 
   const filteredRequests = requests.filter(request => {
@@ -244,6 +250,13 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
   const handleApprove = async (id?: number, remark?: string) => {
     if (!selectedRequest || actionInFlight.current) return;
+    const { networkStatus } = require('../../utils/networkStatus');
+    if (!networkStatus.isOnline) {
+      setModalTitle('You are offline');
+      setModalMessage('Approving requests needs an internet connection. You can view requests while offline.');
+      setShowErrorModal(true);
+      return;
+    }
     actionInFlight.current = true;
     const req = selectedRequest;
     setProcessing(true);
@@ -274,6 +287,13 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
   const handleReject = async (id?: number, remark?: string) => {
     if (!selectedRequest || actionInFlight.current) return;
+    const { networkStatus } = require('../../utils/networkStatus');
+    if (!networkStatus.isOnline) {
+      setModalTitle('You are offline');
+      setModalMessage('Rejecting requests needs an internet connection. You can view requests while offline.');
+      setShowErrorModal(true);
+      return;
+    }
     actionInFlight.current = true;
     const req = selectedRequest;
     setProcessing(true);

@@ -18,6 +18,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
+import { useNetwork } from '../context/NetworkContext';
 import { formatDateTimeLocal } from '../utils/dateUtils';
 import ThemedText from './ThemedText';
 import ConfirmationModal from './ConfirmationModal';
@@ -51,6 +52,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
   onViewQR, timelineSteps,
 }) => {
   const { theme, isDark } = useTheme();
+  const { isOnline } = useNetwork();
   const insets = useSafeAreaInsets();
   const [remark, setRemark] = useState('');
   const [showFullscreen, setShowFullscreen] = useState(false);
@@ -275,7 +277,26 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
         </ScrollView>
 
         {/* Footer */}
-        {showActions ? (
+        {showActions && !isOnline ? (
+          // Offline — approvals need the server, so the pass is view-only
+          <View
+            style={[
+              styles.footer,
+              {
+                backgroundColor: theme.surface,
+                borderTopColor: theme.border,
+                paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 10) : Math.max(insets.bottom, 12),
+              },
+            ]}
+          >
+            <View style={[styles.offlineNotice, { backgroundColor: theme.inputBackground, borderColor: theme.border }]}>
+              <Ionicons name="cloud-offline-outline" size={18} color={theme.textSecondary} />
+              <ThemedText style={[styles.offlineNoticeText, { color: theme.textSecondary }]}>
+                You're offline — viewing only. Connect to the internet to approve or reject.
+              </ThemedText>
+            </View>
+          </View>
+        ) : showActions ? (
             <View
               style={[
                 styles.footer,
@@ -430,6 +451,8 @@ const styles = StyleSheet.create({
   tlRemarkText: { fontSize: 13, lineHeight: 18 },
   // Footer
   footer: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: Platform.OS === 'ios' ? 10 : 16, borderTopWidth: 1 },
+  offlineNotice: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 14, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12 },
+  offlineNoticeText: { flex: 1, fontSize: 13, fontWeight: '600', lineHeight: 18 },
   remarkInput: { borderRadius: 14, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, borderWidth: 1, textAlignVertical: 'top', marginBottom: 12, minHeight: 72, maxHeight: 100 },
   actionRow: { flexDirection: 'row', gap: 12 },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 16, gap: 8 },
