@@ -563,18 +563,13 @@ public class HODController {
             if (!studentRegNos.isEmpty()) log.debug("Students: {}", studentRegNos);
             if (!staffCodes.isEmpty()) log.debug("Staff: {}", staffCodes);
             
-            // Parse dates - handle ISO format with millis and Z
+            // Parse dates — DateTimeParser converts offset/Z strings to IST
             LocalDateTime exitDateTime;
             if (exitDateTimeStr != null && !exitDateTimeStr.isEmpty()) {
                 try {
-                    // Try ISO instant format first (e.g., 2026-03-17T14:16:25.503Z)
-                    exitDateTime = Instant.parse(exitDateTimeStr).atZone(ZoneId.systemDefault()).toLocalDateTime();
-                } catch (Exception e1) {
-                    try {
-                        exitDateTime = com.example.visitor.util.DateTimeParser.parseToIST(exitDateTimeStr);
-                    } catch (Exception e2) {
-                        exitDateTime = LocalDateTime.now();
-                    }
+                    exitDateTime = com.example.visitor.util.DateTimeParser.parseToIST(exitDateTimeStr);
+                } catch (Exception e) {
+                    exitDateTime = LocalDateTime.now();
                 }
             } else {
                 exitDateTime = LocalDateTime.now();
@@ -583,13 +578,9 @@ public class HODController {
             LocalDateTime returnDateTime;
             if (returnDateTimeStr != null && !returnDateTimeStr.isEmpty()) {
                 try {
-                    returnDateTime = Instant.parse(returnDateTimeStr).atZone(ZoneId.systemDefault()).toLocalDateTime();
-                } catch (Exception e1) {
-                    try {
-                        returnDateTime = com.example.visitor.util.DateTimeParser.parseToIST(returnDateTimeStr);
-                    } catch (Exception e2) {
-                        returnDateTime = exitDateTime.plusHours(24);
-                    }
+                    returnDateTime = com.example.visitor.util.DateTimeParser.parseToIST(returnDateTimeStr);
+                } catch (Exception e) {
+                    returnDateTime = exitDateTime.plusHours(24);
                 }
             } else {
                 returnDateTime = exitDateTime.plusHours(24);
