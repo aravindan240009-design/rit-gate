@@ -571,7 +571,7 @@ public class HODController {
                     exitDateTime = Instant.parse(exitDateTimeStr).atZone(ZoneId.systemDefault()).toLocalDateTime();
                 } catch (Exception e1) {
                     try {
-                        exitDateTime = LocalDateTime.parse(exitDateTimeStr, DateTimeFormatter.ISO_DATE_TIME);
+                        exitDateTime = com.example.visitor.util.DateTimeParser.parseToIST(exitDateTimeStr);
                     } catch (Exception e2) {
                         exitDateTime = LocalDateTime.now();
                     }
@@ -586,7 +586,7 @@ public class HODController {
                     returnDateTime = Instant.parse(returnDateTimeStr).atZone(ZoneId.systemDefault()).toLocalDateTime();
                 } catch (Exception e1) {
                     try {
-                        returnDateTime = LocalDateTime.parse(returnDateTimeStr, DateTimeFormatter.ISO_DATE_TIME);
+                        returnDateTime = com.example.visitor.util.DateTimeParser.parseToIST(returnDateTimeStr);
                     } catch (Exception e2) {
                         returnDateTime = exitDateTime.plusHours(24);
                     }

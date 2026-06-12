@@ -254,7 +254,7 @@ public class StaffController {
             try {
                 String exitDateTimeStr = (String) request.get("exitDateTime");
                 if (exitDateTimeStr != null && !exitDateTimeStr.isEmpty()) {
-                    exitDateTime = java.time.LocalDateTime.parse(exitDateTimeStr, java.time.format.DateTimeFormatter.ISO_DATE_TIME);
+                    exitDateTime = com.example.visitor.util.DateTimeParser.parseToIST(exitDateTimeStr);
                 }
             } catch (Exception e) {
                 System.err.println("⚠️  Error parsing exitDateTime: " + e.getMessage());
@@ -263,7 +263,7 @@ public class StaffController {
             try {
                 String returnDateTimeStr = (String) request.get("returnDateTime");
                 if (returnDateTimeStr != null && !returnDateTimeStr.isEmpty()) {
-                    returnDateTime = java.time.LocalDateTime.parse(returnDateTimeStr, java.time.format.DateTimeFormatter.ISO_DATE_TIME);
+                    returnDateTime = com.example.visitor.util.DateTimeParser.parseToIST(returnDateTimeStr);
                 }
             } catch (Exception e) {
                 System.err.println("⚠️  Error parsing returnDateTime: " + e.getMessage());

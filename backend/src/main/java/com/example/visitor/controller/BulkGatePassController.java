@@ -55,7 +55,7 @@ public class BulkGatePassController {
             try {
                 String exitDateTimeStr = (String) requestData.get("exitDateTime");
                 if (exitDateTimeStr != null && !exitDateTimeStr.isEmpty()) {
-                    exitDateTime = LocalDateTime.parse(exitDateTimeStr, DateTimeFormatter.ISO_DATE_TIME);
+                    exitDateTime = com.example.visitor.util.DateTimeParser.parseToIST(exitDateTimeStr);
                 }
             } catch (Exception e) {
                 log.warn("Error parsing exitDateTime", e);
@@ -64,7 +64,7 @@ public class BulkGatePassController {
             try {
                 String returnDateTimeStr = (String) requestData.get("returnDateTime");
                 if (returnDateTimeStr != null && !returnDateTimeStr.isEmpty()) {
-                    returnDateTime = LocalDateTime.parse(returnDateTimeStr, DateTimeFormatter.ISO_DATE_TIME);
+                    returnDateTime = com.example.visitor.util.DateTimeParser.parseToIST(returnDateTimeStr);
                 }
             } catch (Exception e) {
                 log.warn("Error parsing returnDateTime", e);
