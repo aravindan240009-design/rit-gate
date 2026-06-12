@@ -59,13 +59,13 @@ public interface StudentRepository extends JpaRepository<Student, String> {
 
     // Single-query role detection — replaces 5 sequential queries in detect-role endpoint
     @Query(value =
-        "SELECT 'STUDENT' AS role, NULL AS designation FROM students WHERE register_no = :code " +
+        "SELECT 'STUDENT' AS role, '' AS designation FROM students WHERE register_no = :code " +
         "UNION ALL " +
-        "SELECT 'HOD', NULL FROM departments WHERE staff_code = :code " +
+        "SELECT 'HOD', '' FROM departments WHERE staff_code = :code " +
         "UNION ALL " +
         "SELECT 'NTF', designation FROM non_teaching_staffs WHERE staff_code = :code " +
         "UNION ALL " +
-        "SELECT 'STAFF', NULL FROM teaching_staffs WHERE staff_code = :code " +
+        "SELECT 'STAFF', '' FROM teaching_staffs WHERE staff_code = :code " +
         "LIMIT 1",
         nativeQuery = true)
     Optional<Object[]> detectRoleByCode(@Param("code") String code);
