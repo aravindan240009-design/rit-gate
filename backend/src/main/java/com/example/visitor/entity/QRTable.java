@@ -61,11 +61,11 @@ public class QRTable {
     @Column(name = "qr_expires_at")
     private LocalDateTime qrExpiresAt; // Midnight of the day the QR was generated
     
-    @Column(length = 12)
-    private String entry; // Timestamp marker for entry
-    
-    @Column(name = "`exit`", length = 12)
-    private String exit; // Timestamp marker for exit
+    @Column(name = "entry_marker", length = 12)
+    private String entry;
+
+    @Column(name = "exit_marker", length = 12)
+    private String exit;
     
     @Column(name = "qr_code", unique = true, length = 100)
     private String qrCode; // Stores the random token
