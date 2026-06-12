@@ -4,6 +4,7 @@ import com.example.visitor.entity.*;
 import com.example.visitor.repository.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
@@ -49,40 +50,56 @@ public class GatePassRequestService {
         this.departmentLookupService = departmentLookupService;
     }
     
+    // Fetch student info in an isolated read transaction to avoid Hibernate tracking
+    // the Student entity (whose PK is longtext — causes flush issues in MySQL)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public String[] fetchStudentInfo(String regNo) {
+        Optional<Student> studentOpt = studentRepository.findByRegNo(regNo);
+        if (studentOpt.isEmpty()) return null;
+        Student s = studentOpt.get();
+        return new String[]{
+            s.getFullName(),
+            s.getDepartment(),
+            s.getStaffCode(),
+            s.getSemester() != null ? s.getSemester().toString() : null
+        };
+    }
+
     // Submit student gate pass request
     @Transactional
-    public GatePassRequest submitStudentRequest(String regNo, String purpose, String reason, 
+    public GatePassRequest submitStudentRequest(String regNo, String purpose, String reason,
                                                 LocalDateTime requestDate, String attachmentUri) {
         log.info("Submitting gate pass request for student: {}", regNo);
-        
-        // Find student
-        Optional<Student> studentOpt = studentRepository.findByRegNo(regNo);
-        if (studentOpt.isEmpty()) {
+
+        // Load student data in a separate transaction so the Student entity is NOT
+        // tracked by the outer Hibernate session (longtext PK causes flush errors)
+        String[] studentInfo = fetchStudentInfo(regNo);
+        if (studentInfo == null) {
             throw new RuntimeException("Student not found with regNo: " + regNo);
         }
-        
-        Student student = studentOpt.get();
-        String department = student.getDepartment();
-        
+        String studentName = studentInfo[0];
+        String department  = studentInfo[1];
+        String staffCode   = studentInfo[2];
+        Integer semester   = studentInfo[3] != null ? Integer.parseInt(studentInfo[3]) : null;
+
         // Find assigned staff (class incharge for this student's section)
-        String assignedStaffCode = student.getStaffCode(); // students.staff_code = class incharge
-        if (assignedStaffCode == null || assignedStaffCode.isBlank()) {
-            assignedStaffCode = departmentLookupService.findStaffForDepartment(department);
-        }
+        String assignedStaffCode = (staffCode != null && !staffCode.isBlank())
+            ? staffCode
+            : departmentLookupService.findStaffForDepartment(department);
         if (assignedStaffCode == null) {
             throw new RuntimeException("No staff found for department: " + department);
         }
-        
+
         // Find assigned HOD — first-year students (semester 1-2) always get S&H HOD
-        String assignedHodCode = departmentLookupService.findHODForDepartment(department, student.getSemester());
+        String assignedHodCode = departmentLookupService.findHODForDepartment(department, semester);
         if (assignedHodCode == null) {
             log.warn("No HOD found for department: {}. Request will be submitted without HOD assignment.", department);
         }
-        
+
         // Create request
         GatePassRequest request = new GatePassRequest();
         request.setRegNo(regNo);
-        request.setStudentName(student.getFullName());
+        request.setStudentName(studentName);
         request.setDepartment(department);
         request.setPurpose(purpose);
         request.setReason(reason);
@@ -95,17 +112,17 @@ public class GatePassRequestService {
         request.setAttachmentUri(attachmentUri);
         request.setUserType("STUDENT");
         request.setPassType("SINGLE");
-        
+
         GatePassRequest saved = gatePassRequestRepository.save(request);
         log.info("Gate pass request created with ID: {}", saved.getId());
-        
+
         // Send notification to assigned staff (wrapped in try-catch to prevent transaction rollback)
         try {
             notificationService.notifyStaffOfNewStudentRequest(saved);
         } catch (Exception e) {
             log.error("Failed to notify staff of new student request for request {}", saved.getId(), e);
         }
-        
+
         return saved;
     }
     
