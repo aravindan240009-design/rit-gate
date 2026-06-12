@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.entity.Staff;
 import com.example.visitor.repository.VisitorRepository;
@@ -196,7 +198,7 @@ public class VisitorController {
             );
         } catch (Exception e) {
             System.err.println("Error approving visitor: " + e.getMessage());
-            return ResponseEntity.internalServerError().body("Error approving visitor: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Error approving visitor: " + ErrorMessages.userFriendly(e));
         }
     }
     
@@ -228,7 +230,7 @@ public class VisitorController {
             );
         } catch (Exception e) {
             System.err.println("Error rejecting visitor: " + e.getMessage());
-            return ResponseEntity.internalServerError().body("Error rejecting visitor: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("Error rejecting visitor: " + ErrorMessages.userFriendly(e));
         }
     }
     
@@ -348,7 +350,7 @@ public class VisitorController {
             System.err.println("Error approving visitor request: " + e.getMessage());
             java.util.Map<String, Object> err = new java.util.HashMap<>();
             err.put("success", false);
-            err.put("message", e.getMessage() != null ? e.getMessage() : "Failed to approve visitor request");
+            err.put("message", ErrorMessages.userFriendly(e) != null ? ErrorMessages.userFriendly(e) : "Failed to approve visitor request");
             return ResponseEntity.status(400).body(err);
         }
     }
@@ -377,7 +379,7 @@ public class VisitorController {
             System.err.println("Error rejecting visitor request: " + e.getMessage());
             java.util.Map<String, Object> err = new java.util.HashMap<>();
             err.put("success", false);
-            err.put("message", e.getMessage() != null ? e.getMessage() : "Failed to reject visitor request");
+            err.put("message", ErrorMessages.userFriendly(e) != null ? ErrorMessages.userFriendly(e) : "Failed to reject visitor request");
             return ResponseEntity.status(400).body(err);
         }
     }

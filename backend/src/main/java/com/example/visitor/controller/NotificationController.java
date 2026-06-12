@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.Notification;
 import com.example.visitor.entity.UserPushToken;
 import com.example.visitor.repository.NotificationRepository;
@@ -55,7 +57,7 @@ public class NotificationController {
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Error fetching notifications: " + e.getMessage());
+            errorResponse.put("message", "Error fetching notifications: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
@@ -82,7 +84,7 @@ public class NotificationController {
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Error fetching notifications: " + e.getMessage());
+            errorResponse.put("message", "Error fetching notifications: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
@@ -109,7 +111,7 @@ public class NotificationController {
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Error fetching notifications: " + e.getMessage());
+            errorResponse.put("message", "Error fetching notifications: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
@@ -136,7 +138,7 @@ public class NotificationController {
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Error fetching notifications: " + e.getMessage());
+            errorResponse.put("message", "Error fetching notifications: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
@@ -163,7 +165,7 @@ public class NotificationController {
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Error fetching notifications: " + e.getMessage());
+            errorResponse.put("message", "Error fetching notifications: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
@@ -188,7 +190,7 @@ public class NotificationController {
             System.err.println("❌ Error marking notification as read: " + e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Error marking notification as read: " + e.getMessage());
+            errorResponse.put("message", "Error marking notification as read: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
@@ -225,7 +227,7 @@ public class NotificationController {
             System.err.println("❌ Error marking all notifications as read: " + e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Error marking all notifications as read: " + e.getMessage());
+            errorResponse.put("message", "Error marking all notifications as read: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
@@ -240,7 +242,7 @@ public class NotificationController {
             return ResponseEntity.ok(Map.of("success", true, "message", "All notifications deleted", "count", notifications.size()));
         } catch (Exception e) {
             System.err.println("❌ Error deleting notifications: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", ErrorMessages.userFriendly(e)));
         }
     }
 
@@ -264,7 +266,7 @@ public class NotificationController {
 
             return ResponseEntity.ok(Map.of("success", true, "message", "Push token registered cleanly"));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", ErrorMessages.userFriendly(e)));
         }
     }
 
@@ -278,7 +280,7 @@ public class NotificationController {
             }
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", ErrorMessages.userFriendly(e)));
         }
     }
 
@@ -307,7 +309,7 @@ public class NotificationController {
 
             return ResponseEntity.ok(debugInfo);
         } catch(Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of("error", ErrorMessages.userFriendly(e)));
         }
     }
 
@@ -335,7 +337,7 @@ public class NotificationController {
                 "note", "Check Render logs for FCM HTTP response code"
             ));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("success", false, "error", e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "error", ErrorMessages.userFriendly(e)));
         }
     }
 

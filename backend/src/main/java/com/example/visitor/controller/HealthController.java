@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,7 +54,7 @@ public class HealthController {
             response.put("message", "Test OTP email sent to " + to);
         } catch (Exception e) {
             response.put("status", "FAILED");
-            response.put("error", e.getMessage());
+            response.put("error", ErrorMessages.userFriendly(e));
         }
         return ResponseEntity.ok(response);
     }

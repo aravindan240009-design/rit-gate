@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.Student;
 import com.example.visitor.repository.StudentRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +35,7 @@ public class StudentController {
         } catch (Exception e) {
             log.error("Error fetching all students", e);
             response.put("success", false);
-            response.put("message", "Error fetching students: " + e.getMessage());
+            response.put("message", "Error fetching students: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(response);
         }
     }
@@ -55,7 +57,7 @@ public class StudentController {
         } catch (Exception e) {
             log.error("Error fetching student by regNo: " + regNo, e);
             response.put("success", false);
-            response.put("message", "Error fetching student: " + e.getMessage());
+            response.put("message", "Error fetching student: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(response);
         }
     }
@@ -72,7 +74,7 @@ public class StudentController {
         } catch (Exception e) {
             log.error("Error fetching students by department: " + department, e);
             response.put("success", false);
-            response.put("message", "Error fetching students: " + e.getMessage());
+            response.put("message", "Error fetching students: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(response);
         }
     }

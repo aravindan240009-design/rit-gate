@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.GatePassRequest;
 import com.example.visitor.entity.HR;
 import com.example.visitor.entity.Staff;
@@ -224,7 +226,7 @@ public class StaffController {
             e.printStackTrace();
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Error fetching students: " + e.getMessage());
+            errorResponse.put("message", "Error fetching students: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }

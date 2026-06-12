@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.RailwayEntry;
 import com.example.visitor.entity.RailwayExitLog;
 import com.example.visitor.service.EntryExitService;
@@ -62,7 +64,7 @@ public class EntryExitController {
         } catch (Exception e) {
             log.error("Error recording student exit", e);
             response.put("success", false);
-            response.put("message", "Error recording exit: " + e.getMessage());
+            response.put("message", "Error recording exit: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -106,7 +108,7 @@ public class EntryExitController {
         } catch (Exception e) {
             log.error("Error recording staff exit", e);
             response.put("success", false);
-            response.put("message", "Error recording exit: " + e.getMessage());
+            response.put("message", "Error recording exit: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -138,7 +140,7 @@ public class EntryExitController {
         } catch (Exception e) {
             log.error("Error recording exit with gate pass", e);
             response.put("success", false);
-            response.put("message", "Error recording exit: " + e.getMessage());
+            response.put("message", "Error recording exit: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -160,7 +162,7 @@ public class EntryExitController {
         } catch (Exception e) {
             log.error("Error fetching user history", e);
             response.put("success", false);
-            response.put("message", "Error fetching history: " + e.getMessage());
+            response.put("message", "Error fetching history: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -187,7 +189,7 @@ public class EntryExitController {
         } catch (Exception e) {
             log.error("Error fetching user status", e);
             response.put("success", false);
-            response.put("message", "Error fetching status: " + e.getMessage());
+            response.put("message", "Error fetching status: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -209,7 +211,7 @@ public class EntryExitController {
         } catch (Exception e) {
             log.error("Error fetching today's entries", e);
             response.put("success", false);
-            response.put("message", "Error fetching entries: " + e.getMessage());
+            response.put("message", "Error fetching entries: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -234,7 +236,7 @@ public class EntryExitController {
         } catch (Exception e) {
             log.error("Error fetching stats", e);
             response.put("success", false);
-            response.put("message", "Error fetching stats: " + e.getMessage());
+            response.put("message", "Error fetching stats: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }

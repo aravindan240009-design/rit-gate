@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.service.BulkGatePassService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +31,7 @@ public class BulkGatePassController {
         } catch (Exception e) {
             log.error("Error fetching students by department", e);
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
+                .body(Map.of("success", false, "message", "Error: " + ErrorMessages.userFriendly(e)));
         }
     }
     
@@ -75,7 +77,7 @@ public class BulkGatePassController {
         } catch (Exception e) {
             log.error("Error creating bulk gate pass", e);
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
+                .body(Map.of("success", false, "message", "Error: " + ErrorMessages.userFriendly(e)));
         }
     }
     
@@ -88,7 +90,7 @@ public class BulkGatePassController {
         } catch (Exception e) {
             log.error("Error fetching bulk gate pass details", e);
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
+                .body(Map.of("success", false, "message", "Error: " + ErrorMessages.userFriendly(e)));
         }
     }
     
@@ -101,7 +103,7 @@ public class BulkGatePassController {
         } catch (Exception e) {
             log.error("Error fetching bulk pass student details", e);
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
+                .body(Map.of("success", false, "message", "Error: " + ErrorMessages.userFriendly(e)));
         }
     }
     
@@ -114,7 +116,7 @@ public class BulkGatePassController {
         } catch (Exception e) {
             log.error("Error validating manual entry code", e);
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error: " + e.getMessage(), "valid", false));
+                .body(Map.of("success", false, "message", "Error: " + ErrorMessages.userFriendly(e), "valid", false));
         }
     }
     
@@ -127,7 +129,7 @@ public class BulkGatePassController {
         } catch (Exception e) {
             log.error("Error validating QR string", e);
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error: " + e.getMessage(), "valid", false));
+                .body(Map.of("success", false, "message", "Error: " + ErrorMessages.userFriendly(e), "valid", false));
         }
     }
     
@@ -145,7 +147,7 @@ public class BulkGatePassController {
         } catch (Exception e) {
             log.error("Error recording entry scan", e);
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
+                .body(Map.of("success", false, "message", "Error: " + ErrorMessages.userFriendly(e)));
         }
     }
     
@@ -163,7 +165,7 @@ public class BulkGatePassController {
         } catch (Exception e) {
             log.error("Error recording exit scan", e);
             return ResponseEntity.internalServerError()
-                .body(Map.of("success", false, "message", "Error: " + e.getMessage()));
+                .body(Map.of("success", false, "message", "Error: " + ErrorMessages.userFriendly(e)));
         }
     }
 }

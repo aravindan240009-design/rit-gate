@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.GatePassRequest;
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.service.GatePassRequestService;
@@ -58,7 +60,7 @@ public class HRController {
             log.error("Error fetching pending requests for HR", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "status", "ERROR",
-                "message", "Failed to fetch pending requests: " + e.getMessage()
+                "message", "Failed to fetch pending requests: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -81,7 +83,7 @@ public class HRController {
             log.error("Error fetching all requests for HR", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "status", "ERROR",
-                "message", "Failed to fetch requests: " + e.getMessage()
+                "message", "Failed to fetch requests: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -114,7 +116,7 @@ public class HRController {
             log.error("Error approving request", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "status", "ERROR",
-                "message", "Failed to approve request: " + e.getMessage()
+                "message", "Failed to approve request: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -147,7 +149,7 @@ public class HRController {
             log.error("Error rejecting request", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "status", "ERROR",
-                "message", "Failed to reject request: " + e.getMessage()
+                "message", "Failed to reject request: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -167,7 +169,7 @@ public class HRController {
             log.error("Error fetching pending count", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "status", "ERROR",
-                "message", "Failed to fetch pending count: " + e.getMessage()
+                "message", "Failed to fetch pending count: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -208,7 +210,7 @@ public class HRController {
             log.error("Error fetching pending HOD bulk passes", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", "Failed to fetch pending bulk passes: " + e.getMessage()
+                "message", "Failed to fetch pending bulk passes: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -224,7 +226,7 @@ public class HRController {
             log.error("Error fetching HOD bulk pass details", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", "Failed to fetch request details: " + e.getMessage()
+                "message", "Failed to fetch request details: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -261,7 +263,7 @@ public class HRController {
             log.error("Error approving HOD bulk pass", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", "Failed to approve request: " + e.getMessage()
+                "message", "Failed to approve request: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -299,7 +301,7 @@ public class HRController {
             log.error("Error rejecting HOD bulk pass", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", "Failed to reject request: " + e.getMessage()
+                "message", "Failed to reject request: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -320,7 +322,7 @@ public class HRController {
             log.error("Error fetching pending bulk pass count", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", "Failed to fetch count: " + e.getMessage()
+                "message", "Failed to fetch count: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -355,7 +357,7 @@ public class HRController {
             return ResponseEntity.ok(Map.of("success", true, "requests", result));
         } catch (Exception e) {
             log.error("Error fetching visitor requests for HR", e);
-            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", ErrorMessages.userFriendly(e)));
         }
     }
 
@@ -367,7 +369,7 @@ public class HRController {
             visitorRequestService.approveVisitorRequest(id, hrCode);
             return ResponseEntity.ok(Map.of("success", true, "message", "Visitor request approved"));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", ErrorMessages.userFriendly(e)));
         }
     }
 
@@ -379,7 +381,7 @@ public class HRController {
             visitorRequestService.rejectVisitorRequest(id, reason != null ? reason : "Rejected by HR");
             return ResponseEntity.ok(Map.of("success", true, "message", "Visitor request rejected"));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of("success", false, "message", ErrorMessages.userFriendly(e)));
         }
     }
 
@@ -517,7 +519,7 @@ public class HRController {
             log.error("Error fetching exit logs for HR", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", "Failed to fetch exits: " + e.getMessage()
+                "message", "Failed to fetch exits: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -586,7 +588,7 @@ public class HRController {
             log.error("Error fetching gate logs", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", "Failed to fetch gate logs: " + e.getMessage()
+                "message", "Failed to fetch gate logs: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -642,7 +644,7 @@ public class HRController {
             log.error("Error fetching admin gate logs", e);
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", "Failed to fetch admin gate logs: " + e.getMessage()
+                "message", "Failed to fetch admin gate logs: " + ErrorMessages.userFriendly(e)
             ));
         }
     }

@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.service.NotificationService;
 import com.example.visitor.service.VisitorGatepassService;
@@ -106,7 +108,7 @@ public class UnifiedVisitorController {
             ));
         } catch (Exception e) {
             System.err.println("instant-guest: " + e.getMessage());
-            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", ErrorMessages.userFriendly(e)));
         }
     }
 
@@ -277,7 +279,7 @@ public class UnifiedVisitorController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
-                "message", e.getMessage()
+                "message", ErrorMessages.userFriendly(e)
             ));
         }
     }

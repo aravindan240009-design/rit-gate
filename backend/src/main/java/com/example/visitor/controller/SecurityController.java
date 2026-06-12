@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.Person;
 import com.example.visitor.entity.VehicleRegistration;
 import com.example.visitor.entity.ScanLog;
@@ -288,7 +290,7 @@ public class SecurityController {
             e.printStackTrace();
             return ResponseEntity.status(500).body(java.util.Map.of(
                 "success", false,
-                "message", "Error processing late entry: " + e.getMessage()
+                "message", "Error processing late entry: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -1328,7 +1330,7 @@ public class SecurityController {
             return ResponseEntity.status(500).body(new java.util.HashMap<String, Object>() {{
                 put("qrCode", qrCode);
                 put("status", "ERROR");
-                put("message", "Error processing bulk pass: " + e.getMessage());
+                put("message", "Error processing bulk pass: " + ErrorMessages.userFriendly(e));
                 put("accessGranted", false);
                 put("type", "BULK_PASS");
             }});
@@ -1378,7 +1380,7 @@ public class SecurityController {
             return ResponseEntity.status(500).body(new java.util.HashMap<String, Object>() {{
                 put("qrCode", manualCode);
                 put("status", "ERROR");
-                put("message", "Error processing manual code: " + e.getMessage());
+                put("message", "Error processing manual code: " + ErrorMessages.userFriendly(e));
                 put("success", false);
                 put("accessGranted", false);
                 put("type", "MANUAL_ENTRY");
@@ -1508,7 +1510,7 @@ public class SecurityController {
             e.printStackTrace();
             
             // Check if it's a duplicate entry error
-            String errorMessage = e.getMessage();
+            String errorMessage = ErrorMessages.userFriendly(e);
             if (errorMessage != null && errorMessage.contains("Duplicate entry")) {
                 Map<String, Object> errorResponse = new HashMap<>();
                 errorResponse.put("success", false);
@@ -1518,7 +1520,7 @@ public class SecurityController {
             
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Failed to register vehicle: " + e.getMessage());
+            errorResponse.put("message", "Failed to register vehicle: " + ErrorMessages.userFriendly(e));
             
             return ResponseEntity.status(500).body(errorResponse);
         }
@@ -1566,7 +1568,7 @@ public class SecurityController {
             System.err.println("❌ Error fetching vehicles: " + e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Error fetching vehicles: " + e.getMessage());
+            errorResponse.put("message", "Error fetching vehicles: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.status(500).body(errorResponse);
         }
     }
@@ -1600,7 +1602,7 @@ public class SecurityController {
             System.err.println("❌ Error searching vehicles: " + e.getMessage());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
-            errorResponse.put("message", "Error searching vehicles: " + e.getMessage());
+            errorResponse.put("message", "Error searching vehicles: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.status(500).body(errorResponse);
         }
     }
@@ -2797,7 +2799,7 @@ public class SecurityController {
             System.err.println("Error generating group pass: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError()
-                    .body(java.util.Map.of("error", "Failed to generate group pass: " + e.getMessage()));
+                    .body(java.util.Map.of("error", "Failed to generate group pass: " + ErrorMessages.userFriendly(e)));
         }
     }
     
@@ -3090,7 +3092,7 @@ public class SecurityController {
             System.err.println("Error validating single pass: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError()
-                    .body(java.util.Map.of("error", "Failed to validate single pass: " + e.getMessage()));
+                    .body(java.util.Map.of("error", "Failed to validate single pass: " + ErrorMessages.userFriendly(e)));
         }
     }
     
@@ -3119,7 +3121,7 @@ public class SecurityController {
             System.err.println("Error scanning group pass: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError()
-                    .body(java.util.Map.of("error", "Failed to process group pass: " + e.getMessage()));
+                    .body(java.util.Map.of("error", "Failed to process group pass: " + ErrorMessages.userFriendly(e)));
         }
     }
     
@@ -3259,7 +3261,7 @@ public class SecurityController {
                     System.err.println("❌ Error recording event manual exit: " + e.getMessage());
                     return ResponseEntity.internalServerError().body(java.util.Map.of(
                         "status", "ERROR",
-                        "message", "Failed to record event manual exit: " + e.getMessage()
+                        "message", "Failed to record event manual exit: " + ErrorMessages.userFriendly(e)
                     ));
                 }
             }
@@ -3442,7 +3444,7 @@ public class SecurityController {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(java.util.Map.of(
                 "status", "ERROR",
-                "message", "Failed to record manual exit: " + e.getMessage()
+                "message", "Failed to record manual exit: " + ErrorMessages.userFriendly(e)
             ));
         }
     }
@@ -3489,7 +3491,7 @@ public class SecurityController {
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             System.err.println("Error fetching stats: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(java.util.Map.of("error", e.getMessage(), "success", false));
+            return ResponseEntity.internalServerError().body(java.util.Map.of("error", ErrorMessages.userFriendly(e), "success", false));
         }
     }
 
@@ -3631,7 +3633,7 @@ public class SecurityController {
             v.setNotificationSentAt(java.time.LocalDateTime.now().minusMinutes(10));
             visitorRepository.save(v);
             return ResponseEntity.ok("Force-escalated visitor: " + v.getName());
-        } catch (Exception e) { return ResponseEntity.internalServerError().body(e.getMessage()); }
+        } catch (Exception e) { return ResponseEntity.internalServerError().body(ErrorMessages.userFriendly(e)); }
     }
 
     @GetMapping("/escalated-visitors")
@@ -3947,7 +3949,7 @@ public class SecurityController {
             e.printStackTrace();
             return ResponseEntity.status(500).body(java.util.Map.of(
                 "success", false,
-                "message", "Error registering visitor: " + e.getMessage()
+                "message", "Error registering visitor: " + ErrorMessages.userFriendly(e)
             ));
         }
     }

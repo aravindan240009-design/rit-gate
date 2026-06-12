@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.service.VisitorGatepassService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,7 +94,7 @@ public class VisitorGatepassController {
             System.err.println("Error creating visitor request: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(createErrorResponse(e.getMessage()));
+                    .body(createErrorResponse(ErrorMessages.userFriendly(e)));
         }
     }
     
@@ -146,7 +148,7 @@ public class VisitorGatepassController {
         } catch (Exception e) {
             System.err.println("Error approving visitor request: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(createErrorResponse(e.getMessage()));
+                    .body(createErrorResponse(ErrorMessages.userFriendly(e)));
         }
     }
     
@@ -179,7 +181,7 @@ public class VisitorGatepassController {
         } catch (Exception e) {
             System.err.println("Error rejecting visitor request: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(createErrorResponse(e.getMessage()));
+                    .body(createErrorResponse(ErrorMessages.userFriendly(e)));
         }
     }
     

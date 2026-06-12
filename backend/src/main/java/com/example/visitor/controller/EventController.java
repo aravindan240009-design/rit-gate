@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.Event;
 import com.example.visitor.entity.EventCoordinator;
 import com.example.visitor.entity.EventPass;
@@ -58,10 +60,10 @@ public class EventController {
                 "event", eventToMap(event)
             ));
         } catch (IllegalArgumentException e) {
-            return badRequest(e.getMessage());
+            return badRequest(ErrorMessages.userFriendly(e));
         } catch (Exception e) {
             log.error("Error creating event", e);
-            return serverError("Failed to create event: " + e.getMessage());
+            return serverError("Failed to create event: " + ErrorMessages.userFriendly(e));
         }
     }
 
@@ -77,7 +79,7 @@ public class EventController {
             ));
         } catch (Exception e) {
             log.error("Error fetching events for HOD {}", hodCode, e);
-            return serverError("Failed to fetch events: " + e.getMessage());
+            return serverError("Failed to fetch events: " + ErrorMessages.userFriendly(e));
         }
     }
 
@@ -101,7 +103,7 @@ public class EventController {
             ));
         } catch (Exception e) {
             log.error("Error assigning coordinators to event {}", eventId, e);
-            return serverError("Failed to assign coordinators: " + e.getMessage());
+            return serverError("Failed to assign coordinators: " + ErrorMessages.userFriendly(e));
         }
     }
 
@@ -114,10 +116,10 @@ public class EventController {
             eventService.removeCoordinator(eventId, staffCode);
             return ResponseEntity.ok(Map.of("status", "SUCCESS", "message", "Coordinator removed"));
         } catch (IllegalStateException e) {
-            return badRequest(e.getMessage());
+            return badRequest(ErrorMessages.userFriendly(e));
         } catch (Exception e) {
             log.error("Error removing coordinator {} from event {}", staffCode, eventId, e);
-            return serverError("Failed to remove coordinator: " + e.getMessage());
+            return serverError("Failed to remove coordinator: " + ErrorMessages.userFriendly(e));
         }
     }
 
@@ -133,7 +135,7 @@ public class EventController {
             ));
         } catch (Exception e) {
             log.error("Error fetching coordinators for event {}", eventId, e);
-            return serverError("Failed to fetch coordinators: " + e.getMessage());
+            return serverError("Failed to fetch coordinators: " + ErrorMessages.userFriendly(e));
         }
     }
 
@@ -149,7 +151,7 @@ public class EventController {
             ));
         } catch (Exception e) {
             log.error("Error fetching events for coordinator {}", staffCode, e);
-            return serverError("Failed to fetch events: " + e.getMessage());
+            return serverError("Failed to fetch events: " + ErrorMessages.userFriendly(e));
         }
     }
 
@@ -187,10 +189,10 @@ public class EventController {
                 "totalCount", rows.size()
             ));
         } catch (IllegalArgumentException e) {
-            return badRequest(e.getMessage());
+            return badRequest(ErrorMessages.userFriendly(e));
         } catch (Exception e) {
             log.error("Error previewing CSV for event {}", eventId, e);
-            return serverError("Failed to parse CSV: " + e.getMessage());
+            return serverError("Failed to parse CSV: " + ErrorMessages.userFriendly(e));
         }
     }
 
@@ -255,7 +257,7 @@ public class EventController {
             ));
         } catch (Exception e) {
             log.error("Error confirming CSV upload for event {}", eventId, e);
-            return serverError("Failed to confirm upload: " + e.getMessage());
+            return serverError("Failed to confirm upload: " + ErrorMessages.userFriendly(e));
         }
     }
 
@@ -271,7 +273,7 @@ public class EventController {
             ));
         } catch (Exception e) {
             log.error("Error fetching passes for event {}", eventId, e);
-            return serverError("Failed to fetch passes: " + e.getMessage());
+            return serverError("Failed to fetch passes: " + ErrorMessages.userFriendly(e));
         }
     }
 
@@ -303,10 +305,10 @@ public class EventController {
                 "event", eventToMap(event)
             ));
         } catch (IllegalStateException e) {
-            return badRequest(e.getMessage());
+            return badRequest(ErrorMessages.userFriendly(e));
         } catch (Exception e) {
             log.error("Error completing event {}", eventId, e);
-            return serverError("Failed to complete event: " + e.getMessage());
+            return serverError("Failed to complete event: " + ErrorMessages.userFriendly(e));
         }
     }
 

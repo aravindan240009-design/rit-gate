@@ -1,5 +1,7 @@
 package com.example.visitor.controller;
 
+import com.example.visitor.util.ErrorMessages;
+
 import com.example.visitor.entity.GatePassRequest;
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.repository.GatePassRequestRepository;
@@ -81,7 +83,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error submitting student request", e);
             response.put("success", false);
-            response.put("message", "Error submitting request: " + e.getMessage());
+            response.put("message", "Error submitting request: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -123,7 +125,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error submitting NTF request", e);
             response.put("success", false);
-            response.put("message", "Error submitting request: " + e.getMessage());
+            response.put("message", "Error submitting request: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -167,7 +169,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error submitting non-class-incharge request", e);
             response.put("success", false);
-            response.put("message", "Error submitting request: " + e.getMessage());
+            response.put("message", "Error submitting request: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -185,7 +187,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error fetching non-class-incharge own requests", e);
             response.put("success", false);
-            response.put("message", "Error fetching requests: " + e.getMessage());
+            response.put("message", "Error fetching requests: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -237,7 +239,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error submitting staff request", e);
             response.put("success", false);
-            response.put("message", "Error submitting staff request: " + e.getMessage());
+            response.put("message", "Error submitting staff request: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -259,7 +261,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error fetching student requests", e);
             response.put("success", false);
-            response.put("message", "Error fetching requests: " + e.getMessage());
+            response.put("message", "Error fetching requests: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -282,7 +284,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error fetching staff own requests", e);
             response.put("success", false);
-            response.put("message", "Error fetching requests: " + e.getMessage());
+            response.put("message", "Error fetching requests: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -304,7 +306,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error fetching staff pending requests", e);
             response.put("success", false);
-            response.put("message", "Error fetching staff pending requests: " + e.getMessage());
+            response.put("message", "Error fetching staff pending requests: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -365,7 +367,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error fetching staff pending-all requests", e);
             response.put("success", false);
-            response.put("message", "Error: " + e.getMessage());
+            response.put("message", "Error: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -386,7 +388,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error fetching all staff requests", e);
             response.put("success", false);
-            response.put("message", "Error fetching requests: " + e.getMessage());
+            response.put("message", "Error fetching requests: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -408,7 +410,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error fetching HOD pending requests", e);
             response.put("success", false);
-            response.put("message", "Error fetching HOD pending requests: " + e.getMessage());
+            response.put("message", "Error fetching HOD pending requests: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -430,7 +432,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error fetching all HOD requests", e);
             response.put("success", false);
-            response.put("message", "Error fetching requests: " + e.getMessage());
+            response.put("message", "Error fetching requests: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -456,7 +458,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error approving request by staff", e);
             response.put("success", false);
-            response.put("message", "Error approving request: " + e.getMessage());
+            response.put("message", "Error approving request: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -482,7 +484,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error approving request by HOD", e);
             response.put("success", false);
-            response.put("message", "Error approving request: " + e.getMessage());
+            response.put("message", "Error approving request: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -514,7 +516,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error rejecting request by staff", e);
             response.put("success", false);
-            response.put("message", "Error rejecting request: " + e.getMessage());
+            response.put("message", "Error rejecting request: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -546,7 +548,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error rejecting request by HOD", e);
             response.put("success", false);
-            response.put("message", "Error rejecting request: " + e.getMessage());
+            response.put("message", "Error rejecting request: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -568,7 +570,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error using QR code", e);
             response.put("success", false);
-            response.put("message", "Error using QR code: " + e.getMessage());
+            response.put("message", "Error using QR code: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -589,7 +591,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error fetching staff pending count", e);
             response.put("success", false);
-            response.put("message", "Error fetching count: " + e.getMessage());
+            response.put("message", "Error fetching count: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -609,7 +611,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("Error fetching HOD pending count", e);
             response.put("success", false);
-            response.put("message", "Error fetching count: " + e.getMessage());
+            response.put("message", "Error fetching count: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -663,7 +665,7 @@ public class GatePassRequestController {
         } catch (Exception e) {
             log.error("❌ Error fetching QR code for request {}: {}", requestId, e.getMessage(), e);
             response.put("success", false);
-            response.put("message", "Error fetching QR code: " + e.getMessage());
+            response.put("message", "Error fetching QR code: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }
@@ -684,7 +686,7 @@ public class GatePassRequestController {
             log.error("Error regenerating QR code for request {}", requestId, e);
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("message", "Error regenerating QR code: " + e.getMessage());
+            response.put("message", "Error regenerating QR code: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
