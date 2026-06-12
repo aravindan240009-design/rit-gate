@@ -22,13 +22,14 @@ export class AppError extends Error {
 }
 
 export const parseError = (error: any): ErrorInfo => {
-  if (error.message?.includes('Network request failed') || 
+  if (error.message?.includes('Network request failed') ||
       error.message?.includes('Failed to fetch') ||
+      error.message?.includes('No internet connection') ||
       error.code === 'NETWORK_ERROR') {
     return {
       type: 'network',
-      title: 'Network Connectivity Issue',
-      message: 'A stable internet connection is required to continue. Please try again.',
+      title: 'No Internet Connection',
+      message: 'Please check your Wi-Fi or mobile data and try again.',
       canRetry: true,
     };
   }

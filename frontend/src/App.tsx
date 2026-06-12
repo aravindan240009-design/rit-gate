@@ -24,6 +24,8 @@ import { NotificationProvider } from './context/NotificationContext';
 import { ProfileProvider, useProfile } from './context/ProfileContext';
 import { ActionLockProvider, useActionLock } from './context/ActionLockContext';
 import { RefreshProvider, useRefresh } from './context/RefreshContext';
+import { NetworkProvider } from './context/NetworkContext';
+import OfflineBanner from './components/OfflineBanner';
 
 // ✅ ONLY SmartGate Screens
 import HomeScreen from './screens/HomeScreen';
@@ -1466,6 +1468,7 @@ const App: React.FC = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        <NetworkProvider>
         <ThemeProvider userId={
           student?.regNo ||
           staff?.staffCode ||
@@ -1531,6 +1534,9 @@ const App: React.FC = () => {
                         <ThemedText style={styles.exitToastText}>Press back again to exit</ThemedText>
                       </Animated.View>
                     )}
+
+                    {/* Global connectivity banner */}
+                    <OfflineBanner />
                   </View>
                 </ThemedApp>
               </ProfileProvider>
@@ -1538,6 +1544,7 @@ const App: React.FC = () => {
           </ActionLockProvider>
           </RefreshProvider>
         </ThemeProvider>
+        </NetworkProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

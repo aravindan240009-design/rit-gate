@@ -59,6 +59,11 @@ class ApiService {
 
   // ── Core request — up to 2 attempts, 120s timeout ────────────────────────
   private async makeRequest(url: string, options: RequestInit): Promise<any> {
+    // Fail fast when the device is offline — no point waiting out a fetch timeout
+    const { networkStatus } = require('../utils/networkStatus');
+    if (!networkStatus.isOnline) {
+      throw new Error('No internet connection. Please check your network and try again.');
+    }
     console.log(`📡 ${options.method || 'GET'} ${url}`);
     const t0 = Date.now();
     const { timeHeaders } = require('../utils/timeUtils');
@@ -105,7 +110,7 @@ class ApiService {
       const msg = err?.message || '';
       const isRetryable = msg.includes('502') || msg.includes('503') || msg.includes('504') ||
         msg.includes('Network') || msg.includes('fetch') || msg.includes('network');
-      if (isRetryable) {
+      if (isRetryable && networkStatus.isOnline) {
         console.log(`🔄 Retrying after error: ${msg}`);
         await new Promise(r => setTimeout(r, 1500));
         return await attempt();

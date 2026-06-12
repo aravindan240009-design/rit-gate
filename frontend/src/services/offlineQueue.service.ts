@@ -28,6 +28,7 @@ class OfflineQueueService {
   private processing = false;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   private appStateSubscription: any = null;
+  private networkUnsubscribe: (() => void) | null = null;
 
   async enqueue(action: Omit<QueuedAction, 'id' | 'retries' | 'createdAt'>): Promise<void> {
     const item: QueuedAction = {
@@ -47,15 +48,25 @@ class OfflineQueueService {
     this.appStateSubscription = AppState.addEventListener('change', (state: AppStateStatus) => {
       if (state === 'active') this.processQueue();
     });
+    // Flush the queue the moment connectivity is restored (realtime via NetInfo)
+    const { networkStatus } = require('../utils/networkStatus');
+    networkStatus.start();
+    this.networkUnsubscribe = networkStatus.subscribe((online: boolean) => {
+      if (online) this.processQueue();
+    });
     this.processQueue();
   }
 
   stop(): void {
     this.appStateSubscription?.remove();
+    this.networkUnsubscribe?.();
     if (this.retryTimer) clearTimeout(this.retryTimer);
   }
 
   private async isOnline(): Promise<boolean> {
+    // Skip the health-check round trip entirely when the device has no network
+    const { networkStatus } = require('../utils/networkStatus');
+    if (!networkStatus.isOnline) return false;
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 3000);
