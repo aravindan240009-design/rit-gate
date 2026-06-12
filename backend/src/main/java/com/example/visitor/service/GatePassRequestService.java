@@ -21,17 +21,19 @@ public class GatePassRequestService {
     private final StudentRepository studentRepository;
     private final StaffRepository staffRepository;
     private final HRRepository hrRepository;
+    private final HODRepository hodRepository;
     private final QRTableRepository qrTableRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
     private final DepartmentLookupService departmentLookupService;
-    
+
     // Constructor
     public GatePassRequestService(
             GatePassRequestRepository gatePassRequestRepository,
             StudentRepository studentRepository,
             StaffRepository staffRepository,
             HRRepository hrRepository,
+            HODRepository hodRepository,
             QRTableRepository qrTableRepository,
             NotificationService notificationService,
             EmailService emailService,
@@ -40,6 +42,7 @@ public class GatePassRequestService {
         this.studentRepository = studentRepository;
         this.staffRepository = staffRepository;
         this.hrRepository = hrRepository;
+        this.hodRepository = hodRepository;
         this.qrTableRepository = qrTableRepository;
         this.notificationService = notificationService;
         this.emailService = emailService;
@@ -1155,14 +1158,21 @@ public class GatePassRequestService {
                                            LocalDateTime requestDate, String attachmentUri) {
         log.info("Submitting gate pass request for HOD: {}", hodCode);
         
-        // Look up HOD details from staff table
-        Optional<Staff> staffOpt = staffRepository.findByStaffCode(hodCode);
-        if (staffOpt.isEmpty()) {
-            throw new RuntimeException("HOD/Staff not found with code: " + hodCode);
+        // Look up HOD details — try departments table first (primary source), fall back to teaching_staffs
+        String hodName;
+        String department;
+        Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(hodCode);
+        if (hodOpt.isPresent()) {
+            hodName = hodOpt.get().getHodName();
+            department = hodOpt.get().getDepartment();
+        } else {
+            Optional<Staff> staffOpt = staffRepository.findByStaffCode(hodCode);
+            if (staffOpt.isEmpty()) {
+                throw new RuntimeException("HOD not found with code: " + hodCode);
+            }
+            hodName = staffOpt.get().getStaffName();
+            department = staffOpt.get().getDepartment();
         }
-        Staff hodStaff = staffOpt.get();
-        String hodName = hodStaff.getStaffName();
-        String department = hodStaff.getDepartment();
         
         // Find assigned HR (first active HR — role contains "HR" in staff table)
         String assignedHrCode = departmentLookupService.findActiveHR();
