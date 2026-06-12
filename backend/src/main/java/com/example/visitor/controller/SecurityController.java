@@ -560,28 +560,9 @@ public class SecurityController {
                     if (randomNumber != null && randomNumber.equals(qrTable.getEntry())) {
                         accessGranted = true;
                         scanLocation = "Entry Gate";
-                        
-                        // Write to Entry table — unified entry log for all user types
-                        // Resolve visitor name/department for the log
-                        final String[] vgEntryName = {"Visitor"};
-                        final String[] vgEntryDept = {null};
-                        try {
-                            Long visitorId = Long.parseLong(userId);
-                            visitorRepository.findById(visitorId).ifPresent(v -> {
-                                vgEntryName[0] = v.getName() != null ? v.getName() : "Visitor";
-                                vgEntryDept[0] = v.getDepartment() != null ? v.getDepartment() : v.getRole();
-                            });
-                        } catch (Exception ignored) {}
-                        RailwayEntry vgEntryLog = new RailwayEntry();
-                        vgEntryLog.setUserType("VISITOR");
-                        vgEntryLog.setUserId(userId);
-                        vgEntryLog.setPersonName(vgEntryName[0]);
-                        vgEntryLog.setDepartment(vgEntryDept[0]);
-                        vgEntryLog.setScannedBy("Security Guard");
-                        vgEntryLog.setScanLocation("Entry Gate");
-                        vgEntryLog.setTimestamp(LocalDateTime.now());
-                        railwayEntryRepository.save(vgEntryLog);
-                        
+
+                        // Entry row is written once in Step 7 (ScanLog → Entry table);
+                        // no inline save here or the history shows duplicate entries
                         System.out.println("✅ VG ENTRY details captured, will save to ScanLog in Step 7");
                         
                         // Move random from entry to exit
