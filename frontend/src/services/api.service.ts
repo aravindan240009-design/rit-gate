@@ -162,6 +162,19 @@ class ApiService {
 
   // ── Auth endpoints ────────────────────────────────────────────────────────
 
+  // Unified send-OTP: detects role + sends OTP in a single backend round trip.
+  // Use for staff-pattern IDs (STAFF/HOD/HR) to avoid the extra /detect-role call.
+  async sendOTPUnified(userId: string): Promise<{ success: boolean; message: string; role?: string; maskedEmail?: string; email?: string }> {
+    try {
+      return await this.makeRequest(`${this.baseURL}/auth/send-otp`, {
+        method: 'POST',
+        body: JSON.stringify({ userId }),
+      });
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Failed to send OTP' };
+    }
+  }
+
   // Detect actual role from backend (handles HOD/HR/STAFF who all have same ID pattern)
   async detectRole(staffCode: string): Promise<UserRole> {
     try {

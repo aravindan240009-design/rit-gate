@@ -1313,6 +1313,96 @@ public class AuthController {
     }
 
     /**
+     * Unified send-OTP endpoint: detects role + sends OTP in a single request.
+     * Eliminates the extra /detect-role round-trip for staff-pattern IDs.
+     * Body: { "userId": "cs195" }
+     * Response: { "success": true, "role": "STAFF", "email": "cs***@rit.ac.in", ... }
+     */
+    @PostMapping("/send-otp")
+    public ResponseEntity<?> unifiedSendOTP(@RequestBody Map<String, String> request) {
+        try {
+            String userId = sanitizeInput(request.get("userId"));
+            if (userId == null || userId.isEmpty()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("User ID is required"));
+            }
+
+            // Step 1: Detect role (same logic as /detect-role but inline — no extra HTTP)
+            String code = userId;
+            String detectedRole = "STAFF"; // default for alpha IDs
+
+            // Students are pure numeric — fast path, no DB needed
+            if (userId.matches("^\\d+$")) {
+                detectedRole = "STUDENT";
+            } else if (userId.toUpperCase().contains("HOD")) {
+                detectedRole = "HOD";
+            } else if (userId.toUpperCase().matches("^HR\\d+$")) {
+                detectedRole = "HR";
+            } else if (userId.toUpperCase().matches("^SEC\\d+$")) {
+                detectedRole = "SECURITY";
+            } else {
+                // Staff-pattern: do the DB detect
+                Optional<Object[]> result = studentRepository.detectRoleByCode(code);
+                if (result.isPresent()) {
+                    Object[] row = result.get();
+                    String baseRole    = row[0] != null ? row[0].toString() : "";
+                    String designation = row[1] != null ? row[1].toString() : "";
+                    switch (baseRole) {
+                        case "HOD":  detectedRole = "HOD"; break;
+                        case "NTF":
+                            if ("Senior Manager - HR".equalsIgnoreCase(designation)) detectedRole = "HR";
+                            else if ("Administrative Officer".equalsIgnoreCase(designation)) detectedRole = "ADMIN_OFFICER";
+                            else detectedRole = "NON_TEACHING";
+                            break;
+                        case "STAFF":
+                            detectedRole = staffRepository.isClassIncharge(code) ? "STAFF" : "NON_CLASS_INCHARGE";
+                            break;
+                        default: detectedRole = "STAFF";
+                    }
+                }
+            }
+
+            // Step 2: Send OTP based on detected role — reuse existing role-specific logic
+            Map<String, String> roleRequest = new HashMap<>();
+            switch (detectedRole) {
+                case "STUDENT":
+                    roleRequest.put("regNo", userId);
+                    ResponseEntity<?> sResp = sendStudentOTP(roleRequest);
+                    return addRole(sResp, detectedRole);
+                case "HOD":
+                    roleRequest.put("hodCode", userId);
+                    ResponseEntity<?> hResp = sendHODOTP(roleRequest);
+                    return addRole(hResp, detectedRole);
+                case "HR":
+                    roleRequest.put("hrCode", userId);
+                    ResponseEntity<?> hrResp = sendHROTP(roleRequest);
+                    return addRole(hrResp, detectedRole);
+                case "SECURITY":
+                    roleRequest.put("securityId", userId);
+                    ResponseEntity<?> secResp = loginWithSecurityId(roleRequest);
+                    return addRole(secResp, detectedRole);
+                default: // STAFF, NON_TEACHING, NON_CLASS_INCHARGE, ADMIN_OFFICER
+                    roleRequest.put("staffCode", userId);
+                    ResponseEntity<?> stResp = sendStaffOTP(roleRequest);
+                    return addRole(stResp, detectedRole);
+            }
+        } catch (Exception e) {
+            log.error("Error in unifiedSendOTP: {}", e.getMessage());
+            return ResponseEntity.internalServerError().body(createErrorResponse("Failed to send OTP"));
+        }
+    }
+
+    /** Injects the detected role into the OTP send response body. */
+    @SuppressWarnings("unchecked")
+    private ResponseEntity<?> addRole(ResponseEntity<?> resp, String role) {
+        if (resp.getBody() instanceof Map) {
+            Map<String, Object> body = new HashMap<>((Map<String, Object>) resp.getBody());
+            body.put("role", role);
+            return ResponseEntity.status(resp.getStatusCode()).body(body);
+        }
+        return resp;
+    }
+
+    /**
      * Detect the actual role of a staff code.
      * Priority:
      *   1. HR / HOD explicit role field

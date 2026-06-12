@@ -168,28 +168,34 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
       return;
     }
     setLoading(true);
-    setLoadingMessage('Detecting role...');
+    setLoadingMessage('Sending OTP...');
     try {
       let role = detectUserRole(effectiveUserId);
 
-      // For staff-pattern IDs (HOD/HR/STAFF share the same ID format),
-      // always ask the backend to confirm the actual role FIRST to prevent routing errors.
+      // For staff-pattern IDs use the unified backend endpoint which detects role
+      // and sends OTP in a single round trip (replaces detectRole + sendOTP = 2 calls).
       if (role === 'STAFF' || role === 'HOD' || role === 'HR') {
-        setLoadingMessage('Verifying role...');
-        const confirmedRole = await apiService.detectRole(effectiveUserId);
-        console.log(`🔍 Backend detected role for ${effectiveUserId}: ${confirmedRole}`);
-        if (confirmedRole) {
-          role = confirmedRole;
+        const response = await apiService.sendOTPUnified(effectiveUserId);
+        if (response.success) {
+          const confirmedRole = (response as any).role as UserRole || role;
+          setUserId(effectiveUserId);
+          setMaskedEmail(response.maskedEmail || response.email || 'm***@institution.edu');
+          setDetectedRole(confirmedRole);
+          resolvedRoleRef.current = confirmedRole;
+          setOtpTimer(120);
+          setShowOTPSuccessModal(true);
+          console.log(`✅ OTP sent for ${effectiveUserId} as ${confirmedRole} (unified)`);
+        } else {
+          showError(new AppError('api', response.message || 'Failed to send OTP', 'OTP Send Failed'), handleSendOTP);
         }
+        return;
       }
 
-      // Update detected role immediately so UI reflects it
+      // Students / Security — already uniquely identified locally, single sendOTP call
       setDetectedRole(role);
-
-      setLoadingMessage('Sending OTP...');
       const response = await apiService.sendOTP(effectiveUserId, role);
       if (response.success) {
-        setUserId(effectiveUserId);  // store trimmed version
+        setUserId(effectiveUserId);
         setMaskedEmail(response.maskedEmail || response.email || 'm***@institution.edu');
         setDetectedRole(role);
         resolvedRoleRef.current = role;
