@@ -23,6 +23,7 @@ import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
 import { useActionLock } from '../../context/ActionLockContext';
 import { getRelativeTimeLocal, formatDateShortLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import StaffRequestTimeline from '../../components/StaffRequestTimeline';
 import BottomNavBar from '../../components/BottomNavBar';
 
@@ -464,11 +465,13 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
               }}
             >
               <View style={styles.cardTopRow}>
-                <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                  <ThemedText style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
-                    {getInitials(request.studentName || 'ST')}
-                  </ThemedText>
-                </View>
+                <RequesterAvatar
+                  code={request.regNo || request.requestedByStaffCode}
+                  name={request.studentName || 'ST'}
+                  size={48}
+                  containerStyle={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}
+                  textStyle={[styles.requestAvatarText, { color: theme.textSecondary }]}
+                />
 
                 <View style={styles.headerMainInfo}>
                   <View style={styles.nameRow}>

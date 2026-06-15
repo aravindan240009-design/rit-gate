@@ -37,6 +37,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
 import TopRefreshControl from '../../components/TopRefreshControl';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
 import BottomNavBar from '../../components/BottomNavBar';
 
@@ -466,11 +467,13 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                   }}
                 >
                   <View style={styles.cardTopRow}>
-                    <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                      <ThemedText style={[styles.cardAvatarText, { color: theme.textSecondary }]}>
-                        {getInitials(request.requestType === 'BULK' ? (request.hodCode || 'HOD') : request.requestType === 'VISITOR' ? (request.visitorName || 'VR') : (request.requestedByStaffName || request.studentName || 'ST'))}
-                      </ThemedText>
-                    </View>
+                    <RequesterAvatar
+                      code={request.requestType === 'BULK' ? request.hodCode : (request.requestedByStaffCode || request.regNo)}
+                      name={request.requestType === 'BULK' ? (request.hodCode || 'HOD') : request.requestType === 'VISITOR' ? (request.visitorName || 'VR') : (request.requestedByStaffName || request.studentName || 'ST')}
+                      size={48}
+                      containerStyle={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}
+                      textStyle={[styles.cardAvatarText, { color: theme.textSecondary }]}
+                    />
                     <View style={styles.headerMainInfo}>
                       <View style={styles.nameRow}>
                         <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>

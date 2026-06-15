@@ -20,6 +20,7 @@ import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import { useActionLock } from '../../context/ActionLockContext';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import BottomNavBar from '../../components/BottomNavBar';
@@ -388,11 +389,13 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
               }}
             >
               <View style={styles.cardTopRow}>
-                <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                  <ThemedText style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
-                    {getInitials(request.passType === 'BULK' ? (request.requestedByStaffName || 'BR') : request.passType === 'VISITOR' ? (request.visitorName || request.studentName || 'VR') : (request.studentName || 'ST'))}
-                  </ThemedText>
-                </View>
+                <RequesterAvatar
+                  code={request.passType === 'BULK' ? request.requestedByStaffCode : request.regNo}
+                  name={request.passType === 'BULK' ? (request.requestedByStaffName || 'BR') : request.passType === 'VISITOR' ? (request.visitorName || request.studentName || 'VR') : (request.studentName || 'ST')}
+                  size={48}
+                  containerStyle={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}
+                  textStyle={[styles.requestAvatarText, { color: theme.textSecondary }]}
+                />
                 <View style={styles.headerMainInfo}>
                   <View style={styles.nameRow}>
                     <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
