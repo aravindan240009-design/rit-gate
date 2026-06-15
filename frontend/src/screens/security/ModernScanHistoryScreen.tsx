@@ -651,7 +651,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   </View>
                 ) : (
                   <RequesterAvatar
-                    code={scan.userId || scan.regNo}
+                    code={scan.userId || scan.regNo || String(scan.id || "")}
                     name={scan.name}
                     size={48}
                     containerStyle={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}
@@ -991,7 +991,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     </View>
                   ) : (
                     <RequesterAvatar
-                      code={scan.userId || scan.regNo}
+                      code={scan.userId || scan.regNo || String(scan.id || "")}
                       name={scan.name}
                       size={48}
                       containerStyle={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}
@@ -1211,7 +1211,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                       {/* Single pass profile row */}
                       <View style={[styles.fsProfileRow, { backgroundColor: theme.surface }]}>
                         <RequesterAvatar
-                          code={selectedScan.userId || selectedScan.regNo}
+                          code={selectedScan.userId || selectedScan.regNo || String(selectedScan.id || "")}
                           name={selectedScan.name}
                           size={48}
                           containerStyle={[styles.fsAvatar, { backgroundColor: statusColor }]}
