@@ -28,6 +28,9 @@ public class Staff {
     @Column(name = "phone", length = 20)
     private String phone;
 
+    @Column(name = "profile", columnDefinition = "LONGTEXT")
+    private String profile;
+
     @Transient private boolean isActive = true;
 
     public String getId() { return staffCode; }
@@ -44,6 +47,8 @@ public class Staff {
     public void setEmail(String email) { this.email = email; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+    public String getProfile() { return profile; }
+    public void setProfile(String profile) { this.profile = profile; }
     public boolean getIsActive() { return true; }
     public void setIsActive(boolean isActive) { this.isActive = isActive; }
     public String getPassword() { return null; }

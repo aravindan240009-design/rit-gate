@@ -28,6 +28,9 @@ public class HR {
     @Column(name = "designation", length = 100)
     private String role;
 
+    @Column(name = "profile", columnDefinition = "LONGTEXT")
+    private String profile;
+
     @Transient private boolean isActive = true;
 
     public String getId() { return hrCode; }
@@ -44,6 +47,8 @@ public class HR {
     public void setDepartment(String department) { this.department = department; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    public String getProfile() { return profile; }
+    public void setProfile(String profile) { this.profile = profile; }
     public boolean getIsActive() { return true; }
     public void setIsActive(boolean isActive) { this.isActive = isActive; }
 }

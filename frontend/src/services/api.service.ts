@@ -238,6 +238,16 @@ class ApiService {
     return 'STAFF'; // safe fallback
   }
 
+  // Profile photo URL for a user by regNo/staffCode. Returns null when none
+  // exists (caller should fall back to initials). Cached by makeRequest.
+  async getProfilePhoto(code: string): Promise<string | null> {
+    if (!code) return null;
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/profile-photo/${encodeURIComponent(code)}`, { method: 'GET' });
+      return data?.photoUrl || null;
+    } catch (_) { return null; }
+  }
+
   async sendStudentOTP(regNo: string): Promise<OTPResponse> {
     try { return await this.makeRequest(`${this.baseURL}/auth/student/send-otp`, { method: 'POST', body: JSON.stringify({ regNo }) }); }
     catch (e: any) { return { success: false, message: e.message || 'Failed to send OTP' }; }

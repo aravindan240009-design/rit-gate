@@ -43,6 +43,10 @@ public class Student {
     @Column(name = "staff_code", length = 50)
     private String staffCode;
 
+    // Relative path to the profile photo, e.g. "studentImages/abc.jpg"
+    @Column(name = "profile", columnDefinition = "LONGTEXT")
+    private String profile;
+
     @Transient private Long id;
     @Transient private String year;
     @Transient private String hod;
@@ -82,6 +86,8 @@ public class Student {
     public void setDegreeType(String degreeType) { this.degreeType = degreeType; }
     public String getStaffCode() { return staffCode; }
     public void setStaffCode(String staffCode) { this.staffCode = staffCode; }
+    public String getProfile() { return profile; }
+    public void setProfile(String profile) { this.profile = profile; }
     public boolean getIsActive() { return true; }
     public void setIsActive(boolean isActive) { this.isActive = isActive; }
 }

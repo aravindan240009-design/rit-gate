@@ -67,6 +67,8 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
   const { profileImage } = useProfile();
   const [selectedPerson, setSelectedPerson] = useState<ActivePerson | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [personPhoto, setPersonPhoto] = useState<string | null>(null);
+  const [personPhotoFailed, setPersonPhotoFailed] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
   const { refreshCount } = useRefresh();
   const [escalatedVisitors, setEscalatedVisitors] = useState<EscalatedVisitor[]>([]);
@@ -482,7 +484,15 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
           renderItem={({ item: person }) => (
             <TouchableOpacity
               style={[styles.personCard, { backgroundColor: theme.surface }]}
-              onPress={() => { setSelectedPerson(person); setShowDetailModal(true); }}
+              onPress={() => {
+                setSelectedPerson(person);
+                setPersonPhoto(null);
+                setPersonPhotoFailed(false);
+                setShowDetailModal(true);
+                if (person.userId) {
+                  apiService.getProfilePhoto(String(person.userId)).then(setPersonPhoto);
+                }
+              }}
             >
               <View style={[styles.personAvatar, { backgroundColor: theme.primary }]}>
                 <ThemedText style={styles.personAvatarText}>{getInitials(person.name)}</ThemedText>
@@ -548,7 +558,11 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
               {/* Profile Row */}
               <View style={[detailStyles.profileRow, { backgroundColor: theme.surface }]}>
                 <View style={[detailStyles.avatar, { backgroundColor: theme.primary }]}>
-                  <ThemedText style={detailStyles.avatarText}>{getInitials(selectedPerson.name)}</ThemedText>
+                  {personPhoto && !personPhotoFailed ? (
+                    <Image source={{ uri: personPhoto }} style={detailStyles.avatarPhoto} onError={() => setPersonPhotoFailed(true)} />
+                  ) : (
+                    <ThemedText style={detailStyles.avatarText}>{getInitials(selectedPerson.name)}</ThemedText>
+                  )}
                 </View>
                 <View style={detailStyles.profileInfo}>
                   <View style={[detailStyles.typePill, { backgroundColor: theme.primary + '22' }]}>
@@ -943,8 +957,9 @@ const detailStyles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { paddingBottom: 8 },
   profileRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 12, borderRadius: 14, padding: 12, gap: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
-  avatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  avatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' },
   avatarText: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
+  avatarPhoto: { width: 48, height: 48, borderRadius: 24 },
   profileInfo: { flex: 1 },
   typePill: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, alignSelf: 'flex-start', marginBottom: 4 },
   typePillText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },

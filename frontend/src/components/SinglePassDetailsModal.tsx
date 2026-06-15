@@ -19,6 +19,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import { useNetwork } from '../context/NetworkContext';
+import { apiService } from '../services/api';
 import { formatDateTimeLocal } from '../utils/dateUtils';
 import ThemedText from './ThemedText';
 import ConfirmationModal from './ConfirmationModal';
@@ -59,8 +60,25 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const [showRemarkError, setShowRemarkError] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoFailed, setPhotoFailed] = useState(false);
 
   useEffect(() => { if (visible) setRemark(''); }, [visible, request?.id]);
+
+  // Fetch the requester's profile photo by regNo/staffCode. Falls back to
+  // initials when there's no photo or the load fails.
+  useEffect(() => {
+    setPhotoUrl(null);
+    setPhotoFailed(false);
+    if (!visible || !request) return;
+    const code = request.regNo || request.staffCode || request.requestedByStaffCode;
+    if (!code) return;
+    let active = true;
+    apiService.getProfilePhoto(String(code)).then(url => {
+      if (active) setPhotoUrl(url);
+    });
+    return () => { active = false; };
+  }, [visible, request?.regNo, request?.staffCode]);
 
   if (!request) return null;
 
@@ -134,7 +152,15 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
           {/* Profile Row */}
           <View style={[styles.profileRow, { backgroundColor: theme.surface }]}>
             <View style={[styles.avatar, { backgroundColor: statusColor }]}>
-              <ThemedText style={styles.avatarText}>{getInitials(request.studentName || request.staffName || request.regNo || 'ST')}</ThemedText>
+              {photoUrl && !photoFailed ? (
+                <Image
+                  source={{ uri: photoUrl }}
+                  style={styles.avatarPhoto}
+                  onError={() => setPhotoFailed(true)}
+                />
+              ) : (
+                <ThemedText style={styles.avatarText}>{getInitials(request.studentName || request.staffName || request.regNo || 'ST')}</ThemedText>
+              )}
             </View>
             <View style={styles.profileInfo}>
               {request.requestType === 'VISITOR' && (
@@ -413,8 +439,9 @@ const styles = StyleSheet.create({
   contentWrap: { flex: 1 },
   scrollContent: { paddingBottom: 20 },
   profileRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginTop: 14, borderRadius: 16, padding: 14, gap: 14, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4 },
-  avatar: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  avatar: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' },
   avatarText: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
+  avatarPhoto: { width: 56, height: 56, borderRadius: 28 },
   profileInfo: { flex: 1 },
   visitorBadge: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 5, alignSelf: 'flex-start', marginBottom: 3 },
   visitorBadgeText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
