@@ -19,6 +19,7 @@ import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import { useErrorModal } from '../../hooks/useErrorModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
@@ -145,9 +146,13 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
       >
         {/* Top row */}
         <View style={styles.cardTopRow}>
-          <View style={[styles.avatar, { backgroundColor: theme.warning + '22' }]}>
-            <ThemedText style={[styles.avatarText, { color: theme.warning }]}>{initials}</ThemedText>
-          </View>
+          <RequesterAvatar
+            code={student.regNo}
+            name={name}
+            size={48}
+            containerStyle={[styles.avatar, { backgroundColor: theme.warning + '22' }]}
+            textStyle={[styles.avatarText, { color: theme.warning }]}
+          />
           <View style={styles.nameBlock}>
             <View style={styles.nameRow}>
               <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>

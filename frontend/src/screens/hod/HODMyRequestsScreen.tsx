@@ -16,6 +16,7 @@ import GatePassQRModal from '../../components/GatePassQRModal';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
@@ -169,9 +170,13 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
       >
         {/* Top row: avatar + name + badge + time */}
         <View style={styles.cardTopRow}>
-          <View style={[styles.avatarCircle, { backgroundColor: theme.primary + '22' }]}>
-            <ThemedText style={[styles.avatarText, { color: theme.primary }]}>{initials}</ThemedText>
-          </View>
+          <RequesterAvatar
+            code={user.hodCode}
+            name={name}
+            size={48}
+            containerStyle={[styles.avatarCircle, { backgroundColor: theme.primary + '22' }]}
+            textStyle={[styles.avatarText, { color: theme.primary }]}
+          />
           <View style={styles.cardNameBlock}>
             <View style={styles.cardNameRow}>
               <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>

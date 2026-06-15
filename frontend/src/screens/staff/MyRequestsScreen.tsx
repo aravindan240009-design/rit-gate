@@ -15,6 +15,7 @@ import MyRequestsBulkModal from '../../components/MyRequestsBulkModal';
 import GatePassQRModal from '../../components/GatePassQRModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl, { RefreshBlurOverlay } from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
@@ -163,9 +164,13 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
     return (
       <TouchableOpacity style={[styles.requestCard, { backgroundColor: theme.surface }]} onPress={() => handleReviewRequest(request)} activeOpacity={0.85}>
         <View style={styles.cardTopRow}>
-          <View style={[styles.avatarCircle, { backgroundColor: theme.warning + '22' }]}>
-            <ThemedText style={[styles.avatarText, { color: theme.warning }]}>{initials}</ThemedText>
-          </View>
+          <RequesterAvatar
+            code={user.staffCode}
+            name={name}
+            size={48}
+            containerStyle={[styles.avatarCircle, { backgroundColor: theme.warning + '22' }]}
+            textStyle={[styles.avatarText, { color: theme.warning }]}
+          />
           <View style={styles.cardNameBlock}>
             <View style={styles.cardNameRow}>
               <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{name}</ThemedText>

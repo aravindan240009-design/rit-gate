@@ -6,6 +6,7 @@ import { NonTeachingFaculty, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import ThemedText from '../../components/ThemedText';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import GatePassQRModal from '../../components/GatePassQRModal';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
@@ -147,9 +148,13 @@ const AdminMyRequestsScreen: React.FC<AdminMyRequestsScreenProps> = ({ admin, on
                     activeOpacity={0.85}
                   >
                     <View style={styles.cardTop}>
-                      <View style={[styles.avatar, { backgroundColor: theme.warning + '22' }]}>
-                        <ThemedText style={[styles.avatarText, { color: theme.warning }]}>{initials}</ThemedText>
-                      </View>
+                      <RequesterAvatar
+                        code={admin.staffCode}
+                        name={admin.staffName || admin.name || 'AO'}
+                        size={48}
+                        containerStyle={[styles.avatar, { backgroundColor: theme.warning + '22' }]}
+                        textStyle={[styles.avatarText, { color: theme.warning }]}
+                      />
                       <View style={styles.cardInfo}>
                         <View style={styles.nameRow}>
                           <ThemedText style={[styles.name, { color: theme.text }]} numberOfLines={1}>
