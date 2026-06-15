@@ -154,16 +154,18 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
       setActivePersons(mergedPersons);
       setPersonsLoading(false);
 
-      // Use backend stats: active = on campus, total = entries today, exited = exits today
+      // "Active" must always equal the people actually shown in the active list
+      // (on-campus = status PENDING), so the count never disagrees with the list.
+      const actualActiveCount = mergedPersons.filter(p => p.status === 'PENDING').length;
+
+      // total/exited come from the backend stats; active is derived from the list.
       if (statsResponse.success && statsResponse.data) {
         setStats({
-          active: statsResponse.data.active,
+          active: actualActiveCount,
           exited: statsResponse.data.exited,
           total:  statsResponse.data.total,  // entries today
         });
       } else {
-        // Fallback: use active persons list
-        const actualActiveCount = mergedPersons.filter(p => p.status === 'PENDING').length;
         setStats({ active: actualActiveCount, exited: 0, total: actualActiveCount });
       }
 
