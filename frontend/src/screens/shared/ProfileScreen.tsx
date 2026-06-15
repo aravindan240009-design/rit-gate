@@ -10,8 +10,6 @@ import {
   TextInput,
   Image,
   BackHandler,
-  Alert,
-  Modal,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -53,7 +51,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onTabChange,
 }) => {
   const { theme, isDark, toggleTheme, resetTheme } = useTheme();
-  const { profileImage, captureImage, clearProfileImage } = useProfile();
+  const { profileImage } = useProfile();
   const { lockSwipe, unlockSwipe } = useActionLock();
 
   const [profileData, setProfileData] = useState({
@@ -82,7 +80,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [outerScrollEnabled, setOuterScrollEnabled] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+
 
   useEffect(() => {
     const onBackPress = () => {
@@ -199,9 +197,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     setShowLogoutModal(true);
   };
 
-  const pickAvatar = () => {
-    setShowPhotoOptions(true);
-  };
+
 
   // Notification preferences removed from UI (requested).
 
@@ -396,9 +392,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 </View>
               )}
             </View>
-            <TouchableOpacity style={[styles.cameraBadge, { backgroundColor: theme.accent, borderColor: theme.background }]} onPress={pickAvatar}>
-              <Ionicons name="camera" size={14} color="#FFFFFF" />
-            </TouchableOpacity>
+
           </View>
           <ThemedText style={[styles.userName, { color: theme.text }]}>{getName().toUpperCase()}</ThemedText>
           <ThemedText style={[styles.userRole, { color: theme.textSecondary }]}>{getRole()} | Dept: {getDept()}</ThemedText>
@@ -491,66 +485,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         message="Your profile has been updated successfully."
         onClose={() => setShowSuccessModal(false)}
       />
-      <Modal
-        visible={showPhotoOptions}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowPhotoOptions(false)}
-      >
-        <TouchableOpacity
-          style={styles.photoOptionsOverlay}
-          activeOpacity={1}
-          onPress={() => setShowPhotoOptions(false)}
-        >
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={(e) => e.stopPropagation()}
-            style={[styles.photoOptionsCard, { backgroundColor: theme.surface }]}
-          >
-            <ThemedText style={[styles.photoOptionsTitle, { color: theme.text }]}>Profile Photo</ThemedText>
-            <ThemedText style={[styles.photoOptionsSubtitle, { color: theme.textSecondary }]}>Choose a photo source</ThemedText>
 
-            <TouchableOpacity
-              style={styles.photoOptionButton}
-              onPress={() => {
-                setShowPhotoOptions(false);
-                captureImage('camera');
-              }}
-            >
-              <ThemedText style={[styles.photoOptionText, { color: theme.primary }]}>Take Photo</ThemedText>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.photoOptionButton}
-              onPress={() => {
-                setShowPhotoOptions(false);
-                captureImage('gallery');
-              }}
-            >
-              <ThemedText style={[styles.photoOptionText, { color: theme.primary }]}>Choose from Gallery</ThemedText>
-            </TouchableOpacity>
-
-            {profileImage && (
-              <TouchableOpacity
-                style={styles.photoOptionButton}
-                onPress={() => {
-                  setShowPhotoOptions(false);
-                  clearProfileImage();
-                }}
-              >
-                <ThemedText style={[styles.photoOptionText, { color: theme.error }]}>Remove Photo</ThemedText>
-              </TouchableOpacity>
-            )}
-
-            <TouchableOpacity
-              style={styles.photoOptionButton}
-              onPress={() => setShowPhotoOptions(false)}
-            >
-              <ThemedText style={[styles.photoOptionText, { color: theme.textSecondary }]}>Cancel</ThemedText>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
     </SafeAreaView>
   );
 };
