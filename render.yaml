@@ -9,6 +9,11 @@ services:
     envVars:
       - key: PORT
         value: 8080
+      # DB connection — RIT Chennai MySQL (ritchennaiedu_gate).
+      # Set these three in the Render dashboard (sync:false = not stored in repo):
+      #   SPRING_DATASOURCE_URL      jdbc:mysql://103.14.121.118:3306/ritchennaiedu_gate?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata&characterEncoding=UTF-8&autoReconnect=true
+      #   SPRING_DATASOURCE_USERNAME ritchennaiedu_gate
+      #   SPRING_DATASOURCE_PASSWORD <the db password>
       - key: SPRING_DATASOURCE_URL
         sync: false
       - key: SPRING_DATASOURCE_USERNAME
