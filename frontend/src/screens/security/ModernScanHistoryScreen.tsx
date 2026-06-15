@@ -21,6 +21,7 @@ import { notificationService } from '../../services/NotificationService';
 import { Calendar } from 'react-native-calendars';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import { useTheme } from '../../context/ThemeContext';
@@ -61,6 +62,7 @@ interface ScanRecord {
     department: string;
   }>;
   regNo?: string;
+  userId?: string;
   department?: string;
 }
 
@@ -643,9 +645,19 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             }
             renderItem={({ item: scan }) => (
               <View style={[styles.scanCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                <View style={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}>
-                  <ThemedText style={[styles.scanAvatarText, { color: theme.primary }]}>{scan.isBulkPass ? 'GP' : getInitials(scan.name)}</ThemedText>
-                </View>
+                {scan.isBulkPass || scan.isEventPass ? (
+                  <View style={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}>
+                    <ThemedText style={[styles.scanAvatarText, { color: theme.primary }]}>{scan.isBulkPass ? 'GP' : 'EV'}</ThemedText>
+                  </View>
+                ) : (
+                  <RequesterAvatar
+                    code={scan.userId || scan.regNo}
+                    name={scan.name}
+                    size={48}
+                    containerStyle={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}
+                    textStyle={[styles.scanAvatarText, { color: theme.primary }]}
+                  />
+                )}
                 <View style={styles.scanInfo}>
                   <ThemedText style={[styles.scanName, { color: theme.text }]}>{scan.name}</ThemedText>
                   <ThemedText style={[styles.scanType, { color: theme.textSecondary }]}>{scan.role || scan.type}</ThemedText>
@@ -971,11 +983,21 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     setShowDetailModal(true);
                   }}
                 >
-                  <View style={[styles.scanAvatar, { backgroundColor: scan.isEventPass ? '#f59e0b20' : theme.primary + '20' }]}>
-                    <ThemedText style={[styles.scanAvatarText, { color: scan.isEventPass ? '#f59e0b' : theme.primary }]}>
-                      {scan.isBulkPass ? 'GP' : scan.isEventPass ? 'EV' : getInitials(scan.name)}
-                    </ThemedText>
-                  </View>
+                  {scan.isBulkPass || scan.isEventPass ? (
+                    <View style={[styles.scanAvatar, { backgroundColor: scan.isEventPass ? '#f59e0b20' : theme.primary + '20' }]}>
+                      <ThemedText style={[styles.scanAvatarText, { color: scan.isEventPass ? '#f59e0b' : theme.primary }]}>
+                        {scan.isBulkPass ? 'GP' : 'EV'}
+                      </ThemedText>
+                    </View>
+                  ) : (
+                    <RequesterAvatar
+                      code={scan.userId || scan.regNo}
+                      name={scan.name}
+                      size={48}
+                      containerStyle={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}
+                      textStyle={[styles.scanAvatarText, { color: theme.primary }]}
+                    />
+                  )}
                   <View style={styles.scanInfo}>
                     {scan.isBulkPass ? (
                       <>
@@ -1167,9 +1189,13 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                           <ThemedText style={[styles.fsBlockLabel, { color: theme.textTertiary }]}>PARTICIPANTS</ThemedText>
                           {selectedScan.participants.map((p, i) => (
                             <View key={i} style={[styles.participantCard, { backgroundColor: theme.surfaceHighlight }]}>
-                              <View style={[styles.participantAvatar, { backgroundColor: theme.primary }]}>
-                                <ThemedText style={styles.participantAvatarText}>{getInitials(p.name)}</ThemedText>
-                              </View>
+                              <RequesterAvatar
+                                code={p.id}
+                                name={p.name}
+                                size={40}
+                                containerStyle={[styles.participantAvatar, { backgroundColor: theme.primary }]}
+                                textStyle={styles.participantAvatarText}
+                              />
                               <View style={styles.participantInfo}>
                                 <ThemedText style={[styles.participantName, { color: theme.text }]}>{p.name}</ThemedText>
                                 <ThemedText style={[styles.participantDetails, { color: theme.textSecondary }]}>{p.id} • {p.type}</ThemedText>
@@ -1184,9 +1210,13 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     <>
                       {/* Single pass profile row */}
                       <View style={[styles.fsProfileRow, { backgroundColor: theme.surface }]}>
-                        <View style={[styles.fsAvatar, { backgroundColor: statusColor }]}>
-                          <ThemedText style={styles.fsAvatarText}>{getInitials(selectedScan.name)}</ThemedText>
-                        </View>
+                        <RequesterAvatar
+                          code={selectedScan.userId || selectedScan.regNo}
+                          name={selectedScan.name}
+                          size={48}
+                          containerStyle={[styles.fsAvatar, { backgroundColor: statusColor }]}
+                          textStyle={styles.fsAvatarText}
+                        />
                         <View style={styles.fsProfileInfo}>
                           <ThemedText style={[styles.fsProfileName, { color: theme.text }]}>{selectedScan.name}</ThemedText>
                           <ThemedText style={[styles.fsProfileSub, { color: theme.textSecondary }]}>

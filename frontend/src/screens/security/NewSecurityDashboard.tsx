@@ -16,6 +16,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SecurityPersonnel, ActivePerson, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import SecurityBottomNav from '../../components/SecurityBottomNav';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import { useProfile } from '../../context/ProfileContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { useRefresh } from '../../context/RefreshContext';
@@ -496,9 +497,13 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                 }
               }}
             >
-              <View style={[styles.personAvatar, { backgroundColor: theme.primary }]}>
-                <ThemedText style={styles.personAvatarText}>{getInitials(person.name)}</ThemedText>
-              </View>
+              <RequesterAvatar
+                code={person.userId}
+                name={person.name}
+                size={48}
+                containerStyle={[styles.personAvatar, { backgroundColor: theme.primary }]}
+                textStyle={styles.personAvatarText}
+              />
               <View style={styles.personInfo}>
                 <ThemedText style={[styles.personName, { color: theme.text }]}>{person.name}</ThemedText>
                 <ThemedText style={[styles.personType, { color: theme.primary }]}>{person.type}</ThemedText>

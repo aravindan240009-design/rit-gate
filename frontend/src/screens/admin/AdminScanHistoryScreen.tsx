@@ -12,6 +12,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { notificationService } from '../../services/NotificationService';
 import { formatDateShortLocal } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import SuccessModal from '../../components/SuccessModal';
@@ -220,9 +221,13 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
               return (
                 <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border, marginHorizontal: 4 }]}>
                   <View style={styles.cardTop}>
-                    <View style={[styles.avatar, { backgroundColor: badgeColor + '18' }]}>
-                      <ThemedText style={[styles.avatarText, { color: badgeColor }]}>{getInitials(item.name || item.userId)}</ThemedText>
-                    </View>
+                    <RequesterAvatar
+                      code={item.userId}
+                      name={item.name || item.userId}
+                      size={44}
+                      containerStyle={[styles.avatar, { backgroundColor: badgeColor + '18' }]}
+                      textStyle={[styles.avatarText, { color: badgeColor }]}
+                    />
                     <View style={styles.cardInfo}>
                       <ThemedText style={[styles.cardName, { color: theme.text }]} numberOfLines={1}>{item.name || item.userId || 'Unknown'}</ThemedText>
                       <ThemedText style={[styles.cardSub, { color: theme.textSecondary }]} numberOfLines={1}>
