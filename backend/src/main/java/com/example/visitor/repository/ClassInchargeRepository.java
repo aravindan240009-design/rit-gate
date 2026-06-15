@@ -15,10 +15,10 @@ import org.springframework.stereotype.Repository;
 public interface ClassInchargeRepository extends JpaRepository<ClassIncharge, ClassInchargeId> {
 
     /** Check by exact staff_code match in students table */
-    @Query(value = "SELECT COUNT(*) FROM students WHERE staff_code = :staffCode", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM students_rit WHERE staff_code = :staffCode", nativeQuery = true)
     long countByStaffCode(@Param("staffCode") String staffCode);
 
     /** Check by name — LIKE match on class_incharge column in students */
-    @Query(value = "SELECT COUNT(*) FROM students WHERE LOWER(class_incharge) LIKE LOWER(CONCAT('%', :name, '%'))", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM students_rit WHERE LOWER(class_incharge) LIKE LOWER(CONCAT('%', :name, '%'))", nativeQuery = true)
     long countByNameContaining(@Param("name") String name);
 }

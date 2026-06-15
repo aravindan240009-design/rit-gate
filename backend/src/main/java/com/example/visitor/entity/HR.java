@@ -7,7 +7,7 @@ import jakarta.persistence.*;
  * Columns: name, staff_code, department, designation, email, phone
  */
 @Entity
-@Table(name = "non_teaching_staffs")
+@Table(name = "non_teaching_staffs_rit")
 public class HR {
     @Id
     @Column(name = "staff_code", nullable = false, unique = true, length = 50)

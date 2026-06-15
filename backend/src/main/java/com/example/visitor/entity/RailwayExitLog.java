@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "Exit_logs")
+@Table(name = "Exits")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

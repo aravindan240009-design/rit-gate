@@ -9,7 +9,7 @@ import jakarta.persistence.*;
  * staff_code = HOD's staff code (login ID) — NOT unique, multiple depts can share a HOD
  */
 @Entity
-@Table(name = "departments")
+@Table(name = "departments_rit")
 public class HOD {
     @Id
     @Column(name = "name", length = 100)

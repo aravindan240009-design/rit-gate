@@ -36,7 +36,7 @@ public class DepartmentController {
     public ResponseEntity<List<Map<String, Object>>> getAllDepartments() {
         try {
             List<Map<String, Object>> departmentList = jdbcTemplate.queryForList(
-                "SELECT name, hod, staff_code, student_count, staff_count FROM departments WHERE name IS NOT NULL AND name != ''"
+                "SELECT name, hod, staff_code, student_count, staff_count FROM departments_rit WHERE name IS NOT NULL AND name != ''"
             ).stream().map(row -> {
                 String name = (String) row.get("name");
                 Map<String, Object> map = new HashMap<>();
@@ -64,7 +64,7 @@ public class DepartmentController {
     public ResponseEntity<Map<String, Object>> getDepartmentById(@PathVariable String id) {
         try {
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT name, hod, staff_code, student_count, staff_count FROM departments WHERE name = ?", id
+                "SELECT name, hod, staff_code, student_count, staff_count FROM departments_rit WHERE name = ?", id
             );
             if (rows.isEmpty()) return ResponseEntity.notFound().build();
             Map<String, Object> map = new HashMap<>();
@@ -90,7 +90,7 @@ public class DepartmentController {
 
             // Get HOD staff_code from departments table using normalized department matching.
             List<Map<String, Object>> deptRows = jdbcTemplate.queryForList(
-                "SELECT name, staff_code FROM departments WHERE name IS NOT NULL AND name != ''"
+                "SELECT name, staff_code FROM departments_rit WHERE name IS NOT NULL AND name != ''"
             ).stream()
                 .filter(row -> DepartmentMapper.isSameDepartment((String) row.get("name"), departmentCode))
                 .collect(Collectors.toList());

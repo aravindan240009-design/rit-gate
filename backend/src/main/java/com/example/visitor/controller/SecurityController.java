@@ -1597,7 +1597,7 @@ public class SecurityController {
         try {
             // Use departments table — has staff_code, hod (name), name (dept)
             List<java.util.Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT staff_code, hod, name FROM departments WHERE staff_code IS NOT NULL AND staff_code != '' AND hod IS NOT NULL AND hod != ''"
+                "SELECT staff_code, hod, name FROM departments_rit WHERE staff_code IS NOT NULL AND staff_code != '' AND hod IS NOT NULL AND hod != ''"
             );
 
             List<HODDTO> hodDTOs = new java.util.ArrayList<>();
@@ -1615,7 +1615,7 @@ public class SecurityController {
                 String email = null, phone = null;
                 try {
                     List<java.util.Map<String, Object>> staffRows = jdbcTemplate.queryForList(
-                        "SELECT email, phone FROM teaching_staffs WHERE staff_code = ? LIMIT 1",
+                        "SELECT email, phone FROM teaching_staffs_rit WHERE staff_code = ? LIMIT 1",
                         staffCode
                     );
                     if (!staffRows.isEmpty()) {
@@ -1750,7 +1750,7 @@ public class SecurityController {
             // Fetch HODs from students table for this department
             String shortCode = DepartmentMapper.toShortCode(departmentName);
             List<java.util.Map<String, Object>> hodRows = jdbcTemplate.queryForList(
-                "SELECT DISTINCT hod FROM students WHERE hod IS NOT NULL AND hod != '' AND department LIKE ?",
+                "SELECT DISTINCT hod FROM students_rit WHERE hod IS NOT NULL AND hod != '' AND department LIKE ?",
                 "%" + (shortCode != null ? shortCode : departmentName) + "%"
             );
             java.util.Set<String> addedHods = new java.util.HashSet<>();

@@ -11,7 +11,7 @@ import jakarta.persistence.*;
  * This entity maps to students table for read-only class incharge lookups.
  */
 @Entity
-@Table(name = "students")
+@Table(name = "students_rit")
 @IdClass(ClassInchargeId.class)
 public class ClassIncharge {
 

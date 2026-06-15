@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 // Maps to the Entry table (same as RailwayEntry) - used by SecurityController
 @Entity
-@Table(name = "Entry")
+@Table(name = "Entries")
 public class ScanLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -42,7 +42,7 @@ public interface StudentRepository extends JpaRepository<Student, String> {
     List<Student> findFirstYearStudents();
 
     // Check if a staff code is a class incharge
-    @Query(value = "SELECT COUNT(*) FROM students WHERE staff_code = :staffCode", nativeQuery = true)
+    @Query(value = "SELECT COUNT(*) FROM students_rit WHERE staff_code = :staffCode", nativeQuery = true)
     long countClassInchargeByCode(@Param("staffCode") String staffCode);
 
     default boolean isClassIncharge(String staffCode) {
@@ -59,13 +59,13 @@ public interface StudentRepository extends JpaRepository<Student, String> {
 
     // Single-query role detection — replaces 5 sequential queries in detect-role endpoint
     @Query(value =
-        "SELECT 'STUDENT' AS role, '' AS designation FROM students WHERE register_no = :code " +
+        "SELECT 'STUDENT' AS role, '' AS designation FROM students_rit WHERE register_no = :code " +
         "UNION ALL " +
-        "SELECT 'HOD', '' FROM departments WHERE staff_code = :code " +
+        "SELECT 'HOD', '' FROM departments_rit WHERE staff_code = :code " +
         "UNION ALL " +
-        "SELECT 'NTF', designation FROM non_teaching_staffs WHERE staff_code = :code " +
+        "SELECT 'NTF', designation FROM non_teaching_staffs_rit WHERE staff_code = :code " +
         "UNION ALL " +
-        "SELECT 'STAFF', '' FROM teaching_staffs WHERE staff_code = :code " +
+        "SELECT 'STAFF', '' FROM teaching_staffs_rit WHERE staff_code = :code " +
         "LIMIT 1",
         nativeQuery = true)
     List<Object[]> detectRoleByCode(@Param("code") String code);

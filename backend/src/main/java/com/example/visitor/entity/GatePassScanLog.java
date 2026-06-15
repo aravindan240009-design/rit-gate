@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 // Maps to Exit_logs table (same as RailwayExitLog)
 @Entity
-@Table(name = "Exit_logs")
+@Table(name = "Exits")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
