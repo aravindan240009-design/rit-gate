@@ -66,6 +66,9 @@ import { getInitialNotificationData } from './services/localNotification.service
 import { biometricAuthService } from './services/biometricAuth.service';
 import { runNotificationOnboarding, logDeviceNotificationInfo } from './utils/notificationOnboarding';
 import { apiService } from './services/api.service';
+import crashReporting from './services/crashReporting';
+import { checkVersion, VersionGate } from './services/versionCheck';
+import ForceUpdateScreen from './screens/ForceUpdateScreen';
 import { offlineQueue } from './services/offlineQueue.service';
 
 // Register FCM background handler immediately (Feature 1 — must be outside React tree)
@@ -125,6 +128,22 @@ const App: React.FC = () => {
   const [biometricLoading, setBiometricLoading] = React.useState(false);
   const [biometricMessage, setBiometricMessage] = React.useState('');
   const [biometricPrompted, setBiometricPrompted] = React.useState(false);
+  const [versionGate, setVersionGate] = React.useState<VersionGate | null>(null);
+
+  // Launch-time version gate — hard-block old APKs after a breaking backend change.
+  React.useEffect(() => {
+    checkVersion().then(setVersionGate).catch(() => {});
+  }, []);
+
+  // Attribute Crashlytics reports to the current user/role once login resolves.
+  React.useEffect(() => {
+    if (!userType) return;
+    const code =
+      student?.regNo || staff?.staffCode || (hod as any)?.hodCode ||
+      (hr as any)?.staffCode || (ntf as any)?.staffCode || (nci as any)?.staffCode ||
+      (admin as any)?.staffCode || (security as any)?.securityId;
+    if (code) crashReporting.setUserId(`${userType}:${code}`);
+  }, [userType, student, staff, hod, hr, ntf, nci, admin, security]);
 
   // Battery optimization gate — removed (no longer shown to users)
 
@@ -847,6 +866,11 @@ const App: React.FC = () => {
     console.log(`📱 RENDER: screen=${currentScreen}, userType=${userType}, isLoading=${isLoading}`);
 
     try {
+      // Force-upgrade gate — hard block before anything else if the APK is too old.
+      if (versionGate?.blocked) {
+        return <ForceUpdateScreen updateUrl={versionGate.updateUrl} message={versionGate.message} />;
+      }
+
       // Show loading screen
       if (isLoading) {
         return <LoadingScreen />;

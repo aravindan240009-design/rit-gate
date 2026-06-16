@@ -1,5 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import crashReporting from '../services/crashReporting';
 
 interface Props {
   children: ReactNode;
@@ -23,6 +24,8 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: any) {
     console.error('ErrorBoundary caught:', error, info?.componentStack);
+    // Report to Crashlytics so production crashes are visible.
+    crashReporting.recordError(error, info?.componentStack);
   }
 
   handleReset = () => {

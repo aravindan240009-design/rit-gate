@@ -193,7 +193,8 @@ public class GatePassRequest {
         PENDING_HOD,
         PENDING_HR,
         APPROVED,
-        REJECTED
+        REJECTED,
+        USED        // QR has been scanned at the gate; request is consumed and hidden from lists
     }
     
     public enum ApprovalStatus {

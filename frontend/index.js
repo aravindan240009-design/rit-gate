@@ -42,4 +42,18 @@ function Root() {
   );
 }
 
+// ── Global crash reporting ──────────────────────────────────────────────────
+// Forward uncaught JS errors to Crashlytics, then chain to the default handler
+// (which still shows the red box in dev / terminates as usual in release).
+import crashReporting from './src/services/crashReporting';
+
+const defaultGlobalHandler =
+  typeof ErrorUtils !== 'undefined' ? ErrorUtils.getGlobalHandler() : null;
+if (typeof ErrorUtils !== 'undefined') {
+  ErrorUtils.setGlobalHandler((error, isFatal) => {
+    crashReporting.recordError(error, isFatal ? 'FATAL uncaught JS error' : 'uncaught JS error');
+    if (defaultGlobalHandler) defaultGlobalHandler(error, isFatal);
+  });
+}
+
 AppRegistry.registerComponent('main', () => Root);

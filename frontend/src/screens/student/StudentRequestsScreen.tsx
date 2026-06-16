@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  TextInput,
   BackHandler,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,7 +36,6 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [requests, setRequests] = useState<any[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
@@ -101,13 +99,6 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
     setIsLoading(true);
     loadRequests();
   };
-
-  const filteredRequests = requests.filter(r =>
-    searchQuery === '' ||
-    r.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.purpose?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.id?.toString().includes(searchQuery)
-  );
 
   const getStatusBadge = (status: string) => {
     if (status === 'APPROVED') return { text: 'ACTIVE', color: theme.success, bg: theme.success + '22' };
@@ -209,23 +200,10 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
       </View>
 
       <ScreenContentContainer>
-        <View style={{ paddingHorizontal: 20 }}>
-          <View style={[styles.searchWrap, { backgroundColor: theme.surface }]}>
-            <Ionicons name="search" size={20} color={theme.textTertiary} />
-            <TextInput
-              style={[styles.searchInput, { color: theme.text }]}
-              placeholder="Search requests..."
-              placeholderTextColor={theme.textTertiary}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
-        </View>
-
         {(isLoading || refreshing) ? <SkeletonList count={5} /> : (
         <VerticalFlatList
           style={styles.scroll}
-          data={filteredRequests}
+          data={requests}
           keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -307,8 +285,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   headerTitle: { fontSize: 24, fontWeight: '700' },
-  searchWrap: { flexDirection: 'row', alignItems: 'center', marginTop: 16, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, gap: 10 },
-  searchInput: { flex: 1, fontSize: 16 },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 },
   empty: { paddingVertical: 80, alignItems: 'center' },

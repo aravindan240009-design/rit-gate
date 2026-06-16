@@ -23,6 +23,7 @@ import { useTheme } from '../../context/ThemeContext';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import SearchableDropdown, { DropdownItem } from '../../components/SearchableDropdown';
 import { SkeletonList } from '../../components/SkeletonCard';
+import RequesterAvatar from '../../components/RequesterAvatar';
 
 interface HODContactsScreenProps {
   security: SecurityPersonnel;
@@ -140,19 +141,6 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
     }
   };
 
-  const getInitials = (name: string | null | undefined) => {
-    if (!name || typeof name !== 'string' || name.trim() === '') return 'HD';
-    const trimmedName = name.trim();
-    const parts = trimmedName.split(' ').filter(part => part.length > 0);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    if (parts.length === 1 && parts[0].length >= 2) {
-      return parts[0].substring(0, 2).toUpperCase();
-    }
-    return 'HD';
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
@@ -225,9 +213,13 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
           <View key={hod.id} style={[styles.hodCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             {/* Avatar and Info */}
             <View style={styles.hodHeader}>
-              <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-                <ThemedText style={[styles.avatarText, { color: '#FFFFFF' }]}>{getInitials(hod.name)}</ThemedText>
-              </View>
+              <RequesterAvatar
+                code={hod.hodCode}
+                name={hod.name}
+                size={56}
+                containerStyle={[styles.avatar, { backgroundColor: theme.primary }]}
+                textStyle={[styles.avatarText, { color: '#FFFFFF' }]}
+              />
               <View style={styles.hodInfo}>
                 <ThemedText style={[styles.hodName, { color: theme.text }]}>{hod.name || 'Unknown HOD'}</ThemedText>
                 <ThemedText style={[styles.hodDepartment, { color: theme.textSecondary }]}>

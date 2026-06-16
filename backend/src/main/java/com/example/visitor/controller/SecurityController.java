@@ -318,6 +318,31 @@ public class SecurityController {
     
     // Internal method for QR code scanning logic with QR table push/pop
     @org.springframework.transaction.annotation.Transactional
+    /**
+     * After a QR is consumed at the gate (its qr_table row deleted on the final scan),
+     * mark the linked gate pass request as USED so it disappears from every "My Requests"
+     * list and can never be reused. Best-effort: never blocks the scan response.
+     */
+    private void markGatePassRequestUsed(QRTable qrTable) {
+        try {
+            if (qrTable == null || qrTable.getPassRequestId() == null) return;
+            gatePassRequestRepository.findById(qrTable.getPassRequestId()).ifPresent(gpr -> {
+                gpr.setQrUsed(true);
+                gpr.setQrUsedAt(java.time.LocalDateTime.now());
+                gpr.setStatus(GatePassRequest.RequestStatus.USED);
+                // Clear QR fields so the pass can't be re-rendered or re-scanned
+                gpr.setQrCode(null);
+                gpr.setManualCode(null);
+                gpr.setQrCodeGeneratedAt(null);
+                gpr.setQrExpiresAt(null);
+                gatePassRequestRepository.save(gpr);
+                System.out.println("🗑️  Marked gate pass request " + gpr.getId() + " as USED (hidden from lists)");
+            });
+        } catch (Exception e) {
+            System.err.println("⚠️ Could not mark gate pass request used: " + e.getMessage());
+        }
+    }
+
     private ResponseEntity<?> scanQrCodeInternal(String qrCode) {
         try {
             // Step 0: Check if this is a bulk/group pass (GP| prefix)
@@ -528,10 +553,13 @@ public class SecurityController {
                         }
                     }
                     railwayExitLogRepository.save(exitLog);
-                    
+
+                    // Mark the linked request USED (hide from lists) BEFORE deleting the QR row
+                    markGatePassRequestUsed(qrTable);
+
                     // Delete the entire row from qr_table
                     qrTableRepository.delete(qrTable);
-                    
+
                     System.out.println("✅ ST/SF/HD EXIT APPROVED - Random matched exit column, deleted row: " + qrCode);
                 } else {
                     System.out.println("❌ ACCESS DENIED - Random does not match exit column: " + qrCode);
@@ -685,10 +713,13 @@ public class SecurityController {
                         railwayExitLogRepository.save(exitLog);
                         
                         System.out.println("✅ VG EXIT record created in Exit_logs table");
-                        
+
+                        // Mark the linked request USED (hide from lists) BEFORE deleting the QR row
+                        markGatePassRequestUsed(qrTable);
+
                         // Delete the entire row from qr_table
                         qrTableRepository.delete(qrTable);
-                        
+
                         System.out.println("✅ VG EXIT APPROVED - Deleted entire row: " + qrCode);
                     } else {
                         System.out.println("❌ ACCESS DENIED - Random does not match exit column: " + qrCode);
@@ -1274,9 +1305,12 @@ public class SecurityController {
                 System.out.println("✅ Exit logged: " + name + " (" + participantId + ")");
             }
             
+            // Mark the linked bulk request USED (hide from lists) BEFORE deleting the QR row
+            markGatePassRequestUsed(qrTable);
+
             // Delete the entire row from QR table (same as ST/SF workflow)
             qrTableRepository.delete(qrTable);
-            
+
             System.out.println("✅ Bulk pass QR deleted from database (single-use enforced)");
             
             // Fetch the Gatepass request to get purpose and reason
@@ -2858,7 +2892,8 @@ public class SecurityController {
                     shouldCreateExitLog = true;
                     qrIdForExit = qrTable.getId();
                     exitUserType = "ST".equals(type) ? "STUDENT" : ("SF".equals(type) ? "STAFF" : "HOD");
-                    // Delete the row from qr_table
+                    // Mark linked request USED, then delete the row from qr_table
+                    markGatePassRequestUsed(qrTable);
                     qrTableRepository.delete(qrTable);
                     System.out.println("✅ EXIT APPROVED (SF/ST/HD) - Deleted row for token: " + token);
                 } else {
@@ -2923,6 +2958,7 @@ public class SecurityController {
                             }
                         } catch (Exception ignored) {}
 
+                        markGatePassRequestUsed(qrTable);
                         qrTableRepository.delete(qrTable);
                         System.out.println("✅ VG EXIT APPROVED - Deleted row: " + qrCode);
                     } else {

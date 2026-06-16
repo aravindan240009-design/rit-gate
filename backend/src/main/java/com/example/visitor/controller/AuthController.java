@@ -13,6 +13,7 @@ import com.example.visitor.repository.StaffRepository;
 import com.example.visitor.repository.HODRepository;
 import com.example.visitor.repository.HRRepository;
 import com.example.visitor.service.EmailService;
+import com.example.visitor.service.OtpService;
 import com.example.visitor.util.DepartmentMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -68,12 +68,9 @@ public class AuthController {
     @Value("${auth.rate.limit.seconds:60}")
     private int rateLimitSeconds;
     
-    // In-memory storage (in production, use Redis)
-    private final Map<String, String> otpStore = new ConcurrentHashMap<>();
-    private final Map<String, Long> otpTimestamp = new ConcurrentHashMap<>();
-    private final Map<String, Long> otpExpiry = new ConcurrentHashMap<>();
-    private final Map<String, Integer> otpAttempts = new ConcurrentHashMap<>();
-    private final Map<String, Long> lastOTPRequest = new ConcurrentHashMap<>();
+    // Durable OTP storage (MySQL-backed) — survives backend restarts.
+    @Autowired
+    private OtpService otpService;
     
     // ============================================
     // SECURITY HELPER METHODS
@@ -102,21 +99,14 @@ public class AuthController {
      * Check rate limiting for OTP requests
      */
     private ResponseEntity<?> checkRateLimit(String userId, String userType) {
-        String rateLimitKey = "rate:" + userId;
-        Long lastRequest = lastOTPRequest.get(rateLimitKey);
-        
-        if (lastRequest != null) {
-            long timeSinceLastRequest = System.currentTimeMillis() - lastRequest;
-            if (timeSinceLastRequest < rateLimitSeconds * 1000) {
-                long waitTime = (rateLimitSeconds * 1000 - timeSinceLastRequest) / 1000;
-                logAuthEvent(userId, userType, "OTP_SENT", "RATE_LIMITED", "Wait " + waitTime + " seconds");
-                return ResponseEntity.status(429)
-                    .body(createErrorResponse("Please wait " + waitTime + " seconds before requesting another OTP"));
-            }
+        // Rate-limit keyed off the user id, persisted in the durable OTP store.
+        OtpService.RateLimitResult result = otpService.checkRateLimit("rate:" + userId, rateLimitSeconds);
+        if (!result.allowed()) {
+            long waitTime = result.waitSeconds();
+            logAuthEvent(userId, userType, "OTP_SENT", "RATE_LIMITED", "Wait " + waitTime + " seconds");
+            return ResponseEntity.status(429)
+                .body(createErrorResponse("Please wait " + waitTime + " seconds before requesting another OTP"));
         }
-        
-        // Update last request time
-        lastOTPRequest.put(rateLimitKey, System.currentTimeMillis());
         return null;
     }
     
@@ -124,53 +114,30 @@ public class AuthController {
      * Verify OTP with attempt limiting
      */
     private ResponseEntity<?> verifyOTPWithAttempts(String email, String otp, String userId, String userType) {
-        // Check if OTP exists
-        if (!otpStore.containsKey(email)) {
-            logAuthEvent(userId, userType, "LOGIN", "FAILED", "No OTP found");
-            return ResponseEntity.status(400).body(createErrorResponse("No OTP found. Please request a new one"));
+        OtpService.VerifyResult result = otpService.verifyOtp(email, otp, maxOTPAttempts);
+        switch (result.outcome()) {
+            case NO_OTP:
+                logAuthEvent(userId, userType, "LOGIN", "FAILED", "No OTP found");
+                return ResponseEntity.status(400).body(createErrorResponse("No OTP found. Please request a new one"));
+            case EXPIRED:
+                logAuthEvent(userId, userType, "LOGIN", "FAILED", "OTP expired");
+                return ResponseEntity.status(400).body(createErrorResponse("OTP expired. Please request a new one"));
+            case MAX_ATTEMPTS:
+                logAuthEvent(userId, userType, "LOGIN", "BLOCKED", "Max attempts reached");
+                System.out.println("⚠️  Max attempts reached for: " + email);
+                return ResponseEntity.status(429)
+                    .body(createErrorResponse("Too many failed attempts. Please request a new OTP"));
+            case INVALID:
+                logAuthEvent(userId, userType, "LOGIN", "FAILED", "Invalid OTP");
+                System.out.println("❌ Invalid OTP for: " + email);
+                return ResponseEntity.status(400)
+                    .body(createErrorResponse("Invalid OTP. " + result.remainingAttempts() + " attempt(s) remaining"));
+            case SUCCESS:
+            default:
+                logAuthEvent(userId, userType, "LOGIN", "SUCCESS", "OTP verified successfully");
+                System.out.println("✅ OTP verified successfully for: " + email);
+                return null; // null means success
         }
-        
-        // Check OTP expiry
-        long timestamp = otpTimestamp.get(email);
-        if (System.currentTimeMillis() - timestamp > otpExpiryMinutes * 60 * 1000) {
-            otpStore.remove(email);
-            otpTimestamp.remove(email);
-            otpAttempts.remove(email);
-            logAuthEvent(userId, userType, "LOGIN", "FAILED", "OTP expired");
-            return ResponseEntity.status(400).body(createErrorResponse("OTP expired. Please request a new one"));
-        }
-        
-        // Check attempts
-        int attempts = otpAttempts.getOrDefault(email, 0);
-        if (attempts >= maxOTPAttempts) {
-            otpStore.remove(email);
-            otpTimestamp.remove(email);
-            otpAttempts.remove(email);
-            logAuthEvent(userId, userType, "LOGIN", "BLOCKED", "Max attempts reached");
-            System.out.println("⚠️  Max attempts reached for: " + email);
-            return ResponseEntity.status(429)
-                .body(createErrorResponse("Too many failed attempts. Please request a new OTP"));
-        }
-        
-        // Verify OTP using BCrypt
-        String storedHashedOTP = otpStore.get(email);
-        if (!passwordEncoder.matches(otp, storedHashedOTP)) {
-            otpAttempts.put(email, attempts + 1);
-            int remaining = maxOTPAttempts - attempts - 1;
-            logAuthEvent(userId, userType, "LOGIN", "FAILED", "Invalid OTP (attempt " + (attempts + 1) + "/" + maxOTPAttempts + ")");
-            System.out.println("❌ Invalid OTP attempt " + (attempts + 1) + "/" + maxOTPAttempts + " for: " + email);
-            return ResponseEntity.status(400)
-                .body(createErrorResponse("Invalid OTP. " + remaining + " attempt(s) remaining"));
-        }
-        
-        // Success - clear all tracking data
-        otpStore.remove(email);
-        otpTimestamp.remove(email);
-        otpAttempts.remove(email);
-        logAuthEvent(userId, userType, "LOGIN", "SUCCESS", "OTP verified successfully");
-        System.out.println("✅ OTP verified successfully for: " + email);
-        
-        return null; // null means success
     }
     
     /**
@@ -214,12 +181,10 @@ public class AuthController {
                 return ResponseEntity.status(403).body(createErrorResponse("Account is inactive"));
             }
 
-            // Generate and store OTP with BCrypt hashing
+            // Generate and store OTP (hashed + persisted by OtpService)
             String otp = generateOTP();
-            String hashedOTP = passwordEncoder.encode(otp);
-            otpStore.put(security.getEmail(), hashedOTP);
-            otpTimestamp.put(security.getEmail(), System.currentTimeMillis());
-            
+            otpService.storeOtp(security.getEmail(), otp, otpExpiryMinutes);
+
             // Send OTP via Email
             sendOTPEmail(security.getEmail(), otp, security.getName());
   // Log OTP to console for testing - ENHANCED FORMAT
@@ -275,11 +240,10 @@ public class AuthController {
                 return ResponseEntity.status(403).body(createErrorResponse("Account is inactive"));
             }
 
-            // Generate and store OTP
+            // Generate and store OTP (hashed + persisted by OtpService)
             String otp = generateOTP();
-            otpStore.put(security.getEmail(), otp);
-            otpTimestamp.put(security.getEmail(), System.currentTimeMillis());
-            
+            otpService.storeOtp(security.getEmail(), otp, otpExpiryMinutes);
+
             // Send OTP via Email
             sendOTPEmail(security.getEmail(), otp, security.getName());
 
@@ -437,12 +401,10 @@ public class AuthController {
             
             Student student = studentOpt.get();
             
-            // Generate and store OTP with BCrypt hashing
+            // Generate and store OTP (hashed + persisted by OtpService)
             String otp = generateOTP();
-            String hashedOTP = passwordEncoder.encode(otp);
-            otpStore.put(student.getEmail(), hashedOTP);
-            otpTimestamp.put(student.getEmail(), System.currentTimeMillis());
-            
+            otpService.storeOtp(student.getEmail(), otp, otpExpiryMinutes);
+
             // Send OTP via Email
             sendOTPEmail(student.getEmail(), otp, student.getFullName());
             
@@ -566,8 +528,7 @@ public class AuthController {
             }
             
             String otp = generateOTP();
-            otpStore.put(email, passwordEncoder.encode(otp));
-            otpTimestamp.put(email, System.currentTimeMillis());
+            otpService.storeOtp(email, otp, otpExpiryMinutes);
             sendOTPEmail(email, otp, staffName);
             System.out.println("🔐 OTP [STAFF/NTF] " + staffCode + " → " + otp);
             
@@ -681,11 +642,9 @@ public class AuthController {
                 return ResponseEntity.status(404).body(createErrorResponse("No email found for this HOD"));
             }
             
-            // Generate and store OTP with BCrypt hashing
+            // Generate and store OTP (hashed + persisted by OtpService)
             String otp = generateOTP();
-            String hashedOTP = passwordEncoder.encode(otp);
-            otpStore.put(hod.getEmail(), hashedOTP);
-            otpTimestamp.put(hod.getEmail(), System.currentTimeMillis());
+            otpService.storeOtp(hod.getEmail(), otp, otpExpiryMinutes);
             
             // Send OTP via Email
             sendOTPEmail(hod.getEmail(), otp, hod.getHodName());
@@ -815,11 +774,9 @@ public class AuthController {
             
             HR hr = hrOpt.get();
             
-            // Generate and store OTP with BCrypt hashing
+            // Generate and store OTP (hashed + persisted by OtpService)
             String otp = generateOTP();
-            String hashedOTP = passwordEncoder.encode(otp);
-            otpStore.put(hr.getEmail(), hashedOTP);
-            otpTimestamp.put(hr.getEmail(), System.currentTimeMillis());
+            otpService.storeOtp(hr.getEmail(), otp, otpExpiryMinutes);
             
             // Send OTP via Email
             sendOTPEmail(hr.getEmail(), otp, hr.getHrName());
@@ -944,10 +901,8 @@ public class AuthController {
 
             String otp = generateOTP();
 
-            // Store OTP with 5 minute expiry
-            otpStore.put(email, otp);
-            otpExpiry.put(email, System.currentTimeMillis() + 300000);
-            otpAttempts.put(email, 0);
+            // Store OTP (hashed + persisted by OtpService, configured expiry)
+            otpService.storeOtp(email, otp, otpExpiryMinutes);
 
             // Send OTP via email
             sendOTPEmail(email, otp, security.getName());
