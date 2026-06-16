@@ -80,8 +80,11 @@ public class EmailService {
 
     public void sendOTP(String email, String otp, String userName) {
         // Unique subject per send — prevents Gmail/mail clients from threading all OTP
-        // emails together and hiding newer ones in the same conversation thread.
-        String subject = "Your RIT Gate OTP: " + otp.substring(0, 3) + "***";
+        // emails together and hiding the newest one. Uses the request time (NOT the OTP
+        // digits) so the code is never exposed in subject lines / notification previews.
+        String stamp = ZonedDateTime.now(ZoneId.of("Asia/Kolkata"))
+            .format(DateTimeFormatter.ofPattern("h:mm a"));
+        String subject = "Your RIT Gate Login Code (" + stamp + ")";
         String textBody =
             "Dear " + userName + ",\n\n" +
             "Your One-Time Password (OTP) for login is:\n\n" +
