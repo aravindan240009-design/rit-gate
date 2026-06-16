@@ -98,8 +98,14 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
     }
   };
 
-  const statusColor = getStatusColor(request.status || request.hrApproval);
-  const statusLabel = (request.hrApproval || request.status || 'PENDING').toUpperCase();
+  // The overall request status is authoritative. APPROVED/REJECTED are terminal;
+  // any other value (PENDING_STAFF / PENDING_HOD / PENDING_HR / PENDING) is shown as
+  // a single "PENDING". (Older logic read hrApproval first, but student/hostel passes
+  // have no HR step — hrApproval stays "PENDING" and wrongly overrode an APPROVED status.)
+  const rawStatus = String(request.status || request.hrApproval || 'PENDING').toUpperCase();
+  const isTerminal = rawStatus === 'APPROVED' || rawStatus === 'REJECTED';
+  const statusLabel = isTerminal ? rawStatus : 'PENDING';
+  const statusColor = getStatusColor(statusLabel);
   const showStaffRemark = !!request.staffRemark;
   const showHodRemark = !!request.hodRemark;
   const showHrRemark = !!request.hrRemark || !!request.hrApprovalRemark;

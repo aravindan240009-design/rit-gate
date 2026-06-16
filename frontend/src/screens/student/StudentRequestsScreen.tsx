@@ -250,13 +250,25 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
         viewerRole="student"
         timelineSteps={selectedRequest ? (() => {
           const s = selectedRequest.status;
+          const approved = s === 'APPROVED';
+          const rejected = s === 'REJECTED';
+          // After-3PM hosteler requests are routed to the hostel warden as the sole
+          // approver (no Staff/HOD chain) — show a 2-step timeline.
+          if (selectedRequest.routeType === 'HOSTEL_WARDEN') {
+            return [
+              { label: 'Request Submitted', status: 'done' as const },
+              {
+                label: 'Hostel Warden Approval',
+                status: approved ? 'done' as const : rejected ? 'rejected' as const : 'pending' as const,
+                remark: selectedRequest.staffRemark || selectedRequest.rejectionReason,
+              },
+            ];
+          }
           const staffDone = s !== 'PENDING_STAFF';
-          const hodApproved = s === 'APPROVED';
-          const hodRejected = s === 'REJECTED';
           return [
             { label: 'Request Submitted', status: 'done' as const },
             { label: 'Staff Approval', status: staffDone ? 'done' as const : 'pending' as const, remark: selectedRequest.staffRemark },
-            { label: 'HOD Approval', status: hodApproved ? 'done' as const : hodRejected ? 'rejected' as const : 'pending' as const, remark: selectedRequest.hodRemark || selectedRequest.rejectionReason },
+            { label: 'HOD Approval', status: approved ? 'done' as const : rejected ? 'rejected' as const : 'pending' as const, remark: selectedRequest.hodRemark || selectedRequest.rejectionReason },
           ];
         })() : []}
       />
