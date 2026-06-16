@@ -386,7 +386,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <View style={styles.headerSection}>
           <View style={styles.avatarContainer}>
             <View style={[styles.avatarRing, { borderColor: theme.accent }]}>
-              {profileImage ? <Image source={{ uri: profileImage }} style={styles.avatarImage} /> : (
+              {profileImage ? <Image source={{ uri: profileImage }} style={styles.avatarImage} resizeMode="cover" /> : (
                 <View style={[styles.avatar, { backgroundColor: theme.surfaceHighlight }]}>
                   <ThemedText style={[styles.avatarText, { color: theme.accent }]}>{getInitials()}</ThemedText>
                 </View>

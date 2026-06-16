@@ -297,7 +297,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
             {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+              <Image source={{ uri: profileImage }} style={styles.avatarImage} resizeMode="cover" />
             ) : (
               <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
                 <ThemedText style={styles.avatarText}>{getInitials(hod.hodName || 'HOD')}</ThemedText>
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
+  avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   avatarImage: { width: 48, height: 48, borderRadius: 24 },
   avatarText: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
   headerInfo: { gap: 2, flex: 1 },

@@ -315,7 +315,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
         <View style={styles.headerLeft}>
           <TouchableOpacity style={[styles.avatar, { backgroundColor: theme.primary }]} onPress={() => onNavigate('PROFILE')}>
             {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+              <Image source={{ uri: profileImage }} style={styles.avatarImage} resizeMode="cover" />
             ) : (
               <View style={[styles.avatarFallback, { backgroundColor: theme.surfaceHighlight }]}>
                 <ThemedText style={[styles.avatarText, { color: theme.primary }]}>{getInitials(user.name || user.securityName || 'SG')}</ThemedText>
@@ -566,7 +566,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
               <View style={[detailStyles.profileRow, { backgroundColor: theme.surface }]}>
                 <View style={[detailStyles.avatar, { backgroundColor: theme.primary }]}>
                   {personPhoto && !personPhotoFailed ? (
-                    <Image source={{ uri: personPhoto }} style={detailStyles.avatarPhoto} onError={() => setPersonPhotoFailed(true)} />
+                    <Image source={{ uri: personPhoto }} style={detailStyles.avatarPhoto} resizeMode="cover" onError={() => setPersonPhotoFailed(true)} />
                   ) : (
                     <ThemedText style={detailStyles.avatarText}>{getInitials(selectedPerson.name)}</ThemedText>
                   )}

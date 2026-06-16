@@ -160,7 +160,7 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
           <View style={styles.headerLeft}>
             <TouchableOpacity onPress={() => onNavigate('PROFILE')}>
               {profileImage ? (
-                <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+                <Image source={{ uri: profileImage }} style={styles.avatarImage} resizeMode="cover" />
               ) : (
                 <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
                   <ThemedText style={styles.avatarText}>{getInitials(nci.staffName || 'NF')}</ThemedText>
@@ -452,6 +452,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   avatarImage: {
     width: 44,

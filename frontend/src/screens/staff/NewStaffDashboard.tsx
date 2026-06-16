@@ -380,7 +380,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
             onNavigate('PROFILE');
           }}>
             {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+              <Image source={{ uri: profileImage }} style={styles.avatarImage} resizeMode="cover" />
             ) : (
               <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
                 <ThemedText style={styles.avatarText}>{getInitials(staff.staffName || 'DR')}</ThemedText>
@@ -774,6 +774,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   avatarImage: {
     width: 48,

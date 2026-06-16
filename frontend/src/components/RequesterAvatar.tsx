@@ -45,7 +45,7 @@ const RequesterAvatar: React.FC<Props> = ({ code, name, size = 48, containerStyl
   return (
     <View style={[styles.container, dim, containerStyle]}>
       {photo && !failed ? (
-        <Image source={{ uri: photo }} style={dim} onError={() => setFailed(true)} />
+        <Image source={{ uri: photo }} style={dim} resizeMode="cover" onError={() => setFailed(true)} />
       ) : (
         <ThemedText style={textStyle}>{getInitials(name)}</ThemedText>
       )}

@@ -156,6 +156,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
                 <Image
                   source={{ uri: photoUrl }}
                   style={styles.avatarPhoto}
+                  resizeMode="cover"
                   onError={() => setPhotoFailed(true)}
                 />
               ) : (

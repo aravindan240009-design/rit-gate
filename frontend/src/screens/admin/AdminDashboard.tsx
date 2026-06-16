@@ -120,7 +120,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout, onNavi
           <View style={styles.headerLeft}>
             <TouchableOpacity onPress={() => { setBottomTab('PROFILE'); onNavigate('PROFILE'); }}>
               {profileImage ? (
-                <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+                <Image source={{ uri: profileImage }} style={styles.avatarImage} resizeMode="cover" />
               ) : (
                 <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
                   <ThemedText style={styles.avatarText}>{getInitials(admin.staffName || admin.name || 'AO')}</ThemedText>
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
-  avatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  avatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   avatarImage: { width: 44, height: 44, borderRadius: 22 },
   avatarText: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
   headerInfo: { flex: 1 },

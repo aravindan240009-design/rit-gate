@@ -37,7 +37,7 @@ const TopMenuBar: React.FC<TopMenuBarProps> = ({
         ) : (
           <TouchableOpacity onPress={onProfilePress} style={styles.profileButton}>
             {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+              <Image source={{ uri: profileImage }} style={styles.profileImage} resizeMode="cover" />
             ) : (
               <View style={[styles.profileCircle, { backgroundColor: theme.primary }]}>
                 <ThemedText style={styles.initialsText}>{getInitials(title)}</ThemedText>
