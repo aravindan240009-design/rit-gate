@@ -395,6 +395,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
                 staffApproval={trackingRequest.approvedByStaff || 'PENDING'}
                 hodApproval={trackingRequest.approvedByHOD || 'PENDING'}
                 requestDate={trackingRequest.requestDate}
+                routeType={trackingRequest.routeType}
               />
             )}
 

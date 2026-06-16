@@ -105,6 +105,7 @@ export interface GatePassRequest {
   rejectionReason?: string;
   qrCode?: string;
   passType?: 'SINGLE' | 'BULK';
+  routeType?: string; // 'HOSTEL_WARDEN' for after-3PM hosteler requests
   includeStaff?: boolean;
   studentCount?: number;
   qrOwnerId?: string;

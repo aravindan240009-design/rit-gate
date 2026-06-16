@@ -361,13 +361,16 @@ public class GatePassRequestController {
                 item.put("id", gp.getId());
                 item.put("passType", gp.getPassType() != null ? gp.getPassType() : "SINGLE");
                 item.put("regNo", gp.getRegNo());
+                item.put("studentName", gp.getStudentName());
                 item.put("department", gp.getDepartment());
                 item.put("purpose", gp.getPurpose());
+                item.put("reason", gp.getReason());
                 item.put("exitDateTime", gp.getExitDateTime());
                 item.put("requestDate", gp.getRequestDate());
                 item.put("status", gp.getStatus());
                 item.put("requestedByStaffName", gp.getRequestedByStaffName());
                 item.put("userType", gp.getUserType());
+                item.put("routeType", gp.getRouteType());
                 item.put("includeStaff", gp.getIncludeStaff());
                 item.put("studentCount", gp.getStudentCount());
                 item.put("sourceType", "GATE_PASS");

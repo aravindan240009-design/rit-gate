@@ -11,6 +11,7 @@ interface RequestTimelineProps {
   requestDate: string;
   staffRemark?: string;
   hodRemark?: string;
+  routeType?: string; // 'HOSTEL_WARDEN' for after-3PM hosteler requests
 }
 
 const RequestTimeline: React.FC<RequestTimelineProps> = ({
@@ -19,8 +20,13 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({
   hodApproval,
   staffRemark,
   hodRemark,
+  routeType,
 }) => {
   const { theme } = useTheme();
+
+  // Hostel-warden requests bypass the normal Staff→HOD chain: the warden is the
+  // sole approver (tracked in the staff-approval slot). Show a 2-step timeline.
+  const isHostel = routeType === 'HOSTEL_WARDEN';
 
   const getStepStatus = (step: number) => {
     if (status === 'REJECTED') {
@@ -68,20 +74,25 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({
     return 'ellipse-outline';
   };
 
-  const steps = [
-    { label: 'Request Submitted', step: 1 },
-    { label: 'Staff Approval', step: 2 },
-    { label: 'HOD Approval', step: 3 },
-  ];
+  const steps = isHostel
+    ? [
+        { label: 'Request Submitted', step: 1 },
+        { label: 'Hostel Warden Approval', step: 2 },
+      ]
+    : [
+        { label: 'Request Submitted', step: 1 },
+        { label: 'Staff Approval', step: 2 },
+        { label: 'HOD Approval', step: 3 },
+      ];
 
   const getCompletedStepsCount = () => {
     let count = 1;
     if (staffApproval === 'APPROVED') count++;
-    if (hodApproval === 'APPROVED') count++;
+    if (!isHostel && hodApproval === 'APPROVED') count++;
     return count;
   };
 
-  const progressPercentage = (getCompletedStepsCount() / 3) * 100;
+  const progressPercentage = (getCompletedStepsCount() / steps.length) * 100;
 
   return (
     <View style={styles.container}>
@@ -124,7 +135,7 @@ const RequestTimeline: React.FC<RequestTimelineProps> = ({
               </ThemedText>
               {item.step === 2 && staffRemark && (
                 <View style={[styles.remarkContainer, { backgroundColor: theme.inputBackground, borderLeftColor: theme.warning }]}>
-                  <ThemedText style={[styles.remarkLabel, { color: theme.textSecondary }]}>Staff Remark:</ThemedText>
+                  <ThemedText style={[styles.remarkLabel, { color: theme.textSecondary }]}>{isHostel ? 'Warden Remark:' : 'Staff Remark:'}</ThemedText>
                   <ThemedText style={[styles.remarkText, { color: theme.text }]}>{staffRemark}</ThemedText>
                 </View>
               )}

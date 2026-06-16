@@ -389,7 +389,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
                         <ThemedText style={[styles.statusModalDate, { color: theme.textSecondary }]}>{formatDateTimeLocal(selectedRequest.requestDate)}</ThemedText>
                       </View>
                     </View>
-                    <RequestTimeline status={selectedRequest.status} staffApproval={selectedRequest.staffApproval || 'PENDING'} hodApproval={selectedRequest.hodApproval || 'PENDING'} requestDate={selectedRequest.requestDate} staffRemark={selectedRequest.staffRemark} hodRemark={selectedRequest.hodRemark}/>
+                    <RequestTimeline status={selectedRequest.status} staffApproval={selectedRequest.staffApproval || 'PENDING'} hodApproval={selectedRequest.hodApproval || 'PENDING'} requestDate={selectedRequest.requestDate} staffRemark={selectedRequest.staffRemark} hodRemark={selectedRequest.hodRemark} routeType={selectedRequest.routeType}/>
                     <TouchableOpacity style={[styles.closeModalButton, { backgroundColor: theme.inputBackground }]} onPress={() => setShowDetailModal(false)}>
                       <ThemedText style={[styles.closeModalButtonText, { color: theme.text }]}>Close Status</ThemedText>
                     </TouchableOpacity>
