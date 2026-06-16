@@ -28,6 +28,8 @@ export interface Student {
   section?: string;
   currentStatus?: 'INSIDE' | 'OUTSIDE';
   isActive?: boolean;
+  hosteler?: boolean;   // after-3PM gate passes route to hostel warden
+  gender?: string;      // MALE / FEMALE
 }
 
 export interface Staff {

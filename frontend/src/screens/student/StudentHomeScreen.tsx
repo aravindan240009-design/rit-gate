@@ -18,10 +18,15 @@ const getISTTime = () => {
   return { hours: ist.getHours(), minutes: ist.getMinutes() };
 };
 
-/** Students: gate pass disabled after 15:00 IST */
-const isStudentPassDisabled = () => {
+/**
+ * After 15:00 IST, day-scholars can no longer request a gate pass. Hostelers CAN
+ * still apply after 3PM — their request is routed to the hostel warden — so the
+ * button stays enabled for them.
+ */
+const isStudentPassDisabled = (student?: Student) => {
   const { hours } = getISTTime();
-  return hours >= 15;
+  if (hours < 15) return false;          // before 3PM: everyone can apply
+  return student?.hosteler !== true;     // after 3PM: only hostelers can apply
 };
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -249,7 +254,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
       {/* Fixed: Request Gate Pass card + Recent Requests heading */}
       <View style={styles.staticHeaderContainer}>
         {(() => {
-          const gatePassDisabled = isStudentPassDisabled();
+          const gatePassDisabled = isStudentPassDisabled(student);
           return (
             <TouchableOpacity
               style={[styles.requestCard, { backgroundColor: theme.cardBackground }]}

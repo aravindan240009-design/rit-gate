@@ -478,7 +478,10 @@ public class AuthController {
             
             // Set regNo explicitly for frontend compatibility
             userDTO.setRegNo(student.getRegNo());
-            
+            // Hosteler/gender drive the after-3PM hostel routing gate on the client
+            userDTO.setHosteler(student.getHosteler());
+            userDTO.setGender(student.getGender());
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Login successful");

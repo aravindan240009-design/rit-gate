@@ -19,7 +19,11 @@ public class UserResponseDTO {
     private String email;
     private String phone;
     private String department;
-    
+
+    // Student-only: drives the after-3PM hostel gate-pass routing on the client
+    private Boolean hosteler;
+    private String gender;
+
     @JsonProperty("isActive")
     private boolean isActive; // Explicitly boolean, not Boolean
     
@@ -152,6 +156,12 @@ public class UserResponseDTO {
     
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
+
+    public Boolean getHosteler() { return hosteler; }
+    public void setHosteler(Boolean hosteler) { this.hosteler = hosteler; }
+
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
     private String role;
     public String getRole() { return role; }
