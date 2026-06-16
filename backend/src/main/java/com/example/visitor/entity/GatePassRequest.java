@@ -115,6 +115,9 @@ public class GatePassRequest {
     @Column(name = "qr_expires_at")
     private LocalDateTime qrExpiresAt; // Midnight of the day the QR was generated
     
+    @Column(name = "route_type")
+    private String routeType; // null = normal flow; "HOSTEL_WARDEN" = after-3PM hosteler routed to warden
+
     @Column(name = "pass_type")
     private String passType = "SINGLE"; // SINGLE, BULK
     

@@ -28,6 +28,10 @@ public class HR {
     @Column(name = "designation", length = 100)
     private String role;
 
+    // MALE / FEMALE — set on Hostel warden accounts to match student gender
+    @Column(name = "gender", length = 20)
+    private String gender;
+
     @Column(name = "profile", columnDefinition = "LONGTEXT")
     private String profile;
 
@@ -47,6 +51,8 @@ public class HR {
     public void setDepartment(String department) { this.department = department; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
     public String getProfile() { return profile; }
     public void setProfile(String profile) { this.profile = profile; }
     public boolean getIsActive() { return true; }

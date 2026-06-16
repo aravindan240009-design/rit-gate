@@ -509,6 +509,48 @@ public class NotificationService {
 
     // ==================== PRIVATE HELPER ====================
 
+    // ==================== HOSTEL WARDEN (AFTER-3PM) NOTIFICATIONS ====================
+
+    /** Notify the gender-matched hostel warden of a new after-3PM hosteler request. */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyWardenOfHostelerRequest(GatePassRequest request) {
+        try {
+            String message = String.format(
+                "New Hostel Gate Pass Request from %s. Please review.", request.getStudentName());
+            save(request.getAssignedStaffCode(),
+                "New Hostel Gate Pass", message,
+                Notification.NotificationType.GATE_PASS, Notification.NotificationPriority.HIGH,
+                "/staff/pending-approvals");
+        } catch (Exception e) {
+            log.error("Error notifying warden of hosteler request", e);
+        }
+    }
+
+    /**
+     * Inform the student's class incharge that their student submitted an after-3PM hostel
+     * gate pass. Info-only — no approval action. Includes the spec fields:
+     * Student Name, Register No, Department, Outing Date/Time, Purpose, Status.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyClassInchargeOfHostelerRequest(GatePassRequest request, String classInchargeCode) {
+        try {
+            String outing = request.getExitDateTime() != null
+                ? request.getExitDateTime().toString()
+                : (request.getRequestDate() != null ? request.getRequestDate().toString() : "N/A");
+            String message = String.format(
+                "%s (%s), %s, submitted a hostel gate pass.\nOuting: %s\nPurpose: %s\nStatus: %s",
+                request.getStudentName(), request.getRegNo(), request.getDepartment(),
+                outing, request.getPurpose(),
+                request.getStatus() != null ? request.getStatus().name() : "PENDING");
+            save(classInchargeCode,
+                "Hostel Gate Pass — Your Student", message,
+                Notification.NotificationType.INFO, Notification.NotificationPriority.NORMAL,
+                "/staff/notifications");
+        } catch (Exception e) {
+            log.error("Error notifying class incharge of hosteler request", e);
+        }
+    }
+
     private void save(String userId, String title, String message,
                       Notification.NotificationType type, Notification.NotificationPriority priority,
                       String actionUrl) {

@@ -45,4 +45,11 @@ public interface HRRepository extends JpaRepository<HR, String> {
 
     // Find non-teaching staff by department
     List<HR> findByDepartment(String department);
+
+    // Find Hostel Wardens by gender (designation = 'Hostel warden').
+    // Case-insensitive on both designation and gender so data casing doesn't matter.
+    @Query("SELECT h FROM HR h WHERE LOWER(TRIM(h.role)) = LOWER(:designation) " +
+           "AND UPPER(TRIM(h.gender)) = UPPER(:gender)")
+    List<HR> findWardensByGender(@Param("designation") String designation,
+                                 @Param("gender") String gender);
 }

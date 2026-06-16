@@ -364,6 +364,14 @@ class ApiService {
     catch (e: any) { return { success: false, message: e.message || 'Failed to reject' }; }
   }
 
+  // Returns whether a non-teaching account is a Hostel Warden (and their gender)
+  async getWardenInfo(staffCode: string): Promise<{ isWarden: boolean; gender?: string | null }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/gate-pass/warden/${staffCode}/info`, { method: 'GET' });
+      return { isWarden: !!data.isWarden, gender: data.gender };
+    } catch { return { isWarden: false }; }
+  }
+
   async approveVisitorRequest(visitorId: number, approvedBy: string): Promise<ApiResponse> {
     try {
       const data = await this.makeRequest(`${this.baseURL}/visitors/${visitorId}/approve?approvedBy=${encodeURIComponent(approvedBy)}`, { method: 'POST' });

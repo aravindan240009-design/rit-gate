@@ -47,6 +47,14 @@ public class Student {
     @Column(name = "profile", columnDefinition = "LONGTEXT")
     private String profile;
 
+    // True when the student stays in a hostel — drives after-3PM warden routing
+    @Column(name = "hosteler")
+    private Boolean hosteler;
+
+    // MALE / FEMALE — used to pick the gender-matched hostel warden
+    @Column(name = "gender", length = 20)
+    private String gender;
+
     @Transient private Long id;
     @Transient private String year;
     @Transient private String hod;
@@ -88,6 +96,10 @@ public class Student {
     public void setStaffCode(String staffCode) { this.staffCode = staffCode; }
     public String getProfile() { return profile; }
     public void setProfile(String profile) { this.profile = profile; }
+    public Boolean getHosteler() { return hosteler; }
+    public void setHosteler(Boolean hosteler) { this.hosteler = hosteler; }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
     public boolean getIsActive() { return true; }
     public void setIsActive(boolean isActive) { this.isActive = isActive; }
 }

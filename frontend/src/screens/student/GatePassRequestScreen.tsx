@@ -49,6 +49,7 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
   const [reason, setReason] = useState('');
   const [attachment, setAttachment] = useState<any>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('Submitted!');
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
@@ -161,7 +162,12 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
         } else {
           response = (isStaff || isHOD) ? await apiService.submitStaffGatePassRequest(payload as any) : await apiService.submitGatePassRequest(payload as any);
         }
-        if (response.success) { setSubmitted(true); setShowSuccessModal(true); }
+        if (response.success) {
+          setSubmitted(true);
+          // For after-3PM hostelers the backend returns the warden-forwarded message.
+          setSuccessMessage((response as any).message || 'Submitted!');
+          setShowSuccessModal(true);
+        }
         else { setErrorMessage(response.message || 'Failed to submit.'); setShowErrorModal(true); }
       } catch (error: any) { setErrorMessage(error.message || 'Error occurred.'); setShowErrorModal(true); }
     }, 'Submitting request...');
@@ -297,7 +303,7 @@ const GatePassRequestScreen: React.FC<GatePassRequestScreenProps> = ({ user, nav
         onCancel={() => setShowBackConfirm(false)}
         icon="arrow-back-outline"
       />
-      <SuccessModal visible={showSuccessModal} title="Success" message="Submitted!" onClose={() => { setShowSuccessModal(false); handleGoBack(); }} />
+      <SuccessModal visible={showSuccessModal} title="Success" message={successMessage} onClose={() => { setShowSuccessModal(false); handleGoBack(); }} />
       <ErrorModal visible={showErrorModal} title="Error" message={errorMessage} onClose={() => setShowErrorModal(false)} type="general" />
     </SafeAreaView>
   );

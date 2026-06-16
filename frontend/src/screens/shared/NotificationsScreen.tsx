@@ -211,7 +211,7 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
                       </ThemedText>
                       {!item.isRead && <View style={[styles.unreadDot, { backgroundColor: theme.primary }]} />}
                     </View>
-                    <ThemedText style={[styles.message, { color: theme.textSecondary }]} numberOfLines={3}>
+                    <ThemedText style={[styles.message, { color: theme.textSecondary }]} numberOfLines={item.notificationType === 'INFO' ? 6 : 3}>
                       {item.message}
                     </ThemedText>
                     <ThemedText style={[styles.timestamp, { color: theme.textTertiary }]}>

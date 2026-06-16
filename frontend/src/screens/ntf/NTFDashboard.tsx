@@ -46,6 +46,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const [modalMsg, setModalMsg] = useState('');
   const [selectedVisitor, setSelectedVisitor] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [isWarden, setIsWarden] = useState(false);
   const { unreadCount, loadNotifications } = useNotifications();
   const { refreshCount } = useRefresh();
   const { profileImage } = useProfile();
@@ -60,8 +61,15 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const getInitials = (name: string) =>
     (name || 'NF').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
+  const wardenRef = React.useRef(false);
+
   useEffect(() => {
-    loadData();
+    // Detect warden status first so the first data load can include hostel requests
+    apiService.getWardenInfo(ntf.staffCode).then(info => {
+      wardenRef.current = info.isWarden;
+      setIsWarden(info.isWarden);
+      loadData();
+    });
     loadNotifications(ntf.staffCode, 'staff');
     const interval = setInterval(() => loadData(true), 10000);
     return () => clearInterval(interval);
@@ -86,7 +94,24 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
         const rb = (r.registeredBy || r.registered_by || '').toString();
         return (rb === 'WEBSITE' || rb.toUpperCase().startsWith('WEB-')) && isTodayRequest(r);
       });
-      setAllRequests(websiteOnly);
+
+      // Wardens additionally see the after-3PM hostel gate-pass requests routed to them.
+      // The combined /pending-all endpoint returns GATE_PASS + VISITOR items tagged with sourceType.
+      let hostelRequests: any[] = [];
+      if (wardenRef.current) {
+        const combined = await apiService.getStaffVisitorRequests(ntf.staffCode);
+        if (myFetchId !== fetchIdRef.current) return;
+        hostelRequests = (combined.data || [])
+          .filter((r: any) => r.sourceType === 'GATE_PASS')
+          .map((r: any) => ({
+            ...r,
+            kind: 'HOSTEL_GATE_PASS',
+            requesterName: r.studentName || r.requestedByStaffName || r.regNo,
+            createdAt: r.requestDate || r.exitDateTime,
+            status: typeof r.status === 'string' ? r.status.replace('PENDING_STAFF', 'PENDING') : r.status,
+          }));
+      }
+      setAllRequests([...hostelRequests, ...websiteOnly]);
     } catch (e) {
       if (myFetchId !== fetchIdRef.current) return;
       console.error('NTF visitor load error:', e);
@@ -117,13 +142,17 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
     rejected: allRequests.filter(r => r.status === 'REJECTED').length,
   };
 
+  const isHostelReq = (req: any) => req?.kind === 'HOSTEL_GATE_PASS';
+
   const handleApprove = async (req: any) => {
     const id = req.requestId || req.id;
     setProcessing(id);
     setAllRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
     try {
-      const res = await apiService.approveVisitorRequest(id, ntf.staffCode);
-      if (res.success) { setModalMsg('Visitor approved.'); setShowSuccess(true); }
+      const res = isHostelReq(req)
+        ? await apiService.approveGatePassByStaff(ntf.staffCode, id, 'Approved by warden')
+        : await apiService.approveVisitorRequest(id, ntf.staffCode);
+      if (res.success) { setModalMsg(isHostelReq(req) ? 'Hostel gate pass approved.' : 'Visitor approved.'); setShowSuccess(true); }
       else { loadData(); setModalMsg(res.message || 'Failed to approve.'); setShowError(true); }
     } catch (e: any) { loadData(); setModalMsg(e.message || 'Error.'); setShowError(true); }
     finally { setProcessing(null); }
@@ -134,8 +163,10 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
     setProcessing(id);
     setAllRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
     try {
-      const res = await apiService.rejectVisitorRequest(id, 'Rejected by staff');
-      if (res.success) { setModalMsg('Visitor rejected.'); setShowSuccess(true); }
+      const res = isHostelReq(req)
+        ? await apiService.rejectGatePassByStaff(ntf.staffCode, id, 'Rejected by warden')
+        : await apiService.rejectVisitorRequest(id, 'Rejected by staff');
+      if (res.success) { setModalMsg(isHostelReq(req) ? 'Hostel gate pass rejected.' : 'Visitor rejected.'); setShowSuccess(true); }
       else { loadData(); setModalMsg(res.message || 'Failed to reject.'); setShowError(true); }
     } catch (e: any) { loadData(); setModalMsg(e.message || 'Error.'); setShowError(true); }
     finally { setProcessing(null); }
@@ -239,14 +270,21 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                           <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
                             {req.requesterName || req.name || 'Visitor'}
                           </ThemedText>
-                          <View style={[styles.passTypePill, { backgroundColor: theme.surfaceHighlight, borderColor: theme.border }]}>
-                            <ThemedText style={[styles.passTypePillText, { color: theme.text }]}>
-                              {(req.role || req.type || 'Visitor').charAt(0).toUpperCase() + (req.role || req.type || 'Visitor').slice(1).toLowerCase()}
-                            </ThemedText>
-                          </View>
+                          {/* Explicit request-type chip so wardens can tell hostel passes from visitors */}
+                          {req.kind === 'HOSTEL_GATE_PASS' ? (
+                            <View style={[styles.typeChip, { backgroundColor: theme.primary }]}>
+                              <ThemedText style={[styles.typeChipText, { color: '#FFFFFF' }]}>HOSTEL GATE PASS</ThemedText>
+                            </View>
+                          ) : (
+                            <View style={[styles.typeChip, { backgroundColor: theme.surfaceHighlight, borderWidth: 1, borderColor: theme.border }]}>
+                              <ThemedText style={[styles.typeChipText, { color: theme.text }]}>VISITOR</ThemedText>
+                            </View>
+                          )}
                         </View>
                         <ThemedText style={[styles.studentIdSub, { color: theme.textSecondary }]}>
-                          {req.visitorEmail || req.email || ''}{req.visitorPhone ? ` • ${req.visitorPhone}` : ''}
+                          {req.kind === 'HOSTEL_GATE_PASS'
+                            ? `${req.regNo || ''}${req.department ? ` • ${req.department}` : ''}`
+                            : `${req.visitorEmail || req.email || ''}${req.visitorPhone ? ` • ${req.visitorPhone}` : ''}`}
                         </ThemedText>
                       </View>
 
@@ -292,7 +330,9 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
               ListEmptyComponent={
                 <View style={styles.emptyState}>
                   <Ionicons name="people-outline" size={64} color={theme.border} />
-                  <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>No {activeTab.toLowerCase()} visitor requests</ThemedText>
+                  <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
+                    No {activeTab.toLowerCase()} {isWarden ? 'requests' : 'visitor requests'}
+                  </ThemedText>
                 </View>
               }
             />
@@ -378,20 +418,34 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
       <SinglePassDetailsModal
         visible={showDetailModal}
         onClose={() => setShowDetailModal(false)}
-        request={selectedVisitor ? {
-          id: selectedVisitor.requestId || selectedVisitor.id,
-          studentName: selectedVisitor.requesterName || selectedVisitor.name || 'Visitor',
-          regNo: selectedVisitor.visitorPhone || selectedVisitor.phone || '',
-          department: selectedVisitor.department || '',
-          purpose: selectedVisitor.purpose || '',
-          reason: selectedVisitor.purpose || '',
-          requestDate: selectedVisitor.visitDate || selectedVisitor.createdAt,
-          visitDate: selectedVisitor.visitDate,
-          status: selectedVisitor.status,
-          requestType: 'VISITOR',
-          role: selectedVisitor.role || selectedVisitor.type || 'VISITOR',
-          staffApproval: selectedVisitor.status,
-        } : null}
+        request={selectedVisitor ? (
+          selectedVisitor.kind === 'HOSTEL_GATE_PASS' ? {
+            id: selectedVisitor.requestId || selectedVisitor.id,
+            studentName: selectedVisitor.studentName || selectedVisitor.requesterName || '',
+            regNo: selectedVisitor.regNo || '',
+            department: selectedVisitor.department || '',
+            purpose: selectedVisitor.purpose || '',
+            reason: selectedVisitor.reason || selectedVisitor.purpose || '',
+            requestDate: selectedVisitor.requestDate || selectedVisitor.createdAt,
+            exitDateTime: selectedVisitor.exitDateTime,
+            status: selectedVisitor.status,
+            requestType: 'HOSTEL',
+            staffApproval: selectedVisitor.status,
+          } : {
+            id: selectedVisitor.requestId || selectedVisitor.id,
+            studentName: selectedVisitor.requesterName || selectedVisitor.name || 'Visitor',
+            regNo: selectedVisitor.visitorPhone || selectedVisitor.phone || '',
+            department: selectedVisitor.department || '',
+            purpose: selectedVisitor.purpose || '',
+            reason: selectedVisitor.purpose || '',
+            requestDate: selectedVisitor.visitDate || selectedVisitor.createdAt,
+            visitDate: selectedVisitor.visitDate,
+            status: selectedVisitor.status,
+            requestType: 'VISITOR',
+            role: selectedVisitor.role || selectedVisitor.type || 'VISITOR',
+            staffApproval: selectedVisitor.status,
+          }
+        ) : null}
         showActions={selectedVisitor?.status === 'PENDING'}
         viewerRole="staff"
         processing={processing === (selectedVisitor?.requestId || selectedVisitor?.id)}
@@ -615,6 +669,16 @@ const styles = StyleSheet.create({
   passTypePillText: {
     fontSize: 11,
     fontWeight: '700',
+  },
+  typeChip: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  typeChipText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   statusBadge: {
     paddingHorizontal: 12,

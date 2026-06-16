@@ -3,10 +3,13 @@ package com.example.visitor.controller;
 import com.example.visitor.util.ErrorMessages;
 
 import com.example.visitor.entity.GatePassRequest;
+import com.example.visitor.entity.HR;
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.repository.GatePassRequestRepository;
+import com.example.visitor.repository.HRRepository;
 import com.example.visitor.repository.VisitorRepository;
 import com.example.visitor.service.GatePassRequestService;
+import com.example.visitor.util.HostelConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,9 @@ public class GatePassRequestController {
 
     @Autowired
     private VisitorRepository visitorRepository;
+
+    @Autowired
+    private HRRepository hrRepository;
     
     // Submit student gate pass request
     @PostMapping("/student/submit")
@@ -72,12 +78,16 @@ public class GatePassRequestController {
             // Submit the request
             GatePassRequest gatePassRequest = gatePassRequestService.submitStudentRequest(
                 regNo, purpose, reason, requestDate, attachmentUri);
-            
+
             response.put("success", true);
-            response.put("message", "Gate pass request submitted successfully");
+            boolean routedToWarden = "HOSTEL_WARDEN".equals(gatePassRequest.getRouteType());
+            response.put("message", routedToWarden
+                ? "Your request has been forwarded to the respective Hostel Warden. Your Class Incharge has been notified."
+                : "Gate pass request submitted successfully");
             response.put("requestId", gatePassRequest.getId());
             response.put("status", gatePassRequest.getStatus().toString());
-            
+            response.put("routeType", gatePassRequest.getRouteType());
+
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
@@ -188,6 +198,32 @@ public class GatePassRequestController {
             log.error("Error fetching non-class-incharge own requests", e);
             response.put("success", false);
             response.put("message", "Error fetching requests: " + ErrorMessages.userFriendly(e));
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // Warden info — lets the NTF dashboard know if this non-teaching account is a Hostel Warden.
+    // Returns { isWarden, gender } so the dashboard can show the combined hostel/visitor queue.
+    @GetMapping("/warden/{staffCode}/info")
+    public ResponseEntity<Map<String, Object>> getWardenInfo(@PathVariable String staffCode) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            boolean isWarden = false;
+            String gender = null;
+            Optional<HR> hrOpt = hrRepository.findByHrCode(staffCode);
+            if (hrOpt.isPresent() && HostelConfig.isWardenDesignation(hrOpt.get().getRole())) {
+                isWarden = true;
+                gender = HostelConfig.normalizeGender(hrOpt.get().getGender());
+            }
+            response.put("success", true);
+            response.put("isWarden", isWarden);
+            response.put("gender", gender);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error fetching warden info for {}", staffCode, e);
+            response.put("success", false);
+            response.put("isWarden", false);
+            response.put("message", "Error fetching warden info: " + ErrorMessages.userFriendly(e));
             return ResponseEntity.badRequest().body(response);
         }
     }

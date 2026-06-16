@@ -2,6 +2,7 @@ package com.example.visitor.service;
 
 import com.example.visitor.entity.*;
 import com.example.visitor.repository.*;
+import com.example.visitor.util.HostelConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -61,7 +62,10 @@ public class GatePassRequestService {
             s.getFullName(),
             s.getDepartment(),
             s.getStaffCode(),
-            s.getSemester() != null ? s.getSemester().toString() : null
+            s.getSemester() != null ? s.getSemester().toString() : null,
+            // [4] hosteler flag, [5] gender — drive after-3PM warden routing
+            HostelConfig.isHosteler(s) ? "true" : "false",
+            s.getGender()
         };
     }
 
@@ -81,6 +85,19 @@ public class GatePassRequestService {
         String department  = studentInfo[1];
         String staffCode   = studentInfo[2];
         Integer semester   = studentInfo[3] != null ? Integer.parseInt(studentInfo[3]) : null;
+        boolean isHosteler = "true".equals(studentInfo[4]);
+        String gender      = studentInfo[5];
+
+        LocalDateTime submittedAt = requestDate != null ? requestDate : LocalDateTime.now();
+
+        // ===== After-3PM hostel routing =====
+        // Hostelers submitting at/after 15:00 are routed to the gender-matched Hostel Warden
+        // as the SOLE approver (HOD bypassed). The Class Incharge gets an info-only notification.
+        // All other cases fall through to the existing flow below, unchanged.
+        if (HostelConfig.isAfterCutoff(submittedAt) && isHosteler) {
+            return submitHostelerToWarden(regNo, studentName, department, staffCode,
+                gender, purpose, reason, submittedAt, attachmentUri);
+        }
 
         // Find assigned staff (class incharge for this student's section)
         String assignedStaffCode = (staffCode != null && !staffCode.isBlank())
@@ -125,7 +142,67 @@ public class GatePassRequestService {
 
         return saved;
     }
-    
+
+    /**
+     * After-3PM hosteler routing: send the request to the gender-matched Hostel Warden as the
+     * sole approver (HOD bypassed). The warden sits in the assignedStaffCode slot, so the EXISTING
+     * approveByStaff()/rejectByStaff() flow finalizes the pass and generates the QR (because
+     * assignedHodCode is null). The student's Class Incharge gets an info-only notification.
+     */
+    private GatePassRequest submitHostelerToWarden(String regNo, String studentName, String department,
+                                                   String classInchargeCode, String gender,
+                                                   String purpose, String reason,
+                                                   LocalDateTime submittedAt, String attachmentUri) {
+        log.info("After-3PM hosteler routing for {} (gender={})", regNo, gender);
+
+        String wardenCode = departmentLookupService.findWardenForGender(gender);
+        if (wardenCode == null) {
+            String g = HostelConfig.normalizeGender(gender);
+            String label = g != null ? g.toLowerCase() : "matching";
+            throw new RuntimeException(
+                "No " + label + " hostel warden is configured. Please contact administration.");
+        }
+
+        GatePassRequest request = new GatePassRequest();
+        request.setRegNo(regNo);
+        request.setStudentName(studentName);
+        request.setDepartment(department);
+        request.setPurpose(purpose);
+        request.setReason(reason);
+        request.setRequestDate(submittedAt);
+        // Warden is the sole approver, occupying the staff slot; HOD is bypassed entirely.
+        request.setStatus(GatePassRequest.RequestStatus.PENDING_STAFF);
+        request.setStaffApproval(GatePassRequest.ApprovalStatus.PENDING);
+        request.setHodApproval(GatePassRequest.ApprovalStatus.APPROVED); // bypass HOD
+        request.setAssignedStaffCode(wardenCode);
+        request.setAssignedHodCode(null); // null → approveByStaff() auto-finalizes + generates QR
+        request.setAttachmentUri(attachmentUri);
+        request.setUserType("STUDENT");
+        request.setPassType("SINGLE");
+        request.setRouteType("HOSTEL_WARDEN");
+
+        GatePassRequest saved = gatePassRequestRepository.save(request);
+        log.info("Hosteler gate pass {} routed to warden {}", saved.getId(), wardenCode);
+
+        // Notify the warden of the new hosteler request
+        try {
+            notificationService.notifyWardenOfHostelerRequest(saved);
+        } catch (Exception e) {
+            log.error("Failed to notify warden of hosteler request {}", saved.getId(), e);
+        }
+
+        // Notify the class incharge (info only — never blocks approval)
+        if (classInchargeCode != null && !classInchargeCode.isBlank()) {
+            try {
+                notificationService.notifyClassInchargeOfHostelerRequest(saved, classInchargeCode);
+            } catch (Exception e) {
+                log.error("Failed to notify class incharge of hosteler request {}", saved.getId(), e);
+            }
+        }
+
+        return saved;
+    }
+
     // Submit staff gate pass request (staff submits for themselves)
     @Transactional
     public GatePassRequest submitStaffRequest(String staffCode, String purpose, String reason,

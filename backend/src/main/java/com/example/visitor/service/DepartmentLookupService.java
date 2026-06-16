@@ -8,6 +8,7 @@ import com.example.visitor.repository.HRRepository;
 import com.example.visitor.repository.StaffRepository;
 import com.example.visitor.repository.StudentRepository;
 import com.example.visitor.util.DepartmentMapper;
+import com.example.visitor.util.HostelConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -130,6 +131,33 @@ public class DepartmentLookupService {
             log.warn("No HR staff found in non_teaching_staffs");
         } catch (Exception e) {
             log.error("Error finding active HR: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Returns the staff_code of the Hostel Warden matching the given student gender.
+     * Source: non_teaching_staffs where designation = 'Hostel warden' and gender matches.
+     * Used for after-3PM hosteler routing. Returns null when no matching warden exists.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public String findWardenForGender(String gender) {
+        String normalized = HostelConfig.normalizeGender(gender);
+        if (normalized == null) {
+            log.warn("Cannot find warden — unrecognized student gender: '{}'", gender);
+            return null;
+        }
+        try {
+            List<HR> wardens = hrRepository.findWardensByGender(
+                HostelConfig.WARDEN_DESIGNATION, normalized);
+            if (!wardens.isEmpty()) {
+                HR warden = wardens.get(0);
+                log.info("Found {} hostel warden: {} ({})", normalized, warden.getHrCode(), warden.getHrName());
+                return warden.getHrCode();
+            }
+            log.warn("No {} hostel warden found in non_teaching_staffs", normalized);
+        } catch (Exception e) {
+            log.error("Error finding {} hostel warden: {}", normalized, e.getMessage());
         }
         return null;
     }
