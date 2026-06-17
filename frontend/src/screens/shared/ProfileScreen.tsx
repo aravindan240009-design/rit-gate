@@ -6,8 +6,6 @@ import {
   TouchableOpacity,
   Switch,
   StatusBar,
-  ActivityIndicator,
-  TextInput,
   Image,
   BackHandler,
 } from 'react-native';
@@ -69,10 +67,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const insets = useSafeAreaInsets();
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editPhone, setEditPhone] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-  const [savingProfile, setSavingProfile] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [outerScrollEnabled, setOuterScrollEnabled] = useState(true);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -102,13 +96,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     user?.securityId,
   ]);
 
-  useEffect(() => {
-    if (isEditing) {
-      setEditPhone(profileData.phone);
-      setEditEmail(profileData.email);
-    }
-  }, [isEditing, profileData]);
-
   const onRefresh = () => {
     console.log('🔄 [REFRESH] Shared/Profile');
     setRefreshing(true);
@@ -117,20 +104,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   const handleLogout = () => {
     setShowLogoutModal(true);
-  };
-
-
-
-  // Notification preferences removed from UI (requested).
-
-  const handleSaveProfile = async () => {
-    setSavingProfile(true);
-    setTimeout(() => {
-      setSavingProfile(false);
-      setProfileData(prev => ({ ...prev, email: editEmail, phone: editPhone }));
-      setIsEditing(false);
-      setShowSuccessModal(true);
-    }, 1200);
   };
 
   const getName = () => {
@@ -333,7 +306,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
         <View style={styles.sectionHeaderContainer}>
           <ThemedText style={[styles.sectionHeader, { color: theme.text }]}>PERSONAL INFORMATION</ThemedText>
-          <TouchableOpacity onPress={() => setIsEditing(!isEditing)}><ThemedText style={[styles.editButton, { color: theme.accent }]}>{isEditing ? 'Cancel' : 'Edit'}</ThemedText></TouchableOpacity>
         </View>
         <View style={[styles.infoCard, { backgroundColor: theme.surface }]}>
           <View style={styles.infoRow}>
@@ -345,7 +317,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <View style={[styles.iconBox, { backgroundColor: theme.surfaceHighlight }]}><Ionicons name="mail-outline" size={20} color={theme.accent} /></View>
             <View style={styles.infoContent}>
               <ThemedText style={[styles.infoLabel, { color: theme.textSecondary }]}>EMAIL</ThemedText>
-              {isEditing ? <TextInput style={[styles.editInput, { color: theme.text, borderColor: theme.border, backgroundColor: theme.inputBackground }]} value={editEmail} onChangeText={setEditEmail} keyboardType="email-address" autoCapitalize="none" placeholderTextColor={theme.textTertiary} /> : <ThemedText style={[styles.infoValue, { color: theme.text }]}>{profileData.email || 'N/A'}</ThemedText>}
+              <ThemedText style={[styles.infoValue, { color: theme.text }]}>{profileData.email || 'N/A'}</ThemedText>
             </View>
           </View>
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
@@ -353,14 +325,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             <View style={[styles.iconBox, { backgroundColor: theme.surfaceHighlight }]}><Ionicons name="phone-portrait-outline" size={20} color={theme.accent} /></View>
             <View style={styles.infoContent}>
               <ThemedText style={[styles.infoLabel, { color: theme.textSecondary }]}>PHONE</ThemedText>
-              {isEditing ? <TextInput style={[styles.editInput, { color: theme.text, borderColor: theme.border, backgroundColor: theme.inputBackground }]} value={editPhone} onChangeText={setEditPhone} keyboardType="phone-pad" placeholderTextColor={theme.textTertiary} /> : <ThemedText style={[styles.infoValue, { color: theme.text }]}>{profileData.phone || 'N/A'}</ThemedText>}
+              <ThemedText style={[styles.infoValue, { color: theme.text }]}>{profileData.phone || 'N/A'}</ThemedText>
             </View>
           </View>
-          {isEditing && (
-            <TouchableOpacity style={[styles.saveButton, { backgroundColor: theme.primary }]} onPress={handleSaveProfile} disabled={savingProfile}>
-              {savingProfile ? <ActivityIndicator color="#FFF" size="small" /> : <ThemedText style={[styles.saveButtonText, { color: '#FFF' }]}>Save Changes</ThemedText>}
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* Notification preferences intentionally removed */}
