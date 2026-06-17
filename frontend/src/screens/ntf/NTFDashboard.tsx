@@ -16,6 +16,7 @@ import ErrorModal from '../../components/ErrorModal';
 import SuccessModal from '../../components/SuccessModal';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
+import RequesterAvatar from '../../components/RequesterAvatar';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
@@ -259,11 +260,22 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                     onPress={() => { setSelectedVisitor(req); setShowDetailModal(true); }}
                   >
                     <View style={styles.cardTopRow}>
-                      <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                        <ThemedText style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
-                          {getInitials(req.requesterName || req.name || 'VR')}
-                        </ThemedText>
-                      </View>
+                      {req.kind === 'HOSTEL_GATE_PASS' ? (
+                        // Hostel requests have the student's regNo — show their IMS photo.
+                        <RequesterAvatar
+                          code={req.regNo}
+                          name={req.requesterName || req.studentName}
+                          size={44}
+                          containerStyle={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}
+                          textStyle={[styles.requestAvatarText, { color: theme.textSecondary }]}
+                        />
+                      ) : (
+                        <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
+                          <ThemedText style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
+                            {getInitials(req.requesterName || req.name || 'VR')}
+                          </ThemedText>
+                        </View>
+                      )}
 
                       <View style={styles.headerMainInfo}>
                         <View style={styles.nameRow}>
