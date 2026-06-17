@@ -30,5 +30,13 @@ public class QRExpiryScheduler {
         } catch (Exception e) {
             log.error("❌ [QRExpiryScheduler] Error during midnight cleanup: {}", e.getMessage(), e);
         }
+        // Daily reset: delete previous days' UNACTIONED gate-pass requests of every type
+        // (approved/rejected/used are kept). Wrapped separately so a failure here doesn't
+        // affect QR expiry above.
+        try {
+            gatePassRequestService.deleteStaleUnactionedRequests();
+        } catch (Exception e) {
+            log.error("❌ [QRExpiryScheduler] Error deleting stale requests: {}", e.getMessage(), e);
+        }
     }
 }

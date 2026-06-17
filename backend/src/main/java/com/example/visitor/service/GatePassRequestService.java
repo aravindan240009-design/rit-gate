@@ -740,6 +740,37 @@ public class GatePassRequestService {
         log.info("📅 QR for request {} expires at midnight: {}", requestId, deletionTime);
     }
     
+    /**
+     * Daily cleanup: hard-delete gate-pass requests (ANY type — student, staff, HOD, NTF, NCI,
+     * hostel-warden, bulk) from previous days that were never acted on (still in a PENDING_*
+     * state). APPROVED / REJECTED / USED requests are KEPT so history and the audit trail
+     * survive. Also removes any QR rows linked to the deleted requests to avoid orphans.
+     */
+    @Transactional
+    public void deleteStaleUnactionedRequests() {
+        // Cutoff = start of today (IST) — anything created before midnight today is "previous days".
+        LocalDateTime startOfToday = java.time.LocalDate.now(java.time.ZoneId.of("Asia/Kolkata")).atStartOfDay();
+        List<GatePassRequest> stale = gatePassRequestRepository.findStaleUnactionedRequests(startOfToday);
+        if (stale.isEmpty()) {
+            return;
+        }
+        log.info("🧹 Deleting {} stale unactioned gate-pass request(s) from previous days", stale.size());
+        for (GatePassRequest req : stale) {
+            try {
+                // Remove any linked QR rows first (defensive — pending requests usually have none)
+                List<QRTable> linkedQrs = qrTableRepository.findAll().stream()
+                    .filter(qr -> qr.getPassRequestId() != null && qr.getPassRequestId().equals(req.getId()))
+                    .collect(java.util.stream.Collectors.toList());
+                if (!linkedQrs.isEmpty()) {
+                    qrTableRepository.deleteAll(linkedQrs);
+                }
+                gatePassRequestRepository.delete(req);
+            } catch (Exception e) {
+                log.error("Failed to delete stale request {}", req.getId(), e);
+            }
+        }
+    }
+
     // Clean up QR codes that have passed midnight expiry
     @Transactional
     public void cleanupExpiredQRCodes() {

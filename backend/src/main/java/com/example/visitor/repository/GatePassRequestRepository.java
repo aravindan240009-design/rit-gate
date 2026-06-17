@@ -50,6 +50,17 @@ public interface GatePassRequestRepository extends JpaRepository<GatePassRequest
     // Find requests that are actually waiting for HR (status = PENDING_HR) — HOD already approved
     @Query("SELECT r FROM GatePassRequest r WHERE r.assignedHrCode = :hrCode AND r.status = 'PENDING_HR' ORDER BY r.createdAt DESC")
     List<GatePassRequest> findPendingHRApprovalByHrCode(@Param("hrCode") String hrCode);
+
+    // Stale gate-pass requests (ANY type/route) still UNACTIONED created before the cutoff.
+    // Unactioned = not yet in a terminal state: PENDING / PENDING_STAFF / PENDING_HOD / PENDING_HR.
+    // Used by the daily cleanup — APPROVED / REJECTED / USED are KEPT (history & audit).
+    @Query("SELECT r FROM GatePassRequest r WHERE r.status IN (" +
+           "com.example.visitor.entity.GatePassRequest$RequestStatus.PENDING, " +
+           "com.example.visitor.entity.GatePassRequest$RequestStatus.PENDING_STAFF, " +
+           "com.example.visitor.entity.GatePassRequest$RequestStatus.PENDING_HOD, " +
+           "com.example.visitor.entity.GatePassRequest$RequestStatus.PENDING_HR) " +
+           "AND r.createdAt < :cutoff")
+    List<GatePassRequest> findStaleUnactionedRequests(@Param("cutoff") java.time.LocalDateTime cutoff);
     
     // Find by department
     List<GatePassRequest> findByDepartmentOrderByCreatedAtDesc(String department);

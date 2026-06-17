@@ -104,6 +104,8 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
         if (myFetchId !== fetchIdRef.current) return;
         hostelRequests = (combined.data || [])
           .filter((r: any) => r.sourceType === 'GATE_PASS')
+          // Warden dashboard resets daily — only show requests submitted today.
+          .filter((r: any) => isTodayLocal(r.requestDate || r.exitDateTime || r.createdAt))
           .map((r: any) => ({
             ...r,
             kind: 'HOSTEL_GATE_PASS',
