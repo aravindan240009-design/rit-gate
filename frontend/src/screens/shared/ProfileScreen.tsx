@@ -22,12 +22,11 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
-import { isTodayLocal } from '../../utils/dateUtils';
 
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
-import { StatsSkeleton, ProfileSkeleton } from '../../components/SkeletonCard';
+import { ProfileSkeleton } from '../../components/SkeletonCard';
 
 
 interface ProfileScreenProps {
@@ -67,11 +66,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     });
   }, [user?.regNo, user?.staffCode, user?.hodCode, user?.hrCode, user?.securityId]);
 
-  const [loadingStats, setLoadingStats] = useState(true);
   const insets = useSafeAreaInsets();
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState({ stat1: 0, stat2: 0, stat3: 0 });
   const [isEditing, setIsEditing] = useState(false);
   const [editPhone, setEditPhone] = useState('');
   const [editEmail, setEditEmail] = useState('');
@@ -95,12 +92,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   }, [onBack]);
 
   useEffect(() => {
-    // Reset stats when user changes, then fetch fresh data
-    setStats({ stat1: 0, stat2: 0, stat3: 0 });
     setInitialLoading(true);
-    fetchStats();
+    setInitialLoading(false);
   }, [
-    // Re-fetch whenever the logged-in user changes
     user?.regNo,
     user?.staffCode,
     user?.hodCode,
@@ -115,82 +109,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     }
   }, [isEditing, profileData]);
 
-  const fetchStats = async () => {
-    if (userType.toUpperCase() === 'SECURITY') {
-      // No stats shown for security — skip fetch entirely
-      setLoadingStats(false);
-      setInitialLoading(false);
-      setRefreshing(false);
-      return;
-    }
-    if (!refreshing) setLoadingStats(true);
-    try {
-      const type = userType.toUpperCase();
-
-      // Helper: is the request from today?
-      const isToday = (dateValue?: string) => {
-        if (!dateValue) return false;
-        return isTodayLocal(dateValue);
-      };
-
-      const countStats = (reqs: any[]) => {
-        const today = reqs.filter((r: any) => isToday(r.requestDate || r.createdAt || r.exitDateTime));
-        return {
-          stat1: today.filter((r: any) => r.status === 'APPROVED').length,
-          stat2: today.filter((r: any) => r.status === 'REJECTED').length,
-          stat3: today.filter((r: any) => r.status !== 'APPROVED' && r.status !== 'REJECTED').length,
-        };
-      };
-
-      if (type === 'STUDENT') {
-        const response = await apiService.getStudentGatePassRequests(user.regNo);
-        if (response.success) {
-          const reqs: any[] = response.requests || (response as any).data || [];
-          setStats(countStats(reqs));
-        }
-      } else if (type === 'STAFF') {
-        // Distinguish NCI / NTF / Admin / regular STAFF
-        const staffCode = user.staffCode || user.hrCode;
-        let reqs: any[] = [];
-        if (userSubType === 'NCI') {
-          const response = await apiService.getNonClassInchargeOwnRequests(staffCode);
-          if (response.success) reqs = (response as any).requests || (response as any).data || [];
-        } else if (userSubType === 'NTF') {
-          const response = await apiService.getNTFOwnGatePassRequests(staffCode);
-          if (response.success) reqs = (response as any).requests || (response as any).data || [];
-        } else {
-          // Regular STAFF or Admin — both use the same endpoint
-          const response = await apiService.getStaffOwnGatePassRequests(staffCode);
-          if (response.success) reqs = (response as any).requests || (response as any).data || [];
-        }
-        setStats(countStats(reqs));
-      } else if (type === 'HOD') {
-        const response = await apiService.getHODMyGatePassRequests(user.hodCode);
-        if (response.success) {
-          const reqs: any[] = (response as any).requests || (response as any).data || [];
-          setStats(countStats(reqs));
-        }
-      } else if (type === 'HR') {
-        // HR's OWN gate pass requests (not the ones they approve)
-        const response = await apiService.getStaffOwnGatePassRequests(user.hrCode);
-        if (response.success) {
-          const reqs: any[] = (response as any).requests || (response as any).data || [];
-          setStats(countStats(reqs));
-        }
-      }
-    } catch (error) {
-      console.log('Error fetching stats:', error);
-    } finally {
-      setLoadingStats(false);
-      setInitialLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   const onRefresh = () => {
     console.log('🔄 [REFRESH] Shared/Profile');
     setRefreshing(true);
-    fetchStats();
+    setRefreshing(false);
   };
 
   const handleLogout = () => {
