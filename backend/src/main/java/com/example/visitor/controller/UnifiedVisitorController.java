@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.service.NotificationService;
@@ -81,6 +82,7 @@ public class UnifiedVisitorController {
             if (req.getCreatorStaffCode() == null || req.getCreatorStaffCode().isBlank()) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "creatorStaffCode required"));
             }
+            Authz.requireSelf(req.getCreatorStaffCode()); // creator must be the authenticated user
             Visitor visitor = new Visitor();
             visitor.setName(req.getName());
             visitor.setEmail(req.getEmail());
@@ -165,8 +167,9 @@ public class UnifiedVisitorController {
             @PathVariable String staffCode,
             @RequestParam(required = false) String status) {
         try {
+            Authz.requireSelf(staffCode);
             System.out.println("📡 Fetching visitor requests for staff: " + staffCode);
-            
+
             List<Visitor> requests;
             if ("PENDING".equalsIgnoreCase(status)) {
                 requests = visitorGatepassService.getPendingRequestsForStaff(staffCode);

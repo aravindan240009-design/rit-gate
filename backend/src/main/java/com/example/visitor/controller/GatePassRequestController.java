@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.GatePassRequest;
 import com.example.visitor.entity.HR;
@@ -47,7 +48,8 @@ public class GatePassRequestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            String regNo = (String) requestData.get("regNo");
+            // Submit only for yourself — ignore any regNo in the body, use the token identity.
+            String regNo = Authz.selfId();
             String purpose = (String) requestData.get("purpose");
             String reason = (String) requestData.get("reason");
             String requestDateStr = (String) requestData.get("requestDate");
@@ -102,7 +104,7 @@ public class GatePassRequestController {
     @PostMapping("/ntf/submit")    public ResponseEntity<Map<String, Object>> submitNTFRequest(@RequestBody Map<String, Object> requestData) {
         Map<String, Object> response = new HashMap<>();
         try {
-            String staffCode = (String) requestData.get("staffCode");
+            String staffCode = Authz.selfId(); // submit only for yourself (token identity)
             String purpose = (String) requestData.get("purpose");
             String reason = (String) requestData.get("reason");
             String requestDateStr = (String) requestData.get("requestDate");
@@ -145,7 +147,7 @@ public class GatePassRequestController {
     public ResponseEntity<Map<String, Object>> submitNonClassInchargeRequest(@RequestBody Map<String, Object> requestData) {
         Map<String, Object> response = new HashMap<>();
         try {
-            String staffCode = (String) requestData.get("staffCode");
+            String staffCode = Authz.selfId(); // submit only for yourself (token identity)
             String purpose = (String) requestData.get("purpose");
             String reason = (String) requestData.get("reason");
             String requestDateStr = (String) requestData.get("requestDate");
@@ -189,6 +191,7 @@ public class GatePassRequestController {
     public ResponseEntity<Map<String, Object>> getNonClassInchargeOwnRequests(@PathVariable String staffCode) {
         Map<String, Object> response = new HashMap<>();
         try {
+            Authz.requireSelf(staffCode);
             List<GatePassRequest> requests = gatePassRequestService.getStaffOwnRequests(staffCode);
             response.put("success", true);
             response.put("requests", requests);
@@ -208,6 +211,7 @@ public class GatePassRequestController {
     public ResponseEntity<Map<String, Object>> getWardenInfo(@PathVariable String staffCode) {
         Map<String, Object> response = new HashMap<>();
         try {
+            Authz.requireSelf(staffCode);
             boolean isWarden = false;
             String gender = null;
             Optional<HR> hrOpt = hrRepository.findByHrCode(staffCode);
@@ -233,7 +237,7 @@ public class GatePassRequestController {
     public ResponseEntity<Map<String, Object>> submitStaffRequest(@RequestBody Map<String, Object> requestData) {        Map<String, Object> response = new HashMap<>();
         
         try {
-            String staffCode = (String) requestData.get("staffCode");
+            String staffCode = Authz.selfId(); // submit only for yourself (token identity)
             String purpose = (String) requestData.get("purpose");
             String reason = (String) requestData.get("reason");
             String requestDateStr = (String) requestData.get("requestDate");
@@ -284,8 +288,9 @@ public class GatePassRequestController {
     @GetMapping("/student/{regNo}")
     public ResponseEntity<Map<String, Object>> getStudentRequests(@PathVariable String regNo) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
+            Authz.requireSelf(regNo); // a student can only read their own requests
             List<GatePassRequest> requests = gatePassRequestService.getRequestsByStudent(regNo);
             
             response.put("success", true);
@@ -308,6 +313,7 @@ public class GatePassRequestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            Authz.requireSelf(staffCode);
             // Get requests where regNo = staffCode AND userType = STAFF
             List<GatePassRequest> requests = gatePassRequestService.getStaffOwnRequests(staffCode);
             
@@ -331,8 +337,9 @@ public class GatePassRequestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            Authz.requireSelf(staffCode);
             List<GatePassRequest> requests = gatePassRequestService.getRequestsForStaffApproval(staffCode);
-            
+
             response.put("success", true);
             response.put("requests", requests);
             response.put("count", requests.size());
@@ -352,6 +359,7 @@ public class GatePassRequestController {
     public ResponseEntity<Map<String, Object>> getStaffPendingAll(@PathVariable String staffCode) {
         Map<String, Object> response = new HashMap<>();
         try {
+            Authz.requireSelf(staffCode);
             List<Map<String, Object>> combined = new ArrayList<>();
 
             // 1. Gate pass requests (student/staff single & bulk)
@@ -416,6 +424,7 @@ public class GatePassRequestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            Authz.requireSelf(staffCode);
             List<GatePassRequest> requests = gatePassRequestService.getAllRequestsForStaff(staffCode);
             
             response.put("success", true);
@@ -438,6 +447,7 @@ public class GatePassRequestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            Authz.requireSelf(hodCode);
             List<GatePassRequest> requests = gatePassRequestService.getRequestsForHodApproval(hodCode);
             
             response.put("success", true);
@@ -460,6 +470,7 @@ public class GatePassRequestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            Authz.requireSelf(hodCode);
             List<GatePassRequest> requests = gatePassRequestService.getAllRequestsForHod(hodCode);
             
             response.put("success", true);
@@ -485,6 +496,7 @@ public class GatePassRequestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            Authz.requireSelf(staffCode); // caller's token must match the staff code in the path
             String staffRemark = requestData != null ? requestData.get("remark") : null;
             GatePassRequest request = gatePassRequestService.approveByStaff(requestId, staffCode, staffRemark);
             
@@ -511,6 +523,7 @@ public class GatePassRequestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            Authz.requireSelf(hodCode); // caller's token must match the HOD code in the path
             String hodRemark = requestData != null ? requestData.get("remark") : null;
             GatePassRequest request = gatePassRequestService.approveByHOD(requestId, hodCode, hodRemark);
             
@@ -535,15 +548,16 @@ public class GatePassRequestController {
         @PathVariable Long requestId,
         @RequestBody Map<String, String> requestData) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
+            Authz.requireSelf(staffCode); // caller's token must match the staff code in the path
             String reason = requestData.get("reason") != null ? requestData.get("reason") : requestData.get("remark");
             if (reason == null || reason.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "Rejection reason is required");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             GatePassRequest request = gatePassRequestService.rejectByStaff(requestId, staffCode, reason);
             
             response.put("success", true);
@@ -567,15 +581,16 @@ public class GatePassRequestController {
         @PathVariable Long requestId,
         @RequestBody Map<String, String> requestData) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
+            Authz.requireSelf(hodCode); // caller's token must match the HOD code in the path
             String reason = requestData.get("reason") != null ? requestData.get("reason") : requestData.get("remark");
             if (reason == null || reason.trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "Rejection reason is required");
                 return ResponseEntity.badRequest().body(response);
             }
-            
+
             GatePassRequest request = gatePassRequestService.rejectByHOD(requestId, hodCode, reason);
             
             response.put("success", true);
@@ -620,6 +635,7 @@ public class GatePassRequestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            Authz.requireSelf(staffCode);
             long count = gatePassRequestService.getPendingRequestsCountForStaff(staffCode);
             
             response.put("success", true);
@@ -640,6 +656,7 @@ public class GatePassRequestController {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            Authz.requireSelf(hodCode);
             long count = gatePassRequestService.getPendingRequestsCountForHod(hodCode);
             
             response.put("success", true);

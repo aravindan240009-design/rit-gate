@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.GatePassRequest;
 import com.example.visitor.entity.Student;
@@ -53,7 +54,7 @@ public class HODController {
     @PostMapping("/gate-pass/submit")
     public ResponseEntity<?> submitHODGatePassRequest(@RequestBody Map<String, Object> requestData) {
         try {
-            String hodCode = (String) requestData.get("hodCode");
+            String hodCode = Authz.selfId(); // act only as yourself (token identity)
             String purpose = (String) requestData.get("purpose");
             String reason = (String) requestData.get("reason");
             String attachmentUri = (String) requestData.get("attachmentUri");
@@ -239,7 +240,7 @@ public class HODController {
     @PostMapping("/visitor-requests/{id}/approve")
     public ResponseEntity<?> approveVisitorRequest(@PathVariable Long id, @RequestBody Map<String, String> data) {
         try {
-            String hodCode = data.get("hodCode");
+            String hodCode = Authz.selfId(); // act only as yourself (token identity)
             Visitor approved = visitorRequestService.approveVisitorRequest(id, hodCode);
             return ResponseEntity.ok(Map.of("success", true, "message", "Visitor request approved"));
         } catch (Exception e) {
@@ -263,7 +264,7 @@ public class HODController {
     @PostMapping("/gate-pass/{id}/approve")
     public ResponseEntity<?> approveRequest(@PathVariable Long id, @RequestBody Map<String, String> data) {
         try {
-            String hodCode = data.get("hodCode");
+            String hodCode = Authz.selfId(); // act only as yourself (token identity)
             String hodRemark = data.get("hodRemark");
             
             if (hodCode == null) {
@@ -296,7 +297,7 @@ public class HODController {
     @PostMapping("/gate-pass/{id}/reject")
     public ResponseEntity<?> rejectRequest(@PathVariable Long id, @RequestBody Map<String, String> data) {
         try {
-            String hodCode = data.get("hodCode");
+            String hodCode = Authz.selfId(); // act only as yourself (token identity)
             String reason = data.get("reason");
             
             if (hodCode == null || reason == null) {
@@ -398,6 +399,7 @@ public class HODController {
     @GetMapping("/{hodCode}/department/students")
     public ResponseEntity<?> getDepartmentStudents(@PathVariable String hodCode) {
         try {
+            Authz.requireSelf(hodCode);
             List<String> hodDepts = getHODDepartments(hodCode);
             log.info("HOD {} fetching students for departments: {}", hodCode, hodDepts);
 
@@ -451,6 +453,7 @@ public class HODController {
     @GetMapping("/{hodCode}/department/staff")
     public ResponseEntity<?> getDepartmentStaff(@PathVariable String hodCode) {
         try {
+            Authz.requireSelf(hodCode);
             List<String> hodDepts = getHODDepartments(hodCode);
 
             HOD hod = hodRepository.findFirstByHodCode(hodCode)
@@ -493,6 +496,7 @@ public class HODController {
     // Alias endpoint for frontend compatibility
     @PostMapping("/{hodCode}/bulk-gate-pass")
     public ResponseEntity<?> submitBulkGatePassAlias(@PathVariable String hodCode, @RequestBody Map<String, Object> requestData) {
+        Authz.requireSelf(hodCode);
         // Add hodCode to request data if not present
         if (!requestData.containsKey("hodCode")) {
             requestData.put("hodCode", hodCode);
@@ -504,7 +508,7 @@ public class HODController {
     @PostMapping("/bulk-pass/create")
     public ResponseEntity<?> submitBulkGatePass(@RequestBody Map<String, Object> requestData) {
         try {
-            String hodCode = (String) requestData.get("hodCode");
+            String hodCode = Authz.selfId(); // act only as yourself (token identity)
             
             // Validate HOD exists
             HOD hod = hodRepository.findFirstByHodCode(hodCode)
@@ -632,6 +636,7 @@ public class HODController {
     @GetMapping("/{hodCode}/bulk-pass/requests")
         public ResponseEntity<?> getHODBulkPassRequests(@PathVariable String hodCode) {
             try {
+                Authz.requireSelf(hodCode);
                 List<GatePassRequest> requests = hodBulkGatePassService.getHODRequests(hodCode);
 
                 List<Map<String, Object>> requestList = requests.stream().map(req -> {
@@ -709,6 +714,7 @@ public class HODController {
     @GetMapping("/{hodCode}")
     public ResponseEntity<?> getHODProfile(@PathVariable String hodCode) {
         try {
+            Authz.requireSelf(hodCode);
             log.info("📋 Fetching HOD profile for: {}", hodCode);
 
             Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(hodCode);

@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.Event;
 import com.example.visitor.entity.EventCoordinator;
@@ -40,7 +41,7 @@ public class EventController {
     @PostMapping
     public ResponseEntity<?> createEvent(@RequestBody Map<String, Object> body) {
         try {
-            String hodCode  = (String) body.get("hodCode");
+            String hodCode  = Authz.selfId(); // act only as yourself (token identity)
             String name     = (String) body.get("eventName");
             String dateStr  = (String) body.get("eventDate");
             String venue    = (String) body.get("venue");
@@ -89,7 +90,7 @@ public class EventController {
     public ResponseEntity<?> assignCoordinators(@PathVariable Long eventId,
                                                 @RequestBody Map<String, Object> body) {
         try {
-            String hodCode = (String) body.get("hodCode");
+            String hodCode = Authz.selfId(); // act only as yourself (token identity)
             @SuppressWarnings("unchecked")
             List<String> staffCodes = (List<String>) body.get("staffCodes");
 
@@ -144,6 +145,7 @@ public class EventController {
     @GetMapping("/coordinator/{staffCode}")
     public ResponseEntity<?> getStaffEvents(@PathVariable String staffCode) {
         try {
+            Authz.requireSelf(staffCode);
             List<Event> events = eventService.getEventsForCoordinator(staffCode);
             return ResponseEntity.ok(Map.of(
                 "status", "SUCCESS",
@@ -162,6 +164,7 @@ public class EventController {
                                         @RequestParam("file") MultipartFile file,
                                         @RequestParam("staffCode") String staffCode) {
         try {
+            Authz.requireSelf(staffCode);
             if (!eventService.isCoordinator(eventId, staffCode)) {
                 return ResponseEntity.status(403).body(Map.of(
                     "status", "ERROR",
@@ -202,7 +205,7 @@ public class EventController {
     public ResponseEntity<?> confirmUpload(@PathVariable Long eventId,
                                            @RequestBody Map<String, Object> body) {
         try {
-            String staffCode = (String) body.get("staffCode");
+            String staffCode = Authz.selfId(); // act only as yourself (token identity)
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> rawRows = (List<Map<String, Object>>) body.get("rows");
 
@@ -296,7 +299,7 @@ public class EventController {
     public ResponseEntity<?> completeEvent(@PathVariable Long eventId,
                                            @RequestBody Map<String, Object> body) {
         try {
-            String hodCode = (String) body.get("hodCode");
+            String hodCode = Authz.selfId(); // act only as yourself (token identity)
             if (hodCode == null || hodCode.isBlank()) return badRequest("hodCode is required");
             Event event = eventService.completeEvent(eventId, hodCode);
             return ResponseEntity.ok(Map.of(

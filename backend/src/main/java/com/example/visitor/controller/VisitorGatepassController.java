@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.service.VisitorGatepassService;
@@ -106,6 +107,7 @@ public class VisitorGatepassController {
     @GetMapping("/staff/visitor-requests")
     public ResponseEntity<?> getStaffVisitorRequests(@RequestParam String staffId) {
         try {
+            Authz.requireSelf(staffId);
             if (staffId == null || staffId.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Staff ID is required"));
             }
@@ -210,6 +212,7 @@ public class VisitorGatepassController {
     @GetMapping("/staff/visitor-requests/all")
     public ResponseEntity<?> getAllStaffRequests(@RequestParam String staffId) {
         try {
+            Authz.requireSelf(staffId);
             if (staffId == null || staffId.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("Staff ID is required"));
             }

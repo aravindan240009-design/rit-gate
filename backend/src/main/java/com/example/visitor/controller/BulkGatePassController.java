@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.service.BulkGatePassService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class BulkGatePassController {
     @GetMapping("/students/{staffCode}")
     public ResponseEntity<Map<String, Object>> getStudentsByDepartment(@PathVariable String staffCode) {
         try {
+            Authz.requireSelf(staffCode);
             Map<String, Object> response = bulkGatePassService.getStudentsByStaffDepartment(staffCode);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -39,7 +41,7 @@ public class BulkGatePassController {
     @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createBulkGatePass(@RequestBody Map<String, Object> requestData) {
         try {
-            String staffCode = (String) requestData.get("staffCode");
+            String staffCode = Authz.selfId(); // create only as yourself (token identity)
             @SuppressWarnings("unchecked")
             List<String> studentRegNos = (List<String>) requestData.get("students");
             String purpose = (String) requestData.get("purpose");

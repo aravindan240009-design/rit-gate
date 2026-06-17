@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.entity.Staff;
@@ -278,6 +279,7 @@ public class VisitorController {
             @PathVariable String staffCode,
             @RequestParam(required = false) String status) {
         try {
+            Authz.requireSelf(staffCode);
             System.out.println("📡 Fetching visitor requests for staff: " + staffCode + " (status: " + status + ")");
             
             List<Visitor> visitors;

@@ -67,10 +67,18 @@ public class AuthController {
     
     @Value("${auth.rate.limit.seconds:60}")
     private int rateLimitSeconds;
-    
+
+    // Print OTPs to logs only when explicitly enabled (dev). Off in production.
+    @Value("${app.debug-otp:false}")
+    private boolean debugOtp;
+
     // Durable OTP storage (MySQL-backed) — survives backend restarts.
     @Autowired
     private OtpService otpService;
+
+    // Mints the JWT returned on successful OTP verification.
+    @Autowired
+    private com.example.visitor.security.JwtService jwtService;
     
     // ============================================
     // SECURITY HELPER METHODS
@@ -150,6 +158,13 @@ public class AuthController {
             timestamp, userId, userType, action, status, message
         ));
     }
+
+    /** Print the OTP to the console only when debug-otp is explicitly enabled (never in prod). */
+    private void logOtp(String label, String otp) {
+        if (debugOtp) {
+            System.out.println("│ ⚡ OTP CODE [" + label + "]: " + otp);
+        }
+    }
     
     // Login with Security ID
     @PostMapping("/login/security-id")
@@ -197,7 +212,7 @@ public class AuthController {
             System.out.println("│ Gate        : " + security.getGateAssignment());
             System.out.println("│ Shift       : " + security.getShift());
             System.out.println("├" + "─".repeat(68));
-            System.out.println("│ ⚡ OTP CODE : " + otp);
+            logOtp("LOGIN", otp);
             System.out.println("│ ⏰ Valid for: " + otpExpiryMinutes + " minutes");
             System.out.println("=".repeat(70) + "\n");
             
@@ -258,7 +273,7 @@ public class AuthController {
             System.out.println("│ Gate        : " + security.getGateAssignment());
             System.out.println("│ Shift       : " + security.getShift());
             System.out.println("├" + "─".repeat(68));
-            System.out.println("│ ⚡ OTP CODE : " + otp);
+            logOtp("LOGIN", otp);
             System.out.println("│ ⏰ Valid for: 5 minutes");
             System.out.println("=".repeat(70) + "\n");
 
@@ -319,9 +334,10 @@ public class AuthController {
             response.put("success", true);
             response.put("message", "Login successful");
             response.put("security", userDTO);
-            
+            response.put("token", jwtService.issue(security.getSecurityId(), "SECURITY"));
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             System.err.println("Error in verifyOTP: " + e.getMessage());
             e.printStackTrace();
@@ -417,7 +433,7 @@ public class AuthController {
             System.out.println("│ Email       : " + student.getEmail());
             System.out.println("│ Department  : " + student.getDepartment());
             System.out.println("├" + "─".repeat(68));
-            System.out.println("│ ⚡ OTP CODE : " + otp);
+            logOtp("LOGIN", otp);
             System.out.println("│ ⏰ Valid for: " + otpExpiryMinutes + " minutes");
             System.out.println("=".repeat(70) + "\n");
             
@@ -486,7 +502,8 @@ public class AuthController {
             response.put("success", true);
             response.put("message", "Login successful");
             response.put("student", userDTO);
-            
+            response.put("token", jwtService.issue(student.getRegNo(), "STUDENT"));
+
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
@@ -533,7 +550,7 @@ public class AuthController {
             String otp = generateOTP();
             otpService.storeOtp(email, otp, otpExpiryMinutes);
             sendOTPEmail(email, otp, staffName);
-            System.out.println("🔐 OTP [STAFF/NTF] " + staffCode + " → " + otp);
+            logOtp("STAFF/NTF " + staffCode, otp);
             
             logAuthEvent(staffCode, "STAFF", "OTP_SENT", "SUCCESS", "OTP sent to " + maskEmail(email));
             Map<String, Object> response = new HashMap<>();
@@ -587,12 +604,18 @@ public class AuthController {
             userDTO.setStaffCode(staffCode);
             userDTO.setRole(role);
             
+            // Administrative Officer gets ADMIN authority; all other staff (class incharge,
+            // NTF, NCI) get STAFF. Designation lives in `role` here.
+            String authRole = (role != null && role.toUpperCase().contains("ADMINISTRATIVE OFFICER"))
+                ? "ADMIN" : "STAFF";
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Login successful");
             response.put("staff", userDTO);
+            response.put("token", jwtService.issue(staffCode, authRole));
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             System.err.println("Error in verifyStaffOTP: " + e.getMessage());
             return ResponseEntity.internalServerError().body(createErrorResponse("Verification failed"));
@@ -660,7 +683,7 @@ public class AuthController {
             System.out.println("│ Email       : " + hod.getEmail());
             System.out.println("│ Department  : " + hod.getDepartment());
             System.out.println("├" + "─".repeat(68));
-            System.out.println("│ ⚡ OTP CODE : " + otp);
+            logOtp("LOGIN", otp);
             System.out.println("│ ⏰ Valid for: " + otpExpiryMinutes + " minutes");
             System.out.println("=".repeat(70) + "\n");
             
@@ -739,7 +762,8 @@ public class AuthController {
             response.put("success", true);
             response.put("message", "Login successful");
             response.put("hod", userDTO);
-            
+            response.put("token", jwtService.issue(hod.getHodCode(), "HOD"));
+
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
@@ -792,7 +816,7 @@ public class AuthController {
             System.out.println("│ Email       : " + hr.getEmail());
             System.out.println("│ Department  : " + hr.getDepartment());
             System.out.println("├" + "─".repeat(68));
-            System.out.println("│ ⚡ OTP CODE : " + otp);
+            logOtp("LOGIN", otp);
             System.out.println("│ ⏰ Valid for: " + otpExpiryMinutes + " minutes");
             System.out.println("=".repeat(70) + "\n");
             
@@ -858,7 +882,8 @@ public class AuthController {
             response.put("success", true);
             response.put("message", "Login successful");
             response.put("hr", userDTO);
-            
+            response.put("token", jwtService.issue(hr.getHrCode(), "HR"));
+
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {
@@ -957,6 +982,7 @@ public class AuthController {
             response.put("success", true);
             response.put("message", "Login successful");
             response.put("security", security);
+            response.put("token", jwtService.issue(security.getSecurityId(), "SECURITY"));
 
             return ResponseEntity.ok(response);
 
@@ -974,9 +1000,17 @@ public class AuthController {
     
     @PostMapping("/qr-login")
     public ResponseEntity<?> qrLogin(@RequestBody Map<String, String> request) {
+        // DISABLED: this was a passwordless backdoor — it logged a user in from just their
+        // ID (no OTP), bypassing authentication entirely. The app does not use it. Login
+        // must go through the OTP flow so a JWT can be issued securely.
+        return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN)
+            .body(createErrorResponse("QR login is disabled. Please log in with OTP."));
+    }
+
+    private ResponseEntity<?> qrLoginDisabled(Map<String, String> request) {
         try {
             String qrData = request.get("qrData");
-            
+
             if (qrData == null || qrData.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("QR data is required"));
             }

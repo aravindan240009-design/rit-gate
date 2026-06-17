@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.GatePassRequest;
 import com.example.visitor.entity.HR;
@@ -154,6 +155,7 @@ public class StaffController {
     @GetMapping("/{staffCode}/students")
     public ResponseEntity<?> getStudentsByStaffDepartment(@PathVariable String staffCode) {
         try {
+            Authz.requireSelf(staffCode);
             System.out.println("📋 Fetching students for staff: " + staffCode);
             
             // Find the staff member
@@ -238,7 +240,7 @@ public class StaffController {
     @PostMapping("/bulk-gatepass/create")
     public ResponseEntity<?> createBulkGatePass(@RequestBody Map<String, Object> request) {
         try {
-            String staffCode = (String) request.get("staffCode");
+            String staffCode = Authz.selfId(); // create only as yourself (token identity)
             String purpose = (String) request.get("purpose");
             String reason = (String) request.get("reason");
             String attachmentUri = (String) request.get("attachmentUri");
@@ -299,6 +301,7 @@ public class StaffController {
     @GetMapping("/bulk-gatepass/students/{staffCode}")
     public ResponseEntity<?> getStudentsByDepartment(@PathVariable String staffCode) {
         try {
+            Authz.requireSelf(staffCode);
             // Use BulkGatePassService to get students
             Map<String, Object> response = bulkGatePassService.getStudentsByStaffDepartment(staffCode);
             return ResponseEntity.ok(response);
@@ -317,6 +320,7 @@ public class StaffController {
     @GetMapping("/{staffCode}/bulk-pass/requests")
     public ResponseEntity<?> getStaffBulkPassRequests(@PathVariable String staffCode) {
         try {
+            Authz.requireSelf(staffCode);
             System.out.println("📋 Fetching bulk pass requests for staff: " + staffCode);
             
             // Get all bulk pass requests where this staff is the creator

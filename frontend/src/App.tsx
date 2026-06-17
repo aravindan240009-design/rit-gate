@@ -67,6 +67,7 @@ import { biometricAuthService } from './services/biometricAuth.service';
 import { runNotificationOnboarding, logDeviceNotificationInfo } from './utils/notificationOnboarding';
 import { apiService } from './services/api.service';
 import crashReporting from './services/crashReporting';
+import { loadToken, clearToken } from './services/authToken';
 import { checkVersion, VersionGate } from './services/versionCheck';
 import ForceUpdateScreen from './screens/ForceUpdateScreen';
 import { offlineQueue } from './services/offlineQueue.service';
@@ -392,6 +393,8 @@ const App: React.FC = () => {
   const checkAuthStatus = async () => {
     console.log('🔍 Starting auth check...');
     try {
+      // Restore the persisted JWT so a saved session keeps authenticating requests.
+      await loadToken();
       // Check for saved student session
       const savedStudent = await offlineStorage.getCurrentStudent();
       if (savedStudent) {
@@ -754,6 +757,8 @@ const App: React.FC = () => {
       setRequiresBiometricGate(false);
       setBiometricVerified(false);
       setBiometricPrompted(false);
+      // Clear the JWT so subsequent requests are unauthenticated until next login.
+      clearToken();
       // Clean up storage and push token in background
       Promise.all([
         unregisterPushToken(),

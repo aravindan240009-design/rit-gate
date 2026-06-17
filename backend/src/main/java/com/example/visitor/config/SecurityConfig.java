@@ -1,0 +1,77 @@
+package com.example.visitor.config;
+
+import com.example.visitor.security.JwtAuthFilter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
+
+/**
+ * Enforces JWT authentication on every API call. Before this existed the entire API
+ * was anonymous and trusted caller-supplied ids — anyone could read/modify anything.
+ *
+ * Only the genuinely public flows (login/OTP, version gate, health, visitor self
+ * registration) are permitAll; everything else requires a valid token, with coarse
+ * role gates on the clearly role-scoped path groups. Fine-grained ownership (IDOR)
+ * is enforced inside controllers via Authz.requireSelf(...).
+ */
+@Configuration
+public class SecurityConfig {
+
+    private final JwtAuthFilter jwtAuthFilter;
+    private final CorsConfigurationSource corsConfigurationSource;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, CorsConfigurationSource corsConfigurationSource) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.corsConfigurationSource = corsConfigurationSource;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // ---- Public: login / OTP, version gate, health ----
+                .requestMatchers("/api/auth/**", "/api/app/version", "/api/health").permitAll()
+                // ---- Public: visitor self-registration + email-link approve/reject ----
+                .requestMatchers(HttpMethod.POST, "/api/visitor/request",
+                    "/api/unified-visitors/register", "/api/visitors").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/visitors/*/approve",
+                    "/api/visitors/*/reject", "/api/unified-visitors/status/**").permitAll()
+                // CORS preflight
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // ---- Admin-only sensitive/dev endpoints ----
+                .requestMatchers("/api/test-email",
+                    "/api/notifications/test-push",
+                    "/api/notifications/debug-routing/**",
+                    "/api/notifications/firebase-status",
+                    "/api/security/dev/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/qr-codes/**", "/api/security/**").hasRole("ADMIN")
+
+                // ---- Role-scoped path groups ----
+                .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "HOD", "HR")
+                .requestMatchers("/api/security/**").hasAnyRole("SECURITY", "ADMIN")
+                .requestMatchers("/api/qr-codes/**").hasAnyRole("SECURITY", "ADMIN")
+                .requestMatchers("/api/entry-exit/**").hasAnyRole("SECURITY", "ADMIN")
+                // Bulk-pass gate scanning/validation is a security-desk action.
+                .requestMatchers("/api/bulk-pass/scan/**", "/api/bulk-pass/validate/**")
+                    .hasAnyRole("SECURITY", "ADMIN")
+                .requestMatchers("/api/hod/**").hasAnyRole("HOD", "ADMIN")
+                .requestMatchers("/api/hr/**").hasAnyRole("HR", "ADMIN")
+
+                // ---- Everything else: any authenticated user ----
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+}

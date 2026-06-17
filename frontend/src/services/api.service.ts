@@ -1,4 +1,5 @@
 import { API_CONFIG } from '../config/api.config';
+import { getToken, setToken, clearToken } from './authToken';
 import {
   Student,
   Staff,
@@ -101,9 +102,11 @@ class ApiService {
     console.log(`📡 ${options.method || 'GET'} ${url}`);
     const t0 = Date.now();
     const { timeHeaders } = require('../utils/timeUtils');
+    const authToken = getToken();
     const headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
       ...timeHeaders(),
       ...options.headers,
     };
@@ -120,12 +123,21 @@ class ApiService {
         try { data = await res.json(); } catch { data = {}; }
 
         if (!res.ok) {
+          // Token missing/expired/invalid → drop it so the app falls back to login.
+          if (res.status === 401) {
+            clearToken();
+            throw new Error('Your session has expired. Please log in again.');
+          }
           if (data && typeof data === 'object' && 'success' in data) return data;
           if (data && typeof data === 'object' && 'accessGranted' in data) {
             return { success: false, message: data.message || 'Access denied', ...data };
           }
           const errMsg = (data && (data.message || data.error || data.errorMessage)) || 'Something went wrong. Please try again.';
           throw new Error(errMsg);
+        }
+        // Login responses carry a JWT — persist it so every later request is authenticated.
+        if (data && typeof data === 'object' && typeof data.token === 'string' && data.token) {
+          setToken(data.token);
         }
         return data;
       } catch (err: any) {
@@ -977,7 +989,12 @@ class ApiService {
       formData.append('file', { uri: fileUri, type: 'text/csv', name: fileName } as any);
       formData.append('staffCode', staffCode);
       const url = `${this.baseURL}/events/${eventId}/csv/preview`;
-      const response = await fetch(url, { method: 'POST', body: formData });
+      const uploadToken = getToken();
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: uploadToken ? { Authorization: `Bearer ${uploadToken}` } : undefined,
+      });
       const data = await response.json();
       return { success: data.status === 'SUCCESS', rows: data.rows, validCount: data.validCount, invalidCount: data.invalidCount, totalCount: data.totalCount, message: data.message };
     } catch (e: any) { return { success: false, message: e.message }; }

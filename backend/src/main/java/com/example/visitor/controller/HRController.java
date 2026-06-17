@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.GatePassRequest;
 import com.example.visitor.entity.Visitor;
@@ -389,6 +390,7 @@ public class HRController {
     @GetMapping("/{hrCode}")
     public ResponseEntity<?> getHRProfile(@PathVariable String hrCode) {
         try {
+            Authz.requireSelf(hrCode);
             log.info("📋 Fetching HR profile for: {}", hrCode);
 
             // Find HR by code

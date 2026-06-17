@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.Notification;
 import com.example.visitor.entity.UserPushToken;
@@ -39,6 +40,7 @@ public class NotificationController {
     @GetMapping("/student/{regNo}")
     public ResponseEntity<?> getStudentNotifications(@PathVariable String regNo) {
         try {
+            Authz.requireSelf(regNo);
             System.out.println("📋 Fetching notifications for student: " + regNo);
             
             List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(regNo);
@@ -66,6 +68,7 @@ public class NotificationController {
     @GetMapping("/staff/{staffCode}")
     public ResponseEntity<?> getStaffNotifications(@PathVariable String staffCode) {
         try {
+            Authz.requireSelf(staffCode);
             System.out.println("📋 Fetching notifications for staff: " + staffCode);
             
             List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(staffCode);
@@ -93,6 +96,7 @@ public class NotificationController {
     @GetMapping("/hod/{hodCode}")
     public ResponseEntity<?> getHODNotifications(@PathVariable String hodCode) {
         try {
+            Authz.requireSelf(hodCode);
             System.out.println("📋 Fetching notifications for HOD: " + hodCode);
             
             List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(hodCode);
@@ -120,6 +124,7 @@ public class NotificationController {
     @GetMapping("/hr/{hrCode}")
     public ResponseEntity<?> getHRNotifications(@PathVariable String hrCode) {
         try {
+            Authz.requireSelf(hrCode);
             System.out.println("📋 Fetching notifications for HR: " + hrCode);
             
             List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(hrCode);
@@ -147,6 +152,7 @@ public class NotificationController {
     @GetMapping("/security/{securityId}")
     public ResponseEntity<?> getSecurityNotifications(@PathVariable String securityId) {
         try {
+            Authz.requireSelf(securityId);
             System.out.println("📋 Fetching notifications for security: " + securityId);
             
             List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(securityId);
@@ -207,6 +213,7 @@ public class NotificationController {
     @PutMapping("/user/{userId}/read-all")
     public ResponseEntity<?> markAllAsRead(@PathVariable String userId) {
         try {
+            Authz.requireSelf(userId);
             List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
             
             for (Notification notification : notifications) {
@@ -237,6 +244,7 @@ public class NotificationController {
     @Transactional
     public ResponseEntity<?> deleteAllNotifications(@PathVariable String userId) {
         try {
+            Authz.requireSelf(userId);
             List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
             notificationRepository.deleteAll(notifications);
             return ResponseEntity.ok(Map.of("success", true, "message", "All notifications deleted", "count", notifications.size()));
@@ -250,12 +258,13 @@ public class NotificationController {
     @PostMapping("/push-token")
     public ResponseEntity<?> registerPushToken(@RequestBody Map<String, String> body) {
         try {
-            String userId = body.get("userId");
+            // Bind the push token to the authenticated user, not a caller-supplied id.
+            String userId = Authz.selfId();
             String pushToken = body.get("pushToken");
             String deviceType = body.getOrDefault("deviceType", "ANDROID");
 
-            if (userId == null || pushToken == null) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "userId and pushToken required"));
+            if (pushToken == null) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "pushToken required"));
             }
 
             // Delete in separate try blocks so a "not found" doesn't roll back the whole transaction
