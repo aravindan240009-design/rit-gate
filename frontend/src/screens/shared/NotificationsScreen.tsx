@@ -16,7 +16,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
-import { getRelativeTimeLocal, isWithinLast24HoursLocal, formatDateShortLocal } from '../../utils/dateUtils';
+import { getRelativeTimeLocal, isTodayLocal, formatDateShortLocal } from '../../utils/dateUtils';
 
 
 interface Notification {
@@ -45,7 +45,7 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
 
   const isRecent = (value?: string) => {
     if (!value) return false;
-    return isWithinLast24HoursLocal(value);
+    return isTodayLocal(value);
   };
 
   const fetchNotifications = async () => {
