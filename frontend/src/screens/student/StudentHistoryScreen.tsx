@@ -14,6 +14,8 @@ import { apiService } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
+import BottomNavBar from '../../components/BottomNavBar';
+import { getNavTabs } from '../../components/navTabs';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
@@ -225,25 +227,11 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
         )}
       </ScreenContentContainer>
       </TopRefreshControl>
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
-          <Ionicons name="home-outline" size={24} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('REQUESTS')}>
-          <Ionicons name="document-text-outline" size={24} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Requests</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HISTORY')}>
-          <Ionicons name="time" size={24} color={theme.primary} />
-          <ThemedText style={[styles.navLabelActive, { color: theme.primary }]}>History</ThemedText>
-          <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('PROFILE')}>
-          <Ionicons name="person-outline" size={24} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
-        </TouchableOpacity>
-      </View>
+      <BottomNavBar
+        tabs={getNavTabs('STUDENT')}
+        activeKey="HISTORY"
+        onPress={(key) => onTabChange(key as 'HOME' | 'REQUESTS' | 'HISTORY' | 'PROFILE')}
+      />
     </SafeAreaView>
   );
 };

@@ -37,6 +37,8 @@ import { useNotifications } from '../../context/NotificationContext';
 import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import NotificationDropdown from '../../components/NotificationDropdown';
+import BottomNavBar from '../../components/BottomNavBar';
+import { getNavTabs } from '../../components/navTabs';
 import RequestTimeline from '../../components/RequestTimeline';
 import GatePassQRModal from '../../components/GatePassQRModal';
 import { useErrorModal } from '../../hooks/useErrorModal';
@@ -337,26 +339,12 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
       </ScreenContentContainer>
       </TopRefreshControl>
 
-      {/* Bottom nav — always fixed, outside refresh control */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HOME')}>
-          <Ionicons name="home" size={24} color={theme.primary} />
-          <ThemedText style={[styles.navLabelActive, { color: theme.primary }]}>Home</ThemedText>
-          <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('REQUESTS')}>
-          <Ionicons name="document-text-outline" size={24} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Requests</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('HISTORY')}>
-          <Ionicons name="time-outline" size={24} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>History</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => onTabChange('PROFILE')}>
-          <Ionicons name="person-outline" size={24} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Profile</ThemedText>
-        </TouchableOpacity>
-      </View>
+      {/* Bottom nav — shared component, canonical student tabs */}
+      <BottomNavBar
+        tabs={getNavTabs('STUDENT')}
+        activeKey="HOME"
+        onPress={(key) => onTabChange(key as 'HOME' | 'REQUESTS' | 'HISTORY' | 'PROFILE')}
+      />
 
       <NotificationDropdown visible={showNotificationDropdown} onClose={() => setShowNotificationDropdown(false)} userId={student.regNo} userType="student" />
 

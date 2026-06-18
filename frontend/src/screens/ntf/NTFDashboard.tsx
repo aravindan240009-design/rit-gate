@@ -19,6 +19,8 @@ import ThemedText from '../../components/ThemedText';
 import RequesterAvatar from '../../components/RequesterAvatar';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import BottomNavBar from '../../components/BottomNavBar';
+import { getNavTabs } from '../../components/navTabs';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
@@ -354,70 +356,17 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
         </ScreenContentContainer>
       </TopRefreshControl>
 
-      {/* Bottom Nav */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => setBottomTab('HOME')}
-        >
-          <Ionicons
-            name={bottomTab === 'HOME' ? 'home' : 'home-outline'}
-            size={22}
-            color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary}
-          />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>
-            Home
-          </ThemedText>
-          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('NEW_PASS');
-            setShowPassSheet(true);
-          }}
-        >
-          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('MY_PASSES');
-            onNavigate('NTF_MY_REQUESTS');
-          }}
-        >
-          <Ionicons
-            name={bottomTab === 'MY_PASSES' ? 'list' : 'list-outline'}
-            size={22}
-            color={bottomTab === 'MY_PASSES' ? theme.primary : theme.textTertiary}
-          />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_PASSES' && { color: theme.primary }]}>
-            My Requests
-          </ThemedText>
-          {bottomTab === 'MY_PASSES' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('PROFILE');
-            onNavigate('PROFILE');
-          }}
-        >
-          <Ionicons
-            name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'}
-            size={22}
-            color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary}
-          />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>
-            Profile
-          </ThemedText>
-          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Nav — shared component, canonical tabs */}
+      <BottomNavBar
+        tabs={getNavTabs('NTF')}
+        activeKey="HOME"
+        onPress={(key) => {
+          if (key === 'HOME') setBottomTab('HOME');
+          else if (key === 'NEW_PASS') { setBottomTab('NEW_PASS'); setShowPassSheet(true); }
+          else if (key === 'MY_REQUESTS') { setBottomTab('MY_PASSES'); onNavigate('NTF_MY_REQUESTS'); }
+          else if (key === 'PROFILE') { setBottomTab('PROFILE'); onNavigate('PROFILE'); }
+        }}
+      />
 
       <PassTypeBottomSheet
         visible={showPassSheet}

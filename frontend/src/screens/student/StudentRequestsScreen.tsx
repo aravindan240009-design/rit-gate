@@ -20,6 +20,8 @@ import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import RequesterAvatar from '../../components/RequesterAvatar';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
+import BottomNavBar from '../../components/BottomNavBar';
+import { getNavTabs } from '../../components/navTabs';
 import { VerticalFlatList, VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
@@ -221,26 +223,12 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
       </ScreenContentContainer>
       </TopRefreshControl>
 
-      {/* Bottom nav — outside TopRefreshControl so it never shifts */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-        {[
-          { tab: 'HOME', icon: 'home-outline', label: 'Home' },
-          { tab: 'REQUESTS', icon: 'document-text', label: 'Requests' },
-          { tab: 'HISTORY', icon: 'time-outline', label: 'History' },
-          { tab: 'PROFILE', icon: 'person-outline', label: 'Profile' },
-        ].map(({ tab, icon, label }) => {
-          const active = tab === 'REQUESTS';
-          return (
-            <TouchableOpacity key={tab} style={styles.navItem} onPress={() => onTabChange(tab as any)}>
-              <Ionicons name={icon as any} size={24} color={active ? theme.primary : theme.textTertiary} />
-              <ThemedText style={[styles.navLabel, { color: active ? theme.primary : theme.textTertiary, fontWeight: active ? '700' : '500' }]}>
-                {label}
-              </ThemedText>
-              {active && <View style={[styles.navIndicator, { backgroundColor: theme.primary }]} />}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+      {/* Bottom nav — shared component, canonical student tabs */}
+      <BottomNavBar
+        tabs={getNavTabs('STUDENT')}
+        activeKey="REQUESTS"
+        onPress={(key) => onTabChange(key as 'HOME' | 'REQUESTS' | 'HISTORY' | 'PROFILE')}
+      />
 
       {/* Single pass details */}
       <SinglePassDetailsModal
