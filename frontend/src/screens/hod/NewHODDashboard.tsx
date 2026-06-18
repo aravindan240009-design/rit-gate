@@ -313,7 +313,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
           <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('HOD_EVENT_LIST' as any)}>
             <Ionicons name="calendar-outline" size={22} color={theme.text} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
             <Ionicons name="notifications-outline" size={24} color={theme.text} />
             {unreadCount > 0 && (
               <View style={[styles.notificationBadge, { backgroundColor: theme.error }]}>

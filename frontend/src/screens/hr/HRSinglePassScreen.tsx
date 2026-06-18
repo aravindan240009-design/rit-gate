@@ -97,7 +97,7 @@ const HRSinglePassScreen: React.FC<HRSinglePassScreenProps> = ({ hr, onBack }) =
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
 
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => {
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => {
           if (purpose.trim() || reason.trim()) setShowBackConfirm(true);
           else onBack();
         }}>
@@ -107,7 +107,7 @@ const HRSinglePassScreen: React.FC<HRSinglePassScreenProps> = ({ hr, onBack }) =
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets={true}>
         {/* Info card */}
         <View style={[styles.infoCard, { backgroundColor: theme.primary + '15', borderColor: theme.primary + '30' }]}>
           <Ionicons name="information-circle-outline" size={20} color={theme.primary} />

@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -14,6 +12,7 @@ import { formatDateTimeLocal } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
+import { SkeletonList } from '../../components/SkeletonCard';
 import TopRefreshControl from '../../components/TopRefreshControl';
 
 
@@ -86,7 +85,7 @@ const EntryExitHistoryScreen: React.FC<EntryExitHistoryScreenProps> = ({ user, n
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={handleGoBack} style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={handleGoBack} style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Entry / Exit History</ThemedText>
@@ -143,10 +142,7 @@ const EntryExitHistoryScreen: React.FC<EntryExitHistoryScreenProps> = ({ user, n
           )}
           ListEmptyComponent={
             isLoading ? (
-              <View style={styles.centered}>
-                <ActivityIndicator size="large" color={theme.primary} />
-                <ThemedText style={[styles.loadingText, { color: theme.textSecondary }]}>Loading history...</ThemedText>
-              </View>
+              <SkeletonList count={6} />
             ) : (
               <View style={styles.centered}>
                 <Ionicons name="time-outline" size={64} color={theme.border} />

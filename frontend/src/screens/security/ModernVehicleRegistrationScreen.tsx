@@ -173,7 +173,7 @@ const ModernVehicleRegistrationScreen: React.FC<ModernVehicleRegistrationScreenP
 
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Vehicle Registration</ThemedText>

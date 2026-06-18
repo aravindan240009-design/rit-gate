@@ -408,7 +408,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       <SafeAreaView style={[styles.fsScreen, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
         <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <View style={[styles.fsHeader, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-          <TouchableOpacity style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={closeVehicleRangeResults}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={closeVehicleRangeResults}>
             <Ionicons name="arrow-back" size={22} color={theme.text} />
           </TouchableOpacity>
           <ThemedText style={[styles.fsHeaderTitle, { color: theme.text }]}>Date range results</ThemedText>
@@ -516,7 +516,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#ffffff' }}>
-          <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' }} onPress={() => setVehicleRangePickerPage(false)}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' }} onPress={() => setVehicleRangePickerPage(false)}>
             <Ionicons name="arrow-back" size={22} color="#1a1a1a" />
           </TouchableOpacity>
           <ThemedText style={{ fontSize: 17, fontWeight: '700', color: '#1a1a1a' }}>Select dates</ThemedText>
@@ -615,7 +615,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       <SafeAreaView style={[styles.fsScreen, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
         <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <View style={[styles.fsHeader, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-          <TouchableOpacity style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={closeRangeResults}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={closeRangeResults}>
             <Ionicons name="arrow-back" size={22} color={theme.text} />
           </TouchableOpacity>
           <ThemedText style={[styles.fsHeaderTitle, { color: theme.text }]}>Date range results</ThemedText>
@@ -723,7 +723,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#ffffff' }}>
-          <TouchableOpacity style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' }} onPress={() => setRangePickerPage(false)}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6', alignItems: 'center', justifyContent: 'center' }} onPress={() => setRangePickerPage(false)}>
             <Ionicons name="arrow-back" size={22} color="#1a1a1a" />
           </TouchableOpacity>
           <ThemedText style={{ fontSize: 17, fontWeight: '700', color: '#1a1a1a' }}>Select dates</ThemedText>
@@ -825,7 +825,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>History</ThemedText>
@@ -1123,7 +1123,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             return (
               <>
                 <View style={[styles.fsHeader, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-                  <TouchableOpacity style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => setShowDetailModal(false)}>
+                  <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => setShowDetailModal(false)}>
                     <Ionicons name="arrow-back" size={22} color={theme.text} />
                   </TouchableOpacity>
                   <ThemedText style={[styles.fsHeaderTitle, { color: theme.text }]}>Scan Details</ThemedText>
@@ -1312,7 +1312,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
             return (
               <>
                 <View style={[styles.fsHeader, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-                  <TouchableOpacity style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => setShowVehicleModal(false)}>
+                  <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={() => setShowVehicleModal(false)}>
                     <Ionicons name="arrow-back" size={22} color={theme.text} />
                   </TouchableOpacity>
                   <ThemedText style={[styles.fsHeaderTitle, { color: theme.text }]}>Vehicle Details</ThemedText>

@@ -115,14 +115,14 @@ const AdminSinglePassScreen: React.FC<AdminSinglePassScreenProps> = ({ admin, on
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={handleBack}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={handleBack}>
           <Ionicons name="arrow-back" size={22} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>New Gate Pass</ThemedText>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets={true}>
         <View style={[styles.infoCard, { backgroundColor: theme.primary + '15', borderColor: theme.primary + '30' }]}>
           <Ionicons name="information-circle-outline" size={20} color={theme.primary} />
           <ThemedText style={[styles.infoText, { color: theme.primary }]}>

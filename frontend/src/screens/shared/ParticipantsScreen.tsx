@@ -90,7 +90,7 @@ const ParticipantsScreen: React.FC<ParticipantsScreenProps> = ({
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color="#1F2937" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>

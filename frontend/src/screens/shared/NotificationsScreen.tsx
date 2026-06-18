@@ -155,7 +155,7 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right', 'bottom']}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <View style={styles.headerRow}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             onPress={onBack}
             style={[styles.iconButton, { backgroundColor: theme.inputBackground }]}
           >

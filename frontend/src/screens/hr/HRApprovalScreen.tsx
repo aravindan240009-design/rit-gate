@@ -103,7 +103,7 @@ const HRApprovalScreen: React.FC<HRApprovalScreenProps> = ({ user, request, onBa
     return (
       <SafeAreaView style={styles.container} edges={['bottom']}>
         <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-          <TouchableOpacity onPress={onBack} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onBack} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
             <Ionicons name="arrow-back" size={24} color={theme.text} />
           </TouchableOpacity>
           <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Request Details</ThemedText>
@@ -120,7 +120,7 @@ const HRApprovalScreen: React.FC<HRApprovalScreenProps> = ({ user, request, onBa
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['bottom']}>
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={onBack} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={onBack} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Request Details</ThemedText>

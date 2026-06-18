@@ -226,7 +226,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" />
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={handleBack}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={handleBack}>
           <Ionicons name="arrow-back" size={22} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Pre-register guest</ThemedText>

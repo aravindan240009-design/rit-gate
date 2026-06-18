@@ -249,7 +249,7 @@ const RequestsScreen: React.FC<RequestsScreenProps> = ({ user, onBack, onNavigat
         />
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: theme.border }]}>
-          <TouchableOpacity 
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} 
             onPress={onBack}
             style={[styles.backButton, { backgroundColor: theme.cardBackground }]}
           >

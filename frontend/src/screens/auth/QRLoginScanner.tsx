@@ -104,7 +104,7 @@ const QRLoginScanner: React.FC<QRLoginScannerProps> = ({ onScanSuccess, onClose 
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={onClose}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={styles.backButton} onPress={onClose}>
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>Scan QR/Barcode</ThemedText>

@@ -29,6 +29,7 @@ import { useSuccessModal } from '../../hooks/useSuccessModal';
 import { AppError } from '../../utils/errorHandler';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
+import { useTheme } from '../../context/ThemeContext';
 
 
 interface ModernUnifiedLoginScreenProps {
@@ -37,6 +38,7 @@ interface ModernUnifiedLoginScreenProps {
 }
 
 const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onLoginSuccess, onBack }) => {
+  const { theme } = useTheme();
   const extractLoginId = (rawScan: string): string => {
     const raw = (rawScan || '').trim();
     if (!raw) return '';
@@ -257,12 +259,12 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
   if (showQRScanner) return <QRLoginScanner onScanSuccess={handleQRScanSuccess} onClose={() => setShowQRScanner(false)} />;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+      <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardView}>
         <VerticalScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {onBack && (
-            <TouchableOpacity style={styles.backBtn} onPress={onBack}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={styles.backBtn} onPress={onBack}>
               <Ionicons name="arrow-back" size={24} color={THEME.colors.text} />
             </TouchableOpacity>
           )}
@@ -286,17 +288,17 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
                 </View>
               </View>
             </View>
-            <View style={styles.loginCard}>
-              <ThemedText style={styles.cardTitle}>{otpSent ? 'Verify Identity' : 'Welcome Back'}</ThemedText>
-              <ThemedText style={styles.cardSubtitle}>
+            <View style={[styles.loginCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+              <ThemedText style={[styles.cardTitle, { color: theme.text }]}>{otpSent ? 'Verify Identity' : 'Welcome Back'}</ThemedText>
+              <ThemedText style={[styles.cardSubtitle, { color: theme.textSecondary }]}>
                 {otpSent ? 'Enter the one-time password sent to your email.' : 'Sign in with your institute credential.'}
               </ThemedText>
             
               {!otpSent ? (
                <View style={{ width: '100%', alignItems: 'center' }}>
                 <View style={styles.inputWrap}>
-                  <ThemedText style={styles.label}>IDENTIFICATION</ThemedText>
-                  <TextInput style={styles.input} placeholder="Security ID / Staff ID / Roll No" placeholderTextColor="#94A3B8" value={userId} onChangeText={setUserId} autoCapitalize="none" editable={!loading} />
+                  <ThemedText style={[styles.label, { color: theme.text }]}>IDENTIFICATION</ThemedText>
+                  <TextInput style={[styles.input, { backgroundColor: theme.inputBackground, color: theme.text, borderColor: theme.border }]} placeholder="Security ID / Staff ID / Roll No" placeholderTextColor={theme.textTertiary} value={userId} onChangeText={setUserId} autoCapitalize="none" editable={!loading} />
                 </View>
                 <TouchableOpacity style={[styles.btn, loading && styles.btnDisabled]} onPress={() => handleSendOTP()} disabled={loading}>
                   {loading ? (
@@ -316,7 +318,7 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
               ) : (
                 <View style={{ width: '100%', alignItems: 'center' }}>
                     <View style={styles.inputWrap}>
-                      <ThemedText style={styles.label}>VERIFICATION CODE</ThemedText>
+                      <ThemedText style={[styles.label, { color: theme.text }]}>VERIFICATION CODE</ThemedText>
                       <View style={styles.otpBoxRow}>
                         {otpDigits.map((digit, i) => (
                           <TextInput

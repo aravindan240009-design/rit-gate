@@ -25,6 +25,7 @@ import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import { useTheme } from '../../context/ThemeContext';
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
+import { hapticSuccess, hapticError } from '../../utils/haptics';
 
 
 interface ModernQRScannerScreenProps {
@@ -120,6 +121,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         const scanLabel = isExit ? 'Exit' : isLateEntry ? 'Late Entry' : 'Entry';
         setModalTitle(`✅ ${scanLabel} Recorded`);
         setModalMessage(response.message || `${scanLabel} recorded successfully`);
+        hapticSuccess();
         setShowSuccessModal(true);
       } else {
         setModalTitle('Scan Failed');
@@ -142,6 +144,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
           friendlyMsg = 'Could not process the QR code. Please try again.';
         }
         setModalMessage(friendlyMsg);
+        hapticError();
         setShowErrorModal(true);
         resetScanner();
       }
@@ -149,6 +152,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
       console.error('❌ [MODERN] Error scanning QR code:', error);
       setModalTitle('Scan Error');
       setModalMessage(error.message || 'Failed to process scan. Please check your connection and try again.');
+      hapticError();
       setShowErrorModal(true);
       resetScanner();
     } finally {
@@ -195,6 +199,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         setModalMessage(response.message || `${scanLabel} recorded successfully`);
         setManualCode('');
         setShowManualModal(false);
+        hapticSuccess();
         setShowSuccessModal(true);
       } else {
         setModalTitle('Scan Failed');
@@ -212,12 +217,14 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
           friendlyMsg = 'This code is invalid or already used. Please verify and try again.';
         }
         setModalMessage(friendlyMsg);
+        hapticError();
         setShowErrorModal(true);
       }
     } catch (error: any) {
       console.error('❌ [MODERN] Manual entry error:', error);
       setModalTitle('Entry Error');
       setModalMessage('Could not process the code. Please check your connection and try again.');
+      hapticError();
       setShowErrorModal(true);
     } finally {
       setIsLoading(false);
@@ -336,7 +343,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
 
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>QR Scanner</ThemedText>
