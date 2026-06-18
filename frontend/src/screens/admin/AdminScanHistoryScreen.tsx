@@ -395,9 +395,9 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700' },
+  headerTitle: { fontSize: 18, fontWeight: '700' },
   listContent: { padding: 16, paddingBottom: 40 },
   hint: { fontSize: 14, marginBottom: 16 },
   actions: { flexDirection: 'row', gap: 12, marginBottom: 20 },

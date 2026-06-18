@@ -143,7 +143,7 @@ const HODCreateEventScreen: React.FC<Props> = ({ hod, onBack, onCreated }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   backBtn: { padding: 4, marginRight: 8 },
   headerTitle: { fontSize: 18, fontWeight: '700' },
   scroll: { flex: 1 },

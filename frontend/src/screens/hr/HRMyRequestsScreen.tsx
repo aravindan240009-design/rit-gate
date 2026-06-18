@@ -234,8 +234,8 @@ const HRMyRequestsScreen: React.FC<HRMyRequestsScreenProps> = ({ hr, onBack, onN
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 17, fontWeight: '700' },
+  header: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
+  headerTitle: { fontSize: 18, fontWeight: '700' },
   bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 12, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 8, position: 'relative' },
   navLabel: { fontSize: 12, marginTop: 4, fontWeight: '500' },

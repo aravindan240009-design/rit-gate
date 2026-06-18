@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#1F2937' },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1F2937' },
   headerSub: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
   searchContainer: {
     flexDirection: 'row',

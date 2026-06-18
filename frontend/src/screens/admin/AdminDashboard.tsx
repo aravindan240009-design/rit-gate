@@ -284,7 +284,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout, onNavi
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   avatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   avatarImage: { width: 44, height: 44, borderRadius: 22 },

@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '700',
     letterSpacing: 0.5,
     textAlign: 'center',

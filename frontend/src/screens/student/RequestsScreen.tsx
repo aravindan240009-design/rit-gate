@@ -432,8 +432,8 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '700',
     flex: 1,
   },
   filterContainer: {

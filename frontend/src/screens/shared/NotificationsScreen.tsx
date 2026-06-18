@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 12, fontSize: 16 },
-  header: { paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: 1 },
+  header: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   headerTitleWrap: { flex: 1, paddingHorizontal: 4 },

@@ -234,9 +234,9 @@ const HRSinglePassScreen: React.FC<HRSinglePassScreenProps> = ({ hr, onBack }) =
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700' },
+  headerTitle: { fontSize: 18, fontWeight: '700' },
   content: { padding: 20, paddingBottom: 60 },
   infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, borderRadius: 12, padding: 14, borderWidth: 1, marginBottom: 20 },
   infoText: { flex: 1, fontSize: 13, fontWeight: '500', lineHeight: 18 },
