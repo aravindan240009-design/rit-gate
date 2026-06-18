@@ -156,7 +156,7 @@ public class VisitorGatepassService {
         String qrString = generateQRCodeString(request, token);
         request.setQrCode(qrString);
         
-        String manualCode = String.format("%06d", new java.util.Random().nextInt(999999));
+        String manualCode = String.format("%06d", random.nextInt(999999));
         request.setManualCode(manualCode);
 
         // Create QR table entry so scanners can validate/consume the token.
