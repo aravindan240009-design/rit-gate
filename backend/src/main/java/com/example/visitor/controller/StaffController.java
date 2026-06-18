@@ -72,6 +72,7 @@ public class StaffController {
     @GetMapping("/{staffCode}")
     public ResponseEntity<Map<String, Object>> getStaffByCode(@PathVariable String staffCode) {
         try {
+            Authz.requireSelf(staffCode);
             System.out.println("📋 Fetching staff profile for: " + staffCode);
             
             java.util.Optional<Staff> staffOpt = staffRepository.findByStaffCode(staffCode);

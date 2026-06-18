@@ -58,6 +58,9 @@ public class SecurityConfig {
 
                 // ---- Role-scoped path groups ----
                 .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "HOD", "HR")
+                // Whole-visitor-list dump is a security-desk/admin view (the single-visitor,
+                // self-register and email-link routes above remain available).
+                .requestMatchers(HttpMethod.GET, "/api/visitors").hasAnyRole("SECURITY", "ADMIN")
                 .requestMatchers("/api/security/**").hasAnyRole("SECURITY", "ADMIN")
                 .requestMatchers("/api/qr-codes/**").hasAnyRole("SECURITY", "ADMIN")
                 .requestMatchers("/api/entry-exit/**").hasAnyRole("SECURITY", "ADMIN")

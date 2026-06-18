@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.Person;
 import com.example.visitor.entity.VehicleRegistration;
@@ -3518,6 +3519,7 @@ public class SecurityController {
     @GetMapping("/{securityId}")
     public ResponseEntity<?> getSecurityProfile(@PathVariable String securityId) {
         try {
+            Authz.requireSelf(securityId);
             System.out.println("📋 Fetching security profile for: " + securityId);
 
             Optional<com.example.visitor.entity.SecurityPersonnel> securityOpt =
