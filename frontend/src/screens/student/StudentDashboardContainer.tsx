@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, BackHandler } from 'react-native';
+import { BackHandler } from 'react-native';
 import { Student } from '../../types';
 import StudentHomeScreen from './StudentHomeScreen';
 import StudentRequestsScreen from './StudentRequestsScreen';
@@ -7,6 +7,7 @@ import StudentHistoryScreen from './StudentHistoryScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import GatePassRequestScreen from './GatePassRequestScreen';
 import { useNotifications } from '../../context/NotificationContext';
+import ScreenTransition from '../../components/navigation/ScreenTransition';
 
 interface StudentDashboardContainerProps {
   student: Student;
@@ -109,9 +110,9 @@ const StudentDashboardContainer: React.FC<StudentDashboardContainerProps> = ({
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <ScreenTransition screenKey={activeTab}>
       {renderScreen()}
-    </View>
+    </ScreenTransition>
   );
 };
 

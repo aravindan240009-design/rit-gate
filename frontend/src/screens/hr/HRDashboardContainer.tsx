@@ -7,6 +7,7 @@ import HRSinglePassScreen from './HRSinglePassScreen';
 import HRMyRequestsScreen from './HRMyRequestsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import ScreenTransition from '../../components/navigation/ScreenTransition';
 
 interface HRDashboardContainerProps {
   hr: HR;
@@ -105,7 +106,9 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
 
   return (
     <View style={{ flex: 1 }}>
-      {renderScreen()}
+      <ScreenTransition screenKey={activeTab}>
+        {renderScreen()}
+      </ScreenTransition>
       {/* HR only has single pass + guest — no bulk */}
       <PassTypeBottomSheet
         visible={showPassSheet}

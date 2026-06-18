@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, BackHandler } from 'react-native';
+import { BackHandler } from 'react-native';
 import { NonTeachingFaculty, ScreenName } from '../../types';
 import AdminDashboard from './AdminDashboard';
 import AdminSinglePassScreen from './AdminSinglePassScreen';
@@ -7,6 +7,7 @@ import AdminMyRequestsScreen from './AdminMyRequestsScreen';
 import AdminScanHistoryScreen from './AdminScanHistoryScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import GuestPreRequestScreen from '../shared/GuestPreRequestScreen';
+import ScreenTransition from '../../components/navigation/ScreenTransition';
 
 interface AdminDashboardContainerProps {
   admin: NonTeachingFaculty;
@@ -37,49 +38,52 @@ const AdminDashboardContainer: React.FC<AdminDashboardContainerProps> = ({ admin
     else onNavigate(screen);
   };
 
-  if (activeTab === 'PROFILE') {
-    return (
-      <ProfileScreen 
-        user={admin as any} 
-        userType="STAFF" 
-        userSubType="ADMIN" 
-        onBack={() => setActiveTab('DASHBOARD')} 
-        onLogout={onLogout}
-        showBottomNav={true}
-        onTabChange={(tab) => {
-          if (tab === 'HOME') setActiveTab('DASHBOARD');
-          else if (tab === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
-          else if (tab === 'SCAN_HISTORY') setActiveTab('SCAN_HISTORY');
-          else if (tab === 'PROFILE') setActiveTab('PROFILE');
-        }}
-      />
-    );
-  }
-  if (activeTab === 'NEW_PASS') {
-    return <AdminSinglePassScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} />;
-  }
-  if (activeTab === 'MY_REQUESTS') {
-    return <AdminMyRequestsScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} onNavigate={handleNavigate} />;
-  }
-  if (activeTab === 'SCAN_HISTORY') {
-    return <AdminScanHistoryScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} onNavigate={handleNavigate} />;
-  }
-  if (activeTab === 'GUEST') {
-    return (
-      <GuestPreRequestScreen
-        creatorRole="NTF"
-        creatorStaffCode={admin.staffCode}
-        creatorName={admin.staffName || admin.name || ''}
-        creatorDepartment={admin.department || ''}
-        onBack={() => setActiveTab('DASHBOARD')}
-      />
-    );
-  }
+  const renderScreen = () => {
+    if (activeTab === 'PROFILE') {
+      return (
+        <ProfileScreen
+          user={admin as any}
+          userType="STAFF"
+          userSubType="ADMIN"
+          onBack={() => setActiveTab('DASHBOARD')}
+          onLogout={onLogout}
+          showBottomNav={true}
+          onTabChange={(tab) => {
+            if (tab === 'HOME') setActiveTab('DASHBOARD');
+            else if (tab === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
+            else if (tab === 'SCAN_HISTORY') setActiveTab('SCAN_HISTORY');
+            else if (tab === 'PROFILE') setActiveTab('PROFILE');
+          }}
+        />
+      );
+    }
+    if (activeTab === 'NEW_PASS') {
+      return <AdminSinglePassScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} />;
+    }
+    if (activeTab === 'MY_REQUESTS') {
+      return <AdminMyRequestsScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} onNavigate={handleNavigate} />;
+    }
+    if (activeTab === 'SCAN_HISTORY') {
+      return <AdminScanHistoryScreen admin={admin} onBack={() => setActiveTab('DASHBOARD')} onNavigate={handleNavigate} />;
+    }
+    if (activeTab === 'GUEST') {
+      return (
+        <GuestPreRequestScreen
+          creatorRole="NTF"
+          creatorStaffCode={admin.staffCode}
+          creatorName={admin.staffName || admin.name || ''}
+          creatorDepartment={admin.department || ''}
+          onBack={() => setActiveTab('DASHBOARD')}
+        />
+      );
+    }
+    return <AdminDashboard admin={admin} onLogout={onLogout} onNavigate={handleNavigate} />;
+  };
 
   return (
-    <View style={{ flex: 1 }}>
-      <AdminDashboard admin={admin} onLogout={onLogout} onNavigate={handleNavigate} />
-    </View>
+    <ScreenTransition screenKey={activeTab}>
+      {renderScreen()}
+    </ScreenTransition>
   );
 };
 

@@ -5,6 +5,7 @@ import NCIDashboard from './NCIDashboard';
 import NCIMyRequestsScreen from './NCIMyRequestsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import ScreenTransition from '../../components/navigation/ScreenTransition';
 
 interface NCIDashboardContainerProps {
   nci: NonTeachingFaculty;
@@ -78,7 +79,9 @@ const NCIDashboardContainer: React.FC<NCIDashboardContainerProps> = ({ nci, onLo
 
   return (
     <View style={{ flex: 1 }}>
-      {renderScreen()}
+      <ScreenTransition screenKey={activeTab}>
+        {renderScreen()}
+      </ScreenTransition>
       {/* NCI: single pass + guest only */}
       <PassTypeBottomSheet
         visible={showPassSheet}
