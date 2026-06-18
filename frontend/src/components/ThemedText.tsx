@@ -6,9 +6,14 @@ type Props = TextProps & {
   children: React.ReactNode;
 };
 
-const ThemedText: React.FC<Props> = ({ children, style, variant: _v, ...rest }) => {
+/**
+ * App-wide text wrapper. Caps OS font scaling at 1.3× so users with larger
+ * system font sizes get readable text without overflowing fixed-height cards
+ * and badges. Callers can still override maxFontSizeMultiplier per-instance.
+ */
+const ThemedText: React.FC<Props> = ({ children, style, variant: _v, maxFontSizeMultiplier, ...rest }) => {
   return (
-    <Text {...rest} style={style}>
+    <Text maxFontSizeMultiplier={maxFontSizeMultiplier ?? 1.3} {...rest} style={style}>
       {children}
     </Text>
   );

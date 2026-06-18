@@ -59,6 +59,9 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ tabs, activeKey, onPress })
             style={styles.navItem}
             onPress={() => onPress(tab.key)}
             activeOpacity={0.7}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: active }}
+            accessibilityLabel={tab.label}
           >
             <Ionicons
               name={iconName as any}
