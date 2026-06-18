@@ -16,24 +16,26 @@ import TopRefreshControl from '../../components/TopRefreshControl';
 import { SkeletonList } from '../../components/SkeletonCard';
 import { formatDateTimeShortLocal, getRelativeTimeLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import BottomNavBar from '../../components/BottomNavBar';
+import { getNavTabs, isPrincipalDesignation } from '../../components/navTabs';
 import PageHeader from '../../components/PageHeader';
-
-const NCI_TABS = [
-  { key: 'HOME', label: 'Home', icon: 'home-outline', iconActive: 'home' },
-  { key: 'NEW_PASS', label: 'New Pass', icon: 'add-circle-outline', isAdd: true },
-  { key: 'MY_REQUESTS', label: 'My Requests', icon: 'list-outline', iconActive: 'list' },
-  { key: 'PROFILE', label: 'Profile', icon: 'person-outline', iconActive: 'person' },
-];
 
 interface NCIMyRequestsScreenProps {
   user: NonTeachingFaculty;
   onBack?: () => void;
-  onNavigate?: (screen: 'HOME' | 'NEW_PASS' | 'PROFILE') => void;
+  onNavigate?: (screen: 'HOME' | 'NEW_PASS' | 'PROFILE' | 'SCAN_HISTORY') => void;
 }
 
 const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack, onNavigate }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  // Canonical tabs — principals/directors also get Gate Logs.
+  const navTabs = getNavTabs('NCI', isPrincipalDesignation(user));
+  const handleNavPress = (key: string) => {
+    if (key === 'HOME') onBack && onBack();
+    else if (key === 'NEW_PASS') onNavigate && onNavigate('NEW_PASS');
+    else if (key === 'SCAN_HISTORY') onNavigate && onNavigate('SCAN_HISTORY');
+    else if (key === 'PROFILE') onNavigate && onNavigate('PROFILE');
+  };
   const [allRequests, setAllRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -185,11 +187,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
       <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
         <PageHeader title="My Requests" />
         <SkeletonList count={5} />
-      <BottomNavBar tabs={NCI_TABS} activeKey="MY_REQUESTS" onPress={(key) => {
-        if (key === 'HOME') onBack && onBack();
-        else if (key === 'NEW_PASS') onNavigate && onNavigate('NEW_PASS');
-        else if (key === 'PROFILE') onNavigate && onNavigate('PROFILE');
-      }} />
+      <BottomNavBar tabs={navTabs} activeKey="MY_REQUESTS" onPress={handleNavPress} />
       </SafeAreaView>
     );
   }
@@ -222,11 +220,7 @@ const NCIMyRequestsScreen: React.FC<NCIMyRequestsScreenProps> = ({ user, onBack,
       </TopRefreshControl>
 
       {/* Bottom Navigation */}
-      <BottomNavBar tabs={NCI_TABS} activeKey="MY_REQUESTS" onPress={(key) => {
-        if (key === 'HOME') onBack && onBack();
-        else if (key === 'NEW_PASS') onNavigate && onNavigate('NEW_PASS');
-        else if (key === 'PROFILE') onNavigate && onNavigate('PROFILE');
-      }} />
+      <BottomNavBar tabs={navTabs} activeKey="MY_REQUESTS" onPress={handleNavPress} />
 
       <SinglePassDetailsModal
         visible={showDetailModal}

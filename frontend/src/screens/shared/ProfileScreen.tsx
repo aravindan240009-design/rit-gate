@@ -20,6 +20,8 @@ import ConfirmationModal from '../../components/ConfirmationModal';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
+import BottomNavBar from '../../components/BottomNavBar';
+import { getNavTabs, isPrincipalDesignation, NavRole } from '../../components/navTabs';
 
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
@@ -136,112 +138,31 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     return name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().substring(0, 2);
   };
 
-  const renderBottomNav = (tabChange: (tab: string) => void) => {
-    const isStudent = userType.toUpperCase() === 'STUDENT';
-    if (isStudent) {
-      return (
-        <>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HOME')}>
-            <Ionicons name="home-outline" size={24} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('REQUESTS')}>
-            <Ionicons name="document-text-outline" size={24} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Requests</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HISTORY')}>
-            <Ionicons name="time-outline" size={24} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>History</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="person" size={24} color={theme.primary} />
-            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>Profile</ThemedText>
-            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
-          </TouchableOpacity>
-        </>
-      );
-    }
-    // Admin Officer (AO) - 5 tabs with Gate Logs
-    const isAdmin = userSubType === 'ADMIN';
-    if (isAdmin) {
-      return (
-        <>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HOME')}>
-            <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('NEW_PASS')}>
-            <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('MY_REQUESTS')}>
-            <Ionicons name="list-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>My Requests</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('SCAN_HISTORY')}>
-            <Ionicons name="time-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Gate Logs</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="person" size={22} color={theme.primary} />
-            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>Profile</ThemedText>
-            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
-          </TouchableOpacity>
-        </>
-      );
-    }
-    // HR - 5 tabs with Gate Logs
-    const isHR = userType.toUpperCase() === 'HR';
-    if (isHR) {
-      return (
-        <>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HOME')}>
-            <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('NEW_PASS')}>
-            <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('REQUESTS')}>
-            <Ionicons name="list-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>My Requests</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem} onPress={() => tabChange('EXITS')}>
-            <Ionicons name="swap-vertical-outline" size={22} color={theme.textTertiary} />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Gate Logs</ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.navItem}>
-            <Ionicons name="person" size={22} color={theme.primary} />
-            <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>Profile</ThemedText>
-            <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
-          </TouchableOpacity>
-        </>
-      );
-    }
-    // Staff / HOD / NCI / NTF - 4 tabs
-    return (
-      <>
-        <TouchableOpacity style={styles.navItem} onPress={() => tabChange('HOME')}>
-          <Ionicons name="home-outline" size={22} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>Home</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => tabChange('NEW_PASS')}>
-          <Ionicons name="add-circle-outline" size={28} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => tabChange('REQUESTS')}>
-          <Ionicons name="list-outline" size={22} color={theme.textTertiary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>My Requests</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="person" size={22} color={theme.primary} />
-          <ThemedText style={[styles.navLabel, { color: theme.primary, fontWeight: '700' }]}>Profile</ThemedText>
-          <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />
-        </TouchableOpacity>
-      </>
-    );
+  // Resolve this user's canonical role for the shared bottom nav.
+  const navRole: NavRole = (() => {
+    const t = userType.toUpperCase();
+    if (t === 'STUDENT') return 'STUDENT';
+    if (t === 'HR') return 'HR';
+    if (userSubType === 'ADMIN') return 'ADMIN';
+    if (userSubType === 'NCI') return 'NCI';
+    if (userSubType === 'NTF') return 'NTF';
+    if (t === 'HOD') return 'HOD';
+    return 'STAFF';
+  })();
+  // NCI principals/directors also get a Gate Logs tab.
+  const profileNavTabs = getNavTabs(navRole, navRole === 'NCI' && isPrincipalDesignation(user));
+
+  // Profile is always the active tab on this screen. The HR Gate Logs tab routes via
+  // the 'EXITS' key in some flows — normalize so the shared 'SCAN_HISTORY' key maps through.
+  const handleNavPress = (key: string) => {
+    if (!onTabChange) return;
+    if (key === 'PROFILE') return; // already here
+    onTabChange(key);
   };
+
+  const renderSharedNav = () => (
+    <BottomNavBar tabs={profileNavTabs} activeKey="PROFILE" onPress={handleNavPress} />
+  );
 
   if (initialLoading) {
     return (
@@ -257,11 +178,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <ScreenContentContainer>
           <ProfileSkeleton />
         </ScreenContentContainer>
-        {showBottomNav && onTabChange && (
-          <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-            {renderBottomNav(onTabChange)}
-          </View>
-        )}
+        {showBottomNav && onTabChange && renderSharedNav()}
       </SafeAreaView>
     );
   }
@@ -341,11 +258,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       </ScreenContentContainer>
 
       </TopRefreshControl>
-      {showBottomNav && onTabChange && (
-        <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-          {renderBottomNav(onTabChange)}
-        </View>
-      )}
+      {showBottomNav && onTabChange && renderSharedNav()}
       <ConfirmationModal visible={showLogoutModal} title="Logout" message="Are you sure you want to log out?" confirmText="Logout" onConfirm={onLogout} onCancel={() => setShowLogoutModal(false)} icon="log-out-outline" confirmColor={theme.error}/>
       <SuccessModal
         visible={showSuccessModal}

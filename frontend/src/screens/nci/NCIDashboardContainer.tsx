@@ -48,8 +48,9 @@ const NCIDashboardContainer: React.FC<NCIDashboardContainerProps> = ({ nci, onLo
           showBottomNav={true}
           onTabChange={(tab) => {
             if (tab === 'HOME') setActiveTab('DASHBOARD');
-            else if (tab === 'REQUESTS') setActiveTab('MY_REQUESTS');
+            else if (tab === 'REQUESTS' || tab === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
             else if (tab === 'NEW_PASS') openPassSheet();
+            else if (tab === 'SCAN_HISTORY') onNavigate('NCI_EXITS' as ScreenName);
           }}
         />
       );
@@ -64,6 +65,7 @@ const NCIDashboardContainer: React.FC<NCIDashboardContainerProps> = ({ nci, onLo
             if (screen === 'HOME') setActiveTab('DASHBOARD');
             else if (screen === 'PROFILE') setActiveTab('PROFILE');
             else if (screen === 'NEW_PASS') openPassSheet();
+            else if (screen === 'SCAN_HISTORY') onNavigate('NCI_EXITS' as ScreenName);
           }}
         />
       );

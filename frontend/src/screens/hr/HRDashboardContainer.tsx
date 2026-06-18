@@ -55,9 +55,9 @@ const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
           showBottomNav={true}
           onTabChange={(tab) => {
             if (tab === 'HOME') setActiveTab('DASHBOARD');
-            else if (tab === 'REQUESTS') setActiveTab('MY_REQUESTS');
+            else if (tab === 'REQUESTS' || tab === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
             else if (tab === 'NEW_PASS') openPassSheet();
-            else if (tab === 'EXITS') setActiveTab('EXITS');
+            else if (tab === 'EXITS' || tab === 'SCAN_HISTORY') setActiveTab('EXITS');
           }}
         />
       );

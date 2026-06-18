@@ -19,6 +19,8 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ThemedText from '../../components/ThemedText';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import BottomNavBar from '../../components/BottomNavBar';
+import { getNavTabs } from '../../components/navTabs';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
@@ -309,90 +311,18 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
         </ScreenContentContainer>
       </TopRefreshControl>
 
-      {/* Bottom Nav */}
-      <View style={[styles.bottomNav, { backgroundColor: theme.surface, borderTopColor: theme.border, paddingBottom: insets.bottom }]}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => setBottomTab('HOME')}
-        >
-          <Ionicons
-            name={bottomTab === 'HOME' ? 'home' : 'home-outline'}
-            size={22}
-            color={bottomTab === 'HOME' ? theme.primary : theme.textTertiary}
-          />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'HOME' && { color: theme.primary }]}>
-            Home
-          </ThemedText>
-          {bottomTab === 'HOME' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('NEW_PASS');
-            setShowPassSheet(true);
-          }}
-        >
-          <Ionicons name="add-circle-outline" size={32} color={theme.textSecondary} />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }]}>New Pass</ThemedText>
-        </TouchableOpacity>
-
-        {isPrincipalOrDirector && (
-          <TouchableOpacity
-            style={styles.navItem}
-            onPress={() => {
-              setBottomTab('EXITS' as any);
-              onNavigate('NCI_EXITS');
-            }}
-          >
-            <Ionicons
-              name={bottomTab === ('EXITS' as any) ? 'exit' : 'exit-outline'}
-              size={22}
-              color={bottomTab === ('EXITS' as any) ? theme.primary : theme.textTertiary}
-            />
-            <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === ('EXITS' as any) && { color: theme.primary }]}>
-              Gate Logs
-            </ThemedText>
-            {bottomTab === ('EXITS' as any) && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-          </TouchableOpacity>
-        )}
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('MY_PASSES');
-            onNavigate('NCI_MY_REQUESTS');
-          }}
-        >
-          <Ionicons
-            name={bottomTab === 'MY_PASSES' ? 'list' : 'list-outline'}
-            size={22}
-            color={bottomTab === 'MY_PASSES' ? theme.primary : theme.textTertiary}
-          />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'MY_PASSES' && { color: theme.primary }]}>
-            My Passes
-          </ThemedText>
-          {bottomTab === 'MY_PASSES' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => {
-            setBottomTab('PROFILE');
-            onNavigate('PROFILE');
-          }}
-        >
-          <Ionicons
-            name={bottomTab === 'PROFILE' ? 'person' : 'person-outline'}
-            size={22}
-            color={bottomTab === 'PROFILE' ? theme.primary : theme.textTertiary}
-          />
-          <ThemedText style={[styles.navLabel, { color: theme.textTertiary }, bottomTab === 'PROFILE' && { color: theme.primary }]}>
-            Profile
-          </ThemedText>
-          {bottomTab === 'PROFILE' && <View style={[styles.activeIndicator, { backgroundColor: theme.primary }]} />}
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Nav — shared component, canonical tabs (principal gets Gate Logs) */}
+      <BottomNavBar
+        tabs={getNavTabs('NCI', isPrincipalOrDirector)}
+        activeKey="HOME"
+        onPress={(key) => {
+          if (key === 'HOME') setBottomTab('HOME');
+          else if (key === 'NEW_PASS') { setBottomTab('NEW_PASS'); setShowPassSheet(true); }
+          else if (key === 'SCAN_HISTORY') { setBottomTab('EXITS' as any); onNavigate('NCI_EXITS'); }
+          else if (key === 'MY_REQUESTS') { setBottomTab('MY_PASSES'); onNavigate('NCI_MY_REQUESTS'); }
+          else if (key === 'PROFILE') { setBottomTab('PROFILE'); onNavigate('PROFILE'); }
+        }}
+      />
 
       <PassTypeBottomSheet
         visible={showPassSheet}
