@@ -42,11 +42,12 @@ export const theme = {
   },
 
   shadow: {
-    sm: '0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04)',
-    md: '0 8px 24px rgba(15,23,42,0.08)',
-    lg: '0 20px 50px rgba(15,23,42,0.12)',
-    brand: '0 12px 36px rgba(0,188,212,0.35)',
-    brandSoft: '0 8px 24px rgba(0,188,212,0.16)',
+    // Minimal, barely-there elevation — borders do most of the separation work.
+    sm: '0 1px 2px rgba(15,23,42,0.04)',
+    md: '0 2px 8px rgba(15,23,42,0.05)',
+    lg: '0 6px 20px rgba(15,23,42,0.06)',
+    brand: '0 4px 14px rgba(0,188,212,0.18)',
+    brandSoft: '0 2px 8px rgba(0,188,212,0.10)',
   },
 
   font: {

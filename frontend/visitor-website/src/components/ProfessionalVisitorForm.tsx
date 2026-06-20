@@ -415,50 +415,50 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
   const c = theme.color;
   const input = (focused: boolean): React.CSSProperties => ({
     width: '100%',
-    padding: '14px 16px',
+    padding: '12px 14px',
     fontSize: 15,
-    border: `2px solid ${focused ? c.brand : c.line}`,
-    borderRadius: theme.radius.md,
-    transition: 'all 0.2s ease',
-    background: focused ? c.surface : c.surfaceAlt,
+    border: `1px solid ${focused ? c.brandDark : c.line}`,
+    borderRadius: theme.radius.sm,
+    transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+    background: c.surface,
     color: c.ink,
     outline: 'none',
-    boxShadow: focused ? '0 0 0 4px rgba(0,188,212,0.10)' : 'none',
+    boxShadow: focused ? `0 0 0 3px ${c.brandTint}` : 'none',
     fontFamily: 'inherit',
   });
-  const label: React.CSSProperties = { display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 8 };
+  const label: React.CSSProperties = { display: 'block', fontSize: 13.5, fontWeight: 500, color: c.ink, marginBottom: 7 };
   const sectionTitle: React.CSSProperties = {
-    fontSize: 12, fontWeight: 800, color: c.brandDark, textTransform: 'uppercase',
-    letterSpacing: '1.2px', margin: '8px 0 16px', display: 'flex', alignItems: 'center', gap: 8,
+    fontSize: 11.5, fontWeight: 600, color: c.muted, textTransform: 'uppercase',
+    letterSpacing: '0.8px', margin: '18px 0 14px',
   };
-  const group: React.CSSProperties = { marginBottom: 22, position: 'relative' };
+  const group: React.CSSProperties = { marginBottom: 18, position: 'relative' };
   const menu: React.CSSProperties = {
     position: 'absolute', top: '100%', left: 0, right: 0, background: c.surface,
-    border: `1px solid ${c.line}`, borderRadius: theme.radius.md, marginTop: 8, maxHeight: 300,
-    overflowY: 'auto', boxShadow: theme.shadow.lg, zIndex: 50, animation: 'vf-drop 0.18s ease-out',
+    border: `1px solid ${c.line}`, borderRadius: theme.radius.sm, marginTop: 6, maxHeight: 280,
+    overflowY: 'auto', boxShadow: theme.shadow.md, zIndex: 50,
   };
   const item = (hl: boolean): React.CSSProperties => ({
-    padding: '13px 18px', cursor: 'pointer', transition: 'background 0.15s ease',
-    background: hl ? c.brand : 'transparent', color: hl ? '#fff' : '#374151',
-    fontSize: 15, fontWeight: hl ? 600 : 500, borderBottom: `1px solid ${c.surfaceSunken}`,
+    padding: '11px 14px', cursor: 'pointer', transition: 'background 0.12s ease',
+    background: hl ? c.surfaceSunken : 'transparent', color: c.ink,
+    fontSize: 14.5, fontWeight: hl ? 600 : 450, borderBottom: `1px solid ${c.surfaceAlt}`,
   });
   const chip = (selected: boolean): React.CSSProperties => ({
-    padding: '8px 16px', borderRadius: theme.radius.pill,
-    border: `2px solid ${selected ? c.brand : c.line}`,
-    background: selected ? c.brandTint : c.surfaceAlt,
-    color: selected ? c.brandDark : c.muted,
-    fontWeight: selected ? 700 : 500, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s',
+    padding: '7px 14px', borderRadius: theme.radius.sm,
+    border: `1px solid ${selected ? c.brandDark : c.line}`,
+    background: selected ? c.brandTint : c.surface,
+    color: selected ? c.brandDark : c.body,
+    fontWeight: selected ? 600 : 500, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s',
   });
   const submitBtn: React.CSSProperties = {
-    width: '100%', padding: '16px 32px', fontSize: 16, fontWeight: 700, color: '#fff',
-    background: theme.gradient.brand, border: 'none', borderRadius: theme.radius.md,
-    cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease',
-    boxShadow: theme.shadow.brandSoft, opacity: isSubmitting ? 0.7 : 1, marginTop: 6,
+    width: '100%', padding: '14px 32px', fontSize: 15, fontWeight: 600, color: '#fff',
+    background: c.brandDark, border: 'none', borderRadius: theme.radius.sm,
+    cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: 'background 0.18s ease',
+    opacity: isSubmitting ? 0.55 : 1, marginTop: 8,
   };
   const backBtn: React.CSSProperties = {
-    position: 'fixed', top: 20, left: 20, zIndex: 1000, padding: '11px 20px', fontSize: 14, fontWeight: 600,
-    color: '#fff', background: 'rgba(255,255,255,0.16)', border: '2px solid rgba(255,255,255,0.32)',
-    borderRadius: theme.radius.md, cursor: 'pointer', backdropFilter: 'blur(10px)', fontFamily: 'inherit',
+    position: 'fixed', top: 18, left: 18, zIndex: 1000, padding: '8px 15px', fontSize: 14, fontWeight: 500,
+    color: c.body, background: c.surface, border: `1px solid ${c.line}`,
+    borderRadius: theme.radius.sm, cursor: 'pointer', fontFamily: 'inherit',
   };
 
   const keyframes = `
@@ -471,12 +471,13 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
   `;
 
   const pageStyle: React.CSSProperties = {
-    minHeight: '100vh', background: theme.gradient.brand,
-    padding: '48px 20px', fontFamily: theme.font.sans,
+    minHeight: '100vh', background: c.surfaceAlt,
+    padding: '68px 20px 64px', fontFamily: theme.font.sans,
+    overflowX: 'hidden', width: '100%', maxWidth: '100%',
   };
   const cardStyle: React.CSSProperties = {
-    background: c.surface, borderRadius: theme.radius.xl, padding: 'clamp(24px, 4vw, 40px)',
-    boxShadow: theme.shadow.lg, animation: 'vf-scaleIn 0.45s ease-out',
+    background: c.surface, borderRadius: theme.radius.lg, padding: 'clamp(22px, 4vw, 36px)',
+    border: `1px solid ${c.line}`, boxShadow: theme.shadow.sm,
   };
 
   // ── Success screen ──────────────────────────────────────────────────────
@@ -492,36 +493,36 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
       <div style={pageStyle}>
         <style>{keyframes}</style>
         {showApprovalBanner && (
-          <div role="status" aria-live="polite" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 2000, background: 'linear-gradient(90deg, #059669, #10b981 55%, #34d399)', color: '#fff', padding: '16px 22px', display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 12px 40px rgba(5,150,105,0.45)', animation: 'vf-banner 0.8s cubic-bezier(0.34,1.45,0.64,1) both' }}>
-            <span aria-hidden style={{ fontSize: 30 }}>✓</span>
+          <div role="status" aria-live="polite" style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 2000, background: c.success, color: '#fff', padding: '14px 22px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: theme.shadow.md, animation: 'vf-banner 0.8s cubic-bezier(0.34,1.45,0.64,1) both' }}>
+            <span aria-hidden style={{ fontSize: 22 }}>✓</span>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 800 }}>Your visit has been approved</div>
-              <div style={{ fontSize: 13, marginTop: 4, opacity: 0.95 }}>Your gate pass is ready — use the QR or manual code at security.</div>
+              <div style={{ fontSize: 15, fontWeight: 600 }}>Your visit has been approved</div>
+              <div style={{ fontSize: 13, marginTop: 3, opacity: 0.95 }}>Your gate pass is ready — use the QR or manual code at security.</div>
             </div>
           </div>
         )}
-        {onBack && <button onClick={onBack} style={backBtn}>← Back to Home</button>}
+        {onBack && <button onClick={onBack} style={backBtn}>← Back</button>}
 
         <div style={{ maxWidth: 640, margin: '0 auto', animation: 'vf-slideUp 0.5s ease-out' }}>
           <div style={cardStyle}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ width: 76, height: 76, margin: '0 auto 20px', background: theme.gradient.successText, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 42, color: '#fff', boxShadow: '0 10px 30px rgba(16,185,129,0.3)', animation: 'vf-scaleIn 0.5s ease-out' }}>✓</div>
-              <h2 style={{ fontSize: 28, fontWeight: 800, color: c.success, marginBottom: 12 }}>Request Submitted!</h2>
+              <div style={{ width: 60, height: 60, margin: '0 auto 18px', background: c.success, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, color: '#fff' }}>✓</div>
+              <h2 style={{ fontSize: 24, fontWeight: 700, color: c.ink, marginBottom: 10, letterSpacing: '-0.5px' }}>Request submitted</h2>
               <p style={{ fontSize: 15, color: c.muted, marginBottom: 28, lineHeight: 1.6 }}>
                 Your visit request has been sent to <strong>{registeredVisitor.personToMeet}</strong> for approval.
               </p>
 
               {approvalStatus === 'PENDING' && (
-                <div style={{ background: theme.gradient.brand && `linear-gradient(135deg, ${c.warningSoft}, #FDE68A)`, border: `2px solid ${c.warning}`, borderRadius: theme.radius.lg, padding: 28, marginBottom: 24 }}>
-                  <div style={{ fontSize: 44, marginBottom: 12, animation: 'vf-pulse 2s ease-in-out infinite' }}>⏳</div>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, color: '#92400e', marginBottom: 8 }}>Awaiting Approval</h3>
-                  <p style={{ fontSize: 14, color: '#78350f' }}>This page updates automatically and your QR + manual code will appear here once approved.</p>
+                <div style={{ background: c.warningSoft, border: `1px solid ${c.warning}`, borderRadius: theme.radius.md, padding: 24, marginBottom: 22 }}>
+                  <div style={{ fontSize: 32, marginBottom: 10 }}>⏳</div>
+                  <h3 style={{ fontSize: 17, fontWeight: 650, color: '#92400e', marginBottom: 6 }}>Awaiting approval</h3>
+                  <p style={{ fontSize: 14, color: '#78350f', lineHeight: 1.55 }}>This page updates automatically — your QR and manual code will appear here once approved.</p>
                 </div>
               )}
 
               {approvalStatus === 'APPROVED' && (
-                <div style={{ background: `linear-gradient(135deg, ${c.successSoft}, #BBF7D0)`, border: `2px solid ${c.success}`, borderRadius: theme.radius.lg, padding: 28, marginBottom: 24 }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, color: '#166534', marginBottom: 16 }}>✅ Approved — Your Pass Is Ready</h3>
+                <div style={{ background: c.successSoft, border: `1px solid ${c.success}`, borderRadius: theme.radius.md, padding: 24, marginBottom: 22 }}>
+                  <h3 style={{ fontSize: 17, fontWeight: 650, color: '#166534', marginBottom: 16 }}>Approved — your pass is ready</h3>
                   {approvedQrCode && (
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(approvedQrCode)}`}
@@ -549,10 +550,10 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
               )}
 
               {approvalStatus === 'REJECTED' && (
-                <div style={{ background: `linear-gradient(135deg, ${c.dangerSoft}, #FECACA)`, border: `2px solid ${c.danger}`, borderRadius: theme.radius.lg, padding: 28, marginBottom: 24 }}>
-                  <div style={{ fontSize: 44, marginBottom: 12 }}>✗</div>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, color: '#991B1B', marginBottom: 8 }}>Request Rejected</h3>
-                  <p style={{ fontSize: 14, color: '#991B1B' }}>Your request was declined by the host. Please contact reception for help.</p>
+                <div style={{ background: c.dangerSoft, border: `1px solid ${c.danger}`, borderRadius: theme.radius.md, padding: 24, marginBottom: 22 }}>
+                  <div style={{ fontSize: 32, marginBottom: 10 }}>✗</div>
+                  <h3 style={{ fontSize: 17, fontWeight: 650, color: '#991B1B', marginBottom: 6 }}>Request rejected</h3>
+                  <p style={{ fontSize: 14, color: '#991B1B', lineHeight: 1.55 }}>Your request was declined by the host. Please contact reception for help.</p>
                 </div>
               )}
 
@@ -563,7 +564,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
                 {detail('Person to Meet', registeredVisitor.personToMeet, true)}
               </div>
 
-              <button onClick={resetResult} style={submitBtn}>Register Another Visitor</button>
+              <button onClick={resetResult} style={submitBtn}>Register another visitor</button>
             </div>
           </div>
         </div>
@@ -575,24 +576,24 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
   return (
     <div style={pageStyle}>
       <style>{keyframes}</style>
-      {onBack && <button onClick={onBack} style={backBtn}>← Back to Home</button>}
+      {onBack && <button onClick={onBack} style={backBtn}>← Back</button>}
 
       <div style={{ maxWidth: 720, margin: '0 auto', animation: 'vf-slideUp 0.5s ease-out' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h1 style={{ fontSize: 'clamp(30px, 5vw, 42px)', fontWeight: 800, color: '#fff', letterSpacing: '-0.5px', textShadow: '0 2px 20px rgba(0,0,0,0.18)' }}>Visitor Registration</h1>
-          <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.92)', marginTop: 8 }}>Welcome to our campus. Please fill in your details below.</p>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <h1 style={{ fontSize: 'clamp(26px, 4vw, 34px)', fontWeight: 700, color: c.ink, letterSpacing: '-0.8px' }}>Visitor registration</h1>
+          <p style={{ fontSize: 15, color: c.muted, marginTop: 8 }}>Welcome to RIT. Please fill in your details below.</p>
         </div>
 
         <div style={cardStyle} ref={formRef}>
           {error && (
-            <div role="alert" style={{ background: c.dangerSoft, color: '#991b1b', padding: '14px 18px', borderRadius: theme.radius.md, fontSize: 14, fontWeight: 600, marginBottom: 20, border: `2px solid #fecaca`, animation: 'vf-shake 0.4s ease' }}>
+            <div role="alert" style={{ background: c.dangerSoft, color: '#991b1b', padding: '12px 16px', borderRadius: theme.radius.sm, fontSize: 14, fontWeight: 500, marginBottom: 18, border: `1px solid #fecaca` }}>
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} noValidate>
             {/* Visitor info */}
-            <div style={sectionTitle}><span aria-hidden>👥</span> Visitor Information</div>
+            <div style={sectionTitle}>Visitor information</div>
 
             <div style={group}>
               <label style={label} htmlFor="vf-count">Number of Visitors</label>
@@ -630,7 +631,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
             </div>
 
             {/* Contact */}
-            <div style={sectionTitle}><span aria-hidden>📧</span> Contact Details</div>
+            <div style={sectionTitle}>Contact details</div>
 
             <div style={group}>
               <label style={label} htmlFor="vf-email">Email Address</label>
@@ -680,7 +681,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
             </div>
 
             {/* Visit details */}
-            <div style={sectionTitle}><span aria-hidden>🏢</span> Visit Details</div>
+            <div style={sectionTitle}>Visit details</div>
 
             <div style={group}>
               <label style={label} htmlFor="vf-dept">Department to Visit</label>
@@ -717,7 +718,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
                           return (
                             <li key={s.id} role="option" aria-selected={hl} onMouseDown={(e) => e.preventDefault()} onClick={() => selectStaff(s)} style={item(hl)}>
                               <span style={{ fontWeight: 600 }}>{hl && '✓ '}{s.name}</span>
-                              <span style={{ marginLeft: 8, fontSize: 13, fontWeight: 600, color: hl ? 'rgba(255,255,255,0.9)' : c.brandDark, background: hl ? 'rgba(255,255,255,0.18)' : c.brandTint, padding: '2px 8px', borderRadius: 6 }}>{s.role || 'Faculty'}</span>
+                              <span style={{ marginLeft: 8, fontSize: 12.5, fontWeight: 500, color: c.muted, background: c.surfaceAlt, padding: '2px 8px', borderRadius: 4, border: `1px solid ${c.line}` }}>{s.role || 'Faculty'}</span>
                             </li>
                           );
                         })}
@@ -756,7 +757,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
             )}
 
             <button type="submit" disabled={isSubmitting} style={submitBtn}>
-              {isSubmitting ? 'Submitting Request…' : 'Submit Visitor Request'}
+              {isSubmitting ? 'Submitting…' : 'Submit request'}
             </button>
           </form>
         </div>
