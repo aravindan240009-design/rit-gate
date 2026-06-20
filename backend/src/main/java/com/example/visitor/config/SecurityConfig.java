@@ -48,6 +48,12 @@ public class SecurityConfig {
                 // CORS preflight
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                // ---- Visitor website pickers: scoped VISITOR_PORTAL token OR any real user ----
+                // The website mints a VISITOR_PORTAL token at /api/auth/visitor-portal-token.
+                // Staff email/phone are redacted for VISITOR_PORTAL in DepartmentController.
+                .requestMatchers(HttpMethod.GET, "/api/departments", "/api/departments/*/staff-list")
+                    .hasAnyRole("VISITOR_PORTAL", "STUDENT", "STAFF", "HOD", "HR", "SECURITY", "ADMIN")
+
                 // ---- Admin-only sensitive/dev endpoints ----
                 .requestMatchers("/api/test-email",
                     "/api/notifications/test-push",
@@ -70,8 +76,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/hod/**").hasAnyRole("HOD", "ADMIN")
                 .requestMatchers("/api/hr/**").hasAnyRole("HR", "ADMIN")
 
-                // ---- Everything else: any authenticated user ----
-                .anyRequest().authenticated()
+                // ---- Everything else: any authenticated REAL user ----
+                // Listed explicitly (not bare authenticated()) so the scoped VISITOR_PORTAL
+                // token is contained to only the picker endpoints whitelisted above.
+                .anyRequest().hasAnyRole("STUDENT", "STAFF", "HOD", "HR", "SECURITY", "ADMIN")
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -1243,6 +1243,26 @@ public class AuthController {
         return "STUDENT";
     }
 
+    /**
+     * Issues a short-lived, tightly-scoped token for the PUBLIC visitor website.
+     *
+     * The website is anonymous (visitors have no accounts), but it still needs to read the
+     * department + staff pickers — which we refuse to leave open. This token carries the
+     * VISITOR_PORTAL role, which SecurityConfig restricts to ONLY those two read endpoints
+     * (with staff email/phone redacted); it cannot reach any other authenticated API.
+     */
+    @PostMapping("/visitor-portal-token")
+    public ResponseEntity<?> issueVisitorPortalToken() {
+        // 12h TTL: long enough for a kiosk session, short enough to limit replay.
+        long ttlMillis = 12L * 60L * 60L * 1000L;
+        String token = jwtService.issue("visitor-portal", "VISITOR_PORTAL", ttlMillis);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("token", token);
+        response.put("expiresInSeconds", ttlMillis / 1000L);
+        return ResponseEntity.ok(response);
+    }
+
     // Health check endpoint for frontend connectivity testing
     @GetMapping("/me")
     public ResponseEntity<?> healthCheck() {

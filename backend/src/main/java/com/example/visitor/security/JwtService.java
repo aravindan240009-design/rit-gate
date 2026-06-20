@@ -44,8 +44,13 @@ public class JwtService {
 
     /** Mint a signed token for a verified user. role is e.g. STUDENT/STAFF/HOD/HR/SECURITY/ADMIN. */
     public String issue(String userId, String role) {
+        return issue(userId, role, expirationDays * 24L * 60L * 60L * 1000L);
+    }
+
+    /** Mint a signed token with an explicit time-to-live (ms). Used for short-lived scoped tokens. */
+    public String issue(String userId, String role, long ttlMillis) {
         long now = System.currentTimeMillis();
-        long expMs = now + expirationDays * 24L * 60L * 60L * 1000L;
+        long expMs = now + ttlMillis;
         return Jwts.builder()
             .subject(userId)
             .claim("role", role)

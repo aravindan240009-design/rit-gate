@@ -33,11 +33,16 @@ public class UnifiedVisitorController {
      * POST /api/unified-visitors/register
      */
     @PostMapping("/register")
-    public ResponseEntity<VisitorRegistrationResponse> registerVisitor(
+    public ResponseEntity<?> registerVisitor(
             @RequestBody VisitorRegistrationRequest request) {
         try {
+            String validationError = validateRegistration(request);
+            if (validationError != null) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", validationError));
+            }
+
             System.out.println("📝 Registering visitor: " + request.getName());
-            
+
             Visitor visitor = new Visitor();
             visitor.setName(request.getName());
             visitor.setEmail(request.getEmail());
@@ -68,10 +73,35 @@ public class UnifiedVisitorController {
         } catch (Exception e) {
             System.err.println("❌ Error registering visitor: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError()
+                .body(Map.of("success", false, "message", ErrorMessages.userFriendly(e)));
         }
     }
-    
+
+    /**
+     * Validate a website visitor registration. Returns an error message, or null if valid.
+     */
+    private String validateRegistration(VisitorRegistrationRequest request) {
+        if (request == null) return "Request body is missing.";
+        if (isBlank(request.getName())) return "Please enter the visitor's name.";
+        String email = request.getEmail();
+        if (isBlank(email) || !email.contains("@") || !email.contains(".")) {
+            return "Please enter a valid email address.";
+        }
+        String digits = request.getPhone() == null ? "" : request.getPhone().replaceAll("\\D", "");
+        if (digits.length() < 10) return "Please enter a valid phone number (at least 10 digits).";
+        if (isBlank(request.getDepartment())) return "Please select a department to visit.";
+        if (isBlank(request.getStaffCode())) return "Please select a person to meet.";
+        if (isBlank(request.getPurpose()) && isBlank(request.getReason())) {
+            return "Please enter the purpose of your visit.";
+        }
+        return null;
+    }
+
+    private boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
     /**
      * Staff/HOD/HR pre-request: create visitor gate pass and auto-approve (QR + manual code immediately).
      * POST /api/unified-visitors/instant-guest
@@ -305,17 +335,6 @@ public class UnifiedVisitorController {
         dto.setQrCode(visitor.getQrCode());
         dto.setManualCode(visitor.getManualCode());
         return dto;
-    }
-    
-    private String extractPhoneFromReason(String reason) {
-        if (reason == null) return null;
-        String[] lines = reason.split("\n");
-        for (String line : lines) {
-            if (line.startsWith("Phone: ")) {
-                return line.substring(7);
-            }
-        }
-        return null;
     }
     
     // Request/Response DTOs

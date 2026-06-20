@@ -7,6 +7,9 @@ import com.example.visitor.util.DepartmentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -103,6 +106,9 @@ public class DepartmentController {
                 .filter(hr -> DepartmentMapper.isSameDepartment(hr.getDepartment(), departmentCode))
                 .collect(Collectors.toList());
 
+            // The public website (VISITOR_PORTAL token) must not receive staff PII.
+            boolean exposeContact = callerMaySeeStaffContact();
+
             List<Map<String, Object>> staffData = new java.util.ArrayList<>();
 
             teachingStaff.stream()
@@ -111,8 +117,10 @@ public class DepartmentController {
                     map.put("id", staff.getStaffCode());
                     map.put("staffCode", staff.getStaffCode());
                     map.put("name", staff.getStaffName());
-                    map.put("email", staff.getEmail());
-                    map.put("phone", staff.getPhone());
+                    if (exposeContact) {
+                        map.put("email", staff.getEmail());
+                        map.put("phone", staff.getPhone());
+                    }
                     map.put("department", staff.getDepartment());
                     String role = hodStaffCode != null && staff.getStaffCode().equals(hodStaffCode) ? "HOD"
                         : (staff.getRole() != null && !staff.getRole().isBlank() ? staff.getRole() : "Faculty");
@@ -130,8 +138,10 @@ public class DepartmentController {
                     map.put("id", effectiveId);
                     map.put("staffCode", effectiveId);
                     map.put("name", hr.getHrName());
-                    map.put("email", hr.getEmail());
-                    map.put("phone", hr.getPhone());
+                    if (exposeContact) {
+                        map.put("email", hr.getEmail());
+                        map.put("phone", hr.getPhone());
+                    }
                     map.put("department", hr.getDepartment());
                     map.put("role", hr.getRole() != null && !hr.getRole().isBlank() ? hr.getRole() : "Non-Teaching Staff");
                     return map;
@@ -145,6 +155,22 @@ public class DepartmentController {
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    /**
+     * Staff email/phone are PII. Only real authenticated users (mobile app) may see them;
+     * the public website's scoped VISITOR_PORTAL token gets name/role/code only.
+     */
+    private boolean callerMaySeeStaffContact() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) return false;
+        for (GrantedAuthority ga : auth.getAuthorities()) {
+            String role = ga.getAuthority();
+            if (role != null && role.startsWith("ROLE_") && !role.equals("ROLE_VISITOR_PORTAL")) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

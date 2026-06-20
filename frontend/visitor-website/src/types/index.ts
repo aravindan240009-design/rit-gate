@@ -1,31 +1,37 @@
 export interface Department {
-  id: number;
+  id: string;
+  code: string;
   name: string;
+  hod?: string;
 }
 
 export interface Staff {
   id: string;
-  staffId: string;
+  staffId?: string;
   staffCode: string;
   name: string;
   role: string;
-  phone: string;
-  email: string;
-  department: string;
+  phone?: string;
+  email?: string;
+  department?: string;
 }
+
+export type VisitorRole = 'VISITOR' | 'VENDOR';
+export type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface VisitorRegistration {
   name: string;
   email: string;
   phone: string;
-  type: 'VISITOR' | 'VENDOR';
-  role?: 'VISITOR' | 'VENDOR';
-  department?: string;
+  role: VisitorRole;
+  machineId: string;
+  department: string;
+  staffCode: string;
   purpose: string;
+  reason?: string;
   numberOfPeople?: number;
   vehicleNumber?: string;
-  personToMeet?: string;
-  staffCode?: string;
+  vehicleType?: string;
 }
 
 export interface VisitorResponse {
@@ -34,6 +40,17 @@ export interface VisitorResponse {
   email: string;
   department: string;
   personToMeet: string;
-  approvalStatus: string;
+  approvalStatus?: string;
+  message?: string;
+}
+
+export interface VisitorStatus {
+  success: boolean;
+  status?: string;
+  scanCount?: number;
+  qrCode?: string;
+  manualCode?: string;
+  name?: string;
+  role?: string;
   message?: string;
 }
