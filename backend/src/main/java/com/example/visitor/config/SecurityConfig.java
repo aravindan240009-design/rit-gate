@@ -76,6 +76,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/bulk-pass/scan/**", "/api/bulk-pass/validate/**")
                     .hasAnyRole("SECURITY", "ADMIN")
                 .requestMatchers("/api/hod/**").hasAnyRole("HOD", "ADMIN")
+                // Gate logs are read-only campus entry/exit records. Principals/directors
+                // (NCI accounts) carry ROLE_STAFF but get a Gate Logs tab, so allow STAFF
+                // to read this one endpoint in addition to HR/ADMIN.
+                .requestMatchers(HttpMethod.GET, "/api/hr/gate-logs").hasAnyRole("STAFF", "HR", "ADMIN")
                 .requestMatchers("/api/hr/**").hasAnyRole("HR", "ADMIN")
 
                 // ---- Everything else: any authenticated REAL user ----
