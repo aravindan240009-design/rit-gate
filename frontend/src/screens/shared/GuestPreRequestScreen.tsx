@@ -382,16 +382,9 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 20, borderBottomWidth: 1 },
   backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700' },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   scroll: { padding: 16, paddingBottom: 120 },
   hint: { fontSize: 14, marginBottom: 8 },
   subHint: { fontSize: 12, marginBottom: 16 },

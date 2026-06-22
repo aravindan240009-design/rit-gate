@@ -93,8 +93,8 @@ const StaffEventPassResultScreen: React.FC<Props> = ({ event, result, onDone }) 
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '700' },
+  header: { paddingHorizontal: 16, paddingVertical: 20, borderBottomWidth: 1, alignItems: 'center' },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   content: { padding: 20, gap: 20, alignItems: 'center' },
   iconWrap: { alignItems: 'center', gap: 8, paddingTop: 16 },
   iconCircle: { width: 100, height: 100, borderRadius: 50, alignItems: 'center', justifyContent: 'center' },

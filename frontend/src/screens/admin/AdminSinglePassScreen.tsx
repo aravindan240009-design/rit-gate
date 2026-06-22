@@ -241,9 +241,9 @@ const AdminSinglePassScreen: React.FC<AdminSinglePassScreenProps> = ({ admin, on
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 20, borderBottomWidth: 1 },
   backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700' },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   content: { padding: 20, paddingBottom: 60 },
   infoCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, borderRadius: 12, padding: 14, borderWidth: 1, marginBottom: 20 },
   infoText: { flex: 1, fontSize: 13, fontWeight: '500', lineHeight: 18 },

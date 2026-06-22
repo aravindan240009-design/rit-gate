@@ -2,8 +2,8 @@
  * PageHeader — single source of truth for simple page headers (My Requests, Gate Logs, etc.)
  *
  * Canonical spec:
- *   paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1
- *   title: fontSize 18, fontWeight '700'
+ *   paddingHorizontal: 20, paddingVertical: 20, borderBottomWidth: 1
+ *   title: fontSize 20, fontWeight '700', centered, ALL-CAPS
  */
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -26,12 +26,14 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title }) => {
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 20,
     borderBottomWidth: 1,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
+    textAlign: 'center',
+    textTransform: 'uppercase',
   },
 });
 

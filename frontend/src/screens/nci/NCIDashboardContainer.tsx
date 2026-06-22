@@ -3,6 +3,7 @@ import { View, BackHandler } from 'react-native';
 import { NonTeachingFaculty, ScreenName } from '../../types';
 import NCIDashboard from './NCIDashboard';
 import NCIMyRequestsScreen from './NCIMyRequestsScreen';
+import NCIExitsScreen from './NCIExitsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 
@@ -12,7 +13,7 @@ interface NCIDashboardContainerProps {
   onNavigate: (screen: ScreenName) => void;
 }
 
-type InternalTab = 'DASHBOARD' | 'PROFILE' | 'MY_REQUESTS';
+type InternalTab = 'DASHBOARD' | 'PROFILE' | 'MY_REQUESTS' | 'GATE_LOGS';
 
 const NCIDashboardContainer: React.FC<NCIDashboardContainerProps> = ({ nci, onLogout, onNavigate }) => {
   const [activeTab, setActiveTab] = useState<InternalTab>('DASHBOARD');
@@ -33,6 +34,7 @@ const NCIDashboardContainer: React.FC<NCIDashboardContainerProps> = ({ nci, onLo
   const handleNavigate = (screen: ScreenName) => {
     if (screen === 'PROFILE') setActiveTab('PROFILE');
     else if ((screen as any) === 'NCI_MY_REQUESTS') setActiveTab('MY_REQUESTS');
+    else if ((screen as any) === 'NCI_EXITS' || (screen as any) === 'SCAN_HISTORY') setActiveTab('GATE_LOGS');
     else onNavigate(screen);
   };
 
@@ -50,7 +52,22 @@ const NCIDashboardContainer: React.FC<NCIDashboardContainerProps> = ({ nci, onLo
             if (tab === 'HOME') setActiveTab('DASHBOARD');
             else if (tab === 'REQUESTS' || tab === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
             else if (tab === 'NEW_PASS') openPassSheet();
-            else if (tab === 'SCAN_HISTORY') onNavigate('NCI_EXITS' as ScreenName);
+            else if (tab === 'SCAN_HISTORY') setActiveTab('GATE_LOGS');
+          }}
+        />
+      );
+    }
+
+    if (activeTab === 'GATE_LOGS') {
+      return (
+        <NCIExitsScreen
+          nci={nci}
+          onBack={() => setActiveTab('DASHBOARD')}
+          onNavigate={(screen) => {
+            if (screen === 'HOME') setActiveTab('DASHBOARD');
+            else if (screen === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
+            else if (screen === 'PROFILE') setActiveTab('PROFILE');
+            else if (screen === 'NEW_PASS') openPassSheet();
           }}
         />
       );
@@ -65,7 +82,7 @@ const NCIDashboardContainer: React.FC<NCIDashboardContainerProps> = ({ nci, onLo
             if (screen === 'HOME') setActiveTab('DASHBOARD');
             else if (screen === 'PROFILE') setActiveTab('PROFILE');
             else if (screen === 'NEW_PASS') openPassSheet();
-            else if (screen === 'SCAN_HISTORY') onNavigate('NCI_EXITS' as ScreenName);
+            else if (screen === 'SCAN_HISTORY') setActiveTab('GATE_LOGS');
           }}
         />
       );

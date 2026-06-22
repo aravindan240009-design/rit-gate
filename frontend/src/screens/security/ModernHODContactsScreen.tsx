@@ -146,9 +146,7 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color={theme.text} />
-        </TouchableOpacity>
+        <View style={styles.headerRight} />
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>HOD Contacts</ThemedText>
         <View style={styles.headerRight} />
       </View>
@@ -298,7 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 20,
     paddingHorizontal: 20,
-    paddingBottom: 18,
+    paddingBottom: 22,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -312,13 +310,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 22 },
   headerRight: {
     width: 40,
   },

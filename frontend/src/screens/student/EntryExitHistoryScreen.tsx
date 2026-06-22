@@ -166,12 +166,9 @@ const EntryExitHistoryScreen: React.FC<EntryExitHistoryScreenProps> = ({ user, n
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1,
-  },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 20, borderBottomWidth: 1 },
   backButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '700' },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   content: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 100 },
   centered: { alignItems: 'center', paddingVertical: 60 },

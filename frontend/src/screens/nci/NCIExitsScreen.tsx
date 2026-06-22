@@ -18,17 +18,24 @@ import { VerticalFlatList } from '../../components/navigation/VerticalScrollView
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
 import TopRefreshControl from '../../components/TopRefreshControl';
+import BottomNavBar from '../../components/BottomNavBar';
+import { getNavTabs, isPrincipalDesignation } from '../../components/navTabs';
 
 interface NCIExitsScreenProps {
   nci: NonTeachingFaculty;
   onBack: () => void;
+  onNavigate?: (screen: 'HOME' | 'NEW_PASS' | 'MY_REQUESTS' | 'PROFILE') => void;
 }
 
-const getInitials = (name: string) =>
-  (name || 'NA').split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-
-const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
+const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack, onNavigate }) => {
   const { theme } = useTheme();
+  // Canonical tabs — principals/directors get Gate Logs as a primary tab.
+  const navTabs = getNavTabs('NCI', isPrincipalDesignation(nci));
+  const handleNavPress = (key: string) => {
+    if (key === 'HOME') onBack();
+    else if (key === 'SCAN_HISTORY') { /* already here */ }
+    else onNavigate && onNavigate(key as 'NEW_PASS' | 'MY_REQUESTS' | 'PROFILE');
+  };
   const [gateLogs, setGateLogs] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -119,9 +126,7 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
     <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.surface} />
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={onBack}>
-          <Ionicons name="arrow-back" size={22} color={theme.text} />
-        </TouchableOpacity>
+        <View style={{ width: 40 }} />
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Gate Logs</ThemedText>
         <View style={{ width: 40 }} />
       </View>
@@ -153,7 +158,7 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
           <VerticalFlatList
             data={gateLogs}
             keyExtractor={(item) => `log-${item.id}`}
-            contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
+            contentContainerStyle={[styles.listContent, { paddingBottom: 120 }]}
             showsVerticalScrollIndicator={false}
             decelerationRate="normal"
             renderItem={({ item }) => {
@@ -312,15 +317,16 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack }) => {
 
       <SuccessModal visible={showSuccess} title="Done" message={modalMsg} onClose={() => setShowSuccess(false)} autoClose autoCloseDelay={2500} />
       <ErrorModal visible={showError} type="general" title="Cannot Download" message={modalMsg} onClose={() => setShowError(false)} />
+
+      <BottomNavBar tabs={navTabs} activeKey="SCAN_HISTORY" onPress={handleNavPress} />
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
-  backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  headerTitle: { fontSize: 17, fontWeight: '700' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 20, borderBottomWidth: 1 },
+  headerTitle: { flex: 1, fontSize: 20, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   listContent: { padding: 16, paddingBottom: 40 },
   hint: { fontSize: 14, marginBottom: 16 },
   actions: { flexDirection: 'row', gap: 12, marginBottom: 20 },

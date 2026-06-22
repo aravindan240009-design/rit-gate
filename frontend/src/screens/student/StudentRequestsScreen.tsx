@@ -283,8 +283,8 @@ const StudentRequestsScreen: React.FC<StudentRequestsScreenProps> = ({ student, 
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 24, fontWeight: '700' },
+  header: { paddingHorizontal: 20, paddingVertical: 20, borderBottomWidth: 1 },
+  headerTitle: { flex: 1, fontSize: 26, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 },
   empty: { paddingVertical: 80, alignItems: 'center' },
