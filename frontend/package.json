@@ -7,7 +7,8 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@notifee/react-native": "^9.1.8",
@@ -24,6 +25,7 @@
     "@react-navigation/bottom-tabs": "^7.7.2",
     "@react-navigation/native": "^7.1.28",
     "@react-navigation/stack": "^7.7.2",
+    "patch-package": "^8.0.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
