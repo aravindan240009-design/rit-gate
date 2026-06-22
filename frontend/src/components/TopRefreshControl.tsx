@@ -48,9 +48,14 @@ const TopRefreshControl: React.FC<TopRefreshControlProps> = ({
   const progressLoop = useRef<Animated.CompositeAnimation | null>(null);
   const pullEnabledRef = useRef(pullEnabled);
   const refreshingRef  = useRef(refreshing);
+  // The PanResponder below is created once (useRef) and would otherwise capture
+  // the onRefresh from the first render — stale if the parent's handler closes
+  // over state (e.g. a selected date range). Keep the latest handler in a ref.
+  const onRefreshRef   = useRef(onRefresh);
 
   useEffect(() => { pullEnabledRef.current = pullEnabled; }, [pullEnabled]);
   useEffect(() => { refreshingRef.current = refreshing; }, [refreshing]);
+  useEffect(() => { onRefreshRef.current = onRefresh; }, [onRefresh]);
 
   // Track scroll position so we only intercept when at top
   useEffect(() => {
@@ -120,7 +125,7 @@ const TopRefreshControl: React.FC<TopRefreshControlProps> = ({
         if (drag >= PULL_THRESHOLD && !triggered.current) {
           triggered.current = true;
           console.log('🔄 [TopRefreshControl] Pull-to-refresh triggered');
-          animateTo(INDICATOR_HEIGHT, () => onRefresh());
+          animateTo(INDICATOR_HEIGHT, () => onRefreshRef.current());
         } else {
           animateTo(0);
         }

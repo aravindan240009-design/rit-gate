@@ -77,7 +77,7 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack, onNavigate
   };
 
   const onRefresh = () => {
-    console.log('🔄 [REFRESH] NCI/Exits'); setRefreshing(true); loadGateLogs(fromDate || undefined, toDate || undefined, true); };
+    console.log('🔄 [REFRESH] NCI/Exits'); setRefreshing(true); loadGateLogs(rangeRef.current.from, rangeRef.current.to, true); };
 
   const exportPdf = async () => {
     if (gateLogs.length === 0) {
