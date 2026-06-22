@@ -142,7 +142,7 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
@@ -278,7 +278,7 @@ export default function HODContactsScreen({ security, onBack, onNavigate }: HODC
         message={errorMessage}
         onClose={() => setShowErrorModal(false)}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -294,9 +294,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: 'transparent',
-    paddingTop: Platform.OS === 'ios' ? 50 : StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 20,
     paddingHorizontal: 20,
-    paddingBottom: 22,
+    paddingVertical: 18,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

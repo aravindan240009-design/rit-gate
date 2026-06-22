@@ -405,7 +405,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
   if (vehicleRangeResultsVisible) {
     return (
-      <SafeAreaView style={[styles.fsScreen, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.fsScreen, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
         <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <View style={[styles.fsHeader, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
           <TouchableOpacity style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={closeVehicleRangeResults}>
@@ -519,7 +519,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       ? vehicleToDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
       : null;
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }} edges={['top', 'left', 'right']}>
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#ffffff' }}>
@@ -619,7 +619,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
 
   if (rangeResultsVisible) {
     return (
-      <SafeAreaView style={[styles.fsScreen, { backgroundColor: theme.background }]} edges={['top', 'bottom']}>
+      <SafeAreaView style={[styles.fsScreen, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
         <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
         <View style={[styles.fsHeader, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
           <TouchableOpacity style={[styles.fsBackBtn, { backgroundColor: theme.surfaceHighlight }]} onPress={closeRangeResults}>
@@ -733,7 +733,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
       ? toDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
       : null;
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }} edges={['top', 'bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }} edges={['top', 'left', 'right']}>
         <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
         {/* Header */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#ffffff' }}>
@@ -834,7 +834,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
       <StatusBar barStyle={theme.type === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.background} />
 
       {/* Header */}
