@@ -45,6 +45,8 @@ public class SecurityConfig {
                     "/api/unified-visitors/register", "/api/visitors").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/visitors/*/approve",
                     "/api/visitors/*/reject", "/api/unified-visitors/status/**").permitAll()
+                // ---- Public: static CSV template download (opened in browser, no token) ----
+                .requestMatchers(HttpMethod.GET, "/api/events/csv-template").permitAll()
                 // CORS preflight
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
