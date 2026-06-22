@@ -20,6 +20,7 @@ import ErrorModal from '../../components/ErrorModal';
 import TopRefreshControl from '../../components/TopRefreshControl';
 import BottomNavBar from '../../components/BottomNavBar';
 import { getNavTabs, isPrincipalDesignation } from '../../components/navTabs';
+import { GateLogSkeletonList } from '../../components/SkeletonCard';
 
 interface NCIExitsScreenProps {
   nci: NonTeachingFaculty;
@@ -155,6 +156,9 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack, onNavigate
             </View>
           </View>
 
+          {loading ? (
+          <GateLogSkeletonList count={6} />
+          ) : (
           <VerticalFlatList
             data={gateLogs}
             keyExtractor={(item) => `log-${item.id}`}
@@ -200,23 +204,18 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack, onNavigate
               );
             }}
             ListEmptyComponent={
-              !loading ? (
-                <View style={styles.emptyCard}>
-                  <View style={[styles.emptyIconWrap, { backgroundColor: theme.border + '40' }]}>
-                    <Ionicons name="swap-vertical-outline" size={40} color={theme.textTertiary} />
-                  </View>
-                  <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>No gate log records</ThemedText>
-                  <ThemedText style={[styles.emptySub, { color: theme.textSecondary }]}>
-                    No entry or exit records found for the selected period.
-                  </ThemedText>
+              <View style={styles.emptyCard}>
+                <View style={[styles.emptyIconWrap, { backgroundColor: theme.border + '40' }]}>
+                  <Ionicons name="swap-vertical-outline" size={40} color={theme.textTertiary} />
                 </View>
-              ) : (
-                <View style={styles.centered}>
-                  <ActivityIndicator size="large" color={theme.primary} />
-                </View>
-              )
+                <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>No gate log records</ThemedText>
+                <ThemedText style={[styles.emptySub, { color: theme.textSecondary }]}>
+                  No entry or exit records found for the selected period.
+                </ThemedText>
+              </View>
             }
           />
+          )}
         </ScreenContentContainer>
       </TopRefreshControl>
 
@@ -332,7 +331,6 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 12, marginBottom: 20 },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 13, borderRadius: 12 },
   actionBtnText: { fontSize: 14, fontWeight: '700' },
-  centered: { paddingVertical: 60, alignItems: 'center' },
   emptyCard: { borderRadius: 16, padding: 32, alignItems: 'center', gap: 12, marginTop: 8 },
   emptyIconWrap: { width: 72, height: 72, borderRadius: 36, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
   emptyTitle: { fontSize: 18, fontWeight: '700', textAlign: 'center' },

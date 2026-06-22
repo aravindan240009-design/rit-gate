@@ -4,7 +4,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -14,6 +13,7 @@ import { formatDateTimeLocal } from '../../utils/dateUtils';
 import ThemedText from '../../components/ThemedText';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
+import { GateLogSkeletonList } from '../../components/SkeletonCard';
 import TopRefreshControl from '../../components/TopRefreshControl';
 
 
@@ -94,6 +94,9 @@ const EntryExitHistoryScreen: React.FC<EntryExitHistoryScreenProps> = ({ user, n
       </View>
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
       <ScreenContentContainer>
+        {isLoading ? (
+        <GateLogSkeletonList count={6} />
+        ) : (
         <VerticalFlatList
           style={styles.content}
           data={history}
@@ -142,22 +145,16 @@ const EntryExitHistoryScreen: React.FC<EntryExitHistoryScreenProps> = ({ user, n
             </View>
           )}
           ListEmptyComponent={
-            isLoading ? (
-              <View style={styles.centered}>
-                <ActivityIndicator size="large" color={theme.primary} />
-                <ThemedText style={[styles.loadingText, { color: theme.textSecondary }]}>Loading history...</ThemedText>
-              </View>
-            ) : (
-              <View style={styles.centered}>
-                <Ionicons name="time-outline" size={64} color={theme.border} />
-                <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>No history yet</ThemedText>
-                <ThemedText style={[styles.emptySubtext, { color: theme.textSecondary }]}>
-                  Your campus entry and exit records will appear here
-                </ThemedText>
-              </View>
-            )
+            <View style={styles.centered}>
+              <Ionicons name="time-outline" size={64} color={theme.border} />
+              <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>No history yet</ThemedText>
+              <ThemedText style={[styles.emptySubtext, { color: theme.textSecondary }]}>
+                Your campus entry and exit records will appear here
+              </ThemedText>
+            </View>
           }
         />
+        )}
       </ScreenContentContainer>
       </TopRefreshControl>
     </SafeAreaView>
@@ -172,7 +169,6 @@ const styles = StyleSheet.create({
   content: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 100 },
   centered: { alignItems: 'center', paddingVertical: 60 },
-  loadingText: { marginTop: 12, fontSize: 15 },
   emptyTitle: { fontSize: 18, fontWeight: '600', marginTop: 16 },
   emptySubtext: { fontSize: 14, marginTop: 8, textAlign: 'center', paddingHorizontal: 32 },
   card: {
