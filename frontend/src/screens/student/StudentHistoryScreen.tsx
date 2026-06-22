@@ -239,7 +239,7 @@ const StudentHistoryScreen: React.FC<StudentHistoryScreenProps> = ({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingVertical: 18, borderBottomWidth: 1 },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
+  headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   content: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 },
   emptyState: { paddingVertical: 80, alignItems: 'center' },

@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 18 },
   backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#F1F5F9' },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
+  headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   content: { flex: 1, paddingHorizontal: 16, paddingTop: 16 },
   infoCard: { padding: 12, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, elevation: 2 },
   avatarContainer: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },

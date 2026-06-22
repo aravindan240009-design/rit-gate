@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', color: THEME.colors.text },
+  headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', color: THEME.colors.text },
   content: {
     flex: 1,
     padding: 16,

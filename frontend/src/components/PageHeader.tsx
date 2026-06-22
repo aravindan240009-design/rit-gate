@@ -3,7 +3,7 @@
  *
  * Canonical spec:
  *   paddingHorizontal: 20, paddingVertical: 18, borderBottomWidth: 1
- *   title: fontSize 18, fontWeight '700', centered, ALL-CAPS
+ *   title: fontSize 17, fontWeight '700', centered, ALL-CAPS
  */
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     textAlign: 'center',
     textTransform: 'uppercase',

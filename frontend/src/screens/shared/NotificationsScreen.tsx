@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   headerTitleWrap: { flex: 1, paddingHorizontal: 4 },
   headerActions: { flexDirection: 'row', gap: 10 },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: '900', textAlign: 'center', textTransform: 'uppercase', letterSpacing: -0.2 },
+  headerTitle: { flex: 1, fontSize: 17, fontWeight: '900', textAlign: 'center', textTransform: 'uppercase', letterSpacing: -0.2 },
   headerSubtitle: { fontSize: 13, marginTop: 2 },
   listContainer: { padding: 16, paddingBottom: 100 },
   notificationCard: {

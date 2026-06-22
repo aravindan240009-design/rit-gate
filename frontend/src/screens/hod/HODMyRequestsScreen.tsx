@@ -341,7 +341,7 @@ const HODMyRequestsScreen: React.FC<HODMyRequestsScreenProps> = ({ user, onBack,
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: 20, paddingVertical: 18, borderBottomWidth: 1 },
-  headerTitle: { fontSize: 18, fontWeight: '700' },
+  headerTitle: { fontSize: 17, fontWeight: '700' },
   bottomNav: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 8, borderTopWidth: 1, elevation: 8 },
   navItem: { flex: 1, alignItems: 'center', paddingVertical: 6, position: 'relative' },
   navLabel: { fontSize: 11, marginTop: 3, fontWeight: '500' },

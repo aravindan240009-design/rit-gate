@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 16,
   },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: '800', textAlign: 'center', textTransform: 'uppercase' },
+  headerTitle: { flex: 1, fontSize: 17, fontWeight: '800', textAlign: 'center', textTransform: 'uppercase' },
   filterContainer: {
     paddingVertical: 12,
   },

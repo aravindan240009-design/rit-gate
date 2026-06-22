@@ -326,7 +326,7 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack, onNavigate
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 18, borderBottomWidth: 1 },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
+  headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   listContent: { padding: 16, paddingBottom: 40 },
   hint: { fontSize: 14, marginBottom: 16 },
   actions: { flexDirection: 'row', gap: 12, marginBottom: 20 },

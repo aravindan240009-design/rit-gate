@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: { flex: 1, fontSize: 18, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', color: '#FFFFFF' },
+  headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', color: '#FFFFFF' },
   placeholder: {
     width: 40,
   },
