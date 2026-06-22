@@ -311,7 +311,7 @@ const HODBulkGatePassScreen: React.FC<HODBulkGatePassScreenProps> = ({ user, nav
     <SafeAreaView style={[s.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <View style={[s.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={handleGoBack} style={[s.backBtn, { backgroundColor: theme.inputBackground }]}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={handleGoBack} style={[s.backBtn, { backgroundColor: theme.inputBackground }]}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[s.headerTitle, { color: theme.text }]}>HOD Bulk Gate Pass</ThemedText>
@@ -613,7 +613,7 @@ const dd = StyleSheet.create({
 
 const s = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
   backBtn: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '700' },
   infoBanner: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, gap: 8 },

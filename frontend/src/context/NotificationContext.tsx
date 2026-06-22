@@ -10,7 +10,7 @@ import {
 } from '../services/localNotification.service';
 import { updateBadgeCount, clearBadge } from '../services/pushNotification.service';
 import { offlineQueue } from '../services/offlineQueue.service';
-import { isWithinLast24HoursLocal } from '../utils/dateUtils';
+import { isTodayLocal } from '../utils/dateUtils';
 
 interface Notification {
   id: number;
@@ -61,9 +61,10 @@ async function saveShownIds(ids: Set<number>): Promise<void> {
   } catch {}
 }
 
-/** Check if a timestamp is within the last 24 hours */
+/** Check if a timestamp falls on today's date (in-app bell shows today only) */
 function isRecent(value?: string): boolean {
-  return isWithinLast24HoursLocal(value);
+  if (!value) return false;
+  return isTodayLocal(value);
 }
 
 export const NotificationProvider: React.FC<{ children: ReactNode; onNavigate?: (route: string) => void }> = ({ children, onNavigate }) => {

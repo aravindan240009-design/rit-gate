@@ -5,6 +5,7 @@ import NewHODDashboard from './NewHODDashboard';
 import HODMyRequestsScreen from './HODMyRequestsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import ScreenTransition from '../../components/navigation/ScreenTransition';
 import HODEventListScreen from './HODEventListScreen';
 import HODCreateEventScreen from './HODCreateEventScreen';
 import HODAssignCoordinatorsScreen from './HODAssignCoordinatorsScreen';
@@ -122,7 +123,9 @@ const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
 
   return (
     <View style={{ flex: 1 }}>
-      {renderScreen()}
+      <ScreenTransition screenKey={activeTab}>
+        {renderScreen()}
+      </ScreenTransition>
       <PassTypeBottomSheet
         visible={showPassSheet}
         onClose={() => setShowPassSheet(false)}

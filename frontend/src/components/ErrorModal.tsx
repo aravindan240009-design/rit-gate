@@ -10,6 +10,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import ThemedText from './ThemedText';
+import { hapticError } from '../utils/haptics';
 
 export type ErrorType = 'network' | 'api' | 'validation' | 'auth' | 'timeout' | 'general';
 
@@ -45,6 +46,7 @@ const ErrorModal: React.FC<ErrorModalProps> = ({
 
   React.useEffect(() => {
     if (visible) {
+      hapticError();
       const initialSeconds = Math.max(1, Math.ceil(autoCloseDelay / 1000));
       setSecondsRemaining(initialSeconds);
       progressAnim.setValue(0);

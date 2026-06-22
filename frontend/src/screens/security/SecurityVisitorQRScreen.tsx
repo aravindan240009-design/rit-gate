@@ -128,7 +128,7 @@ const SecurityVisitorQRScreen: React.FC<Props> = ({ security, onBack, onNavigate
 
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={() => onNavigate('VISITOR_REGISTRATION')} style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => onNavigate('VISITOR_REGISTRATION')} style={[styles.backButton, { backgroundColor: theme.surfaceHighlight }]}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Visitor QR Codes</ThemedText>

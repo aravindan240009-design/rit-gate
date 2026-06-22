@@ -239,7 +239,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
             onPress={() => onNavigate('NOTIFICATIONS')}
           >

@@ -266,7 +266,7 @@ const ModernBulkGatePassScreen: React.FC<ModernBulkGatePassScreenProps> = ({ use
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-        <TouchableOpacity onPress={handleGoBack} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={handleGoBack} style={[styles.backButton, { backgroundColor: theme.inputBackground }]}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Bulk Gate Pass</ThemedText>

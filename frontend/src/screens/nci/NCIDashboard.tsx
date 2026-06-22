@@ -175,7 +175,7 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
             </View>
           </View>
           <View style={styles.headerRight}>
-            <TouchableOpacity
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
               onPress={() => onNavigate('NOTIFICATIONS')}
             >
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingVertical: 16,
   },
   headerLeft: {
     flexDirection: 'row',

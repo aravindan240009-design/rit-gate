@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, BackHandler } from 'react-native';
+import { BackHandler } from 'react-native';
 import { SecurityPersonnel, ScreenName } from '../../types';
 import NewSecurityDashboard from './NewSecurityDashboard';
 import ModernQRScannerScreen from './ModernQRScannerScreen';
@@ -10,6 +10,7 @@ import ModernScanHistoryScreen from './ModernScanHistoryScreen';
 import ModernHODContactsScreen from './ModernHODContactsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import NotificationsScreen from '../shared/NotificationsScreen';
+import ScreenTransition from '../../components/navigation/ScreenTransition';
 
 interface SecurityDashboardContainerProps {
   security: SecurityPersonnel;
@@ -96,83 +97,89 @@ const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
     }
   };
 
-  switch (activeScreen) {
-    case 'QR_SCANNER':
-      return (
-        <ModernQRScannerScreen
-          security={security}
-          onBack={goHome}
-          onNavigate={handleNavigate}
-        />
-      );
-    case 'VISITOR_REGISTRATION':
-      return (
-        <ModernVisitorRegistrationScreen
-          security={security}
-          onBack={goHome}
-          onNavigate={handleNavigate}
-        />
-      );
-    case 'VISITOR_QR':
-      return (
-        <SecurityVisitorQRScreen
-          security={security}
-          onBack={() => goBack()}
-          onNavigate={handleNavigate}
-        />
-      );
-    case 'VEHICLE_REGISTRATION':
-      return (
-        <ModernVehicleRegistrationScreen
-          security={security}
-          onBack={goHome}
-          onNavigate={handleNavigate}
-        />
-      );
-    case 'SCAN_HISTORY':
-      return (
-        <ModernScanHistoryScreen
-          security={security}
-          onBack={goHome}
-          onNavigate={handleNavigate}
-        />
-      );
-    case 'HOD_CONTACTS':
-      return (
-        <ModernHODContactsScreen
-          security={security}
-          onBack={goHome}
-          onNavigate={handleNavigate}
-        />
-      );
-    case 'PROFILE':
-      return (
-        <ProfileScreen
-          user={security}
-          userType="SECURITY"
-          onBack={goHome}
-          onLogout={onLogout}
-        />
-      );
-    case 'NOTIFICATIONS':
-      return (
-        <NotificationsScreen
-          userId={security.securityId}
-          userType="security"
-          onBack={goHome}
-        />
-      );
-    default:
-      return (
-        <View style={{ flex: 1 }}>
+  const renderScreen = () => {
+    switch (activeScreen) {
+      case 'QR_SCANNER':
+        return (
+          <ModernQRScannerScreen
+            security={security}
+            onBack={goHome}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'VISITOR_REGISTRATION':
+        return (
+          <ModernVisitorRegistrationScreen
+            security={security}
+            onBack={goHome}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'VISITOR_QR':
+        return (
+          <SecurityVisitorQRScreen
+            security={security}
+            onBack={() => goBack()}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'VEHICLE_REGISTRATION':
+        return (
+          <ModernVehicleRegistrationScreen
+            security={security}
+            onBack={goHome}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'SCAN_HISTORY':
+        return (
+          <ModernScanHistoryScreen
+            security={security}
+            onBack={goHome}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'HOD_CONTACTS':
+        return (
+          <ModernHODContactsScreen
+            security={security}
+            onBack={goHome}
+            onNavigate={handleNavigate}
+          />
+        );
+      case 'PROFILE':
+        return (
+          <ProfileScreen
+            user={security}
+            userType="SECURITY"
+            onBack={goHome}
+            onLogout={onLogout}
+          />
+        );
+      case 'NOTIFICATIONS':
+        return (
+          <NotificationsScreen
+            userId={security.securityId}
+            userType="security"
+            onBack={goHome}
+          />
+        );
+      default:
+        return (
           <NewSecurityDashboard
             user={security}
             onLogout={onLogout}
             onNavigate={handleNavigate}
           />
-        </View>
-      );
-  }
+        );
+    }
+  };
+
+  return (
+    <ScreenTransition screenKey={activeScreen}>
+      {renderScreen()}
+    </ScreenTransition>
+  );
 };
 
 export default SecurityDashboardContainer;

@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -49,7 +50,11 @@ import java.util.HashMap;
 @RequestMapping("/api/security")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class SecurityController {
-    
+
+    // Cryptographically strong RNG for gate codes / tokens — java.util.Random is
+    // predictable and unsafe for security codes. One shared instance (thread-safe).
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     @Autowired
     private PersonRepository personRepository;
     
@@ -3993,7 +3998,7 @@ public class SecurityController {
             for (Visitor v : legacyVisitors) {
                 // Backfill manual code if needed
                 if ("APPROVED".equals(v.getStatus()) && (v.getManualCode() == null || v.getManualCode().isEmpty())) {
-                    String manualCode = String.format("%06d", new java.util.Random().nextInt(999999));
+                    String manualCode = String.format("%06d", SECURE_RANDOM.nextInt(999999));
                     v.setManualCode(manualCode);
                     visitorRepository.save(v);
                     // Also backfill into QR table if a matching row exists
@@ -4118,16 +4123,15 @@ public class SecurityController {
     private String generateRandomToken(int length) {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder token = new StringBuilder();
-        java.util.Random random = new java.util.Random();
         for (int i = 0; i < length; i++) {
-            token.append(chars.charAt(random.nextInt(chars.length())));
+            token.append(chars.charAt(SECURE_RANDOM.nextInt(chars.length())));
         }
         return token.toString();
     }
     
     private String generateManualCode() {
         // 6-digit numeric code matching the format used by students/staff/HOD
-        int code = 100000 + new java.util.Random().nextInt(900000);
+        int code = 100000 + SECURE_RANDOM.nextInt(900000);
         return String.valueOf(code);
     }
 

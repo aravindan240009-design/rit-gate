@@ -399,7 +399,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           >
             <Ionicons name="calendar-outline" size={22} color={theme.text} />
           </TouchableOpacity>
-          <TouchableOpacity
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
             onPress={() => onNavigate('NOTIFICATIONS')}
           >

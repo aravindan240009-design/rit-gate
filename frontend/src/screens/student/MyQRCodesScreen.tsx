@@ -70,7 +70,7 @@ const MyQRCodesScreen: React.FC<MyQRCodesScreenProps> = ({ user, navigation, onB
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={handleGoBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={THEME.colors.text} />
         </TouchableOpacity>
         <ThemedText style={styles.headerTitle}>My QR Codes</ThemedText>

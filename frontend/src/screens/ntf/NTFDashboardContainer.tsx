@@ -5,6 +5,7 @@ import NTFDashboard from './NTFDashboard';
 import NTFMyRequestsScreen from './NTFMyRequestsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import ScreenTransition from '../../components/navigation/ScreenTransition';
 
 interface NTFDashboardContainerProps {
   ntf: NonTeachingFaculty;
@@ -76,7 +77,9 @@ const NTFDashboardContainer: React.FC<NTFDashboardContainerProps> = ({ ntf, onLo
 
   return (
     <View style={{ flex: 1 }}>
-      {renderScreen()}
+      <ScreenTransition screenKey={activeTab}>
+        {renderScreen()}
+      </ScreenTransition>
       {/* NTF: single pass + guest only */}
       <PassTypeBottomSheet
         visible={showPassSheet}

@@ -61,6 +61,7 @@ import NotificationsScreen from './screens/shared/NotificationsScreen';
 import SwipeBackWrapper from './components/SwipeBackWrapper';
 import ErrorBoundary from './components/ErrorBoundary';
 import ExitConfirmModal from './components/navigation/ExitConfirmModal';
+import ScreenTransition from './components/navigation/ScreenTransition';
 import { initPushNotifications, unregisterPushToken, setupNotificationTapHandler, handleInitialNotification, setupFCMForegroundHandler, registerBackgroundHandler } from './services/pushNotification.service';
 import { getInitialNotificationData } from './services/localNotification.service';
 import { biometricAuthService } from './services/biometricAuth.service';
@@ -1535,7 +1536,9 @@ const App: React.FC = () => {
                       onBack={handleSwipeBack}
                     >
                       <ErrorBoundary fallbackScreen={goBackToHome}>
-                        {renderCurrentScreen()}
+                        <ScreenTransition screenKey={`${userType ?? 'none'}:${currentScreen}`}>
+                          {renderCurrentScreen()}
+                        </ScreenTransition>
                       </ErrorBoundary>
                     </AppNavigator>
                     {exitAnimating && (

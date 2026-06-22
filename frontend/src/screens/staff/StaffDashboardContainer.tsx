@@ -5,6 +5,7 @@ import NewStaffDashboard from './NewStaffDashboard';
 import MyRequestsScreen from './MyRequestsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
+import ScreenTransition from '../../components/navigation/ScreenTransition';
 import StaffEventListScreen from './StaffEventListScreen';
 import EventCsvUploadScreen from './EventCsvUploadScreen';
 import EventCsvPreviewScreen from './EventCsvPreviewScreen';
@@ -145,7 +146,9 @@ const StaffDashboardContainer: React.FC<StaffDashboardContainerProps> = ({
 
   return (
     <View style={{ flex: 1 }}>
-      {renderScreen()}
+      <ScreenTransition screenKey={activeTab}>
+        {renderScreen()}
+      </ScreenTransition>
       <PassTypeBottomSheet
         visible={showPassSheet}
         onClose={() => setShowPassSheet(false)}

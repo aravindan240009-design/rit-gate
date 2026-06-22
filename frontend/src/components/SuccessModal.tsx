@@ -10,6 +10,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '../context/ThemeContext';
 import ThemedText from './ThemedText';
+import { hapticSuccess } from '../utils/haptics';
 
 interface SuccessModalProps {
   visible: boolean;
@@ -39,6 +40,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
 
   React.useEffect(() => {
     if (visible) {
+      hapticSuccess();
       const initialSeconds = Math.max(1, Math.ceil(autoCloseDelay / 1000));
       setSecondsRemaining(initialSeconds);
       progressAnim.setValue(0);

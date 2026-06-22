@@ -23,11 +23,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -346,9 +346,13 @@ public class AuthController {
     }
     
     // Helper methods
+
+    // Cryptographically strong RNG for OTPs — java.util.Random is predictable and
+    // unsafe for security codes. One shared instance (SecureRandom is thread-safe).
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private String generateOTP() {
-        Random random = new Random();
-        int otp = 100000 + random.nextInt(900000); // 6-digit OTP
+        int otp = 100000 + SECURE_RANDOM.nextInt(900000); // 6-digit OTP
         return String.valueOf(otp);
     }
     

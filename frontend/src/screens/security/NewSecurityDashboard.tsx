@@ -328,7 +328,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
             <Ionicons name="notifications-outline" size={24} color={theme.text} />
             {unreadCount > 0 && <View style={[styles.notificationIndicator, { backgroundColor: theme.error }]} />}
           </TouchableOpacity>
@@ -547,7 +547,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
 
           {/* Header */}
           <View style={[detailStyles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-            <TouchableOpacity onPress={() => setShowDetailModal(false)} style={[detailStyles.backBtn, { backgroundColor: theme.inputBackground }]}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => setShowDetailModal(false)} style={[detailStyles.backBtn, { backgroundColor: theme.inputBackground }]}>
               <Ionicons name="arrow-back" size={22} color={theme.text} />
             </TouchableOpacity>
             <ThemedText style={[detailStyles.headerTitle, { color: theme.text }]}>Person Details</ThemedText>
@@ -672,7 +672,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
 
           {/* Header */}
           <View style={[detailStyles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
-            <TouchableOpacity onPress={() => setShowVisitorModal(false)} style={[detailStyles.backBtn, { backgroundColor: theme.inputBackground }]}>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go back" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} onPress={() => setShowVisitorModal(false)} style={[detailStyles.backBtn, { backgroundColor: theme.inputBackground }]}>
               <Ionicons name="arrow-back" size={22} color={theme.text} />
             </TouchableOpacity>
             <ThemedText style={[detailStyles.headerTitle, { color: theme.text }]}>Visitor Request</ThemedText>
@@ -956,9 +956,9 @@ const styles = StyleSheet.create({
 
 const detailStyles = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, gap: 10 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, gap: 10 },
   backBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { flex: 1, fontSize: 17, fontWeight: '800' },
+  headerTitle: { flex: 1, fontSize: 18, fontWeight: '800' },
   statusPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   statusPillText: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
   scroll: { flex: 1 },

@@ -134,7 +134,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout, onNavi
               </ThemedText>
             </View>
           </View>
-          <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
             <Ionicons name="notifications-outline" size={24} color={theme.text} />
             {unreadCount > 0 && <View style={[styles.notifDot, { backgroundColor: theme.error, borderColor: theme.surface }]} />}
           </TouchableOpacity>
@@ -284,7 +284,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout, onNavi
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   avatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   avatarImage: { width: 44, height: 44, borderRadius: 22 },

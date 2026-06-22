@@ -21,6 +21,12 @@ export const VerticalScrollView = React.forwardRef<ScrollView, ScrollViewProps>(
     return (
       <ScrollView
         ref={ref}
+        // Keyboard-friendly defaults (overridable via props): keep taps working
+        // while the keyboard is up, let users swipe it away, and lift content
+        // above the keyboard so the focused input is never covered.
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        automaticallyAdjustKeyboardInsets={true}
         {...props}
         horizontal={false}
         showsHorizontalScrollIndicator={false}
