@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 22 },
+  headerTitle: { flex: 1, fontSize: 18, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.5, lineHeight: 22 },
   headerRight: {
     width: 40,
   },

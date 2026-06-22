@@ -272,7 +272,7 @@ const NTFMyRequestsScreen: React.FC<NTFMyRequestsScreenProps> = ({ user, onBack,
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
+  header: { paddingHorizontal: 20, paddingVertical: 18, borderBottomWidth: 1 },
   headerTitle: { fontSize: 18, fontWeight: '700' },
 
   content: { flex: 1 },

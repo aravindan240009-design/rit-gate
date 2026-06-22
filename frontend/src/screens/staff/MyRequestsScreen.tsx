@@ -339,7 +339,7 @@ const MyRequestsScreen: React.FC<MyRequestsScreenProps> = ({ user, onBack, onNav
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1 },
+  header: { paddingHorizontal: 20, paddingVertical: 18, borderBottomWidth: 1 },
   headerTitle: { fontSize: 18, fontWeight: '700' },
   loadingText: { marginTop: 12, fontSize: 14 },
   content: { flex: 1 },
