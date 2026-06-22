@@ -60,10 +60,15 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
   // Keep a ref to cancel stale responses when a newer fetch starts
   const fetchSeqRef = React.useRef(0);
 
+  // Holds the currently applied range so the 30s auto-refresh re-queries the
+  // SAME dates instead of closing over the initial empty dates (which would
+  // silently refetch "today" and overwrite a selected range).
+  const rangeRef = React.useRef<{ from?: string; to?: string }>({});
+
   useEffect(() => {
     loadGateLogs();
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { onBack(); return true; });
-    const interval = setInterval(() => loadGateLogs(fromDate || undefined, toDate || undefined, true), 30000);
+    const interval = setInterval(() => loadGateLogs(rangeRef.current.from, rangeRef.current.to, true), 30000);
     return () => { sub.remove(); clearInterval(interval); };
   }, []);
 
@@ -352,13 +357,13 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
               />
             </ScrollView>
             <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#E5E7EB' }}>
-              <TouchableOpacity style={{ flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', backgroundColor: '#F3F4F6' }} onPress={() => { setFromDate(''); setToDate(''); setSelectingDateType('FROM'); setRangeLabel("Today's gate logs"); loadGateLogs(); setRangeModalVisible(false); }}>
+              <TouchableOpacity style={{ flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', backgroundColor: '#F3F4F6' }} onPress={() => { setFromDate(''); setToDate(''); setSelectingDateType('FROM'); setRangeLabel("Today's gate logs"); rangeRef.current = {}; loadGateLogs(); setRangeModalVisible(false); }}>
                 <ThemedText style={{ fontSize: 15, fontWeight: '700', color: '#6B7280' }}>Clear</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ flex: 2, paddingVertical: 14, borderRadius: 12, alignItems: 'center', backgroundColor: fromDate && toDate ? theme.primary : '#D1D5DB' }}
                 disabled={!fromDate || !toDate}
-                onPress={() => { setRangeModalVisible(false); setRangeLabel(`${fromDate} → ${toDate}`); loadGateLogs(fromDate, toDate); }}
+                onPress={() => { setRangeModalVisible(false); setRangeLabel(`${fromDate} → ${toDate}`); rangeRef.current = { from: fromDate, to: toDate }; loadGateLogs(fromDate, toDate); }}
               >
                 <ThemedText style={{ fontSize: 15, fontWeight: '700', color: '#ffffff' }}>Apply</ThemedText>
               </TouchableOpacity>
