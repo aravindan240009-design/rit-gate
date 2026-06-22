@@ -213,9 +213,9 @@ const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) =>
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 20, borderBottomWidth: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1 },
   backBtn: { padding: 4, marginRight: 8, flexShrink: 0 },
-  headerTitle: { flex: 1, fontSize: 20, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
+  headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   headerSub: { fontSize: 13 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   section: { margin: 16, borderRadius: 12, padding: 14, borderWidth: 1 },
