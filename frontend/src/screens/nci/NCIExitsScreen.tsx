@@ -53,11 +53,14 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack, onNavigate
   useEffect(() => {
     loadGateLogs();
     const sub = BackHandler.addEventListener('hardwareBackPress', () => { onBack(); return true; });
-    const interval = setInterval(() => loadGateLogs(fromDate || undefined, toDate || undefined), 30000);
+    const interval = setInterval(() => loadGateLogs(fromDate || undefined, toDate || undefined, true), 30000);
     return () => { sub.remove(); clearInterval(interval); };
   }, []);
 
-  const loadGateLogs = async (rangeFrom?: string, rangeTo?: string) => {
+  const loadGateLogs = async (rangeFrom?: string, rangeTo?: string, silent = false) => {
+    // Show the skeleton on user-initiated loads (page open, date-range apply/clear);
+    // silent=true for the 30s auto-refresh and pull-to-refresh so they don't flash it.
+    if (!silent) setLoading(true);
     try {
       const response = await apiService.getGateLogs(rangeFrom, rangeTo);
       if (response.success) setGateLogs(response.logs || []);
@@ -70,7 +73,7 @@ const NCIExitsScreen: React.FC<NCIExitsScreenProps> = ({ nci, onBack, onNavigate
   };
 
   const onRefresh = () => {
-    console.log('🔄 [REFRESH] NCI/Exits'); setRefreshing(true); loadGateLogs(fromDate || undefined, toDate || undefined); };
+    console.log('🔄 [REFRESH] NCI/Exits'); setRefreshing(true); loadGateLogs(fromDate || undefined, toDate || undefined, true); };
 
   const exportPdf = async () => {
     if (gateLogs.length === 0) {
