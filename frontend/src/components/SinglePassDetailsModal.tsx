@@ -238,8 +238,8 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
             </View>
           )}
 
-          {/* Remarks (for reviewer roles) */}
-          {hasAnyRemark && (
+          {/* Remarks (reviewer view only — the read-only view shows remarks inline in the timeline below) */}
+          {!isReadOnly && hasAnyRemark && (
             <View style={[styles.block, { backgroundColor: theme.surface }]}>
               <ThemedText style={[styles.blockLabel, { color: theme.textTertiary }]}>REMARKS</ThemedText>
               {showStaffRemark && (

@@ -417,6 +417,12 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           </View>
         </View>
         <ScreenContentContainer style={{ flex: 1 }}>
+          {vehiclesLoading ? (
+            <View style={styles.rangeLoadingContainer}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <ThemedText style={[styles.rangeLoadingText, { color: theme.textSecondary }]}>Loading records…</ThemedText>
+            </View>
+          ) : (
           <VerticalFlatList
             style={styles.content}
             data={filteredVehicles}
@@ -468,6 +474,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               </View>
             }
           />
+          )}
         </ScreenContentContainer>
         <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
         {isDownloading && (
@@ -624,6 +631,12 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
           </View>
         </View>
         <ScreenContentContainer style={{ flex: 1 }}>
+          {scansLoading ? (
+            <View style={styles.rangeLoadingContainer}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <ThemedText style={[styles.rangeLoadingText, { color: theme.textSecondary }]}>Loading records…</ThemedText>
+            </View>
+          ) : (
           <VerticalFlatList
             style={styles.content}
             data={filteredScans}
@@ -675,6 +688,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
               </View>
             }
           />
+          )}
         </ScreenContentContainer>
         <SecurityBottomNav activeTab="history" onNavigate={onNavigate} />
         {isDownloading && (
@@ -1984,6 +1998,16 @@ const styles = StyleSheet.create({
   downloadingText: {
     fontSize: 15,
     fontWeight: '600',
+  },
+  rangeLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
+  rangeLoadingText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 
