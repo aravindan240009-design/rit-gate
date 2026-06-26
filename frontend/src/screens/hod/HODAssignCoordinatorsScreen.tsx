@@ -51,9 +51,10 @@ const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) =>
 
   const assignedCodes = new Set(coordinators.map(c => c.staffCode));
   const filtered = allStaff.filter(s => {
-    const name = (s.staffName || s.name || '').toLowerCase();
+    const name = (s.fullName || s.staffName || s.name || '').toLowerCase();
     const code = (s.staffCode || '').toLowerCase();
-    return name.includes(search.toLowerCase()) || code.includes(search.toLowerCase());
+    const q = search.toLowerCase();
+    return name.includes(q) || code.includes(q);
   });
 
   const toggle = (code: string) => {
