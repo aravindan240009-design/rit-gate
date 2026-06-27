@@ -168,6 +168,15 @@ const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSel
         message={errorMessage}
         onClose={() => setErrorVisible(false)}
       />
+
+      {deleting && (
+        <View style={styles.deletingOverlay}>
+          <View style={[styles.deletingCard, { backgroundColor: theme.cardBackground }]}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <ThemedText style={[styles.deletingText, { color: theme.text }]}>Deleting event…</ThemedText>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -196,6 +205,9 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 15 },
   emptyBtn: { paddingHorizontal: 24, paddingVertical: 10, borderRadius: 24 },
   emptyBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  deletingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center', zIndex: 10 },
+  deletingCard: { paddingHorizontal: 28, paddingVertical: 24, borderRadius: 16, alignItems: 'center', gap: 14, minWidth: 180 },
+  deletingText: { fontSize: 15, fontWeight: '600' },
 });
 
 export default HODEventListScreen;
