@@ -87,10 +87,12 @@ const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSel
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <ThemedText style={styles.headerTitle}>My Events</ThemedText>
-        <TouchableOpacity onPress={onCreateEvent} style={[styles.createBtn, { backgroundColor: theme.primary }]}>
-          <Ionicons name="add" size={20} color="#fff" />
-        </TouchableOpacity>
+        <ThemedText style={styles.headerTitle} numberOfLines={1}>My Events</ThemedText>
+        <View style={styles.createBtnWrap}>
+          <TouchableOpacity onPress={onCreateEvent} style={[styles.createBtn, { backgroundColor: theme.primary }]}>
+            <Ionicons name="add" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {loading ? (
@@ -126,9 +128,10 @@ const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSel
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 18, borderBottomWidth: 1 },
-  backBtn: { padding: 4, marginRight: 8 },
-  headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
+  header: { justifyContent: 'center', paddingHorizontal: 56, paddingVertical: 18, borderBottomWidth: 1 },
+  backBtn: { position: 'absolute', left: 12, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: 4, zIndex: 1 },
+  headerTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
+  createBtnWrap: { position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 },
   createBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   list: { padding: 16, gap: 12 },
   card: { borderRadius: 12, padding: 16, borderWidth: 1, gap: 8 },
