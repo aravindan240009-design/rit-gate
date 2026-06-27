@@ -48,7 +48,15 @@ public class EventService {
     }
 
     public List<Event> getEventsForHod(String hodCode) {
-        return eventRepository.findByCreatedByHodOrderByCreatedAtDesc(hodCode);
+        return eventRepository.findByCreatedByHodOrderByCreatedAtDesc(hodCode).stream()
+            .filter(EventService::isNotPast)
+            .collect(Collectors.toList());
+    }
+
+    /** An event is shown until the end of its event date; once the date has passed it is hidden. */
+    private static boolean isNotPast(Event event) {
+        LocalDate eventDate = event.getEventDate();
+        return eventDate == null || !eventDate.isBefore(LocalDate.now());
     }
 
     @Transactional
@@ -100,6 +108,7 @@ public class EventService {
         List<Long> eventIds = assignments.stream().map(EventCoordinator::getEventId).collect(Collectors.toList());
         if (eventIds.isEmpty()) return List.of();
         return eventRepository.findAllById(eventIds).stream()
+            .filter(EventService::isNotPast)
             .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
             .collect(Collectors.toList());
     }
