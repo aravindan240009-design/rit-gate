@@ -3,7 +3,7 @@ import {
   View, StyleSheet, TouchableOpacity, FlatList,
   ActivityIndicator, RefreshControl,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { HOD, RITGateEvent } from '../../types';
 import { apiService } from '../../services/api';
@@ -20,7 +20,6 @@ interface Props {
 
 const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSelectEvent }) => {
   const { theme } = useTheme();
-  const insets = useSafeAreaInsets();
   const [events, setEvents] = useState<RITGateEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -83,7 +82,7 @@ const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSel
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <View style={[styles.header, { borderBottomColor: theme.border, paddingTop: insets.top > 0 ? 0 : 12 }]}>
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>

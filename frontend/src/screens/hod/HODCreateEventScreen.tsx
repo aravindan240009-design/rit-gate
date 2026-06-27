@@ -3,7 +3,7 @@ import {
   View, StyleSheet, TouchableOpacity, TextInput,
   ScrollView, ActivityIndicator, Platform,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { HOD } from '../../types';
@@ -21,7 +21,6 @@ interface Props {
 
 const HODCreateEventScreen: React.FC<Props> = ({ hod, onBack, onCreated }) => {
   const { theme } = useTheme();
-  const insets = useSafeAreaInsets();
   const [eventName, setEventName] = useState('');
   const [venue, setVenue] = useState('');
   const [eventDate, setEventDate] = useState<Date>(new Date());
@@ -64,7 +63,7 @@ const HODCreateEventScreen: React.FC<Props> = ({ hod, onBack, onCreated }) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <View style={[styles.header, { borderBottomColor: theme.border, paddingTop: insets.top > 0 ? 0 : 12 }]}>
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>

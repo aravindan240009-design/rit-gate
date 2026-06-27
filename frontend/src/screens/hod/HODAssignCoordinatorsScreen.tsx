@@ -3,7 +3,7 @@ import {
   View, StyleSheet, TouchableOpacity, FlatList,
   TextInput, ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { HOD, RITGateEvent, EventCoordinator } from '../../types';
 import { apiService } from '../../services/api';
@@ -21,7 +21,6 @@ interface Props {
 
 const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) => {
   const { theme } = useTheme();
-  const insets = useSafeAreaInsets();
   const [allStaff, setAllStaff] = useState<any[]>([]);
   const [coordinators, setCoordinators] = useState<EventCoordinator[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -94,7 +93,7 @@ const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) =>
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <View style={[styles.header, { borderBottomColor: theme.border, paddingTop: insets.top > 0 ? 0 : 12 }]}>
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
