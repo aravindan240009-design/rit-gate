@@ -128,7 +128,7 @@ const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSel
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { justifyContent: 'center', paddingHorizontal: 56, paddingVertical: 18, borderBottomWidth: 1 },
+  header: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 56, paddingVertical: 18, borderBottomWidth: 1 },
   backBtn: { position: 'absolute', left: 12, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: 4, zIndex: 1 },
   headerTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
   createBtnWrap: { position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center', zIndex: 1 },

@@ -98,10 +98,12 @@ const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) =>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <View style={styles.headerTitleBlock}>
-          <ThemedText style={styles.headerTitle} numberOfLines={1}>Assign Coordinators</ThemedText>
-          <ThemedText style={[styles.headerSub, { color: theme.textSecondary }]} numberOfLines={1}>{event.eventName}</ThemedText>
-        </View>
+        <ThemedText style={styles.headerTitle} numberOfLines={1}>Assign Coordinators</ThemedText>
+      </View>
+
+      <View style={[styles.eventStrip, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
+        <Ionicons name="calendar-outline" size={15} color={theme.primary} />
+        <ThemedText style={[styles.eventStripText, { color: theme.textSecondary }]} numberOfLines={1}>{event.eventName}</ThemedText>
       </View>
 
       {loading ? (
@@ -214,11 +216,11 @@ const HODAssignCoordinatorsScreen: React.FC<Props> = ({ hod, event, onBack }) =>
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { justifyContent: 'center', paddingHorizontal: 56, paddingVertical: 18, borderBottomWidth: 1 },
+  header: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 56, paddingVertical: 18, borderBottomWidth: 1 },
   backBtn: { position: 'absolute', left: 12, top: 0, bottom: 0, justifyContent: 'center', paddingHorizontal: 4, zIndex: 1 },
-  headerTitleBlock: { alignItems: 'center' },
   headerTitle: { fontSize: 17, fontWeight: '700', textAlign: 'center', textTransform: 'uppercase' },
-  headerSub: { fontSize: 13, textAlign: 'center' },
+  eventStrip: { flexDirection: 'row', alignItems: 'center', gap: 7, paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1 },
+  eventStripText: { flex: 1, fontSize: 13, fontWeight: '600' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   section: { margin: 16, borderRadius: 12, padding: 14, borderWidth: 1 },
   sectionTitle: { fontSize: 13, fontWeight: '700', marginBottom: 10, opacity: 0.7 },
