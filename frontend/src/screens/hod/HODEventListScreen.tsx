@@ -10,6 +10,8 @@ import { apiService } from '../../services/api';
 import { useTheme } from '../../context/ThemeContext';
 import ThemedText from '../../components/ThemedText';
 import ErrorModal from '../../components/ErrorModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
+import SuccessModal from '../../components/SuccessModal';
 
 interface Props {
   hod: HOD;
@@ -25,6 +27,9 @@ const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSel
   const [refreshing, setRefreshing] = useState(false);
   const [errorVisible, setErrorVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<RITGateEvent | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [successVisible, setSuccessVisible] = useState(false);
 
   const loadEvents = useCallback(async () => {
     const hodCode = hod.hodCode || (hod as any).hod_code || '';
@@ -48,6 +53,21 @@ const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSel
     setRefreshing(true);
     await loadEvents();
     setRefreshing(false);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const res = await apiService.deleteEvent(deleteTarget.id);
+    setDeleting(false);
+    setDeleteTarget(null);
+    if (res.success) {
+      await loadEvents();
+      setSuccessVisible(true);
+    } else {
+      setErrorMessage(res.message || 'Failed to delete event');
+      setErrorVisible(true);
+    }
   };
 
   const statusColor = (status: string) => {
@@ -76,6 +96,15 @@ const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSel
       <View style={styles.cardFooter}>
         <Ionicons name="people-outline" size={14} color={theme.textSecondary} />
         <ThemedText style={[styles.footerText, { color: theme.textSecondary }]}> Tap to manage coordinators</ThemedText>
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity
+          onPress={() => setDeleteTarget(item)}
+          style={styles.deleteBtn}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="trash-outline" size={16} color="#dc2626" />
+          <ThemedText style={styles.deleteText}>Delete</ThemedText>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -115,6 +144,24 @@ const HODEventListScreen: React.FC<Props> = ({ hod, onBack, onCreateEvent, onSel
         />
       )}
 
+      <ConfirmationModal
+        visible={deleteTarget !== null}
+        title="Delete Event"
+        message={deleteTarget
+          ? `Delete "${deleteTarget.eventName}"? Any assigned coordinators will be notified, and all event passes will be removed. This cannot be undone.`
+          : ''}
+        confirmText={deleting ? 'Deleting…' : 'Delete'}
+        onConfirm={handleDelete}
+        onCancel={() => !deleting && setDeleteTarget(null)}
+      />
+
+      <SuccessModal
+        visible={successVisible}
+        title="Event Deleted"
+        message="The event was removed and its coordinators have been notified."
+        onClose={() => setSuccessVisible(false)}
+      />
+
       <ErrorModal type="general"
         visible={errorVisible}
         title="Error"
@@ -142,6 +189,8 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 11, fontWeight: '700' },
   cardFooter: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   footerText: { fontSize: 12 },
+  deleteBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4 },
+  deleteText: { color: '#dc2626', fontSize: 12, fontWeight: '700' },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyWrap: { alignItems: 'center', gap: 12, paddingTop: 80 },
   emptyText: { fontSize: 15 },

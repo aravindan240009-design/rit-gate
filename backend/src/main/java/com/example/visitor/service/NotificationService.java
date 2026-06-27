@@ -492,6 +492,23 @@ public class NotificationService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void notifyCoordinatorOfEventCancellation(String staffCode, String eventName, java.time.LocalDate eventDate) {
+        try {
+            String title = "Event Cancelled";
+            String message = String.format(
+                "The event \"%s\"%s has been cancelled by the HOD. You are no longer a coordinator for it.",
+                eventName,
+                eventDate != null ? " scheduled for " + eventDate : ""
+            );
+            save(staffCode, title, message,
+                Notification.NotificationType.INFO, Notification.NotificationPriority.HIGH,
+                "/staff/events");
+        } catch (Exception e) {
+            log.error("Error notifying staff of event cancellation", e);
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void notifyCoordinatorOfUploadConfirmation(String staffCode, String eventName, int issuedCount) {
         try {
             String title = "Event Passes Issued";

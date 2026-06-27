@@ -117,6 +117,36 @@ public class EventService {
         return eventCoordinatorRepository.existsByEventIdAndStaffCode(eventId, staffCode);
     }
 
+    /**
+     * Delete an event and everything attached to it (coordinator assignments + issued passes).
+     * Only the HOD who created the event may delete it. Every assigned coordinator is notified
+     * (in-app + device push) that the event has been cancelled before the records are removed.
+     */
+    @Transactional
+    public void deleteEvent(Long eventId, String hodCode) {
+        Event event = getEvent(eventId);
+        if (!event.getCreatedByHod().equals(hodCode)) {
+            throw new IllegalStateException("Only the creating HOD can delete this event.");
+        }
+
+        List<EventCoordinator> coordinators = eventCoordinatorRepository.findByEventId(eventId);
+        for (EventCoordinator c : coordinators) {
+            try {
+                notificationService.notifyCoordinatorOfEventCancellation(
+                    c.getStaffCode(), event.getEventName(), event.getEventDate());
+            } catch (Exception e) {
+                log.warn("Could not notify coordinator {} of event {} cancellation: {}",
+                    c.getStaffCode(), eventId, e.getMessage());
+            }
+        }
+
+        eventPassRepository.deleteByEventId(eventId);
+        eventCoordinatorRepository.deleteByEventId(eventId);
+        eventRepository.delete(event);
+        log.info("HOD {} deleted event {} ({}) and notified {} coordinator(s)",
+            hodCode, eventId, event.getEventName(), coordinators.size());
+    }
+
     @Transactional
     public Event completeEvent(Long eventId, String hodCode) {
         Event event = getEvent(eventId);

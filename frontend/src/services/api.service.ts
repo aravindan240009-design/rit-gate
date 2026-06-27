@@ -1024,6 +1024,13 @@ class ApiService {
       return { success: data.status === 'SUCCESS', message: data.message };
     } catch (e: any) { return { success: false, message: e.message }; }
   }
+
+  async deleteEvent(eventId: number): Promise<{ success: boolean; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events/${eventId}`, { method: 'DELETE' });
+      return { success: data.status === 'SUCCESS', message: data.message };
+    } catch (e: any) { return { success: false, message: e.message }; }
+  }
 }
 
 export const apiService = new ApiService();

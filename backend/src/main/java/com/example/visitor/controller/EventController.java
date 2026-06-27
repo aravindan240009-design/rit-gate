@@ -315,6 +315,26 @@ public class EventController {
         }
     }
 
+    // ── HOD: Delete event ──────────────────────────────────────────────────────
+
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<?> deleteEvent(@PathVariable Long eventId) {
+        try {
+            String hodCode = Authz.selfId(); // act only as yourself (token identity)
+            if (hodCode == null || hodCode.isBlank()) return badRequest("hodCode is required");
+            eventService.deleteEvent(eventId, hodCode);
+            return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "Event deleted"
+            ));
+        } catch (IllegalStateException e) {
+            return badRequest(ErrorMessages.userFriendly(e));
+        } catch (Exception e) {
+            log.error("Error deleting event {}", eventId, e);
+            return serverError("Failed to delete event: " + ErrorMessages.userFriendly(e));
+        }
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     private Map<String, Object> eventToMap(Event e) {

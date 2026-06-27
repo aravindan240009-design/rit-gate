@@ -14,4 +14,5 @@ public interface EventCoordinatorRepository extends JpaRepository<EventCoordinat
     Optional<EventCoordinator> findByEventIdAndStaffCode(Long eventId, String staffCode);
     boolean existsByEventIdAndStaffCode(Long eventId, String staffCode);
     void deleteByEventIdAndStaffCode(Long eventId, String staffCode);
+    void deleteByEventId(Long eventId);
 }

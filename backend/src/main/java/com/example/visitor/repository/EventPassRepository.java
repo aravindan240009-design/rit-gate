@@ -21,4 +21,5 @@ public interface EventPassRepository extends JpaRepository<EventPass, Long> {
     List<EventPass> findEnteredPassesPastExpiry(LocalDateTime now);
 
     boolean existsByEventId(Long eventId);
+    void deleteByEventId(Long eventId);
 }
