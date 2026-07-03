@@ -51,8 +51,8 @@ const AdminDashboardContainer: React.FC<AdminDashboardContainerProps> = ({ admin
           onTabChange={(tab) => {
             if (tab === 'HOME') setActiveTab('DASHBOARD');
             else if (tab === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
+            else if (tab === 'NEW_PASS') setActiveTab('NEW_PASS');
             else if (tab === 'SCAN_HISTORY') setActiveTab('SCAN_HISTORY');
-            else if (tab === 'PROFILE') setActiveTab('PROFILE');
           }}
         />
       );

@@ -64,7 +64,7 @@ const StaffDashboardContainer: React.FC<StaffDashboardContainerProps> = ({
           showBottomNav={true}
           onTabChange={(tab) => {
             if (tab === 'HOME') setActiveTab('DASHBOARD');
-            else if (tab === 'REQUESTS') setActiveTab('MY_REQUESTS');
+            else if (tab === 'MY_REQUESTS') setActiveTab('MY_REQUESTS');
             else if (tab === 'NEW_PASS') openPassSheet();
           }}
         />

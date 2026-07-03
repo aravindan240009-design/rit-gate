@@ -154,6 +154,10 @@ const SecurityDashboardContainer: React.FC<SecurityDashboardContainerProps> = ({
             userType="SECURITY"
             onBack={goHome}
             onLogout={onLogout}
+            showBottomNav={true}
+            onTabChange={(tab) => {
+              if (tab === 'HOME') goHome();
+            }}
           />
         );
       case 'NOTIFICATIONS':
