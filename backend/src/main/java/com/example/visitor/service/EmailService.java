@@ -231,13 +231,13 @@ public class EmailService {
             "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Date</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + safeDate + "</td></tr>" +
             "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Venue</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + safeVenue + "</td></tr>" +
             "</table>" +
-            "<div style=\"background:#f0fdf4;border:2px solid #16a34a;border-radius:12px;padding:16px;text-align:center;margin-bottom:16px;\">" +
-            "<div style=\"font-size:12px;font-weight:700;color:#15803d;margin-bottom:10px;letter-spacing:1px;\">YOUR QR CODE</div>" +
-            "<img src=\"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + java.net.URLEncoder.encode(qrString, java.nio.charset.StandardCharsets.UTF_8) + "\" " +
-            "alt=\"QR Code\" width=\"200\" height=\"200\" style=\"display:block;margin:0 auto;border-radius:8px;\" />" +
+            "<div style=\"background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;text-align:center;margin-bottom:16px;\">" +
+            "<div style=\"font-size:12px;font-weight:700;color:#374151;margin-bottom:12px;letter-spacing:1px;\">YOUR QR CODE</div>" +
+            "<img src=\"https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=20&data=" + java.net.URLEncoder.encode(qrString, java.nio.charset.StandardCharsets.UTF_8) + "\" " +
+            "alt=\"QR Code\" width=\"200\" height=\"200\" style=\"display:block;margin:0 auto;\" />" +
             "</div>" +
-            "<div style=\"background:#eff6ff;border:2px solid #3b82f6;border-radius:12px;padding:14px;text-align:center;\">" +
-            "<div style=\"font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:6px;letter-spacing:1px;\">MANUAL ENTRY CODE</div>" +
+            "<div style=\"background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;text-align:center;\">" +
+            "<div style=\"font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;letter-spacing:1px;\">MANUAL ENTRY CODE</div>" +
             "<div style=\"font-size:32px;font-weight:900;letter-spacing:8px;color:#111827;\">" + safeManual + "</div>" +
             "</div>" +
             "<div style=\"font-size:13px;color:#6b7280;margin-top:16px;\">Show this email or the QR code at the RIT gate. The code expires at midnight on the event date.</div>" +
