@@ -162,18 +162,13 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
             <Ionicons name="arrow-back" size={22} color={theme.text} />
           </TouchableOpacity>
 
-          <View style={styles.headerTitleWrap}>
+          <View style={styles.headerTitleWrap} pointerEvents="none">
             <ThemedText style={[styles.headerTitle, { color: theme.text }]}>Notifications</ThemedText>
-            <ThemedText style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
-              Latest updates
-            </ThemedText>
           </View>
 
-          <View style={styles.headerActions}>
-            <TouchableOpacity onPress={clearAllNotifications} style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}>
-              <Ionicons name="trash-outline" size={20} color={theme.error} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity onPress={clearAllNotifications} style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}>
+            <Ionicons name="trash-outline" size={20} color={theme.error} />
+          </TouchableOpacity>
         </View>
       </View>
       <TopRefreshControl refreshing={refreshing} onRefresh={onRefresh} color={theme.primary} pullEnabled={true}>
@@ -238,11 +233,9 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: 12, fontSize: 16 },
   header: { paddingHorizontal: 18, paddingVertical: 18, borderBottomWidth: 1 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
-  headerTitleWrap: { flex: 1, paddingHorizontal: 4 },
-  headerActions: { flexDirection: 'row', gap: 10 },
-  headerTitle: { flex: 1, fontSize: 17, fontWeight: '900', textAlign: 'center', textTransform: 'uppercase', letterSpacing: -0.2 },
-  headerSubtitle: { fontSize: 13, marginTop: 2 },
+  iconButton: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+  headerTitleWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '900', textTransform: 'uppercase', letterSpacing: -0.2 },
   listContainer: { padding: 16, paddingBottom: 100 },
   notificationCard: {
     flexDirection: 'row',
