@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { theme } from '../theme';
 import { login } from '../services/api';
 import { ECUser } from '../types';
 
-interface Props {
-  onLogin: (user: ECUser) => void;
-}
+interface Props { onLogin: (user: ECUser) => void; }
 
-const DEMO_ACCOUNTS = [
-  { username: 'eventadmin', password: 'Event$2026', label: 'Event Administrator' },
+const DEMO = [
+  { username: 'eventadmin',  password: 'Event$2026',  label: 'Event Administrator' },
   { username: 'controller1', password: 'RITevents@1', label: 'Controller One' },
-  { username: 'evtmgr', password: 'Mgr#2026', label: 'Event Manager' },
+  { username: 'evtmgr',      password: 'Mgr#2026',    label: 'Event Manager' },
 ];
 
 export default function LoginPage({ onLogin }: Props) {
@@ -18,351 +15,321 @@ export default function LoginPage({ onLogin }: Props) {
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!username.trim() || !password.trim()) {
-      setError('Username and password are required.');
-      return;
-    }
+    if (!username.trim() || !password.trim()) { setError('Username and password are required.'); return; }
     setLoading(true);
     try {
       const { user } = await login(username.trim(), password);
       onLogin(user);
     } catch (err: any) {
-      setError(err.message || 'Login failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+      setError(err.message || 'Invalid username or password.');
+    } finally { setLoading(false); }
   };
-
-  const fillDemo = (u: string, p: string) => {
-    setUsername(u);
-    setPassword(p);
-    setError('');
-  };
-
-  const css = `
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; background: #f1f5f9; }
-
-    .login-root {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px;
-      background: linear-gradient(160deg, #e8edf5 0%, #f1f5f9 60%, #e2e8f0 100%);
-      font-family: ${theme.font.sans};
-    }
-
-    .login-card {
-      width: 100%;
-      max-width: 420px;
-      background: #fff;
-      border-radius: ${theme.radius.xl};
-      box-shadow: ${theme.shadow.lg};
-      overflow: hidden;
-    }
-
-    .login-header {
-      background: ${theme.color.brand};
-      padding: 32px 32px 28px;
-      text-align: center;
-    }
-
-    .login-logo-wrap {
-      width: 56px;
-      height: 56px;
-      background: rgba(255,255,255,0.12);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-    }
-
-    .login-logo-icon {
-      font-size: 26px;
-    }
-
-    .login-title {
-      font-size: 22px;
-      font-weight: 800;
-      color: #fff;
-      letter-spacing: -0.4px;
-      margin-bottom: 4px;
-    }
-
-    .login-subtitle {
-      font-size: 13px;
-      color: rgba(255,255,255,0.65);
-      font-weight: 500;
-    }
-
-    .login-body {
-      padding: 32px;
-    }
-
-    .login-label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: ${theme.color.ink};
-      margin-bottom: 6px;
-    }
-
-    .login-input-wrap {
-      position: relative;
-      margin-bottom: 16px;
-    }
-
-    .login-input {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1.5px solid ${theme.color.line};
-      border-radius: ${theme.radius.md};
-      font-size: 15px;
-      color: ${theme.color.ink};
-      background: ${theme.color.surfaceAlt};
-      outline: none;
-      transition: border-color 0.18s, box-shadow 0.18s;
-    }
-
-    .login-input:focus {
-      border-color: ${theme.color.brandLight};
-      box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
-      background: #fff;
-    }
-
-    .login-input.has-toggle {
-      padding-right: 44px;
-    }
-
-    .login-toggle {
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: ${theme.color.muted};
-      font-size: 18px;
-      padding: 2px 4px;
-      line-height: 1;
-    }
-
-    .login-error {
-      background: ${theme.color.dangerSoft};
-      border: 1px solid #fca5a5;
-      border-radius: ${theme.radius.md};
-      padding: 10px 14px;
-      font-size: 13.5px;
-      color: #b91c1c;
-      font-weight: 500;
-      margin-bottom: 16px;
-    }
-
-    .login-btn {
-      width: 100%;
-      padding: 14px;
-      background: ${theme.color.brand};
-      color: #fff;
-      border: none;
-      border-radius: ${theme.radius.md};
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.18s, transform 0.14s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .login-btn:hover:not(:disabled) {
-      background: ${theme.color.brandMid};
-      transform: translateY(-1px);
-    }
-
-    .login-btn:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
-    }
-
-    .login-spinner {
-      width: 18px;
-      height: 18px;
-      border: 2.5px solid rgba(255,255,255,0.35);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .demo-section {
-      margin-top: 28px;
-      padding-top: 24px;
-      border-top: 1px solid ${theme.color.line};
-    }
-
-    .demo-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: ${theme.color.muted};
-      letter-spacing: 0.7px;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .demo-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .demo-btn {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      background: ${theme.color.surfaceSunken};
-      border: 1px solid ${theme.color.line};
-      border-radius: ${theme.radius.md};
-      cursor: pointer;
-      transition: border-color 0.16s, background 0.16s;
-      text-align: left;
-    }
-
-    .demo-btn:hover {
-      border-color: ${theme.color.brandLight};
-      background: ${theme.color.brandSoft};
-    }
-
-    .demo-btn-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: ${theme.color.ink};
-    }
-
-    .demo-btn-cred {
-      font-size: 12px;
-      color: ${theme.color.muted};
-      margin-top: 1px;
-    }
-
-    .demo-btn-use {
-      font-size: 11.5px;
-      font-weight: 600;
-      color: ${theme.color.brandLight};
-      white-space: nowrap;
-      margin-left: 10px;
-    }
-
-    .login-footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 12px;
-      color: ${theme.color.muted};
-    }
-  `;
 
   return (
-    <div className="login-root">
-      <style>{css}</style>
-
-      <div className="login-card fade-in">
-        {/* Header */}
-        <div className="login-header">
-          <div className="login-logo-wrap">
-            <span className="login-logo-icon">🎫</span>
-          </div>
-          <div className="login-title">Event Controller</div>
-          <div className="login-subtitle">RIT Gate · Event Management Portal</div>
+    <div style={S.root}>
+      {/* ── Logo / hero ── */}
+      <div style={S.hero}>
+        <div style={S.logoWrap}>
+          <span style={{ fontSize: 40 }}>🎫</span>
         </div>
+        <h1 style={S.mainTitle}>RIT GATE</h1>
+        <p style={S.heroSub}>EVENT CONTROLLER PORTAL</p>
+        <div style={S.pillRow}>
+          {['🗓 Events', '👥 Coordinators', '🎟 Passes'].map(t => (
+            <span key={t} style={S.pill}>{t}</span>
+          ))}
+        </div>
+      </div>
 
-        {/* Body */}
-        <div className="login-body">
-          <form onSubmit={handleSubmit} noValidate>
-            {/* Username */}
-            <label className="login-label" htmlFor="username">Username</label>
-            <div className="login-input-wrap">
-              <input
-                id="username"
-                className="login-input"
-                type="text"
-                autoComplete="username"
-                placeholder="e.g. eventadmin"
-                value={username}
-                onChange={e => { setUsername(e.target.value); setError(''); }}
-                disabled={loading}
-              />
-            </div>
+      {/* ── Login card ── */}
+      <div style={S.card}>
+        <h2 style={S.cardTitle}>Welcome Back</h2>
+        <p style={S.cardSub}>Sign in with your Event Controller credentials.</p>
 
-            {/* Password */}
-            <label className="login-label" htmlFor="password">Password</label>
-            <div className="login-input-wrap">
-              <input
-                id="password"
-                className="login-input has-toggle"
-                type={showPwd ? 'text' : 'password'}
-                autoComplete="current-password"
-                placeholder="Enter password"
-                value={password}
-                onChange={e => { setPassword(e.target.value); setError(''); }}
-                disabled={loading}
-              />
-              <button
-                type="button"
-                className="login-toggle"
-                onClick={() => setShowPwd(v => !v)}
-                tabIndex={-1}
-                aria-label={showPwd ? 'Hide password' : 'Show password'}
-              >
-                {showPwd ? '🙈' : '👁'}
-              </button>
-            </div>
+        <form onSubmit={submit} noValidate>
+          {/* Username */}
+          <label style={S.label}>USERNAME</label>
+          <input
+            style={S.input}
+            type="text"
+            placeholder="e.g. eventadmin"
+            autoComplete="username"
+            value={username}
+            onChange={e => { setUsername(e.target.value); setError(''); }}
+            disabled={loading}
+          />
 
-            {/* Error */}
-            {error && <div className="login-error" role="alert">{error}</div>}
-
-            {/* Submit */}
-            <button className="login-btn" type="submit" disabled={loading}>
-              {loading ? <><div className="login-spinner" />Signing in…</> : 'Sign in →'}
+          {/* Password */}
+          <label style={{ ...S.label, marginTop: 16 }}>PASSWORD</label>
+          <div style={{ position: 'relative' }}>
+            <input
+              style={{ ...S.input, paddingRight: 48 }}
+              type={showPwd ? 'text' : 'password'}
+              placeholder="Enter password"
+              autoComplete="current-password"
+              value={password}
+              onChange={e => { setPassword(e.target.value); setError(''); }}
+              disabled={loading}
+            />
+            <button type="button" style={S.eyeBtn}
+              onClick={() => setShowPwd(v => !v)} tabIndex={-1}
+              aria-label={showPwd ? 'Hide' : 'Show'}>
+              {showPwd ? '🙈' : '👁'}
             </button>
-          </form>
-
-          {/* Demo accounts */}
-          <div className="demo-section">
-            <div className="demo-title">Demo accounts</div>
-            <div className="demo-list">
-              {DEMO_ACCOUNTS.map(a => (
-                <button
-                  key={a.username}
-                  className="demo-btn"
-                  type="button"
-                  onClick={() => fillDemo(a.username, a.password)}
-                >
-                  <div>
-                    <div className="demo-btn-name">{a.label}</div>
-                    <div className="demo-btn-cred">{a.username} / {a.password}</div>
-                  </div>
-                  <span className="demo-btn-use">Use →</span>
-                </button>
-              ))}
-            </div>
           </div>
+
+          {/* Error */}
+          {error && <div style={S.errorBox}>{error}</div>}
+
+          {/* Submit */}
+          <button type="submit" style={{ ...S.btn, opacity: loading ? 0.7 : 1 }} disabled={loading}>
+            {loading
+              ? <span style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
+                  <span style={S.spinner} />Signing in…
+                </span>
+              : 'Continue'}
+          </button>
+        </form>
+
+        {/* Demo accounts */}
+        <div style={S.divRow}>
+          <div style={S.divLine} /><span style={S.divText}>DEMO ACCOUNTS</span><div style={S.divLine} />
         </div>
+        {DEMO.map(a => (
+          <button key={a.username} type="button" style={S.demoRow}
+            onClick={() => { setUsername(a.username); setPassword(a.password); setError(''); }}>
+            <div style={S.demoIconWrap}><span style={{ fontSize: 18 }}>👤</span></div>
+            <div style={{ flex: 1, textAlign: 'left' }}>
+              <div style={S.demoName}>{a.label}</div>
+              <div style={S.demoCred}>{a.username} · {a.password}</div>
+            </div>
+            <span style={S.demoArrow}>›</span>
+          </button>
+        ))}
       </div>
 
-      <div className="login-footer" style={{ marginTop: 20 }}>
-        © 2026 Rajalakshmi Institute of Technology
-      </div>
+      <p style={S.footer}>© 2026 Rajalakshmi Institute of Technology</p>
     </div>
   );
 }
+
+/* ── Styles (mirrors app exactly) ───────────────────────────────────────────── */
+const S: Record<string, React.CSSProperties> = {
+  root: {
+    minHeight: '100vh',
+    backgroundColor: '#FFFFFF',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '24px 20px 48px',
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  },
+  hero: {
+    width: '100%',
+    maxWidth: 420,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    paddingTop: 32,
+    marginBottom: 20,
+  },
+  logoWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#F1F5F9',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  mainTitle: {
+    fontSize: 36,
+    fontWeight: 900,
+    color: '#000000',
+    letterSpacing: 2,
+    margin: 0,
+  },
+  heroSub: {
+    fontSize: 11,
+    color: '#000000',
+    letterSpacing: 1.5,
+    marginTop: 6,
+    marginBottom: 14,
+    fontWeight: 700,
+  },
+  pillRow: {
+    display: 'flex',
+    gap: 8,
+    flexWrap: 'wrap' as const,
+    justifyContent: 'center',
+  },
+  pill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F1F5F9',
+    border: '1px solid #E2E8F0',
+    borderRadius: 999,
+    padding: '6px 12px',
+    fontSize: 11,
+    fontWeight: 700,
+    color: '#000000',
+  },
+  card: {
+    width: '100%',
+    maxWidth: 420,
+    backgroundColor: '#FFFFFF',
+    border: '1px solid #E2E8F0',
+    borderRadius: 24,
+    padding: 22,
+    boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+  },
+  cardTitle: {
+    fontSize: 24,
+    fontWeight: 800,
+    color: '#000000',
+    margin: '0 0 4px',
+  },
+  cardSub: {
+    fontSize: 13,
+    color: '#64748B',
+    margin: '0 0 22px',
+  },
+  label: {
+    display: 'block',
+    fontSize: 11,
+    fontWeight: 800,
+    color: '#000000',
+    letterSpacing: 1,
+    marginBottom: 8,
+  },
+  input: {
+    display: 'block',
+    width: '100%',
+    height: 56,
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
+    borderRadius: 16,
+    padding: '0 16px',
+    fontSize: 16,
+    color: '#000000',
+    outline: 'none',
+    transition: 'border-color 0.15s, box-shadow 0.15s',
+  },
+  eyeBtn: {
+    position: 'absolute',
+    right: 14,
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: 18,
+    padding: '2px 4px',
+    lineHeight: 1,
+    color: '#94A3B8',
+  },
+  errorBox: {
+    marginTop: 14,
+    backgroundColor: '#FEF2F2',
+    border: '1px solid #FCA5A5',
+    borderRadius: 12,
+    padding: '10px 14px',
+    fontSize: 13.5,
+    color: '#B91C1C',
+    fontWeight: 500,
+  },
+  btn: {
+    display: 'block',
+    width: '100%',
+    height: 58,
+    backgroundColor: '#1E293B',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: 16,
+    fontSize: 17,
+    fontWeight: 700,
+    marginTop: 20,
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+    transition: 'opacity 0.15s',
+  },
+  spinner: {
+    display: 'inline-block',
+    width: 18,
+    height: 18,
+    border: '2.5px solid rgba(255,255,255,0.3)',
+    borderTopColor: '#fff',
+    borderRadius: '50%',
+    animation: 'spin 0.7s linear infinite',
+  },
+  divRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    margin: '28px 0 16px',
+  },
+  divLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E2E8F0',
+  },
+  divText: {
+    fontSize: 11,
+    fontWeight: 700,
+    color: '#000000',
+    letterSpacing: 1,
+    whiteSpace: 'nowrap' as const,
+  },
+  demoRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 14,
+    width: '100%',
+    padding: '13px 14px',
+    backgroundColor: '#F8FAFC',
+    border: '1px solid #E2E8F0',
+    borderRadius: 16,
+    cursor: 'pointer',
+    marginBottom: 10,
+    transition: 'background 0.15s',
+  },
+  demoIconWrap: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#FFFFFF',
+    border: '1px solid #E2E8F0',
+    borderRadius: 12,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  demoName: {
+    fontSize: 15,
+    fontWeight: 700,
+    color: '#000000',
+  },
+  demoCred: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  demoArrow: {
+    fontSize: 22,
+    color: '#CBD5E1',
+    flexShrink: 0,
+  },
+  footer: {
+    marginTop: 28,
+    fontSize: 12,
+    color: '#94A3B8',
+    textAlign: 'center' as const,
+  },
+};
