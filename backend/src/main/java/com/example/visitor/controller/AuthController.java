@@ -1277,6 +1277,62 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    // ============================================
+    // EVENT CONTROLLER AUTHENTICATION
+    // (username + password, no OTP — portal-only role)
+    // ============================================
+
+    /**
+     * Demo accounts for the Event Controller portal.
+     * In production replace with a proper DB table or env-var secrets.
+     */
+    private static final Map<String, String[]> EVENT_CONTROLLER_ACCOUNTS = Map.of(
+        "eventadmin",  new String[]{"Event$2026", "Event Administrator", "eventadmin@ritchennai.edu.in"},
+        "controller1", new String[]{"RITevents@1", "Controller One",     "controller1@ritchennai.edu.in"},
+        "evtmgr",      new String[]{"Mgr#2026",   "Event Manager",       "evtmgr@ritchennai.edu.in"}
+    );
+
+    @PostMapping("/event-controller/login")
+    public ResponseEntity<?> eventControllerLogin(@RequestBody Map<String, String> request) {
+        try {
+            String username = request.get("username");
+            String password = request.get("password");
+
+            if (username == null || username.isBlank() || password == null || password.isBlank()) {
+                return ResponseEntity.badRequest().body(createErrorResponse("Username and password are required"));
+            }
+
+            String[] account = EVENT_CONTROLLER_ACCOUNTS.get(username.trim().toLowerCase());
+            if (account == null || !account[0].equals(password)) {
+                logAuthEvent(username, "EVENT_CONTROLLER", "LOGIN", "FAILED", "Invalid credentials");
+                return ResponseEntity.status(401).body(createErrorResponse("Invalid username or password"));
+            }
+
+            String displayName = account[1];
+            String email       = account[2];
+
+            logAuthEvent(username, "EVENT_CONTROLLER", "LOGIN", "SUCCESS", "Portal login");
+            System.out.println("✅ Event Controller logged in: " + username + " (" + displayName + ")");
+
+            Map<String, Object> user = new HashMap<>();
+            user.put("username",    username);
+            user.put("displayName", displayName);
+            user.put("email",       email);
+            user.put("role",        "EVENT_CONTROLLER");
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Login successful");
+            response.put("user",    user);
+            response.put("token",   jwtService.issue(username, "EVENT_CONTROLLER"));
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("Event controller login error", e);
+            return ResponseEntity.internalServerError().body(createErrorResponse("Login failed"));
+        }
+    }
+
     /**
      * Normalize a name for HOD comparison:
      *  - Strip honorary titles (Dr., Prof., Mr., Mrs., Ms.)

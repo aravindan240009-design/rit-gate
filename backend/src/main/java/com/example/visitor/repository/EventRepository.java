@@ -10,4 +10,5 @@ import java.util.List;
 public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByCreatedByHodOrderByCreatedAtDesc(String hodCode);
     List<Event> findByStatusOrderByCreatedAtDesc(String status);
+    List<Event> findAllByOrderByCreatedAtDesc();
 }

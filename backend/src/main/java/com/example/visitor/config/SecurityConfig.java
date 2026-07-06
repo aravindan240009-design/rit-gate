@@ -85,7 +85,7 @@ public class SecurityConfig {
                 // ---- Everything else: any authenticated REAL user ----
                 // Listed explicitly (not bare authenticated()) so the scoped VISITOR_PORTAL
                 // token is contained to only the picker endpoints whitelisted above.
-                .anyRequest().hasAnyRole("STUDENT", "STAFF", "HOD", "HR", "SECURITY", "ADMIN")
+                .anyRequest().hasAnyRole("STUDENT", "STAFF", "HOD", "HR", "SECURITY", "ADMIN", "EVENT_CONTROLLER")
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

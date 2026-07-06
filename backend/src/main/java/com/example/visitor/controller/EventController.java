@@ -84,6 +84,22 @@ public class EventController {
         }
     }
 
+    // ── Event Controller: List ALL events ─────────────────────────────────────
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllEvents() {
+        try {
+            List<Event> events = eventService.getAllEvents();
+            return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "events", events.stream().map(this::eventToMap).collect(Collectors.toList())
+            ));
+        } catch (Exception e) {
+            log.error("Error fetching all events", e);
+            return serverError("Failed to fetch events: " + ErrorMessages.userFriendly(e));
+        }
+    }
+
     // ── HOD: Assign coordinators ───────────────────────────────────────────────
 
     @PostMapping("/{eventId}/coordinators")

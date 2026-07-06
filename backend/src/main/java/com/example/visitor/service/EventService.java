@@ -53,6 +53,12 @@ public class EventService {
             .collect(Collectors.toList());
     }
 
+    public List<Event> getAllEvents() {
+        return eventRepository.findAllByOrderByCreatedAtDesc().stream()
+            .filter(EventService::isNotPast)
+            .collect(Collectors.toList());
+    }
+
     /** An event is shown until the end of its event date; once the date has passed it is hidden. */
     private static boolean isNotPast(Event event) {
         LocalDate eventDate = event.getEventDate();
@@ -125,8 +131,11 @@ public class EventService {
     @Transactional
     public void deleteEvent(Long eventId, String hodCode) {
         Event event = getEvent(eventId);
-        if (!event.getCreatedByHod().equals(hodCode)) {
-            throw new IllegalStateException("Only the creating HOD can delete this event.");
+        boolean isOwner = event.getCreatedByHod().equals(hodCode);
+        boolean isEventController = hodCode != null && hodCode.matches("[a-z0-9_]+")
+            && !hodCode.toUpperCase().startsWith("HOD");
+        if (!isOwner && !isEventController) {
+            throw new IllegalStateException("Only the creating HOD or an Event Controller can delete this event.");
         }
 
         List<EventCoordinator> coordinators = eventCoordinatorRepository.findByEventId(eventId);
@@ -150,8 +159,11 @@ public class EventService {
     @Transactional
     public Event completeEvent(Long eventId, String hodCode) {
         Event event = getEvent(eventId);
-        if (!event.getCreatedByHod().equals(hodCode)) {
-            throw new IllegalStateException("Only the creating HOD can complete this event.");
+        boolean isOwner = event.getCreatedByHod().equals(hodCode);
+        boolean isEventController = hodCode != null && hodCode.matches("[a-z0-9_]+")
+            && !hodCode.toUpperCase().startsWith("HOD");
+        if (!isOwner && !isEventController) {
+            throw new IllegalStateException("Only the creating HOD or an Event Controller can complete this event.");
         }
         event.setStatus("COMPLETED");
         return eventRepository.save(event);
