@@ -16,28 +16,38 @@ const CHANNEL_NAME = 'RIT Gate Notifications';
 
 let channelCreated = false;
 
-/** Create the notification channel once (Android 8+). */
+/** Create the notification channels once (Android 8+). */
 export async function ensureChannel() {
   if (channelCreated) return;
-  // Delete existing channel first so settings update takes effect
-  // (Android channels are immutable after creation — delete forces recreation)
+
+  // Main visible channel — used by notifee to display real notifications
   try { await notifee.deleteChannel(CHANNEL_ID); } catch {}
   await notifee.createChannel({
     id: CHANNEL_ID,
     name: CHANNEL_NAME,
     importance: AndroidImportance.HIGH,
     visibility: AndroidVisibility.PUBLIC,
-    // Sound — plays in normal mode, silent in DND/silent (Android handles this automatically)
     sound: 'default',
-    // Vibration — plays in vibration mode and normal mode
     vibration: true,
-    vibrationPattern: [300, 500], // off 300ms, on 500ms — must be even number of positive values
-    // Wake screen on notification arrival
+    vibrationPattern: [300, 500],
     lights: true,
     lightColor: AndroidColor.RED,
-    // Do NOT bypass DND — respect silent mode
     bypassDnd: false,
   });
+
+  // Silent delivery channel — FCM notification block references this so the
+  // system renders nothing visible; notifee background handler shows the real one.
+  try { await notifee.deleteChannel('ritgate_silent'); } catch {}
+  await notifee.createChannel({
+    id: 'ritgate_silent',
+    name: 'RIT Gate Silent Delivery',
+    importance: AndroidImportance.NONE,   // no heads-up, no sound, no vibration
+    visibility: AndroidVisibility.SECRET,  // hidden on lock screen
+    sound: undefined,
+    vibration: false,
+    bypassDnd: false,
+  });
+
   channelCreated = true;
 }
 

@@ -168,8 +168,8 @@ export async function unregisterPushToken(): Promise<void> {
  */
 export function setupFCMForegroundHandler(): () => void {
   const unsub = messaging().onMessage(async (remoteMessage) => {
-    const title = remoteMessage.notification?.title || remoteMessage.data?.title as string || 'RIT Gate';
-    const body  = remoteMessage.notification?.body  || remoteMessage.data?.body  as string || '';
+    const title = remoteMessage.data?.title as string || remoteMessage.notification?.title || 'RIT Gate';
+    const body  = remoteMessage.data?.body  as string || remoteMessage.notification?.body  || '';
     const actionRoute = remoteMessage.data?.actionRoute as string | undefined;
     const dbNotifId = remoteMessage.data?.notificationId as string | undefined;
 
@@ -235,23 +235,29 @@ export async function handleInitialNotification(
  */
 export function registerBackgroundHandler(): void {
   messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-    const title = remoteMessage.notification?.title || remoteMessage.data?.title as string || 'RIT Gate';
-    const body  = remoteMessage.notification?.body  || remoteMessage.data?.body  as string || '';
+    const title = remoteMessage.data?.title as string || remoteMessage.notification?.title || 'RIT Gate';
+    const body  = remoteMessage.data?.body  as string || remoteMessage.notification?.body  || '';
     const actionRoute = remoteMessage.data?.actionRoute as string | undefined;
     const dbNotifId = remoteMessage.data?.notificationId as string | undefined;
     const displayId = dbNotifId || remoteMessage.messageId || String(Date.now());
+
+    // Cancel the silent FCM-delivered notification immediately (it has tag 'silent_delivery')
+    // so the system-rendered blank one never shows to the user
+    try {
+      const notifeeLib = require('@notifee/react-native').default;
+      await notifeeLib.cancelNotification('silent_delivery');
+    } catch {}
 
     // Track in shared shown set so polling won't re-show as a banner
     if (dbNotifId) {
       const numericId = parseInt(dbNotifId, 10);
       if (!isNaN(numericId)) {
         await addToShownIds(numericId);
-        // Send delivery receipt to backend
         sendDeliveryReceipt(numericId).catch(() => {});
       }
     }
 
-    // Show via notifee in background/killed state
+    // Show the real notification via notifee
     await showLocalNotification(displayId, title, body, {
       actionRoute: actionRoute || '',
       notificationId: displayId,

@@ -108,9 +108,11 @@ public class PushNotificationService {
                 : String.format(",\"data\":{\"title\":\"%s\",\"body\":\"%s\"%s}",
                     escapeJson(title), escapeJson(body), nidField);
 
-            // Send DATA payload only and let the app render via notifee on all app states.
-            // This gives one consistent code path (foreground/background/killed) and allows
-            // Android wake-screen flags (lightUpScreen) to be applied uniformly.
+            // Strategy: send BOTH a notification block AND data block.
+            // The notification block guarantees high-priority delivery even when the app
+            // is killed (data-only messages are throttled/dropped on killed apps).
+            // We suppress the system-rendered notification (PRIORITY_MIN + visibility SECRET)
+            // so it's invisible — notifee renders the real notification in the background handler.
             String json = String.format(
                 "{\"message\":{" +
                 "\"token\":\"%s\"," +
@@ -119,21 +121,17 @@ public class PushNotificationService {
                 "  \"ttl\":\"86400s\"," +
                 "  \"direct_boot_ok\":true," +
                 "  \"notification\":{" +
-                "    \"channel_id\":\"ritgate_main\"," +
-                "    \"sound\":\"default\"," +
-                "    \"notification_priority\":\"PRIORITY_MAX\"," +
-                "    \"visibility\":\"PUBLIC\"," +
-                "    \"vibrate_timings\":[\"0s\",\"0.25s\",\"0.25s\",\"0.25s\"]," +
+                "    \"channel_id\":\"ritgate_silent\"," +
+                "    \"notification_priority\":\"PRIORITY_MIN\"," +
+                "    \"visibility\":\"SECRET\"," +
+                "    \"default_sound\":false," +
                 "    \"default_vibrate_timings\":false," +
-                "    \"default_sound\":true," +
-                "    \"default_light_settings\":true," +
-                "    \"tag\":\"%s\"" +
+                "    \"tag\":\"silent_delivery\"" +
                 "  }" +
                 "}" +
                 "%s" +
                 "}}",
                 fcmToken,
-                notificationId != null ? String.valueOf(notificationId) : "ritgate",
                 dataJson
             );
 

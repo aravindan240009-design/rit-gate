@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { API_CONFIG } from '../../config/api.config';
+import { getToken } from '../../services/authToken';
 import { useTheme } from '../../context/ThemeContext';
 import ThemedText from '../../components/ThemedText';
 import ScreenContentContainer from '../../components/ScreenContentContainer';
@@ -43,6 +44,14 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const authHeaders = () => {
+    const token = getToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  };
+
   const isRecent = (value?: string) => {
     if (!value) return false;
     return isWithinLast24HoursLocal(value);
@@ -50,12 +59,14 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/notifications/${userType}/${userId}`);
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}/notifications/${userType}/${userId}`,
+        { headers: authHeaders() }
+      );
       const data = await response.json();
-      
+
       if (data.success && data.notifications) {
         const latest = data.notifications as Notification[];
-        // Only show unread notifications (read ones are dismissed)
         const unread = latest.filter((n) => !n.isRead && isRecent(n.timestamp || n.createdAt));
         setNotifications(unread.slice(0, 20));
       }
@@ -69,8 +80,10 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
 
   const markAsRead = async (notificationId: number) => {
     try {
-      await fetch(`${API_CONFIG.BASE_URL}/notifications/${notificationId}/read`, { method: 'PUT' });
-      // Remove from list so it doesn't reappear
+      await fetch(
+        `${API_CONFIG.BASE_URL}/notifications/${notificationId}/read`,
+        { method: 'PUT', headers: authHeaders() }
+      );
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -79,7 +92,10 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
 
   const markAllAsRead = async () => {
     try {
-      await fetch(`${API_CONFIG.BASE_URL}/notifications/user/${userId}/read-all`, { method: 'PUT' });
+      await fetch(
+        `${API_CONFIG.BASE_URL}/notifications/user/${userId}/read-all`,
+        { method: 'PUT', headers: authHeaders() }
+      );
       setNotifications([]);
     } catch (error) {
       console.error('Error marking all as read:', error);
@@ -88,8 +104,10 @@ export default function NotificationsScreen({ userId, userType, onBack }: Notifi
 
   const clearAllNotifications = async () => {
     try {
-      // Delete all notifications from backend
-      await fetch(`${API_CONFIG.BASE_URL}/notifications/user/${userId}/delete-all`, { method: 'DELETE' });
+      await fetch(
+        `${API_CONFIG.BASE_URL}/notifications/user/${userId}/delete-all`,
+        { method: 'DELETE', headers: authHeaders() }
+      );
     } catch (error) {
       console.error('Error deleting notifications:', error);
     }
