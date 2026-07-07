@@ -17,40 +17,51 @@ interface Props {
   event: RITGateEvent;
   initialRows: EventPassRow[];
   onBack: () => void;
-  onConfirmed: (result: { total: number; issued: number; failed: number }) => void;
+  onConfirmed: (result: { total: number; issued: number; failed: number; skipped: number }) => void;
 }
 
+// ── client-side re-validation (within-batch duplicates only) ─────────────────
 const validateRow = (row: EventPassRow, allRows: EventPassRow[]): EventPassRow => {
+  // Don't re-validate rows the server already flagged as DB duplicates
+  if (row.duplicate) return row;
+
   const errors: string[] = [];
-  if (!row.fullName?.trim()) errors.push('full_name required');
+  if (!row.fullName?.trim())    errors.push('full_name required');
   if (!row.collegeName?.trim()) errors.push('college_name required');
-  if (!row.phone?.trim()) errors.push('phone required');
+  if (!row.phone?.trim())       errors.push('phone required');
   if (!row.email?.trim()) {
     errors.push('email required');
   } else if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(row.email.trim())) {
     errors.push('invalid email format');
   } else {
-    const dupes = allRows.filter(r => r.rowIndex !== row.rowIndex && r.email?.trim().toLowerCase() === row.email?.trim().toLowerCase());
-    if (dupes.length > 0) errors.push('duplicate email');
+    const dupes = allRows.filter(
+      r => !r.duplicate && r.rowIndex !== row.rowIndex &&
+           r.email?.trim().toLowerCase() === row.email?.trim().toLowerCase(),
+    );
+    if (dupes.length > 0) errors.push('duplicate email in this upload');
   }
   return { ...row, valid: errors.length === 0, errorMessage: errors.length > 0 ? errors.join('; ') : undefined };
 };
 
-const revalidateAll = (rows: EventPassRow[]): EventPassRow[] => rows.map(r => validateRow(r, rows));
+const revalidateAll = (rows: EventPassRow[]): EventPassRow[] =>
+  rows.map(r => validateRow(r, rows));
 
 const EventCsvPreviewScreen: React.FC<Props> = ({ staff, event, initialRows, onBack, onConfirmed }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const [rows, setRows] = useState<EventPassRow[]>(() => revalidateAll(initialRows));
+  const [rows, setRows]           = useState<EventPassRow[]>(() => revalidateAll(initialRows));
   const [confirming, setConfirming] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
-  const [editRow, setEditRow] = useState<EventPassRow | null>(null);
-  const [errorVisible, setErrorVisible] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [editRow, setEditRow]     = useState<EventPassRow | null>(null);
+  const [errorVisible, setErrorVisible]   = useState(false);
+  const [errorMessage, setErrorMessage]   = useState('');
+  const [showDupes, setShowDupes] = useState(false);
 
   const staffCode = staff.staffCode || (staff as any).staff_code || '';
-  const validCount = rows.filter(r => r.valid).length;
-  const invalidCount = rows.filter(r => !r.valid).length;
+
+  const validRows     = rows.filter(r => r.valid && !r.duplicate);
+  const invalidRows   = rows.filter(r => !r.valid && !r.duplicate);
+  const duplicateRows = rows.filter(r => r.duplicate);
 
   const deleteRow = useCallback((rowIndex: number) => {
     setRows(prev => revalidateAll(prev.filter(r => r.rowIndex !== rowIndex)));
@@ -63,13 +74,15 @@ const EventCsvPreviewScreen: React.FC<Props> = ({ staff, event, initialRows, onB
 
   const handleConfirm = async () => {
     setConfirmVisible(false);
-    if (invalidCount > 0) {
-      setErrorMessage(`Cannot confirm: ${invalidCount} invalid row${invalidCount > 1 ? 's' : ''} present. Please fix or remove them.`);
+    if (invalidRows.length > 0) {
+      setErrorMessage(
+        `Cannot confirm: ${invalidRows.length} invalid row${invalidRows.length > 1 ? 's' : ''} present. Fix or remove them.`,
+      );
       setErrorVisible(true);
       return;
     }
     setConfirming(true);
-    const res = await apiService.confirmEventCsvUpload(event.id, staffCode, rows.filter(r => r.valid));
+    const res = await apiService.confirmEventCsvUpload(event.id, staffCode, validRows);
     setConfirming(false);
     if (res.success && res.result) {
       onConfirmed(res.result as any);
@@ -79,16 +92,15 @@ const EventCsvPreviewScreen: React.FC<Props> = ({ staff, event, initialRows, onB
     }
   };
 
-  const renderItem = ({ item }: { item: EventPassRow }) => (
-    <View style={[
-      styles.rowCard,
-      { backgroundColor: item.valid ? theme.cardBackground : '#fef2f2', borderColor: item.valid ? theme.border : '#fca5a5' },
-    ]}>
+  const renderValid = ({ item }: { item: EventPassRow }) => (
+    <View style={[styles.rowCard, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}>
       <View style={styles.rowTop}>
         <View style={{ flex: 1 }}>
-          <ThemedText style={[styles.rowName, { color: item.valid ? theme.text : '#dc2626' }]}>{item.fullName || '—'}</ThemedText>
+          <ThemedText style={[styles.rowName, { color: theme.text }]}>{item.fullName || '—'}</ThemedText>
           <ThemedText style={[styles.rowSub, { color: theme.textSecondary }]}>{item.email || '—'}</ThemedText>
-          <ThemedText style={[styles.rowSub, { color: theme.textSecondary }]}>{item.collegeName || '—'} · {item.phone || '—'}</ThemedText>
+          <ThemedText style={[styles.rowSub, { color: theme.textSecondary }]}>
+            {item.collegeName || '—'} · {item.phone || '—'}
+          </ThemedText>
         </View>
         <View style={styles.rowActions}>
           <TouchableOpacity onPress={() => setEditRow({ ...item })} style={styles.actionBtn}>
@@ -99,7 +111,29 @@ const EventCsvPreviewScreen: React.FC<Props> = ({ staff, event, initialRows, onB
           </TouchableOpacity>
         </View>
       </View>
-      {!item.valid && item.errorMessage && (
+    </View>
+  );
+
+  const renderInvalid = ({ item }: { item: EventPassRow }) => (
+    <View style={[styles.rowCard, { backgroundColor: '#fef2f2', borderColor: '#fca5a5' }]}>
+      <View style={styles.rowTop}>
+        <View style={{ flex: 1 }}>
+          <ThemedText style={[styles.rowName, { color: '#dc2626' }]}>{item.fullName || '—'}</ThemedText>
+          <ThemedText style={[styles.rowSub, { color: theme.textSecondary }]}>{item.email || '—'}</ThemedText>
+          <ThemedText style={[styles.rowSub, { color: theme.textSecondary }]}>
+            {item.collegeName || '—'} · {item.phone || '—'}
+          </ThemedText>
+        </View>
+        <View style={styles.rowActions}>
+          <TouchableOpacity onPress={() => setEditRow({ ...item })} style={styles.actionBtn}>
+            <Ionicons name="pencil-outline" size={18} color={theme.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => deleteRow(item.rowIndex)} style={styles.actionBtn}>
+            <Ionicons name="trash-outline" size={18} color="#dc2626" />
+          </TouchableOpacity>
+        </View>
+      </View>
+      {item.errorMessage && (
         <View style={styles.errorRow}>
           <Ionicons name="alert-circle-outline" size={14} color="#dc2626" />
           <ThemedText style={styles.errorText}>{item.errorMessage}</ThemedText>
@@ -108,8 +142,27 @@ const EventCsvPreviewScreen: React.FC<Props> = ({ staff, event, initialRows, onB
     </View>
   );
 
+  const renderDuplicate = ({ item }: { item: EventPassRow }) => (
+    <View style={[styles.rowCard, { backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }]}>
+      <View style={styles.rowTop}>
+        <View style={{ flex: 1 }}>
+          <ThemedText style={[styles.rowName, { color: '#64748b' }]}>{item.fullName || '—'}</ThemedText>
+          <ThemedText style={[styles.rowSub, { color: '#94a3b8' }]}>{item.email || '—'}</ThemedText>
+          <ThemedText style={[styles.rowSub, { color: '#94a3b8' }]}>
+            {item.collegeName || '—'} · {item.phone || '—'}
+          </ThemedText>
+        </View>
+        <View style={[styles.dupeBadge]}>
+          <Ionicons name="checkmark-done-outline" size={12} color="#64748b" />
+          <ThemedText style={styles.dupeBadgeText}>Already issued</ThemedText>
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+      {/* Header */}
       <View style={[styles.header, { borderBottomColor: theme.border, paddingTop: insets.top > 0 ? 0 : 12 }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={theme.text} />
@@ -117,43 +170,83 @@ const EventCsvPreviewScreen: React.FC<Props> = ({ staff, event, initialRows, onB
         <ThemedText style={styles.headerTitle}>Preview Participants</ThemedText>
       </View>
 
+      {/* Summary bar */}
       <View style={[styles.summary, { backgroundColor: theme.cardBackground, borderBottomColor: theme.border }]}>
         <View style={styles.summaryItem}>
-          <ThemedText style={styles.summaryCount}>{rows.length}</ThemedText>
-          <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>Total</ThemedText>
+          <ThemedText style={styles.summaryCount}>{validRows.length}</ThemedText>
+          <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>New</ThemedText>
         </View>
         <View style={[styles.divider, { backgroundColor: theme.border }]} />
         <View style={styles.summaryItem}>
-          <ThemedText style={[styles.summaryCount, { color: '#16a34a' }]}>{validCount}</ThemedText>
-          <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>Valid</ThemedText>
-        </View>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <View style={styles.summaryItem}>
-          <ThemedText style={[styles.summaryCount, { color: invalidCount > 0 ? '#dc2626' : theme.textSecondary }]}>{invalidCount}</ThemedText>
+          <ThemedText style={[styles.summaryCount, { color: invalidRows.length > 0 ? '#dc2626' : theme.textSecondary }]}>
+            {invalidRows.length}
+          </ThemedText>
           <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>Invalid</ThemedText>
         </View>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <TouchableOpacity style={styles.summaryItem} onPress={() => setShowDupes(v => !v)}>
+          <ThemedText style={[styles.summaryCount, { color: '#64748b' }]}>{duplicateRows.length}</ThemedText>
+          <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
+            {showDupes ? 'Skip ▲' : 'Skipped ▼'}
+          </ThemedText>
+        </TouchableOpacity>
       </View>
 
       <FlatList
-        data={rows}
-        keyExtractor={(item) => item.rowIndex.toString()}
-        renderItem={renderItem}
+        data={[
+          // invalid first so they're easy to fix
+          ...invalidRows,
+          ...validRows,
+          ...(showDupes ? duplicateRows : []),
+        ]}
+        keyExtractor={item => `${item.rowIndex}-${item.duplicate ? 'd' : 'r'}`}
+        renderItem={({ item }) =>
+          item.duplicate
+            ? renderDuplicate({ item })
+            : item.valid
+              ? renderValid({ item })
+              : renderInvalid({ item })
+        }
         contentContainerStyle={styles.list}
         style={{ flex: 1 }}
+        ListHeaderComponent={
+          duplicateRows.length > 0 && !showDupes ? (
+            <TouchableOpacity
+              style={[styles.dupesBanner, { backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }]}
+              onPress={() => setShowDupes(true)}
+            >
+              <Ionicons name="checkmark-done-circle-outline" size={16} color="#64748b" />
+              <ThemedText style={styles.dupesBannerText}>
+                {duplicateRows.length} row{duplicateRows.length > 1 ? 's' : ''} already have passes — will be skipped. Tap to view.
+              </ThemedText>
+            </TouchableOpacity>
+          ) : null
+        }
       />
 
+      {/* Footer */}
       <View style={[styles.footer, { backgroundColor: theme.background, borderTopColor: theme.border }]}>
-        {invalidCount > 0 && (
-          <ThemedText style={styles.footerWarning}>Fix or remove {invalidCount} invalid row{invalidCount > 1 ? 's' : ''} before confirming.</ThemedText>
+        {invalidRows.length > 0 && (
+          <ThemedText style={styles.footerWarning}>
+            Fix or remove {invalidRows.length} invalid row{invalidRows.length > 1 ? 's' : ''} before confirming.
+          </ThemedText>
         )}
         <TouchableOpacity
-          style={[styles.confirmBtn, { backgroundColor: (confirming || invalidCount > 0) ? theme.textSecondary : '#16a34a' }]}
+          style={[styles.confirmBtn, {
+            backgroundColor: (confirming || invalidRows.length > 0 || validRows.length === 0)
+              ? theme.textSecondary : '#16a34a',
+          }]}
           onPress={() => setConfirmVisible(true)}
-          disabled={confirming || invalidCount > 0 || validCount === 0}
+          disabled={confirming || invalidRows.length > 0 || validRows.length === 0}
         >
           {confirming
             ? <ActivityIndicator color="#fff" size="small" />
-            : <ThemedText style={styles.confirmBtnText}>Confirm &amp; Issue {validCount} QR Pass{validCount !== 1 ? 'es' : ''}</ThemedText>}
+            : (
+              <ThemedText style={styles.confirmBtnText}>
+                Confirm &amp; Issue {validRows.length} QR Pass{validRows.length !== 1 ? 'es' : ''}
+                {duplicateRows.length > 0 ? ` · ${duplicateRows.length} skipped` : ''}
+              </ThemedText>
+            )}
         </TouchableOpacity>
       </View>
 
@@ -164,20 +257,24 @@ const EventCsvPreviewScreen: React.FC<Props> = ({ staff, event, initialRows, onB
             <ThemedText style={styles.editTitle}>Edit Row {editRow?.rowIndex}</ThemedText>
             <ScrollView contentContainerStyle={{ gap: 10 }}>
               {([
-                { key: 'fullName', label: 'Full Name *' },
-                { key: 'email', label: 'Email *' },
+                { key: 'fullName',    label: 'Full Name *' },
+                { key: 'email',       label: 'Email *' },
                 { key: 'collegeName', label: 'College Name *' },
-                { key: 'phone', label: 'Phone *' },
-                { key: 'studentId', label: 'Student ID' },
-                { key: 'department', label: 'Department' },
-                { key: 'course', label: 'Course' },
+                { key: 'phone',       label: 'Phone *' },
+                { key: 'studentId',   label: 'Student ID' },
+                { key: 'department',  label: 'Department' },
+                { key: 'course',      label: 'Course' },
               ] as { key: keyof EventPassRow; label: string }[]).map(({ key, label }) => (
                 <View key={key}>
                   <ThemedText style={[styles.editLabel, { color: theme.textSecondary }]}>{label}</ThemedText>
                   <TextInput
-                    style={[styles.editInput, { borderColor: theme.border, backgroundColor: theme.inputBackground, color: theme.text }]}
+                    style={[styles.editInput, {
+                      borderColor: theme.border,
+                      backgroundColor: theme.inputBackground,
+                      color: theme.text,
+                    }]}
                     value={(editRow?.[key] as string) || ''}
-                    onChangeText={(v) => setEditRow(prev => prev ? { ...prev, [key]: v } : prev)}
+                    onChangeText={v => setEditRow(prev => prev ? { ...prev, [key]: v } : prev)}
                     placeholder={label}
                     placeholderTextColor={theme.textSecondary}
                   />
@@ -185,7 +282,10 @@ const EventCsvPreviewScreen: React.FC<Props> = ({ staff, event, initialRows, onB
               ))}
             </ScrollView>
             <View style={styles.editActions}>
-              <TouchableOpacity onPress={() => setEditRow(null)} style={[styles.editCancelBtn, { borderColor: theme.border }]}>
+              <TouchableOpacity
+                onPress={() => setEditRow(null)}
+                style={[styles.editCancelBtn, { borderColor: theme.border }]}
+              >
                 <ThemedText>Cancel</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
@@ -202,7 +302,7 @@ const EventCsvPreviewScreen: React.FC<Props> = ({ staff, event, initialRows, onB
       <ConfirmationModal
         visible={confirmVisible}
         title="Confirm Upload"
-        message={`Issue QR passes and send emails to ${validCount} participants? This cannot be undone.`}
+        message={`Issue QR passes and send emails to ${validRows.length} participant${validRows.length !== 1 ? 's' : ''}?${duplicateRows.length > 0 ? ` (${duplicateRows.length} already-issued will be skipped)` : ''} This cannot be undone.`}
         onConfirm={handleConfirm}
         onCancel={() => setConfirmVisible(false)}
       />
@@ -228,8 +328,24 @@ const styles = StyleSheet.create({
   rowSub: { fontSize: 12, marginTop: 2 },
   rowActions: { flexDirection: 'row', gap: 4 },
   actionBtn: { padding: 6 },
-  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, paddingTop: 8, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#fca5a5' },
+  errorRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginTop: 8, paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#fca5a5',
+  },
   errorText: { fontSize: 12, color: '#dc2626', flex: 1 },
+  dupeBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 8, paddingVertical: 4,
+    borderRadius: 8, backgroundColor: '#e2e8f0',
+  },
+  dupeBadgeText: { fontSize: 10, fontWeight: '700', color: '#64748b' },
+  dupesBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginBottom: 10, padding: 12,
+    borderRadius: 10, borderWidth: 1,
+  },
+  dupesBannerText: { flex: 1, fontSize: 13, color: '#64748b' },
   footer: { padding: 16, borderTopWidth: 1, gap: 8 },
   footerWarning: { fontSize: 13, color: '#dc2626', textAlign: 'center' },
   confirmBtn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center' },

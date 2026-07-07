@@ -8,7 +8,7 @@ import ThemedText from '../../components/ThemedText';
 
 interface Props {
   event: RITGateEvent;
-  result: { total: number; issued: number; failed: number; errors?: any[] };
+  result: { total: number; issued: number; failed: number; skipped?: number; errors?: any[] };
   onDone: () => void;
 }
 
@@ -16,6 +16,7 @@ const StaffEventPassResultScreen: React.FC<Props> = ({ event, result, onDone }) 
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const allSuccess = result.failed === 0;
+  const skipped = result.skipped ?? 0;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
@@ -49,15 +50,35 @@ const StaffEventPassResultScreen: React.FC<Props> = ({ event, result, onDone }) 
             <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
             <View style={styles.statItem}>
               <ThemedText style={[styles.statCount, { color: '#16a34a' }]}>{result.issued}</ThemedText>
-              <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Emails Sent</ThemedText>
+              <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Issued</ThemedText>
             </View>
+            {skipped > 0 && (
+              <>
+                <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+                <View style={styles.statItem}>
+                  <ThemedText style={[styles.statCount, { color: '#64748b' }]}>{skipped}</ThemedText>
+                  <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Skipped</ThemedText>
+                </View>
+              </>
+            )}
             <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
             <View style={styles.statItem}>
-              <ThemedText style={[styles.statCount, { color: result.failed > 0 ? '#dc2626' : theme.textSecondary }]}>{result.failed}</ThemedText>
+              <ThemedText style={[styles.statCount, { color: result.failed > 0 ? '#dc2626' : theme.textSecondary }]}>
+                {result.failed}
+              </ThemedText>
               <ThemedText style={[styles.statLabel, { color: theme.textSecondary }]}>Failed</ThemedText>
             </View>
           </View>
         </View>
+
+        {skipped > 0 && (
+          <View style={[styles.skipCard, { backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }]}>
+            <Ionicons name="checkmark-done-circle-outline" size={16} color="#64748b" />
+            <ThemedText style={[styles.skipText, { color: '#64748b' }]}>
+              {skipped} participant{skipped > 1 ? 's' : ''} already had passes and were skipped.
+            </ThemedText>
+          </View>
+        )}
 
         {result.failed > 0 && (
           <View style={[styles.failCard, { backgroundColor: '#fef2f2', borderColor: '#fca5a5' }]}>
@@ -106,6 +127,8 @@ const styles = StyleSheet.create({
   statCount: { fontSize: 28, fontWeight: '800' },
   statLabel: { fontSize: 12, marginTop: 4 },
   statDivider: { width: 1, height: 44 },
+  skipCard: { flexDirection: 'row', alignItems: 'center', gap: 8, width: '100%', borderRadius: 12, padding: 14, borderWidth: 1 },
+  skipText: { flex: 1, fontSize: 13 },
   failCard: { width: '100%', borderRadius: 12, padding: 16, borderWidth: 1, gap: 8 },
   failTitle: { fontSize: 14, fontWeight: '700', color: '#dc2626', marginBottom: 4 },
   failRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },

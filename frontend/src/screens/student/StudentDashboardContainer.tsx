@@ -34,7 +34,7 @@ const StudentDashboardContainer: React.FC<StudentDashboardContainerProps> = ({
   const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'HOME');
   const [selectedEvent, setSelectedEvent] = useState<RITGateEvent | null>(null);
   const [previewRows, setPreviewRows] = useState<EventPassRow[]>([]);
-  const [uploadResult, setUploadResult] = useState<{ total: number; issued: number; failed: number; errors?: any[] } | null>(null);
+  const [uploadResult, setUploadResult] = useState<{ total: number; issued: number; failed: number; skipped?: number; errors?: any[] } | null>(null);
   const { loadNotifications } = useNotifications();
 
   // Adapter so the shared staff event screens can treat the student as a
@@ -94,6 +94,10 @@ const StudentDashboardContainer: React.FC<StudentDashboardContainerProps> = ({
           staff={studentAsStaff}
           event={selectedEvent}
           onBack={() => setActiveTab('EVENT_LIST')}
+          onSingleIssued={(result) => {
+            setUploadResult(result);
+            setActiveTab('EVENT_RESULT');
+          }}
           onPreview={(rows, event) => {
             setPreviewRows(rows);
             setSelectedEvent(event);

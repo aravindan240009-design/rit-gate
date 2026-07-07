@@ -191,29 +191,39 @@ public class EventController {
             }
             if (file == null || file.isEmpty()) return badRequest("No file uploaded.");
             String filename = file.getOriginalFilename();
-            if (filename == null || !filename.toLowerCase().endsWith(".csv")) {
-                return badRequest("Only .csv files are accepted.");
-            }
-            if (eventPassRepository.existsByEventId(eventId)) {
-                return badRequest("This event already has a confirmed CSV upload.");
+            if (filename == null) return badRequest("Filename is missing.");
+
+            // Support both .csv and .xlsx
+            List<EventPassRowDTO> rows;
+            if (filename.toLowerCase().endsWith(".csv")) {
+                rows = eventCsvService.parseCsv(file.getBytes());
+            } else if (filename.toLowerCase().endsWith(".xlsx")) {
+                rows = eventCsvService.parseExcel(file.getBytes());
+            } else {
+                return badRequest("Only .csv and .xlsx files are accepted.");
             }
 
-            List<EventPassRowDTO> rows = eventCsvService.parseCsv(file.getBytes());
-            long validCount   = rows.stream().filter(r -> r.valid).count();
-            long invalidCount = rows.stream().filter(r -> !r.valid).count();
+            // Validate within-file duplicates + check against DB
+            rows = eventCsvService.validateRows(rows);
+            rows = eventCsvService.markDbDuplicates(eventId, rows);
+
+            long validCount     = rows.stream().filter(r -> r.valid).count();
+            long invalidCount   = rows.stream().filter(r -> !r.valid && !r.duplicate).count();
+            long duplicateCount = rows.stream().filter(r -> r.duplicate).count();
 
             return ResponseEntity.ok(Map.of(
                 "status", "SUCCESS",
                 "rows", rows.stream().map(EventPassRowDTO::toMap).collect(Collectors.toList()),
                 "validCount", validCount,
                 "invalidCount", invalidCount,
+                "duplicateCount", duplicateCount,
                 "totalCount", rows.size()
             ));
         } catch (IllegalArgumentException e) {
             return badRequest(ErrorMessages.userFriendly(e));
         } catch (Exception e) {
-            log.error("Error previewing CSV for event {}", eventId, e);
-            return serverError("Failed to parse CSV: " + ErrorMessages.userFriendly(e));
+            log.error("Error previewing file for event {}", eventId, e);
+            return serverError("Failed to parse file: " + ErrorMessages.userFriendly(e));
         }
     }
 
@@ -236,11 +246,8 @@ public class EventController {
                     "message", "You are not an assigned coordinator for this event."
                 ));
             }
-            if (eventPassRepository.existsByEventId(eventId)) {
-                return badRequest("This event already has a confirmed CSV upload.");
-            }
 
-            // Map raw rows back to DTOs
+            // Map raw rows back to DTOs (duplicates are filtered out client-side)
             List<EventPassRowDTO> validRows = new ArrayList<>();
             for (Map<String, Object> raw : rawRows) {
                 EventPassRowDTO dto = new EventPassRowDTO();
@@ -279,6 +286,53 @@ public class EventController {
         } catch (Exception e) {
             log.error("Error confirming CSV upload for event {}", eventId, e);
             return serverError("Failed to confirm upload: " + ErrorMessages.userFriendly(e));
+        }
+    }
+
+    // ── Staff: Add a single participant manually ───────────────────────────────
+
+    @PostMapping("/{eventId}/passes/single")
+    public ResponseEntity<?> addSinglePass(@PathVariable Long eventId,
+                                           @RequestBody Map<String, Object> body) {
+        try {
+            String staffCode = Authz.selfId();
+            if (!eventService.isCoordinator(eventId, staffCode)) {
+                return ResponseEntity.status(403).body(Map.of(
+                    "status", "ERROR",
+                    "message", "You are not an assigned coordinator for this event."
+                ));
+            }
+
+            EventPassRowDTO row = new EventPassRowDTO();
+            row.rowIndex    = 1;
+            row.fullName    = str(body.get("fullName"));
+            row.email       = str(body.get("email"));
+            row.collegeName = str(body.get("collegeName"));
+            row.phone       = str(body.get("phone"));
+            row.studentId   = str(body.get("studentId"));
+            row.department  = str(body.get("department"));
+            row.course      = str(body.get("course"));
+            row.valid       = true;
+
+            // Validate format
+            List<EventPassRowDTO> singleList = eventCsvService.validateRows(List.of(row));
+            if (!singleList.get(0).valid) {
+                return badRequest("Validation failed: " + singleList.get(0).errorMessage);
+            }
+
+            Event event = eventService.getEvent(eventId);
+            Map<String, Object> result = eventCsvService.confirmSingle(event, row, staffCode);
+
+            return ResponseEntity.ok(Map.of(
+                "status", "SUCCESS",
+                "message", "Pass issued successfully.",
+                "result", result
+            ));
+        } catch (IllegalArgumentException e) {
+            return badRequest(ErrorMessages.userFriendly(e));
+        } catch (Exception e) {
+            log.error("Error adding single pass for event {}", eventId, e);
+            return serverError("Failed to add pass: " + ErrorMessages.userFriendly(e));
         }
     }
 

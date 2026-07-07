@@ -32,7 +32,7 @@ const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
   const [showPassSheet, setShowPassSheet] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<RITGateEvent | null>(null);
   const [previewRows, setPreviewRows] = useState<EventPassRow[]>([]);
-  const [uploadResult, setUploadResult] = useState<{ total: number; issued: number; failed: number; errors?: any[] } | null>(null);
+  const [uploadResult, setUploadResult] = useState<{ total: number; issued: number; failed: number; skipped?: number; errors?: any[] } | null>(null);
 
   // Adapter so the shared staff event screens can treat the HOD as a coordinator.
   // The HOD's coordinator identity is their hodCode (the Event Controller assigns
@@ -115,6 +115,10 @@ const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
           staff={hodAsStaff}
           event={selectedEvent}
           onBack={() => setActiveTab('EVENT_LIST')}
+          onSingleIssued={(result) => {
+            setUploadResult(result);
+            setActiveTab('EVENT_RESULT');
+          }}
           onPreview={(rows, event) => {
             setPreviewRows(rows);
             setSelectedEvent(event);

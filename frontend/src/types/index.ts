@@ -386,6 +386,7 @@ export interface EventPassRow {
   department?: string;
   course?: string;
   valid: boolean;
+  duplicate?: boolean;
   errorMessage?: string;
 }
 

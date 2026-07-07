@@ -983,10 +983,14 @@ class ApiService {
     } catch (e: any) { return { success: false, events: [], message: e.message }; }
   }
 
-  async uploadEventCsvPreview(eventId: number, staffCode: string, fileUri: string, fileName: string): Promise<{ success: boolean; rows?: any[]; validCount?: number; invalidCount?: number; totalCount?: number; message?: string }> {
+  async uploadEventCsvPreview(eventId: number, staffCode: string, fileUri: string, fileName: string): Promise<{ success: boolean; rows?: any[]; validCount?: number; invalidCount?: number; duplicateCount?: number; totalCount?: number; message?: string }> {
     try {
+      const nameLower = fileName.toLowerCase();
+      const mimeType = nameLower.endsWith('.xlsx')
+        ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        : 'text/csv';
       const formData = new FormData();
-      formData.append('file', { uri: fileUri, type: 'text/csv', name: fileName } as any);
+      formData.append('file', { uri: fileUri, type: mimeType, name: fileName } as any);
       formData.append('staffCode', staffCode);
       const url = `${this.baseURL}/events/${eventId}/csv/preview`;
       const uploadToken = getToken();
@@ -996,13 +1000,26 @@ class ApiService {
         headers: uploadToken ? { Authorization: `Bearer ${uploadToken}` } : undefined,
       });
       const data = await response.json();
-      return { success: data.status === 'SUCCESS', rows: data.rows, validCount: data.validCount, invalidCount: data.invalidCount, totalCount: data.totalCount, message: data.message };
+      return { success: data.status === 'SUCCESS', rows: data.rows, validCount: data.validCount, invalidCount: data.invalidCount, duplicateCount: data.duplicateCount, totalCount: data.totalCount, message: data.message };
     } catch (e: any) { return { success: false, message: e.message }; }
   }
 
   async confirmEventCsvUpload(eventId: number, staffCode: string, rows: any[]): Promise<{ success: boolean; result?: any; message?: string }> {
     try {
       const data = await this.makeRequest(`${this.baseURL}/events/${eventId}/csv/confirm`, { method: 'POST', body: JSON.stringify({ staffCode, rows }) });
+      return { success: data.status === 'SUCCESS', result: data.result, message: data.message };
+    } catch (e: any) { return { success: false, message: e.message }; }
+  }
+
+  async addSingleEventPass(eventId: number, participant: {
+    fullName: string; email: string; collegeName: string; phone: string;
+    studentId?: string; department?: string; course?: string;
+  }): Promise<{ success: boolean; result?: any; message?: string }> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/events/${eventId}/passes/single`, {
+        method: 'POST',
+        body: JSON.stringify(participant),
+      });
       return { success: data.status === 'SUCCESS', result: data.result, message: data.message };
     } catch (e: any) { return { success: false, message: e.message }; }
   }

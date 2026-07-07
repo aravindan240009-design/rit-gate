@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface EventPassRepository extends JpaRepository<EventPass, Long> {
@@ -21,5 +22,9 @@ public interface EventPassRepository extends JpaRepository<EventPass, Long> {
     List<EventPass> findEnteredPassesPastExpiry(LocalDateTime now);
 
     boolean existsByEventId(Long eventId);
+    boolean existsByEventIdAndEmail(Long eventId, String email);
     void deleteByEventId(Long eventId);
+
+    @Query("SELECT ep.email FROM EventPass ep WHERE ep.eventId = :eventId")
+    Set<String> findEmailsByEventId(Long eventId);
 }

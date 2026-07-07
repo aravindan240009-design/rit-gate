@@ -28,7 +28,7 @@ const StaffDashboardContainer: React.FC<StaffDashboardContainerProps> = ({
   const [showPassSheet, setShowPassSheet] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<RITGateEvent | null>(null);
   const [previewRows, setPreviewRows] = useState<EventPassRow[]>([]);
-  const [uploadResult, setUploadResult] = useState<{ total: number; issued: number; failed: number; errors?: any[] } | null>(null);
+  const [uploadResult, setUploadResult] = useState<{ total: number; issued: number; failed: number; skipped?: number; errors?: any[] } | null>(null);
 
   useEffect(() => {
     const onBack = () => {
@@ -101,6 +101,10 @@ const StaffDashboardContainer: React.FC<StaffDashboardContainerProps> = ({
           staff={staff}
           event={selectedEvent}
           onBack={() => setActiveTab('EVENT_LIST')}
+          onSingleIssued={(result) => {
+            setUploadResult(result);
+            setActiveTab('EVENT_RESULT');
+          }}
           onPreview={(rows, event) => {
             setPreviewRows(rows);
             setSelectedEvent(event);
