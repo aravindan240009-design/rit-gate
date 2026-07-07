@@ -53,10 +53,17 @@ export default function AssignCoordinatorsPage({ user, event, onBack }: Props) {
     if (!toAdd.length) return;
     setAssigning(true);
     try {
-      await assignCoordinators(event.id, toAdd, user.username);
-      setSelected(new Set()); await load();
-      showToast(`✅ ${toAdd.length} coordinator${toAdd.length>1?'s':''} assigned`);
-    } catch(e:any) { showToast('❌ '+(e.message||'Failed')); }
+      const { assigned, alreadyAssigned } = await assignCoordinators(event.id, toAdd, user.username);
+      setSelected(new Set());
+      await load();
+      if (assigned > 0 && alreadyAssigned > 0) {
+        showToast(`✅ ${assigned} assigned · ${alreadyAssigned} already assigned`);
+      } else if (assigned > 0) {
+        showToast(`✅ ${assigned} coordinator${assigned > 1 ? 's' : ''} assigned — notification sent`);
+      } else {
+        showToast(`ℹ️ All selected staff were already assigned`);
+      }
+    } catch(e:any) { showToast('❌ ' + (e.message || 'Failed to assign')); }
     finally { setAssigning(false); }
   };
 

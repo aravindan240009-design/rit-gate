@@ -100,14 +100,18 @@ export async function assignCoordinators(
   eventId: number,
   staffCodes: string[],
   byUser: string
-): Promise<void> {
+): Promise<{ assigned: number; alreadyAssigned: number }> {
   const res = await fetch(`${BASE}/events/${eventId}/coordinators`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ hodCode: byUser, staffCodes }),
+    body: JSON.stringify({ staffCodes }),
   });
   const data = await res.json();
   if (!res.ok || data.status === 'ERROR') throw new Error(data.message || 'Failed to assign coordinators');
+  const results: Array<{ staffCode: string; status: string }> = data.assigned ?? [];
+  const assigned = results.filter(r => r.status === 'ASSIGNED').length;
+  const alreadyAssigned = results.filter(r => r.status === 'ALREADY_ASSIGNED').length;
+  return { assigned, alreadyAssigned };
 }
 
 export async function removeCoordinator(eventId: number, staffCode: string): Promise<void> {
