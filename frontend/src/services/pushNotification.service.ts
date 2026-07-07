@@ -12,6 +12,7 @@ import { Platform } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../config/api.config';
+import { getToken } from './authToken';
 import { showLocalNotification, ensureChannel } from './localNotification.service';
 
 const PUSH_TOKEN_KEY = '@mygate_push_token';
@@ -89,32 +90,49 @@ export async function initPushNotifications(userId: string, userType: string): P
 
     const sessionKey = `${userId}:${token}`;
 
-    // Skip if already registered in this process lifetime
+    // Skip if already registered successfully in this process lifetime
     if (_registeredThisSession.has(sessionKey)) return;
 
-    await savePushTokenToBackend(userId, token);
-    await AsyncStorage.setItem(PUSH_TOKEN_KEY, sessionKey);
-    _registeredThisSession.add(sessionKey);
-    console.log('✅ FCM token registered for', userId);
+    const saved = await savePushTokenToBackend(userId, token);
+    if (saved) {
+      await AsyncStorage.setItem(PUSH_TOKEN_KEY, sessionKey);
+      _registeredThisSession.add(sessionKey);
+      console.log('✅ FCM token registered for', userId);
+    } else {
+      console.warn('⚠️ Push token registration failed for', userId, '— will retry next session');
+    }
   } catch (error) {
     console.warn('⚠️ Push init failed:', error);
   }
 }
 
-/** POST the FCM token to the backend. */
-export async function savePushTokenToBackend(userId: string, token: string): Promise<void> {
+/** POST the FCM token to the backend. Returns true on success. */
+export async function savePushTokenToBackend(userId: string, token: string): Promise<boolean> {
   try {
     const deviceType = Platform.OS === 'ios' ? 'IOS' : 'ANDROID';
+    const authToken = getToken();
+    if (!authToken) {
+      console.warn('⚠️ No auth token available — cannot register push token for', userId);
+      return false;
+    }
     const res = await fetch(`${API_CONFIG.BASE_URL}/notifications/push-token`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      },
       body: JSON.stringify({ userId, pushToken: token, deviceType }),
     });
     const data = await res.json();
-    if (data.success) console.log('✅ FCM token saved to backend');
-    else console.warn('⚠️ Backend rejected push token:', data.message);
+    if (data.success) {
+      console.log('✅ FCM token saved to backend for', userId);
+      return true;
+    }
+    console.warn('⚠️ Backend rejected push token:', data.message);
+    return false;
   } catch (error) {
     console.warn('⚠️ Failed to save FCM token to backend:', error);
+    return false;
   }
 }
 
