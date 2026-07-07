@@ -1,14 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, BackHandler } from 'react-native';
-import { HOD, ScreenName, RITGateEvent } from '../../types';
+import { HOD, Staff, ScreenName, RITGateEvent, EventPassRow } from '../../types';
 import NewHODDashboard from './NewHODDashboard';
 import HODMyRequestsScreen from './HODMyRequestsScreen';
 import ProfileScreen from '../shared/ProfileScreen';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import ScreenTransition from '../../components/navigation/ScreenTransition';
-import HODEventListScreen from './HODEventListScreen';
-import HODCreateEventScreen from './HODCreateEventScreen';
-import HODAssignCoordinatorsScreen from './HODAssignCoordinatorsScreen';
+// HODs are now upload-only coordinators, identical to teaching staff:
+// they see the events they've been assigned to and upload the participant CSV.
+// They can no longer create events or assign coordinators — only the Event
+// Controller (event-manager-portal) assigns coordinators.
+import StaffEventListScreen from '../staff/StaffEventListScreen';
+import EventCsvUploadScreen from '../staff/EventCsvUploadScreen';
+import EventCsvPreviewScreen from '../staff/EventCsvPreviewScreen';
+import StaffEventPassResultScreen from '../staff/StaffEventPassResultScreen';
 
 interface HODDashboardContainerProps {
   hod: HOD;
@@ -16,7 +21,7 @@ interface HODDashboardContainerProps {
   onNavigate: (screen: ScreenName) => void;
 }
 
-type InternalTab = 'DASHBOARD' | 'PROFILE' | 'MY_REQUESTS' | 'EVENT_LIST' | 'CREATE_EVENT' | 'ASSIGN_COORDINATORS';
+type InternalTab = 'DASHBOARD' | 'PROFILE' | 'MY_REQUESTS' | 'EVENT_LIST' | 'CSV_UPLOAD' | 'CSV_PREVIEW' | 'EVENT_RESULT';
 
 const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
   hod,
@@ -26,12 +31,24 @@ const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
   const [activeTab, setActiveTab] = useState<InternalTab>('DASHBOARD');
   const [showPassSheet, setShowPassSheet] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<RITGateEvent | null>(null);
+  const [previewRows, setPreviewRows] = useState<EventPassRow[]>([]);
+  const [uploadResult, setUploadResult] = useState<{ total: number; issued: number; failed: number; errors?: any[] } | null>(null);
+
+  // Adapter so the shared staff event screens can treat the HOD as a coordinator.
+  // The HOD's coordinator identity is their hodCode (the Event Controller assigns
+  // coordinators by code, and the upload endpoint gates on token identity === code).
+  const hodAsStaff = useMemo<Staff>(() => ({
+    ...(hod as any),
+    staffCode: hod.hodCode || (hod as any).hod_code || '',
+    staffName: hod.hodName || hod.name || '',
+  }), [hod]);
 
   useEffect(() => {
     const onBack = () => {
       if (showPassSheet) { setShowPassSheet(false); return true; }
-      if (activeTab === 'ASSIGN_COORDINATORS') { setActiveTab('EVENT_LIST'); return true; }
-      if (activeTab === 'CREATE_EVENT') { setActiveTab('EVENT_LIST'); return true; }
+      if (activeTab === 'CSV_PREVIEW') { setActiveTab('CSV_UPLOAD'); return true; }
+      if (activeTab === 'CSV_UPLOAD') { setActiveTab('EVENT_LIST'); return true; }
+      if (activeTab === 'EVENT_RESULT') { setActiveTab('EVENT_LIST'); return true; }
       if (activeTab === 'EVENT_LIST') { setActiveTab('DASHBOARD'); return true; }
       if (activeTab !== 'DASHBOARD') { setActiveTab('DASHBOARD'); return true; }
       return false;
@@ -81,33 +98,53 @@ const HODDashboardContainer: React.FC<HODDashboardContainerProps> = ({
       );
     }
 
+    // ── Events: upload-only flow, identical to teaching staff ──────────────────
     if (activeTab === 'EVENT_LIST') {
       return (
-        <HODEventListScreen
-          hod={hod}
+        <StaffEventListScreen
+          staff={hodAsStaff}
           onBack={() => setActiveTab('DASHBOARD')}
-          onCreateEvent={() => setActiveTab('CREATE_EVENT')}
-          onSelectEvent={(event) => { setSelectedEvent(event); setActiveTab('ASSIGN_COORDINATORS'); }}
+          onUploadCsv={(event) => { setSelectedEvent(event); setActiveTab('CSV_UPLOAD'); }}
         />
       );
     }
 
-    if (activeTab === 'CREATE_EVENT') {
+    if (activeTab === 'CSV_UPLOAD' && selectedEvent) {
       return (
-        <HODCreateEventScreen
-          hod={hod}
-          onBack={() => setActiveTab('EVENT_LIST')}
-          onCreated={() => setActiveTab('EVENT_LIST')}
-        />
-      );
-    }
-
-    if (activeTab === 'ASSIGN_COORDINATORS' && selectedEvent) {
-      return (
-        <HODAssignCoordinatorsScreen
-          hod={hod}
+        <EventCsvUploadScreen
+          staff={hodAsStaff}
           event={selectedEvent}
           onBack={() => setActiveTab('EVENT_LIST')}
+          onPreview={(rows, event) => {
+            setPreviewRows(rows);
+            setSelectedEvent(event);
+            setActiveTab('CSV_PREVIEW');
+          }}
+        />
+      );
+    }
+
+    if (activeTab === 'CSV_PREVIEW' && selectedEvent) {
+      return (
+        <EventCsvPreviewScreen
+          staff={hodAsStaff}
+          event={selectedEvent}
+          initialRows={previewRows}
+          onBack={() => setActiveTab('CSV_UPLOAD')}
+          onConfirmed={(result) => {
+            setUploadResult(result);
+            setActiveTab('EVENT_RESULT');
+          }}
+        />
+      );
+    }
+
+    if (activeTab === 'EVENT_RESULT' && selectedEvent && uploadResult) {
+      return (
+        <StaffEventPassResultScreen
+          event={selectedEvent}
+          result={uploadResult}
+          onDone={() => { setActiveTab('EVENT_LIST'); setUploadResult(null); }}
         />
       );
     }

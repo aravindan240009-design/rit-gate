@@ -744,7 +744,14 @@ const App: React.FC = () => {
     isLoggingOut.current = true;
     try {
       console.log('🚪 Logging out user...');
-      // Navigate immediately — don't wait for cleanup
+
+      // Unregister push token FIRST — needs the JWT before clearToken() wipes it
+      await unregisterPushToken().catch(e =>
+        console.warn('⚠️ Push token unregister error (non-fatal):', e)
+      );
+
+      // Clear JWT and navigate immediately
+      clearToken();
       setStudent(null);
       setStaff(null);
       setHod(null);
@@ -758,11 +765,9 @@ const App: React.FC = () => {
       setRequiresBiometricGate(false);
       setBiometricVerified(false);
       setBiometricPrompted(false);
-      // Clear the JWT so subsequent requests are unauthenticated until next login.
-      clearToken();
-      // Clean up storage and push token in background
+
+      // Clean up remaining storage in background
       Promise.all([
-        unregisterPushToken(),
         offlineStorage.clearCurrentStudent(),
         offlineStorage.clearCurrentStaff(),
         offlineStorage.clearCurrentHOD(),
@@ -774,7 +779,8 @@ const App: React.FC = () => {
         biometricAuthService.clearSession(),
       ]).catch(e => console.log('⚠️ Logout cleanup error (non-fatal):', e))
         .finally(() => { isLoggingOut.current = false; });
-      console.log('✅ Logout — navigated home, cleanup running in background');
+
+      console.log('✅ Logout complete');
     } catch (error) {
       console.log('❌ Error during logout:', error);
       isLoggingOut.current = false;

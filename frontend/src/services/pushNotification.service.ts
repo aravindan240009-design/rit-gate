@@ -16,6 +16,7 @@ import { getToken } from './authToken';
 import { showLocalNotification, ensureChannel } from './localNotification.service';
 
 const PUSH_TOKEN_KEY = '@mygate_push_token';
+const PUSH_FCM_KEY   = '@mygate_fcm_token';   // stores raw FCM token for logout
 const SHOWN_IDS_KEY = '@ritgate_shown_notif_ids';
 
 // ── Shared deduplication helpers ──────────────────────────────────────────────
@@ -95,7 +96,9 @@ export async function initPushNotifications(userId: string, userType: string): P
 
     const saved = await savePushTokenToBackend(userId, token);
     if (saved) {
+      // Store session key for dedup AND raw FCM token separately for clean logout
       await AsyncStorage.setItem(PUSH_TOKEN_KEY, sessionKey);
+      await AsyncStorage.setItem(PUSH_FCM_KEY, token);
       _registeredThisSession.add(sessionKey);
       console.log('✅ FCM token registered for', userId);
     } else {
@@ -139,20 +142,42 @@ export async function savePushTokenToBackend(userId: string, token: string): Pro
 /** DELETE the FCM token from backend on logout. */
 export async function unregisterPushToken(): Promise<void> {
   try {
-    const stored = await AsyncStorage.getItem(PUSH_TOKEN_KEY);
-    if (!stored) return;
-    const pushToken = stored.substring(stored.indexOf(':') + 1);
+    // Read the raw FCM token stored separately (not the userId:token sessionKey)
+    const pushToken = await AsyncStorage.getItem(PUSH_FCM_KEY);
+    if (!pushToken) {
+      console.warn('⚠️ No FCM token found to unregister');
+      return;
+    }
 
-    await fetch(`${API_CONFIG.BASE_URL}/notifications/push-token`, {
+    // Get the JWT before it is cleared by logout — we still need it for the request
+    const authToken = getToken();
+
+    const res = await fetch(`${API_CONFIG.BASE_URL}/notifications/push-token`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
       body: JSON.stringify({ pushToken }),
     });
+
+    const data = await res.json().catch(() => ({}));
+    if (data.success !== false) {
+      console.log('✅ FCM token unregistered from backend');
+    } else {
+      console.warn('⚠️ Backend failed to unregister push token:', data.message);
+    }
+
+    // Always clean up local storage regardless of backend response
     await AsyncStorage.removeItem(PUSH_TOKEN_KEY);
-    // Clear session cache so next login re-registers
+    await AsyncStorage.removeItem(PUSH_FCM_KEY);
     _registeredThisSession.clear();
-    console.log('✅ FCM token unregistered');
+    console.log('✅ Push token removed from local storage');
   } catch (error) {
+    // Still clean up locally even if network call fails
+    await AsyncStorage.removeItem(PUSH_TOKEN_KEY).catch(() => {});
+    await AsyncStorage.removeItem(PUSH_FCM_KEY).catch(() => {});
+    _registeredThisSession.clear();
     console.warn('⚠️ Failed to unregister FCM token:', error);
   }
 }

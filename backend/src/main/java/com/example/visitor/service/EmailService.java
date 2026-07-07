@@ -248,6 +248,51 @@ public class EmailService {
         sendEmail(toEmail, toName, subject, textBody, htmlBody);
     }
 
+    public void sendCoordinatorAssignmentEmail(String toEmail, String toName, String eventName,
+                                               String eventDate, String venue) {
+        String subject = "You've been assigned as Event Coordinator – " + eventName;
+
+        String safeVenue = venue != null && !venue.isBlank() ? venue : "TBD";
+
+        String textBody =
+            "Dear " + toName + ",\n\n" +
+            "You have been assigned as an Event Coordinator for the following event at RIT Chennai:\n\n" +
+            "Event: " + eventName + "\n" +
+            "Date: " + eventDate + "\n" +
+            "Venue: " + safeVenue + "\n\n" +
+            "Please open the RIT Gate app to upload the participant CSV for this event.\n\n" +
+            "Best regards,\nRIT Gate – Visitor Management System";
+
+        String sName  = escapeHtml(toName != null ? toName : "Coordinator");
+        String sEvent = escapeHtml(eventName);
+        String sDate  = escapeHtml(eventDate);
+        String sVenue = escapeHtml(safeVenue);
+
+        String htmlBody =
+            "<!DOCTYPE html>" +
+            "<html><body style=\"margin:0;padding:0;background:#f2f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;\">" +
+            "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"padding:24px 12px;\">" +
+            "<tr><td align=\"center\">" +
+            "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:560px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;\">" +
+            "<tr><td style=\"background:#172b4d;padding:20px 24px;\">" +
+            "<div style=\"font-size:22px;color:#ffffff;font-weight:800;\">Event Coordinator Assignment</div>" +
+            "</td></tr>" +
+            "<tr><td style=\"padding:26px 24px 22px 24px;color:#1f2937;\">" +
+            "<div style=\"font-size:16px;font-weight:700;margin-bottom:10px;\">Hi " + sName + ",</div>" +
+            "<div style=\"font-size:15px;line-height:1.6;color:#374151;margin-bottom:18px;\">You have been assigned as an <b>Event Coordinator</b> for the event below. Please open the RIT Gate app to upload the participant CSV.</div>" +
+            "<table style=\"width:100%;border-collapse:collapse;margin-bottom:8px;\">" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;width:35%;\">Event</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sEvent + "</td></tr>" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Date</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sDate + "</td></tr>" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Venue</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sVenue + "</td></tr>" +
+            "</table>" +
+            "<div style=\"font-size:13px;color:#6b7280;margin-top:16px;\">Open the RIT Gate app → Events to manage this assignment.</div>" +
+            "</td></tr>" +
+            "</table>" +
+            "</td></tr></table></body></html>";
+
+        sendEmail(toEmail, toName, subject, textBody, htmlBody);
+    }
+
     public void sendGatePassStatusEmail(String toEmail, String toName, String statusLabel,
                                         String purpose, String detailMessage) {
         String subject = "Gate Pass Update: " + statusLabel + " — RIT Gate";

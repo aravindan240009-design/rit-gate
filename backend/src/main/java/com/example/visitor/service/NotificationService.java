@@ -27,6 +27,7 @@ public class NotificationService {
     private final HRRepository hrRepository;
     private final StaffMemberRepository staffMemberRepository;
     private final PushNotificationService pushNotificationService;
+    private final EmailService emailService;
 
     public NotificationService(
             NotificationRepository notificationRepository,
@@ -35,7 +36,8 @@ public class NotificationService {
             HODRepository hodRepository,
             HRRepository hrRepository,
             StaffMemberRepository staffMemberRepository,
-            PushNotificationService pushNotificationService) {
+            PushNotificationService pushNotificationService,
+            EmailService emailService) {
         this.notificationRepository = notificationRepository;
         this.studentRepository = studentRepository;
         this.staffRepository = staffRepository;
@@ -43,6 +45,7 @@ public class NotificationService {
         this.hrRepository = hrRepository;
         this.staffMemberRepository = staffMemberRepository;
         this.pushNotificationService = pushNotificationService;
+        this.emailService = emailService;
     }
 
     // ==================== STUDENT GATE PASS NOTIFICATIONS ====================
@@ -486,6 +489,23 @@ public class NotificationService {
             save(staffCode, title, message,
                 Notification.NotificationType.INFO, Notification.NotificationPriority.HIGH,
                 "/staff/events");
+
+            // Email the assignee (best-effort — never block the in-app notification)
+            try {
+                staffRepository.findByStaffCode(staffCode).ifPresentOrElse(staff -> {
+                    if (staff.getEmail() != null && !staff.getEmail().isBlank()) {
+                        emailService.sendCoordinatorAssignmentEmail(
+                            staff.getEmail(),
+                            staff.getStaffName() != null ? staff.getStaffName() : staffCode,
+                            eventName, eventDate.toString(), venue
+                        );
+                    } else {
+                        log.warn("No email on file for staff {} — skipping coordinator assignment email", staffCode);
+                    }
+                }, () -> log.warn("Staff {} not found — skipping coordinator assignment email", staffCode));
+            } catch (Exception emailEx) {
+                log.error("Failed to send coordinator assignment email to {}: {}", staffCode, emailEx.getMessage());
+            }
         } catch (Exception e) {
             log.error("Error notifying staff of coordinator assignment", e);
         }
