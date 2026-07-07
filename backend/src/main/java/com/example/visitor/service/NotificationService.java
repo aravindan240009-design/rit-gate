@@ -534,6 +534,33 @@ public class NotificationService {
             save(staffCode, title, message,
                 Notification.NotificationType.INFO, Notification.NotificationPriority.HIGH,
                 "/staff/events");
+
+            // Email the coordinator too (best-effort — never block the in-app notification).
+            // The code may be a staff code or a student regNo (students can be coordinators).
+            final String dateStr = eventDate != null ? eventDate.toString() : null;
+            try {
+                staffRepository.findByStaffCode(staffCode).ifPresentOrElse(staff -> {
+                    if (staff.getEmail() != null && !staff.getEmail().isBlank()) {
+                        emailService.sendEventCancellationEmail(
+                            staff.getEmail(),
+                            staff.getStaffName() != null ? staff.getStaffName() : staffCode,
+                            eventName, dateStr);
+                    } else {
+                        log.warn("No email on file for staff {} — skipping event cancellation email", staffCode);
+                    }
+                }, () -> studentRepository.findByRegNo(staffCode).ifPresentOrElse(student -> {
+                    if (student.getEmail() != null && !student.getEmail().isBlank()) {
+                        emailService.sendEventCancellationEmail(
+                            student.getEmail(),
+                            student.getFirstName() != null ? student.getFirstName() : staffCode,
+                            eventName, dateStr);
+                    } else {
+                        log.warn("No email on file for student {} — skipping event cancellation email", staffCode);
+                    }
+                }, () -> log.warn("No staff or student found for {} — skipping event cancellation email", staffCode)));
+            } catch (Exception emailEx) {
+                log.error("Failed to send event cancellation email to {}: {}", staffCode, emailEx.getMessage());
+            }
         } catch (Exception e) {
             log.error("Error notifying staff of event cancellation", e);
         }
@@ -585,15 +612,32 @@ public class NotificationService {
             String outing = request.getExitDateTime() != null
                 ? request.getExitDateTime().toString()
                 : (request.getRequestDate() != null ? request.getRequestDate().toString() : "N/A");
+            String status = request.getStatus() != null ? request.getStatus().name() : "PENDING";
             String message = String.format(
                 "%s (%s), %s, submitted a hostel gate pass.\nOuting: %s\nPurpose: %s\nStatus: %s",
                 request.getStudentName(), request.getRegNo(), request.getDepartment(),
-                outing, request.getPurpose(),
-                request.getStatus() != null ? request.getStatus().name() : "PENDING");
+                outing, request.getPurpose(), status);
             save(classInchargeCode,
                 "Hostel Gate Pass — Your Student", message,
                 Notification.NotificationType.INFO, Notification.NotificationPriority.NORMAL,
                 "/staff/notifications");
+
+            // Email the class incharge too (best-effort — never block the in-app notification).
+            try {
+                staffRepository.findByStaffCode(classInchargeCode).ifPresentOrElse(staff -> {
+                    if (staff.getEmail() != null && !staff.getEmail().isBlank()) {
+                        emailService.sendHostelerClassInchargeEmail(
+                            staff.getEmail(),
+                            staff.getStaffName() != null ? staff.getStaffName() : classInchargeCode,
+                            request.getStudentName(), request.getRegNo(), request.getDepartment(),
+                            outing, request.getPurpose(), status);
+                    } else {
+                        log.warn("No email on file for class incharge {} — skipping hosteler email", classInchargeCode);
+                    }
+                }, () -> log.warn("No staff found for class incharge {} — skipping hosteler email", classInchargeCode));
+            } catch (Exception emailEx) {
+                log.error("Failed to send hosteler class-incharge email to {}: {}", classInchargeCode, emailEx.getMessage());
+            }
         } catch (Exception e) {
             log.error("Error notifying class incharge of hosteler request", e);
         }

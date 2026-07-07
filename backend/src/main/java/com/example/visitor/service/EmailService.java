@@ -304,4 +304,107 @@ public class EmailService {
             "Best regards,\nRIT Gate Visitor Management System";
         sendEmail(toEmail, toName, subject, body);
     }
+
+    /** Notify a coordinator that an event they were assigned to has been cancelled/removed. */
+    public void sendEventCancellationEmail(String toEmail, String toName, String eventName,
+                                           String eventDate) {
+        String subject = "Event Cancelled – " + eventName;
+
+        String safeDate = eventDate != null && !eventDate.isBlank() ? eventDate : "TBD";
+
+        String textBody =
+            "Dear " + toName + ",\n\n" +
+            "The following event at RIT Chennai has been cancelled by the HOD. " +
+            "You are no longer a coordinator for it and any passes issued for it have been removed:\n\n" +
+            "Event: " + eventName + "\n" +
+            "Date: " + safeDate + "\n\n" +
+            "No further action is needed on your part.\n\n" +
+            "Best regards,\nRIT Gate – Visitor Management System";
+
+        String sName  = escapeHtml(toName != null ? toName : "Coordinator");
+        String sEvent = escapeHtml(eventName);
+        String sDate  = escapeHtml(safeDate);
+
+        String htmlBody =
+            "<!DOCTYPE html>" +
+            "<html><body style=\"margin:0;padding:0;background:#f2f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;\">" +
+            "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"padding:24px 12px;\">" +
+            "<tr><td align=\"center\">" +
+            "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:560px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;\">" +
+            "<tr><td style=\"background:#991b1b;padding:20px 24px;\">" +
+            "<div style=\"font-size:22px;color:#ffffff;font-weight:800;\">Event Cancelled</div>" +
+            "</td></tr>" +
+            "<tr><td style=\"padding:26px 24px 22px 24px;color:#1f2937;\">" +
+            "<div style=\"font-size:16px;font-weight:700;margin-bottom:10px;\">Hi " + sName + ",</div>" +
+            "<div style=\"font-size:15px;line-height:1.6;color:#374151;margin-bottom:18px;\">The event below has been <b>cancelled</b> by the HOD. You are no longer a coordinator for it, and any passes issued for it have been removed. No further action is needed.</div>" +
+            "<table style=\"width:100%;border-collapse:collapse;margin-bottom:8px;\">" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;width:35%;\">Event</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sEvent + "</td></tr>" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Date</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sDate + "</td></tr>" +
+            "</table>" +
+            "</td></tr>" +
+            "</table>" +
+            "</td></tr></table></body></html>";
+
+        sendEmail(toEmail, toName, subject, textBody, htmlBody);
+    }
+
+    /**
+     * Inform a class incharge that one of their students submitted an after-3PM hostel gate pass.
+     * Info-only — mirrors the in-app notification. Includes the spec fields.
+     */
+    public void sendHostelerClassInchargeEmail(String toEmail, String toName, String studentName,
+                                               String regNo, String department, String outing,
+                                               String purpose, String status) {
+        String subject = "Hostel Gate Pass – " + studentName + " (" + regNo + ")";
+
+        String safeOuting  = outing  != null && !outing.isBlank()  ? outing  : "N/A";
+        String safePurpose = purpose != null && !purpose.isBlank() ? purpose : "N/A";
+        String safeStatus  = status  != null && !status.isBlank()  ? status  : "PENDING";
+
+        String textBody =
+            "Dear " + toName + ",\n\n" +
+            "One of your students has submitted an after-3PM hostel gate pass request:\n\n" +
+            "Student: " + studentName + "\n" +
+            "Register No: " + regNo + "\n" +
+            "Department: " + (department != null ? department : "N/A") + "\n" +
+            "Outing: " + safeOuting + "\n" +
+            "Purpose: " + safePurpose + "\n" +
+            "Status: " + safeStatus + "\n\n" +
+            "This is for your information only — the hostel warden is the approver.\n\n" +
+            "Best regards,\nRIT Gate – Visitor Management System";
+
+        String sName    = escapeHtml(toName != null ? toName : "Class Incharge");
+        String sStudent = escapeHtml(studentName);
+        String sReg     = escapeHtml(regNo);
+        String sDept    = escapeHtml(department != null ? department : "N/A");
+        String sOuting  = escapeHtml(safeOuting);
+        String sPurpose = escapeHtml(safePurpose);
+        String sStatus  = escapeHtml(safeStatus);
+
+        String htmlBody =
+            "<!DOCTYPE html>" +
+            "<html><body style=\"margin:0;padding:0;background:#f2f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;\">" +
+            "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"padding:24px 12px;\">" +
+            "<tr><td align=\"center\">" +
+            "<table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:560px;background:#ffffff;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden;\">" +
+            "<tr><td style=\"background:#172b4d;padding:20px 24px;\">" +
+            "<div style=\"font-size:22px;color:#ffffff;font-weight:800;\">Hostel Gate Pass — Your Student</div>" +
+            "</td></tr>" +
+            "<tr><td style=\"padding:26px 24px 22px 24px;color:#1f2937;\">" +
+            "<div style=\"font-size:16px;font-weight:700;margin-bottom:10px;\">Hi " + sName + ",</div>" +
+            "<div style=\"font-size:15px;line-height:1.6;color:#374151;margin-bottom:18px;\">One of your students has submitted an after-3PM hostel gate pass. This is for your information only — the hostel warden is the approver.</div>" +
+            "<table style=\"width:100%;border-collapse:collapse;margin-bottom:8px;\">" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;width:38%;\">Student</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sStudent + "</td></tr>" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Register No</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sReg + "</td></tr>" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Department</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sDept + "</td></tr>" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Outing</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sOuting + "</td></tr>" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Purpose</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sPurpose + "</td></tr>" +
+            "<tr><td style=\"padding:8px 10px;background:#f9fafb;border:1px solid #e5e7eb;font-weight:600;\">Status</td><td style=\"padding:8px 10px;border:1px solid #e5e7eb;\">" + sStatus + "</td></tr>" +
+            "</table>" +
+            "</td></tr>" +
+            "</table>" +
+            "</td></tr></table></body></html>";
+
+        sendEmail(toEmail, toName, subject, textBody, htmlBody);
+    }
 }

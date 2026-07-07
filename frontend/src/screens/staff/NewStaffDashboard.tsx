@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Staff, ScreenName } from '../../types';
 import { apiService } from '../../services/api';
 import { useNotifications } from '../../context/NotificationContext';
@@ -99,21 +100,33 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   }, []);
 
   // Show the events icon only when this staff member is currently assigned as
-  // a coordinator for at least one event.
+  // a coordinator for at least one event. The last-known result is cached in
+  // AsyncStorage so the icon renders immediately on reload (before the async
+  // check returns) and never flickers off due to a transient network failure.
   useEffect(() => {
     const staffCode = staff.staffCode || (staff as any).staff_code;
     if (!staffCode) return;
     let cancelled = false;
+    const cacheKey = `@ritgate_has_events:${staffCode}`;
     const checkAssignedEvents = async () => {
       try {
         const response = await apiService.getStaffEvents(staffCode);
-        if (!cancelled && response.success) {
-          setHasAssignedEvents((response.events || []).length > 0);
+        if (cancelled) return;
+        // Only update on a confirmed response — a failed fetch (success:false)
+        // must not hide an icon we already know should be shown.
+        if (response.success) {
+          const has = (response.events || []).length > 0;
+          setHasAssignedEvents(has);
+          AsyncStorage.setItem(cacheKey, has ? '1' : '0').catch(() => {});
         }
       } catch {
-        // On failure keep the icon hidden — no error UI
+        // On failure keep the last-known icon state — no error UI
       }
     };
+    // Seed from cache first so a reload keeps the icon stable.
+    AsyncStorage.getItem(cacheKey)
+      .then(v => { if (!cancelled && v === '1') setHasAssignedEvents(true); })
+      .catch(() => {});
     checkAssignedEvents();
     const interval = setInterval(checkAssignedEvents, 60000);
     return () => { cancelled = true; clearInterval(interval); };
