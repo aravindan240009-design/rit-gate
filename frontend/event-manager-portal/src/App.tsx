@@ -130,11 +130,11 @@ function PassesPage({ user: _u, event, onBack }: { user: ECUser; event: Event; o
         ) : error ? (
           <div style={{ backgroundColor:'#FEF2F2', border:'1px solid #FCA5A5',
             borderRadius:14, padding:'14px 18px', fontSize:14, color:'#B91C1C', fontWeight:500 }}>
-            ⚠️ {error}
+            {error}
           </div>
         ) : passes.length === 0 ? (
           <div style={{ textAlign:'center', padding:'70px 20px' }}>
-            <div style={{ fontSize:52, marginBottom:14 }}>🎟️</div>
+            <img src={process.env.PUBLIC_URL + '/rit-logo.png'} alt="RIT logo" style={{ width:52, height:52, objectFit:'contain', marginBottom:14, opacity:0.6 }} />
             <div style={{ fontSize:18, fontWeight:700, color:'#000000', marginBottom:8 }}>No passes yet</div>
             <div style={{ fontSize:14, color:'#64748B' }}>
               Coordinators can upload the participant CSV to generate passes.

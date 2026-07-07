@@ -7,6 +7,7 @@ import {
   Image,
   Modal,
   Animated,
+  AppState,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -106,33 +107,51 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   // The last-known result is cached in AsyncStorage so the icon renders
   // immediately on reload (before the async check returns) and never flickers
   // off due to a transient network failure.
+  const checkAssignedEvents = React.useCallback(async () => {
+    if (!student.regNo) return;
+    const cacheKey = `@ritgate_has_events:${student.regNo}`;
+    try {
+      const response = await apiService.getStaffEvents(student.regNo);
+      // Only update on a confirmed response — a failed fetch (success:false)
+      // must not hide an icon we already know should be shown.
+      if (response.success) {
+        const has = (response.events || []).length > 0;
+        setHasAssignedEvents(has);
+        AsyncStorage.setItem(cacheKey, has ? '1' : '0').catch(() => {});
+      }
+    } catch {
+      // On failure keep the last-known icon state — no error UI
+    }
+  }, [student.regNo]);
+
   useEffect(() => {
     if (!student.regNo) return;
     let cancelled = false;
     const cacheKey = `@ritgate_has_events:${student.regNo}`;
-    const checkAssignedEvents = async () => {
-      try {
-        const response = await apiService.getStaffEvents(student.regNo);
-        if (cancelled) return;
-        // Only update on a confirmed response — a failed fetch (success:false)
-        // must not hide an icon we already know should be shown.
-        if (response.success) {
-          const has = (response.events || []).length > 0;
-          setHasAssignedEvents(has);
-          AsyncStorage.setItem(cacheKey, has ? '1' : '0').catch(() => {});
-        }
-      } catch {
-        // On failure keep the last-known icon state — no error UI
-      }
-    };
     // Seed from cache first so a reload keeps the icon stable.
     AsyncStorage.getItem(cacheKey)
       .then(v => { if (!cancelled && v === '1') setHasAssignedEvents(true); })
       .catch(() => {});
     checkAssignedEvents();
-    const interval = setInterval(checkAssignedEvents, 60000);
+    // Short poll as a safety net — the focus / refresh / notification triggers
+    // below make assignment & removal feel instant; this just backstops them.
+    const interval = setInterval(() => { if (!cancelled) checkAssignedEvents(); }, 15000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [student.regNo]);
+  }, [student.regNo, checkAssignedEvents]);
+
+  // React the moment something changes: a manual refresh, or a new notification
+  // (coordinator assignment/cancellation both push a notification, so unreadCount
+  // bumps almost immediately → re-check and show/hide the icon right away).
+  useEffect(() => { checkAssignedEvents(); }, [refreshCount, unreadCount, checkAssignedEvents]);
+
+  // Re-check the instant the app returns to the foreground (assignment/removal
+  // may have happened while it was backgrounded).
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', s => {
+      if (s === 'active') checkAssignedEvents();
+    });
+    return () => sub.remove();
+  }, [checkAssignedEvents]);
 
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 

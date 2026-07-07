@@ -35,12 +35,16 @@ export default function LoginPage({ onLogin }: Props) {
       {/* ── Logo / hero ── */}
       <div style={S.hero}>
         <div style={S.logoWrap}>
-          <span style={{ fontSize: 40 }}>🎫</span>
+          <img
+            src={process.env.PUBLIC_URL + '/rit-logo.png'}
+            alt="RIT logo"
+            style={{ width: 64, height: 64, objectFit: 'contain' }}
+          />
         </div>
         <h1 style={S.mainTitle}>RIT GATE</h1>
         <p style={S.heroSub}>EVENT CONTROLLER PORTAL</p>
         <div style={S.pillRow}>
-          {['🗓 Events', '👥 Coordinators', '🎟 Passes'].map(t => (
+          {['Events', 'Coordinators', 'Passes'].map(t => (
             <span key={t} style={S.pill}>{t}</span>
           ))}
         </div>
@@ -79,7 +83,7 @@ export default function LoginPage({ onLogin }: Props) {
             <button type="button" style={S.eyeBtn}
               onClick={() => setShowPwd(v => !v)} tabIndex={-1}
               aria-label={showPwd ? 'Hide' : 'Show'}>
-              {showPwd ? '🙈' : '👁'}
+              {showPwd ? 'Hide' : 'Show'}
             </button>
           </div>
 
@@ -103,7 +107,7 @@ export default function LoginPage({ onLogin }: Props) {
         {DEMO.map(a => (
           <button key={a.username} type="button" style={S.demoRow}
             onClick={() => { setUsername(a.username); setPassword(a.password); setError(''); }}>
-            <div style={S.demoIconWrap}><span style={{ fontSize: 18 }}>👤</span></div>
+            <div style={S.demoIconWrap}><span style={{ fontSize: 15, fontWeight: 700 }}>{a.label.charAt(0)}</span></div>
             <div style={{ flex: 1, textAlign: 'left' }}>
               <div style={S.demoName}>{a.label}</div>
               <div style={S.demoCred}>{a.username} · {a.password}</div>
@@ -230,7 +234,8 @@ const S: Record<string, React.CSSProperties> = {
     background: 'none',
     border: 'none',
     cursor: 'pointer',
-    fontSize: 18,
+    fontSize: 12,
+    fontWeight: 700,
     padding: '2px 4px',
     lineHeight: 1,
     color: '#94A3B8',

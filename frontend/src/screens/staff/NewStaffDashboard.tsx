@@ -9,6 +9,7 @@ import {
   Image,
   ActivityIndicator,
   FlatList,
+  AppState,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -103,34 +104,52 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   // a coordinator for at least one event. The last-known result is cached in
   // AsyncStorage so the icon renders immediately on reload (before the async
   // check returns) and never flickers off due to a transient network failure.
+  const staffCode = staff.staffCode || (staff as any).staff_code;
+  const checkAssignedEvents = React.useCallback(async () => {
+    if (!staffCode) return;
+    const cacheKey = `@ritgate_has_events:${staffCode}`;
+    try {
+      const response = await apiService.getStaffEvents(staffCode);
+      // Only update on a confirmed response — a failed fetch (success:false)
+      // must not hide an icon we already know should be shown.
+      if (response.success) {
+        const has = (response.events || []).length > 0;
+        setHasAssignedEvents(has);
+        AsyncStorage.setItem(cacheKey, has ? '1' : '0').catch(() => {});
+      }
+    } catch {
+      // On failure keep the last-known icon state — no error UI
+    }
+  }, [staffCode]);
+
   useEffect(() => {
-    const staffCode = staff.staffCode || (staff as any).staff_code;
     if (!staffCode) return;
     let cancelled = false;
     const cacheKey = `@ritgate_has_events:${staffCode}`;
-    const checkAssignedEvents = async () => {
-      try {
-        const response = await apiService.getStaffEvents(staffCode);
-        if (cancelled) return;
-        // Only update on a confirmed response — a failed fetch (success:false)
-        // must not hide an icon we already know should be shown.
-        if (response.success) {
-          const has = (response.events || []).length > 0;
-          setHasAssignedEvents(has);
-          AsyncStorage.setItem(cacheKey, has ? '1' : '0').catch(() => {});
-        }
-      } catch {
-        // On failure keep the last-known icon state — no error UI
-      }
-    };
     // Seed from cache first so a reload keeps the icon stable.
     AsyncStorage.getItem(cacheKey)
       .then(v => { if (!cancelled && v === '1') setHasAssignedEvents(true); })
       .catch(() => {});
     checkAssignedEvents();
-    const interval = setInterval(checkAssignedEvents, 60000);
+    // Short poll as a safety net — the focus / refresh / notification triggers
+    // below make assignment & removal feel instant; this just backstops them.
+    const interval = setInterval(() => { if (!cancelled) checkAssignedEvents(); }, 15000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [staff.staffCode]);
+  }, [staffCode, checkAssignedEvents]);
+
+  // React the moment something changes: a manual refresh, or a new notification
+  // (coordinator assignment/cancellation both push a notification, so unreadCount
+  // bumps almost immediately → re-check and show/hide the icon right away).
+  useEffect(() => { checkAssignedEvents(); }, [refreshCount, unreadCount, checkAssignedEvents]);
+
+  // Re-check the instant the app returns to the foreground (assignment/removal
+  // may have happened while it was backgrounded).
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', s => {
+      if (s === 'active') checkAssignedEvents();
+    });
+    return () => sub.remove();
+  }, [checkAssignedEvents]);
 
   useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);
 

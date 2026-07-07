@@ -62,7 +62,7 @@ export default function EventListPage({ user, onManageCoordinators, onViewPasses
       await createEvent(user.username, cName.trim(), cDate, cVenue.trim());
       setCName(''); setCDate(''); setCVenue('');
       setShowCreate(false); await load();
-      showToast('✅ Event created');
+      showToast('Event created');
     } catch(err:any) { setCError(err.message||'Failed to create event'); }
     finally { setCLoading(false); }
   };
@@ -72,8 +72,8 @@ export default function EventListPage({ user, onManageCoordinators, onViewPasses
     setDelLoading(true);
     try {
       await deleteEvent(deleteTarget.id, user.username);
-      setDeleteTarget(null); await load(); showToast('🗑️ Event deleted');
-    } catch(err:any) { setDeleteTarget(null); showToast('❌ '+(err.message||'Failed')); }
+      setDeleteTarget(null); await load(); showToast('Event deleted');
+    } catch(err:any) { setDeleteTarget(null); showToast(err.message||'Failed'); }
     finally { setDelLoading(false); }
   };
 
@@ -82,14 +82,14 @@ export default function EventListPage({ user, onManageCoordinators, onViewPasses
       {/* ── Topbar ── */}
       <div style={S.topbar}>
         <div style={S.topLeft}>
-          <div style={S.topLogoWrap}><span style={{fontSize:22}}>🎫</span></div>
+          <div style={S.topLogoWrap}><img src={process.env.PUBLIC_URL + '/rit-logo.png'} alt="RIT logo" style={{width:28,height:28,objectFit:'contain'}} /></div>
           <div>
             <div style={S.topTitle}>RIT GATE</div>
             <div style={S.topSub}>EVENT CONTROLLER PORTAL</div>
           </div>
         </div>
         <div style={S.topRight}>
-          <span style={S.topUser}>👤 {user.displayName}</span>
+          <span style={S.topUser}>{user.displayName}</span>
           <button style={S.logoutBtn} onClick={onLogout}>Sign out</button>
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function EventListPage({ user, onManageCoordinators, onViewPasses
         {/* ── Error ── */}
         {error && (
           <div style={S.errorBox}>
-            ⚠️ {error}
+            {error}
             <button style={{...S.ghostBtn,marginLeft:'auto',padding:'6px 14px',fontSize:12}}
               onClick={load}>Retry</button>
           </div>
@@ -152,7 +152,7 @@ export default function EventListPage({ user, onManageCoordinators, onViewPasses
           <div style={S.loaderWrap}><div style={S.spinner} /></div>
         ) : events.length === 0 && !error ? (
           <div style={S.emptyState}>
-            <div style={{fontSize:52,marginBottom:14}}>📅</div>
+            <img src={process.env.PUBLIC_URL + '/rit-logo.png'} alt="RIT logo" style={{width:52,height:52,objectFit:'contain',marginBottom:14,opacity:0.6}} />
             <div style={S.emptyTitle}>No events yet</div>
             <div style={S.emptySub}>Create your first event using the button above.</div>
           </div>
@@ -225,7 +225,6 @@ export default function EventListPage({ user, onManageCoordinators, onViewPasses
       {deleteTarget && (
         <div style={S.overlay} onClick={()=>!delLoading&&setDeleteTarget(null)}>
           <div style={S.modal} onClick={e=>e.stopPropagation()} className="fade-in">
-            <div style={S.modalIconWrap}><span style={{fontSize:28}}>🗑️</span></div>
             <h3 style={S.modalTitle}>Delete Event</h3>
             <p style={S.modalMsg}>
               Delete <strong>"{deleteTarget.eventName}"</strong>? All coordinators will be notified and all passes removed. This cannot be undone.
@@ -330,8 +329,6 @@ const S: Record<string, React.CSSProperties> = {
     display:'flex', alignItems:'center', justifyContent:'center', zIndex:200, padding:20 },
   modal: { backgroundColor:'#FFFFFF', borderRadius:28, padding:28,
     maxWidth:400, width:'100%', boxShadow:'0 20px 60px rgba(0,0,0,0.18)' },
-  modalIconWrap: { width:58, height:58, borderRadius:18, backgroundColor:'#FEE2E2',
-    display:'flex', alignItems:'center', justifyContent:'center', marginBottom:16 },
   modalTitle: { fontSize:20, fontWeight:800, color:'#000000', margin:'0 0 10px' },
   modalMsg:   { fontSize:14, color:'#64748B', lineHeight:1.6, margin:'0 0 22px' },
   dangerBtn:  { height:48, padding:'0 24px', backgroundColor:'#EF4444', color:'#FFFFFF',

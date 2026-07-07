@@ -83,20 +83,20 @@ export default function AssignCoordinatorsPage({ user, event, onBack }: Props) {
       setSelected(new Set());
       await load();
       if (assigned > 0 && alreadyAssigned > 0) {
-        showToast(`✅ ${assigned} assigned · ${alreadyAssigned} already assigned`);
+        showToast(`${assigned} assigned · ${alreadyAssigned} already assigned`);
       } else if (assigned > 0) {
-        showToast(`✅ ${assigned} coordinator${assigned > 1 ? 's' : ''} assigned — notification sent`);
+        showToast(`${assigned} coordinator${assigned > 1 ? 's' : ''} assigned — notification sent`);
       } else {
-        showToast(`ℹ️ All selected people were already assigned`);
+        showToast(`All selected people were already assigned`);
       }
-    } catch(e:any) { showToast('❌ ' + (e.message || 'Failed to assign')); }
+    } catch(e:any) { showToast(e.message || 'Failed to assign'); }
     finally { setAssigning(false); }
   };
 
   const handleRemove = async (code: string) => {
     setRemoveTarget(null);
-    try { await removeCoordinator(event.id, code); await load(); showToast('🗑️ Coordinator removed'); }
-    catch(e:any) { showToast('❌ '+(e.message||'Failed')); }
+    try { await removeCoordinator(event.id, code); await load(); showToast('Coordinator removed'); }
+    catch(e:any) { showToast(e.message||'Failed'); }
   };
 
   return (
@@ -113,7 +113,6 @@ export default function AssignCoordinatorsPage({ user, event, onBack }: Props) {
       <div style={S.main}>
         {/* Event strip */}
         <div style={S.eventStrip}>
-          <span style={{fontSize:22}}>📅</span>
           <div>
             <div style={S.stripName}>{event.eventName}</div>
             <div style={S.stripMeta}>{event.eventDate} · {event.venue}</div>
@@ -123,7 +122,7 @@ export default function AssignCoordinatorsPage({ user, event, onBack }: Props) {
         {loading ? (
           <div style={S.loaderWrap}><div style={S.spinner}/></div>
         ) : error ? (
-          <div style={S.errorBox}>⚠️ {error}</div>
+          <div style={S.errorBox}>{error}</div>
         ) : (
           <>
             {/* Current coordinators */}
@@ -175,7 +174,6 @@ export default function AssignCoordinatorsPage({ user, event, onBack }: Props) {
 
             {filtered.length === 0 ? (
               <div style={S.emptyState}>
-                <div style={{fontSize:40,marginBottom:10}}>🔍</div>
                 <div style={{fontSize:15,fontWeight:700,color:'#000'}}>
                   No {tab==='STAFF' ? 'staff' : 'students'} match your search.
                 </div>
@@ -226,7 +224,6 @@ export default function AssignCoordinatorsPage({ user, event, onBack }: Props) {
       {removeTarget && (
         <div style={S.overlay} onClick={()=>setRemoveTarget(null)}>
           <div style={S.modal} onClick={e=>e.stopPropagation()} className="fade-in">
-            <div style={S.modalIconWrap}><span style={{fontSize:26}}>👥</span></div>
             <h3 style={S.modalTitle}>Remove Coordinator</h3>
             <p style={S.modalMsg}>Remove <strong>{removeTarget}</strong> from <strong>"{event.eventName}"</strong>?</p>
             <div style={{display:'flex',gap:10,justifyContent:'flex-end'}}>
@@ -327,8 +324,6 @@ const S: Record<string, React.CSSProperties> = {
     display:'flex', alignItems:'center', justifyContent:'center', zIndex:200, padding:20 },
   modal: { backgroundColor:'#FFFFFF', borderRadius:28, padding:28,
     maxWidth:380, width:'100%', boxShadow:'0 20px 60px rgba(0,0,0,0.18)' },
-  modalIconWrap: { width:56, height:56, borderRadius:16, backgroundColor:'#F1F5F9',
-    display:'flex', alignItems:'center', justifyContent:'center', marginBottom:14 },
   modalTitle: { fontSize:20, fontWeight:800, color:'#000000', margin:'0 0 10px' },
   modalMsg:   { fontSize:14, color:'#64748B', lineHeight:1.6, margin:'0 0 22px' },
   ghostBtn: { height:44, padding:'0 20px', backgroundColor:'transparent', color:'#475569',
