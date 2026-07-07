@@ -8,6 +8,7 @@ import com.example.visitor.entity.EventCoordinator;
 import com.example.visitor.entity.EventPass;
 import com.example.visitor.repository.EventPassRepository;
 import com.example.visitor.repository.StaffRepository;
+import com.example.visitor.repository.StudentRepository;
 import com.example.visitor.service.EventCsvService;
 import com.example.visitor.service.EventCsvService.EventPassRowDTO;
 import com.example.visitor.service.EventService;
@@ -35,6 +36,7 @@ public class EventController {
     private final EventPassRepository eventPassRepository;
     private final NotificationService notificationService;
     private final StaffRepository staffRepository;
+    private final StudentRepository studentRepository;
 
     // ── HOD: Create event ──────────────────────────────────────────────────────
 
@@ -372,11 +374,22 @@ public class EventController {
         m.put("staffCode", c.getStaffCode());
         m.put("assignedBy", c.getAssignedBy());
         m.put("assignedAt", c.getAssignedAt() != null ? c.getAssignedAt().toString() : null);
-        // Include staff name for display
-        String staffName = staffRepository.findByStaffCode(c.getStaffCode())
-            .map(s -> s.getStaffName())
-            .orElse(c.getStaffCode());
-        m.put("staffName", staffName);
+        // Include coordinator name + type for display — the code may be a staff
+        // code or a student regNo (students can be coordinators too).
+        String code = c.getStaffCode();
+        String name;
+        String type;
+        Optional<String> staffName = staffRepository.findByStaffCode(code).map(s -> s.getStaffName());
+        if (staffName.isPresent()) {
+            name = staffName.get();
+            type = "STAFF";
+        } else {
+            Optional<String> studentName = studentRepository.findByRegNo(code).map(s -> s.getFirstName());
+            name = studentName.orElse(code);
+            type = studentName.isPresent() ? "STUDENT" : "UNKNOWN";
+        }
+        m.put("staffName", name);
+        m.put("type", type);
         return m;
     }
 

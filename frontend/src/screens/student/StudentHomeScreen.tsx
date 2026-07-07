@@ -62,6 +62,7 @@ interface StudentHomeScreenProps {
   onNavigate: (screen: any) => void;
   onTabChange: (tab: 'HOME' | 'REQUESTS' | 'HISTORY' | 'PROFILE') => void;
   onRequestGatePass: () => void;
+  onOpenEvents?: () => void;
 }
 
 const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
@@ -70,6 +71,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   onNavigate,
   onTabChange,
   onRequestGatePass,
+  onOpenEvents,
 }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -88,6 +90,7 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
   const [manualEntryCode, setManualEntryCode] = useState<string | null>(null);
   const [qrExpiresAt, setQrExpiresAt] = useState<string | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [hasAssignedEvents, setHasAssignedEvents] = useState(false);
   const { errorInfo, showError, hideError, handleRetry, isVisible: isErrorVisible } = useErrorModal();
   const { successInfo, showSuccess, hideSuccess, isVisible: isSuccessVisible } = useSuccessModal();
 
@@ -96,6 +99,25 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // Show the events icon only when this student is currently assigned as a
+  // coordinator for at least one event (assigned by regNo from the portal).
+  useEffect(() => {
+    let cancelled = false;
+    const checkAssignedEvents = async () => {
+      try {
+        const response = await apiService.getStaffEvents(student.regNo);
+        if (!cancelled && response.success) {
+          setHasAssignedEvents((response.events || []).length > 0);
+        }
+      } catch {
+        // On failure keep the icon hidden — no error UI
+      }
+    };
+    checkAssignedEvents();
+    const interval = setInterval(checkAssignedEvents, 60000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [student.regNo]);
 
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
@@ -239,6 +261,14 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
           </View>
         </View>
         <View style={styles.headerRight}>
+          {hasAssignedEvents && onOpenEvents && (
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Assigned events" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
+              onPress={onOpenEvents}
+            >
+              <Ionicons name="calendar-outline" size={22} color={theme.text} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
             onPress={() => onNavigate('NOTIFICATIONS')}

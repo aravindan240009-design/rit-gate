@@ -85,6 +85,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     rejected: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [hasAssignedEvents, setHasAssignedEvents] = useState(false);
 
   useEffect(() => {
     loadRequests();
@@ -96,6 +97,27 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // Show the events icon only when this staff member is currently assigned as
+  // a coordinator for at least one event.
+  useEffect(() => {
+    const staffCode = staff.staffCode || (staff as any).staff_code;
+    if (!staffCode) return;
+    let cancelled = false;
+    const checkAssignedEvents = async () => {
+      try {
+        const response = await apiService.getStaffEvents(staffCode);
+        if (!cancelled && response.success) {
+          setHasAssignedEvents((response.events || []).length > 0);
+        }
+      } catch {
+        // On failure keep the icon hidden — no error UI
+      }
+    };
+    checkAssignedEvents();
+    const interval = setInterval(checkAssignedEvents, 60000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [staff.staffCode]);
 
   useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);
 
@@ -393,12 +415,14 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
-            onPress={() => onNavigate('STAFF_EVENT_LIST' as any)}
-          >
-            <Ionicons name="calendar-outline" size={22} color={theme.text} />
-          </TouchableOpacity>
+          {hasAssignedEvents && (
+            <TouchableOpacity
+              style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
+              onPress={() => onNavigate('STAFF_EVENT_LIST' as any)}
+            >
+              <Ionicons name="calendar-outline" size={22} color={theme.text} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]}
             onPress={() => onNavigate('NOTIFICATIONS')}

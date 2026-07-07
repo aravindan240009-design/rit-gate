@@ -25,6 +25,16 @@ export interface Staff {
   role?: string;
 }
 
+export interface StudentLite {
+  regNo: string;
+  name: string;
+  department: string;
+  email?: string;
+  course?: string;
+  semester?: number;
+  section?: string;
+}
+
 export interface Coordinator {
   id: number;
   eventId: number;
@@ -32,6 +42,7 @@ export interface Coordinator {
   staffName: string;
   assignedBy: string;
   assignedAt: string | null;
+  type?: 'STAFF' | 'STUDENT' | string;
 }
 
 export interface EventPass {

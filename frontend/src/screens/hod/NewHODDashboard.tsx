@@ -88,6 +88,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
     rejected: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [hasAssignedEvents, setHasAssignedEvents] = useState(false);
 
   useEffect(() => {
     loadRequests();
@@ -95,6 +96,27 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
     const interval = setInterval(() => loadRequests(true), 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // Show the events icon only when this HOD is currently assigned as a
+  // coordinator for at least one event.
+  useEffect(() => {
+    const hodCode = hod.hodCode || (hod as any).hod_code;
+    if (!hodCode) return;
+    let cancelled = false;
+    const checkAssignedEvents = async () => {
+      try {
+        const response = await apiService.getStaffEvents(hodCode);
+        if (!cancelled && response.success) {
+          setHasAssignedEvents((response.events || []).length > 0);
+        }
+      } catch {
+        // On failure keep the icon hidden — no error UI
+      }
+    };
+    checkAssignedEvents();
+    const interval = setInterval(checkAssignedEvents, 60000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [hod.hodCode]);
 
   useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);
 
@@ -310,9 +332,11 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
           </View>
         </View>
         <View style={styles.headerRight}>
-          <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('HOD_EVENT_LIST' as any)}>
-            <Ionicons name="calendar-outline" size={22} color={theme.text} />
-          </TouchableOpacity>
+          {hasAssignedEvents && (
+            <TouchableOpacity style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('HOD_EVENT_LIST' as any)}>
+              <Ionicons name="calendar-outline" size={22} color={theme.text} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={[styles.iconButton, { backgroundColor: theme.surfaceHighlight }]} onPress={() => onNavigate('NOTIFICATIONS')}>
             <Ionicons name="notifications-outline" size={24} color={theme.text} />
             {unreadCount > 0 && (

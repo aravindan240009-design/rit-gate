@@ -490,7 +490,8 @@ public class NotificationService {
                 Notification.NotificationType.INFO, Notification.NotificationPriority.HIGH,
                 "/staff/events");
 
-            // Email the assignee (best-effort — never block the in-app notification)
+            // Email the assignee (best-effort — never block the in-app notification).
+            // The code may be a staff code or a student regNo (students can be coordinators).
             try {
                 staffRepository.findByStaffCode(staffCode).ifPresentOrElse(staff -> {
                     if (staff.getEmail() != null && !staff.getEmail().isBlank()) {
@@ -502,7 +503,17 @@ public class NotificationService {
                     } else {
                         log.warn("No email on file for staff {} — skipping coordinator assignment email", staffCode);
                     }
-                }, () -> log.warn("Staff {} not found — skipping coordinator assignment email", staffCode));
+                }, () -> studentRepository.findByRegNo(staffCode).ifPresentOrElse(student -> {
+                    if (student.getEmail() != null && !student.getEmail().isBlank()) {
+                        emailService.sendCoordinatorAssignmentEmail(
+                            student.getEmail(),
+                            student.getFirstName() != null ? student.getFirstName() : staffCode,
+                            eventName, eventDate.toString(), venue
+                        );
+                    } else {
+                        log.warn("No email on file for student {} — skipping coordinator assignment email", staffCode);
+                    }
+                }, () -> log.warn("No staff or student found for {} — skipping coordinator assignment email", staffCode)));
             } catch (Exception emailEx) {
                 log.error("Failed to send coordinator assignment email to {}: {}", staffCode, emailEx.getMessage());
             }

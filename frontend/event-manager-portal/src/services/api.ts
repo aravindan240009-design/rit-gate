@@ -1,4 +1,4 @@
-import { ECUser, Event, Staff, Coordinator, EventPass } from '../types';
+import { ECUser, Event, Staff, StudentLite, Coordinator, EventPass } from '../types';
 
 const BASE = process.env.REACT_APP_API_URL || 'https://rit-gate.onrender.com/api';
 
@@ -138,6 +138,15 @@ export async function fetchAllStaff(): Promise<Staff[]> {
     phone: s.phone || '',
     role: s.role || '',
   }));
+}
+
+// ── students ───────────────────────────────────────────────────────────────
+
+export async function fetchAllStudents(): Promise<StudentLite[]> {
+  const res = await fetch(`${BASE}/students/directory`, { headers: authHeaders() });
+  if (!res.ok) throw new Error(await readError(res, 'Failed to load students'));
+  const data = await res.json();
+  return data.students ?? [];
 }
 
 // ── passes ─────────────────────────────────────────────────────────────────

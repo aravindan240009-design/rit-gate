@@ -40,6 +40,37 @@ public class StudentController {
         }
     }
 
+    // Lean directory for pickers (Event Controller portal etc.) — maps to small
+    // DTO maps so the LONGTEXT profile photo column is never serialized.
+    @GetMapping("/directory")
+    public ResponseEntity<Map<String, Object>> getStudentDirectory() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<Map<String, Object>> students = studentRepository.findAll().stream()
+                .map(s -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("regNo", s.getRegNo());
+                    m.put("name", s.getFirstName());
+                    m.put("department", s.getDepartment());
+                    m.put("email", s.getEmail());
+                    m.put("course", s.getCourse());
+                    m.put("semester", s.getSemester());
+                    m.put("section", s.getSection());
+                    return m;
+                })
+                .toList();
+            response.put("success", true);
+            response.put("students", students);
+            response.put("count", students.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error fetching student directory", e);
+            response.put("success", false);
+            response.put("message", "Error fetching students: " + ErrorMessages.userFriendly(e));
+            return ResponseEntity.internalServerError().body(response);
+        }
+    }
+
     @GetMapping("/{regNo}")
     public ResponseEntity<Map<String, Object>> getStudentByRegNo(@PathVariable String regNo) {
         Map<String, Object> response = new HashMap<>();

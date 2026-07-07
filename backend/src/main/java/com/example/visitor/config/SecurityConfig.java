@@ -65,6 +65,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/qr-codes/**", "/api/security/**").hasRole("ADMIN")
 
                 // ---- Role-scoped path groups ----
+                // Lean student directory (no profile photo) — also needed by the
+                // Event Controller portal to assign students as coordinators.
+                .requestMatchers(HttpMethod.GET, "/api/students/directory")
+                    .hasAnyRole("ADMIN", "HOD", "HR", "EVENT_CONTROLLER")
                 .requestMatchers("/api/students/**").hasAnyRole("ADMIN", "HOD", "HR")
                 // Whole-visitor-list dump is a security-desk/admin view (the single-visitor,
                 // self-register and email-link routes above remain available).
