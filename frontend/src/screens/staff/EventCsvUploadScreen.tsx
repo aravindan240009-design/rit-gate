@@ -60,31 +60,34 @@ const EventCsvUploadScreen: React.FC<Props> = ({
   // ── file pick ──────────────────────────────────────────────────────────────
   const pickFile = async () => {
     try {
+      // Use allFiles so Android doesn't filter out .xlsx — extension check happens below
       const result = await DocumentPicker.pick({
-        type: [
-          DocumentPicker.types.csv,
-          'text/csv',
-          'text/comma-separated-values',
-          // Excel MIME types
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'application/vnd.ms-excel',
-        ],
+        type: [DocumentPicker.types.allFiles],
+        copyTo: 'cachesDirectory',
       });
       const file = result[0];
       if (!file) return;
 
-      const nameLower = file.name?.toLowerCase() ?? '';
+      // Derive a reliable name — uri often ends with the filename on Android
+      const rawName = file.name ?? file.uri.split('/').pop() ?? '';
+      const nameLower = rawName.toLowerCase();
+
       if (!nameLower.endsWith('.csv') && !nameLower.endsWith('.xlsx')) {
         setErrorMessage('Only .csv or .xlsx files are accepted.');
         setErrorVisible(true);
         return;
       }
 
-      setFileName(file.name);
+      // Always use the copied local uri for reliable reading
+      const localUri = (file as any).fileCopyUri ?? file.uri;
+      // Ensure filename has correct extension for backend MIME detection
+      const safeFileName = rawName || (nameLower.endsWith('.xlsx') ? 'upload.xlsx' : 'upload.csv');
+
+      setFileName(safeFileName);
       setUploading(true);
 
       const res = await apiService.uploadEventCsvPreview(
-        event.id, staffCode, file.uri, file.name || 'upload.csv',
+        event.id, staffCode, localUri, safeFileName,
       );
       setUploading(false);
 
