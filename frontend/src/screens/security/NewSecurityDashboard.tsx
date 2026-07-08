@@ -99,15 +99,15 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
     loadEscalatedVisitors();
     loadNotifications(user.securityId, 'security');
 
-    // Poll for new escalated visitors every 10 seconds
+    // Poll for new escalated visitors every 5 seconds
     const pollInterval = setInterval(() => {
       loadEscalatedVisitors();
-    }, 10000);
+    }, 5000);
 
-    // Refresh stats every 10 seconds (catches gate pass exits)
+    // Refresh stats every 5 seconds (catches gate pass exits)
     const statsInterval = setInterval(() => {
       loadDashboardData();
-    }, 10000);
+    }, 5000);
 
     // Reset at midnight — schedule a reload at next midnight
     const now = new Date();
@@ -126,6 +126,15 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
   }, []);
 
   useEffect(() => { if (refreshCount > 0) { loadDashboardData(); loadEscalatedVisitors(); } }, [refreshCount]);
+
+  // A new notification means new data — reload the moment unreadCount changes so
+  // the list is fresh when the user taps the notification and lands here.
+  const didMountUnread = React.useRef(false);
+  useEffect(() => {
+    if (!didMountUnread.current) { didMountUnread.current = true; return; }
+    loadDashboardData();
+    loadEscalatedVisitors();
+  }, [unreadCount]);
 
   const loadDashboardData = async () => {
     try {

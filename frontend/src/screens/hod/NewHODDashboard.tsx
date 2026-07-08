@@ -93,7 +93,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
   useEffect(() => {
     loadRequests();
     loadNotifications(hod.hodCode, 'hod');
-    const interval = setInterval(() => loadRequests(true), 10000);
+    const interval = setInterval(() => loadRequests(true), 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -119,6 +119,14 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
   }, [hod.hodCode]);
 
   useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);
+
+  // A new notification means new data — reload the moment unreadCount changes so
+  // the list is fresh when the user taps the notification and lands here.
+  const didMountUnread = React.useRef(false);
+  useEffect(() => {
+    if (!didMountUnread.current) { didMountUnread.current = true; return; }
+    loadRequests(true);
+  }, [unreadCount]);
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
@@ -237,10 +245,25 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       .substring(0, 2);
   };
 
+  // Optimistically stamp the request's local status so it leaves PENDING and
+  // lands in APPROVED/REJECTED immediately — loadRequests() then reconciles with
+  // the server. Mirrors the tab filter: visitor keys off status, gate passes off
+  // hodApproval (which the filter reads via effectiveStatus = hodApproval || status).
+  const applyLocalDecision = (targetId: any, req: any, decision: 'APPROVED' | 'REJECTED') => {
+    const isVisitor = req?.passType === 'VISITOR' || req?.sourceType === 'VISITOR';
+    setRequests(prev => prev.map(r => {
+      if (r.id !== targetId) return r;
+      return isVisitor
+        ? { ...r, status: decision }
+        : { ...r, hodApproval: decision, status: decision };
+    }));
+  };
+
   const handleApprove = async (id?: number, remark?: string) => {
     const targetId = id || selectedRequest?.id;
     const targetRemark = remark !== undefined ? remark : hodRemark;
     if (!targetId) return;
+    const req = selectedRequest;
 
     setProcessing(true);
     lock('Approving request...');
@@ -252,6 +275,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       } else {
         await apiService.approveGatePassByHOD(hod.hodCode, targetId, targetRemark);
       }
+      applyLocalDecision(targetId, req, 'APPROVED');
       setShowDetailModal(false);
       setShowBulkModal(false);
       setSelectedRequest(null);
@@ -281,6 +305,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       return;
     }
 
+    const req = selectedRequest;
     setProcessing(true);
     lock('Rejecting request...');
 
@@ -291,6 +316,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
       } else {
         await apiService.rejectGatePassByHOD(hod.hodCode, targetId, targetRemark.trim());
       }
+      applyLocalDecision(targetId, req, 'REJECTED');
       setShowDetailModal(false);
       setShowBulkModal(false);
       setSelectedRequest(null);

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { API_CONFIG } from '../config/api.config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -35,6 +35,9 @@ interface NotificationContextType {
   markAsRead: (notificationId: number) => Promise<void>;
   markAllAsRead: (userId: string) => Promise<void>;
   refreshNotifications: () => void;
+  /** Navigate to a notification's actionRoute — same handler used for push taps,
+   *  so in-app notification taps behave identically to device notification taps. */
+  navigateToRoute: (route: string) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -261,9 +264,13 @@ export const NotificationProvider: React.FC<{ children: ReactNode; onNavigate?: 
     return () => sub.remove();
   }, []);
 
+  const navigateToRoute = useCallback((route: string) => {
+    if (onNavigateRef.current) onNavigateRef.current(route || '');
+  }, []);
+
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, loadNotifications, markAsRead, markAllAsRead, refreshNotifications }}
+      value={{ notifications, unreadCount, loadNotifications, markAsRead, markAllAsRead, refreshNotifications, navigateToRoute }}
     >
       {children}
     </NotificationContext.Provider>

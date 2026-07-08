@@ -11,6 +11,7 @@ import { useNotifications } from '../../context/NotificationContext';
 import { useRefresh } from '../../context/RefreshContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useActionLock } from '../../context/ActionLockContext';
 import { getRelativeTimeLocal, formatDateShortLocal, isTodayLocal, toTimestampLocal } from '../../utils/dateUtils';
 import ErrorModal from '../../components/ErrorModal';
 import SuccessModal from '../../components/SuccessModal';
@@ -53,6 +54,7 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
   const { unreadCount, loadNotifications } = useNotifications();
   const { refreshCount } = useRefresh();
   const { profileImage } = useProfile();
+  const { lock, unlock } = useActionLock();
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -74,10 +76,18 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
       loadData();
     });
     loadNotifications(ntf.staffCode, 'staff');
-    const interval = setInterval(() => loadData(true), 10000);
+    const interval = setInterval(() => loadData(true), 5000);
     return () => clearInterval(interval);
   }, []);
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
+
+  // A new notification means new data — reload the moment unreadCount changes so
+  // the list is fresh when the user taps the notification and lands here.
+  const didMountUnread = React.useRef(false);
+  useEffect(() => {
+    if (!didMountUnread.current) { didMountUnread.current = true; return; }
+    loadData(true);
+  }, [unreadCount]);
 
   const fetchIdRef = React.useRef(0);
 
@@ -149,32 +159,57 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
 
   const isHostelReq = (req: any) => req?.kind === 'HOSTEL_GATE_PASS';
 
+  // Optimistically stamp the request's status so it leaves PENDING and lands in
+  // APPROVED/REJECTED immediately — loadData() then reconciles with the server.
+  const applyLocalDecision = (id: any, decision: 'APPROVED' | 'REJECTED') => {
+    setAllRequests(prev => prev.map(r =>
+      (r.requestId || r.id) === id ? { ...r, status: decision } : r));
+  };
+
+  // Keep the detail modal open with an in-modal spinner (via the `processing`
+  // prop) while the API call runs, then close it and show the success message —
+  // so the page never collapses before the action completes. On failure the
+  // modal stays open so the user can retry; the list is only refreshed after
+  // the call resolves (no optimistic removal that shifts the page underneath).
   const handleApprove = async (req: any) => {
     const id = req.requestId || req.id;
+    // Close the detail sheet first, then show the full-screen lock overlay
+    // ("Approving request… / Please wait…") so it sits cleanly over the
+    // dashboard — two stacked RN Modals can otherwise collide on Android.
+    setShowDetailModal(false);
     setProcessing(id);
-    setAllRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
+    lock('Approving request...');
     try {
       const res = isHostelReq(req)
         ? await apiService.approveGatePassByStaff(ntf.staffCode, id, 'Approved by warden')
         : await apiService.approveVisitorRequest(id, ntf.staffCode);
-      if (res.success) { setModalMsg(isHostelReq(req) ? 'Hostel gate pass approved.' : 'Visitor approved.'); setShowSuccess(true); }
-      else { loadData(); setModalMsg(res.message || 'Failed to approve.'); setShowError(true); }
-    } catch (e: any) { loadData(); setModalMsg(e.message || 'Error.'); setShowError(true); }
-    finally { setProcessing(null); }
+      if (res.success) {
+        applyLocalDecision(id, 'APPROVED');
+        setModalMsg(isHostelReq(req) ? 'Hostel gate pass approved.' : 'Visitor approved.');
+        setShowSuccess(true);
+        loadData();
+      } else { setModalMsg(res.message || 'Failed to approve.'); setShowError(true); }
+    } catch (e: any) { setModalMsg(e.message || 'Error.'); setShowError(true); }
+    finally { unlock(); setProcessing(null); }
   };
 
   const handleReject = async (req: any) => {
     const id = req.requestId || req.id;
+    setShowDetailModal(false);
     setProcessing(id);
-    setAllRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
+    lock('Rejecting request...');
     try {
       const res = isHostelReq(req)
         ? await apiService.rejectGatePassByStaff(ntf.staffCode, id, 'Rejected by warden')
         : await apiService.rejectVisitorRequest(id, 'Rejected by staff');
-      if (res.success) { setModalMsg(isHostelReq(req) ? 'Hostel gate pass rejected.' : 'Visitor rejected.'); setShowSuccess(true); }
-      else { loadData(); setModalMsg(res.message || 'Failed to reject.'); setShowError(true); }
-    } catch (e: any) { loadData(); setModalMsg(e.message || 'Error.'); setShowError(true); }
-    finally { setProcessing(null); }
+      if (res.success) {
+        applyLocalDecision(id, 'REJECTED');
+        setModalMsg(isHostelReq(req) ? 'Hostel gate pass rejected.' : 'Visitor rejected.');
+        setShowSuccess(true);
+        loadData();
+      } else { setModalMsg(res.message || 'Failed to reject.'); setShowError(true); }
+    } catch (e: any) { setModalMsg(e.message || 'Error.'); setShowError(true); }
+    finally { unlock(); setProcessing(null); }
   };
 
   return (
@@ -412,8 +447,8 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
         showActions={selectedVisitor?.status === 'PENDING'}
         viewerRole="staff"
         processing={processing === (selectedVisitor?.requestId || selectedVisitor?.id)}
-        onApprove={async (_id, _remark) => { setShowDetailModal(false); await handleApprove(selectedVisitor); }}
-        onReject={async (_id, _remark) => { setShowDetailModal(false); await handleReject(selectedVisitor); }}
+        onApprove={async (_id, _remark) => { await handleApprove(selectedVisitor); }}
+        onReject={async (_id, _remark) => { await handleReject(selectedVisitor); }}
       />
     </SafeAreaView>
   );

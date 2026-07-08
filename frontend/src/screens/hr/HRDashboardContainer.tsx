@@ -9,20 +9,23 @@ import ProfileScreen from '../shared/ProfileScreen';
 import PassTypeBottomSheet from '../../components/PassTypeBottomSheet';
 import ScreenTransition from '../../components/navigation/ScreenTransition';
 
+type InternalTab = 'DASHBOARD' | 'PROFILE' | 'EXITS' | 'NEW_PASS' | 'MY_REQUESTS';
+
 interface HRDashboardContainerProps {
   hr: HR;
   onLogout: () => void;
   onNavigate: (screen: ScreenName) => void;
+  /** Tab to open on mount — used by notification routing (e.g. gate-logs → EXITS). */
+  initialTab?: InternalTab;
 }
-
-type InternalTab = 'DASHBOARD' | 'PROFILE' | 'EXITS' | 'NEW_PASS' | 'MY_REQUESTS';
 
 const HRDashboardContainer: React.FC<HRDashboardContainerProps> = ({
   hr,
   onLogout,
   onNavigate,
+  initialTab,
 }) => {
-  const [activeTab, setActiveTab] = useState<InternalTab>('DASHBOARD');
+  const [activeTab, setActiveTab] = useState<InternalTab>(initialTab || 'DASHBOARD');
   const [showPassSheet, setShowPassSheet] = useState(false);
 
   useEffect(() => {

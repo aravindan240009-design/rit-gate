@@ -71,10 +71,18 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
   useEffect(() => {
     loadData();
     loadNotifications(nci.staffCode, 'staff');
-    const interval = setInterval(() => loadData(true), 10000);
+    const interval = setInterval(() => loadData(true), 5000);
     return () => clearInterval(interval);
   }, []);
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
+
+  // A new notification means new data — reload the moment unreadCount changes so
+  // the list is fresh when the user taps the notification and lands here.
+  const didMountUnread = React.useRef(false);
+  useEffect(() => {
+    if (!didMountUnread.current) { didMountUnread.current = true; return; }
+    loadData(true);
+  }, [unreadCount]);
 
   const fetchIdRef = React.useRef(0);
 
@@ -128,13 +136,19 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
     rejected: allRequests.filter(r => r.status === 'REJECTED').length,
   };
 
+  // Optimistically stamp the request's status so it leaves PENDING and lands in
+  // APPROVED/REJECTED immediately — loadData() then reconciles with the server.
+  const applyLocalDecision = (id: any, decision: 'APPROVED' | 'REJECTED') => {
+    setAllRequests(prev => prev.map(r =>
+      (r.requestId || r.id) === id ? { ...r, status: decision } : r));
+  };
+
   const handleApprove = async (req: any) => {
     const id = req.requestId || req.id;
     setProcessing(id);
-    setAllRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
     try {
       const res = await apiService.approveVisitorRequest(id, nci.staffCode);
-      if (res.success) { setModalMsg('Visitor approved.'); setShowSuccess(true); }
+      if (res.success) { applyLocalDecision(id, 'APPROVED'); setModalMsg('Visitor approved.'); setShowSuccess(true); loadData(); }
       else { loadData(); setModalMsg(res.message || 'Failed to approve.'); setShowError(true); }
     } catch (e: any) { loadData(); setModalMsg(e.message || 'Error.'); setShowError(true); }
     finally { setProcessing(null); }
@@ -143,10 +157,9 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
   const handleReject = async (req: any) => {
     const id = req.requestId || req.id;
     setProcessing(id);
-    setAllRequests(prev => prev.filter(r => (r.requestId || r.id) !== id));
     try {
       const res = await apiService.rejectVisitorRequest(id, 'Rejected by staff');
-      if (res.success) { setModalMsg('Visitor rejected.'); setShowSuccess(true); }
+      if (res.success) { applyLocalDecision(id, 'REJECTED'); setModalMsg('Visitor rejected.'); setShowSuccess(true); loadData(); }
       else { loadData(); setModalMsg(res.message || 'Failed to reject.'); setShowError(true); }
     } catch (e: any) { loadData(); setModalMsg(e.message || 'Error.'); setShowError(true); }
     finally { setProcessing(null); }

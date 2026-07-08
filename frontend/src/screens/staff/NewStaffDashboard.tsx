@@ -96,7 +96,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
     const interval = setInterval(() => {
       const { networkStatus } = require('../../utils/networkStatus');
       if (networkStatus.isOnline) loadRequests(true);
-    }, 10000);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -152,6 +152,15 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
   }, [checkAssignedEvents]);
 
   useEffect(() => { if (refreshCount > 0) loadRequests(); }, [refreshCount]);
+
+  // A new notification means new data on the server — reload the request list the
+  // moment unreadCount changes, so the list is already fresh when the user taps
+  // the notification and lands here (no stale "no requests" gap).
+  const didMountUnread = React.useRef(false);
+  useEffect(() => {
+    if (!didMountUnread.current) { didMountUnread.current = true; return; }
+    loadRequests(true);
+  }, [unreadCount]);
 
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
@@ -303,6 +312,25 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
 
   const actionInFlight = useRef(false);
 
+  // Optimistically stamp a request's local status so it leaves the PENDING tab
+  // and lands in APPROVED/REJECTED immediately — the subsequent loadRequests()
+  // refetch reconciles against the server. Mirrors both the gate-pass fields
+  // (status/staffApproval) and the visitor field (status) used by the tab filter.
+  const applyLocalDecision = (req: any, decision: 'APPROVED' | 'REJECTED') => {
+    const key = req.id;
+    setRequests(prev => prev.map(r => {
+      if (r.id !== key) return r;
+      return req.requestType === 'VISITOR'
+        ? { ...r, status: decision, staffApproval: decision }
+        : { ...r, staffApproval: decision, status: decision === 'APPROVED' ? 'APPROVED' : 'REJECTED' };
+    }));
+    setStats(prev => ({
+      pending: Math.max(0, prev.pending - 1),
+      approved: prev.approved + (decision === 'APPROVED' ? 1 : 0),
+      rejected: prev.rejected + (decision === 'REJECTED' ? 1 : 0),
+    }));
+  };
+
   const handleApprove = async (id?: number, remark?: string) => {
     if (!selectedRequest || actionInFlight.current) return;
     const { networkStatus } = require('../../utils/networkStatus');
@@ -323,6 +351,10 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
       } else {
         await apiService.approveGatePassByStaff(staff.staffCode, req.id, remark || '');
       }
+      // Optimistically move the request out of PENDING right away so it doesn't
+      // linger in the list for the second or two the refetch takes. loadRequests()
+      // then reconciles with the server.
+      applyLocalDecision(req, 'APPROVED');
       setShowDetailModal(false);
       setSelectedRequest(null);
       setModalTitle('Approved');
@@ -360,6 +392,8 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
       } else {
         await apiService.rejectGatePassByStaff(staff.staffCode, req.id, remark || 'Rejected by staff');
       }
+      // Optimistically move the request out of PENDING right away (see handleApprove).
+      applyLocalDecision(req, 'REJECTED');
       setShowDetailModal(false);
       setSelectedRequest(null);
       setModalTitle('Rejected');

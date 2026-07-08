@@ -155,6 +155,14 @@ const StudentHomeScreen: React.FC<StudentHomeScreenProps> = ({
 
   useEffect(() => { if (refreshCount > 0) loadData(); }, [refreshCount]);
 
+  // A new notification (e.g. approval/rejection) means new data — reload the
+  // moment unreadCount changes so the request status is fresh right away.
+  const didMountUnread = React.useRef(false);
+  useEffect(() => {
+    if (!didMountUnread.current) { didMountUnread.current = true; return; }
+    loadData();
+  }, [unreadCount]);
+
   const isToday = (dateValue?: string) => {
     if (!dateValue) return false;
     return isTodayLocal(dateValue);

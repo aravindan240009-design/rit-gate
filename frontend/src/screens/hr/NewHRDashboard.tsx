@@ -104,11 +104,19 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
     loadRequests();
     loadNotifications(hr.hrCode, 'hr');
     loadExitLogs();
-    const interval = setInterval(() => { loadRequests(true); loadExitLogs(); }, 10000);
+    const interval = setInterval(() => { loadRequests(true); loadExitLogs(); }, 5000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => { if (refreshCount > 0) { loadRequests(); loadExitLogs(); } }, [refreshCount]);
+
+  // A new notification means new data — reload the moment unreadCount changes so
+  // the list is fresh when the user taps the notification and lands here.
+  const didMountUnread = React.useRef(false);
+  useEffect(() => {
+    if (!didMountUnread.current) { didMountUnread.current = true; return; }
+    loadRequests(true);
+  }, [unreadCount]);
 
   useEffect(() => {
     const now = new Date();
@@ -301,6 +309,18 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       .substring(0, 2);
   };
 
+  // Optimistically stamp the request's local status so it leaves PENDING and
+  // lands in APPROVED/REJECTED immediately — loadRequests() then reconciles with
+  // the server. Mirrors the tab filter: VISITOR keys off status, others off hrApproval.
+  const applyLocalDecision = (targetId: any, req: any, decision: 'APPROVED' | 'REJECTED') => {
+    setRequests(prev => prev.map(r => {
+      if (r.id !== targetId) return r;
+      return req?.requestType === 'VISITOR'
+        ? { ...r, status: decision }
+        : { ...r, hrApproval: decision, status: decision };
+    }));
+  };
+
   const handleApprove = async (id?: number, remark?: string) => {
     const targetId = id || selectedRequest?.id;
     if (!targetId) return;
@@ -317,6 +337,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       } else {
         await apiService.approveHODBulkPass(targetId, hr.hrCode);
       }
+      applyLocalDecision(targetId, req, 'APPROVED');
       setShowDetailModal(false);
       setShowBulkModal(false);
       setSelectedRequest(null);
@@ -351,6 +372,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
       } else {
         await apiService.rejectHODBulkPass(targetId, hr.hrCode, targetRemark);
       }
+      applyLocalDecision(targetId, req, 'REJECTED');
       setShowDetailModal(false);
       setShowBulkModal(false);
       setSelectedRequest(null);

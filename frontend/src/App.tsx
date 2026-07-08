@@ -149,7 +149,7 @@ const App: React.FC = () => {
 
   // Battery optimization gate — removed (no longer shown to users)
 
-  const [studentInitialTab, setStudentInitialTab] = React.useState<'HOME' | 'REQUESTS' | 'HISTORY' | 'PROFILE' | 'NEW_REQUEST' | undefined>(undefined);
+  const [studentInitialTab, setStudentInitialTab] = React.useState<'HOME' | 'REQUESTS' | 'HISTORY' | 'PROFILE' | 'NEW_REQUEST' | 'EVENT_LIST' | undefined>(undefined);
   const lastBackPress = useRef<number>(0);
   const [showExitToast, setShowExitToast] = React.useState(false);
   const exitToastTimer = useRef<NodeJS.Timeout | null>(null);
@@ -180,6 +180,12 @@ const App: React.FC = () => {
       else if (ut === 'NON_TEACHING') setCurrentScreen('NTF_MY_REQUESTS');
       else if (ut === 'NON_CLASS_INCHARGE') setCurrentScreen('NCI_MY_REQUESTS');
     }
+    // Events — coordinator assignment / cancellation
+    else if (r.includes('/events') || r.includes('event')) {
+      if (ut === 'STAFF') setCurrentScreen('STAFF_EVENT_LIST');
+      else if (ut === 'STUDENT') { setStudentInitialTab('EVENT_LIST'); setCurrentScreen('DASHBOARD'); }
+      else if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
+    }
     // Pending approvals — go to the approver's dashboard
     else if (r.includes('pending-approvals') || r.includes('pending_approvals') ||
              r.includes('pending-requests') || r.includes('pending_requests')) {
@@ -187,11 +193,17 @@ const App: React.FC = () => {
       else if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
       else if (ut === 'HR') setCurrentScreen('HR_DASHBOARD');
       else if (ut === 'SECURITY') setCurrentScreen('SECURITY_DASHBOARD');
+      else if (ut === 'NON_TEACHING') setCurrentScreen('NTF_DASHBOARD');
+      else if (ut === 'NON_CLASS_INCHARGE') setCurrentScreen('NCI_DASHBOARD');
     }
     // HOD/HR specific pending
     else if (r.includes('hod/pending') || r.includes('hr/pending')) {
       if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
       else if (ut === 'HR') setCurrentScreen('HR_DASHBOARD');
+    }
+    // Gate logs / late-entry alerts — HR reviews these on the Exits screen
+    else if (r.includes('gate-logs') || r.includes('gate_logs')) {
+      if (ut === 'HR') setCurrentScreen('HR_EXITS');
     }
     // Notifications screen
     else if (r.includes('notifications')) {
@@ -212,6 +224,8 @@ const App: React.FC = () => {
       else if (ut === 'HOD') setCurrentScreen('HOD_DASHBOARD');
       else if (ut === 'HR') setCurrentScreen('HR_DASHBOARD');
       else if (ut === 'SECURITY') setCurrentScreen('SECURITY_DASHBOARD');
+      else if (ut === 'NON_TEACHING') setCurrentScreen('NTF_DASHBOARD');
+      else if (ut === 'NON_CLASS_INCHARGE') setCurrentScreen('NCI_DASHBOARD');
     }
   }, []);
 
@@ -1081,6 +1095,17 @@ const App: React.FC = () => {
                 onBack={() => setCurrentScreen('STAFF_DASHBOARD')}
               />
             );
+          case 'STAFF_EVENT_LIST':
+            // Notification routing target: open the container directly on the events tab
+            return (
+              <StaffDashboardContainer
+                key="EVENT_LIST"
+                staff={staff}
+                onLogout={handleLogout}
+                onNavigate={navigateToScreen}
+                initialTab="EVENT_LIST"
+              />
+            );
           default:
             return (
               <StaffDashboardContainer
@@ -1224,6 +1249,28 @@ const App: React.FC = () => {
                 creatorName={hr.hrName || hr.name}
                 creatorDepartment={hr.department}
                 onBack={() => setCurrentScreen('HR_DASHBOARD')}
+              />
+            );
+          case 'HR_EXITS':
+            // Notification routing target (late-entry / gate-log alerts) — open on EXITS tab
+            return (
+              <HRDashboardContainer
+                key="EXITS"
+                hr={hr}
+                onLogout={handleLogout}
+                onNavigate={(screen: ScreenName) => setCurrentScreen(screen)}
+                initialTab="EXITS"
+              />
+            );
+          case 'HR_MY_REQUESTS':
+            // Notification routing target (decisions on HR's own requests)
+            return (
+              <HRDashboardContainer
+                key="MY_REQUESTS"
+                hr={hr}
+                onLogout={handleLogout}
+                onNavigate={(screen: ScreenName) => setCurrentScreen(screen)}
+                initialTab="MY_REQUESTS"
               />
             );
           default:

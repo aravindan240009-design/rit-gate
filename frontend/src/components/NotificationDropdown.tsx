@@ -24,6 +24,7 @@ interface Notification {
   isRead: boolean;
   timestamp: string;
   createdAt: string;
+  actionRoute?: string;
 }
 
 interface NotificationDropdownProps {
@@ -43,7 +44,15 @@ export default function NotificationDropdown({
 }: NotificationDropdownProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const { refreshNotifications } = useNotifications();
+  const { refreshNotifications, navigateToRoute } = useNotifications();
+
+  // Tap a notification → mark read, close the dropdown, and navigate to its
+  // target screen — identical behaviour to tapping the device push notification.
+  const handleNotificationPress = (notif: Notification) => {
+    if (!notif.isRead) markAsRead(notif.id);
+    onClose();
+    navigateToRoute(notif.actionRoute || '');
+  };
 
   const isToday = (value?: string) => {
     if (!value) return false;
@@ -187,7 +196,7 @@ export default function NotificationDropdown({
                   <TouchableOpacity
                     key={notif.id}
                     style={[styles.notificationItem, !notif.isRead && styles.unreadItem]}
-                    onPress={() => !notif.isRead && markAsRead(notif.id)}
+                    onPress={() => handleNotificationPress(notif)}
                     activeOpacity={0.7}
                   >
                     {/* Unread dot */}

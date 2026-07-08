@@ -11,20 +11,23 @@ import EventCsvUploadScreen from './EventCsvUploadScreen';
 import EventCsvPreviewScreen from './EventCsvPreviewScreen';
 import StaffEventPassResultScreen from './StaffEventPassResultScreen';
 
+type InternalTab = 'DASHBOARD' | 'PROFILE' | 'MY_REQUESTS' | 'EVENT_LIST' | 'CSV_UPLOAD' | 'CSV_PREVIEW' | 'EVENT_RESULT';
+
 interface StaffDashboardContainerProps {
   staff: Staff;
   onLogout: () => void;
   onNavigate: (screen: ScreenName) => void;
+  /** Tab to open on mount — used by notification routing (e.g. events). */
+  initialTab?: InternalTab;
 }
-
-type InternalTab = 'DASHBOARD' | 'PROFILE' | 'MY_REQUESTS' | 'EVENT_LIST' | 'CSV_UPLOAD' | 'CSV_PREVIEW' | 'EVENT_RESULT';
 
 const StaffDashboardContainer: React.FC<StaffDashboardContainerProps> = ({
   staff,
   onLogout,
   onNavigate,
+  initialTab,
 }) => {
-  const [activeTab, setActiveTab] = useState<InternalTab>('DASHBOARD');
+  const [activeTab, setActiveTab] = useState<InternalTab>(initialTab || 'DASHBOARD');
   const [showPassSheet, setShowPassSheet] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<RITGateEvent | null>(null);
   const [previewRows, setPreviewRows] = useState<EventPassRow[]>([]);
