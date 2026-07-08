@@ -65,8 +65,7 @@ function PassesPage({ user: _u, event, onBack }: { user: ECUser; event: Event; o
     return !q ||
       (p.fullName     || '').toLowerCase().includes(q) ||
       (p.email        || '').toLowerCase().includes(q) ||
-      (p.collegeName  || '').toLowerCase().includes(q) ||
-      (p.manualEntryCode || '').toLowerCase().includes(q);
+      (p.collegeName  || '').toLowerCase().includes(q);
   });
 
   const scanned = passes.filter(p => p.entryScannedAt).length;
@@ -107,12 +106,13 @@ function PassesPage({ user: _u, event, onBack }: { user: ECUser; event: Event; o
         {!loading && !error && (
           <div style={{ display:'flex', gap:14, flexWrap:'wrap', marginBottom:24 }}>
             {[
-              { val: passes.length,          label: 'Total passes',    color: '#000000' },
-              { val: scanned,                label: 'Scanned in',      color: '#15803D' },
-              { val: passes.length - scanned,label: 'Not yet scanned', color: '#B45309' },
+              { val: passes.length,                                            label: 'Total passes',  color: '#000000' },
+              { val: passes.filter(p => p.status !== 'EMAIL_FAILED').length,  label: 'Email sent',    color: '#15803D' },
+              { val: passes.filter(p => p.status === 'EMAIL_FAILED').length,  label: 'Email failed',  color: '#B91C1C' },
+              { val: scanned,                                                  label: 'Scanned in',    color: '#1D4ED8' },
             ].map(s => (
               <div key={s.label} style={{ backgroundColor:'#FFFFFF', border:'1px solid #E2E8F0',
-                borderRadius:20, padding:'16px 22px', flex:1, minWidth:140,
+                borderRadius:20, padding:'16px 22px', flex:1, minWidth:130,
                 boxShadow:'0 2px 8px rgba(0,0,0,0.04)' }}>
                 <div style={{ fontSize:30, fontWeight:900, color:s.color, letterSpacing:-1 }}>{s.val}</div>
                 <div style={{ fontSize:12, color:'#64748B', marginTop:3, fontWeight:500 }}>{s.label}</div>
@@ -143,7 +143,7 @@ function PassesPage({ user: _u, event, onBack }: { user: ECUser; event: Event; o
         ) : (
           <>
             <input
-              placeholder="Search by name, email, college or code…"
+              placeholder="Search by name, email or college…"
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{ display:'block', width:'100%', height:52, backgroundColor:'#F8FAFC',
@@ -156,7 +156,7 @@ function PassesPage({ user: _u, event, onBack }: { user: ECUser; event: Event; o
               <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13.5 }}>
                 <thead>
                   <tr>
-                    {['#','Name','College','Dept','Code','Status'].map(h => (
+                    {['#','Name','College','Dept','Email Status','Scan Status'].map(h => (
                       <th key={h} style={{ backgroundColor:'#F8FAFC', padding:'11px 14px',
                         textAlign:'left', fontSize:11, fontWeight:800, color:'#000000',
                         letterSpacing:0.8, textTransform:'uppercase',
@@ -167,7 +167,9 @@ function PassesPage({ user: _u, event, onBack }: { user: ECUser; event: Event; o
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((p, i) => (
+                  {filtered.map((p, i) => {
+                    const emailFailed = p.status === 'EMAIL_FAILED';
+                    return (
                     <tr key={p.id} style={{ transition:'background 0.12s' }}>
                       <td style={{ padding:'11px 14px', borderBottom:'1px solid #F1F5F9',
                         color:'#94A3B8', fontWeight:600 }}>{i+1}</td>
@@ -182,9 +184,17 @@ function PassesPage({ user: _u, event, onBack }: { user: ECUser; event: Event; o
                         {p.department||'—'}
                       </td>
                       <td style={{ padding:'11px 14px', borderBottom:'1px solid #F1F5F9' }}>
-                        <code style={{ fontSize:13, fontWeight:800, letterSpacing:2, color:'#1E293B' }}>
-                          {p.manualEntryCode}
-                        </code>
+                        <span style={{
+                          display:'inline-flex', alignItems:'center', gap:5,
+                          padding:'4px 10px', borderRadius:999,
+                          fontSize:11, fontWeight:700,
+                          backgroundColor: emailFailed ? '#FEF2F2' : '#F0FDF4',
+                          color:           emailFailed ? '#B91C1C' : '#15803D',
+                          border:          emailFailed ? '1px solid #FCA5A5' : '1px solid #86EFAC',
+                        }}>
+                          <span style={{ fontSize:13 }}>{emailFailed ? '✗' : '✓'}</span>
+                          {emailFailed ? 'Failed' : 'Sent'}
+                        </span>
                       </td>
                       <td style={{ padding:'11px 14px', borderBottom:'1px solid #F1F5F9' }}>
                         <span style={{ display:'inline-block', padding:'4px 10px',
@@ -194,7 +204,8 @@ function PassesPage({ user: _u, event, onBack }: { user: ECUser; event: Event; o
                         </span>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
