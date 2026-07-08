@@ -134,19 +134,23 @@ public class EmailService {
             .replace("'", "&#39;");
     }
 
+    /**
+     * Notify-only — no approve/reject links. A GET link with no auth would let anyone
+     * (including email-client link-scanners that prefetch URLs) silently approve/reject
+     * the visitor. Approval/rejection happens in the app instead.
+     */
     public void sendApprovalRequestEmail(String staffEmail, String staffName, String visitorName,
                                          String visitorEmail, String visitorPhone, String purpose,
                                          Integer numberOfPeople, String department, Long visitorId) {
-        String subject = "Visitor Approval Request - " + visitorName;
+        String subject = "New Visitor Request - " + visitorName;
         String body =
             "Dear " + staffName + ",\n\n" +
-            "You have a new visitor approval request:\n\n" +
+            "You have a new visitor request:\n\n" +
             "Visitor Details:\n" +
             "Name: " + visitorName + "\nEmail: " + visitorEmail + "\nPhone: " + visitorPhone +
             "\nNumber of People: " + numberOfPeople + "\nDepartment: " + department +
             "\nPurpose: " + purpose + "\n\n" +
-            "Approve: " + backendBaseUrl + "/api/visitors/" + visitorId + "/approve\n" +
-            "Reject: " + backendBaseUrl + "/api/visitors/" + visitorId + "/reject\n\n" +
+            "Please open the RIT Gate app to approve or reject this request.\n\n" +
             "Best regards,\nRIT Gate Visitor Management System";
         sendEmail(staffEmail, staffName, subject, body);
     }
