@@ -498,17 +498,23 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
               style={[styles.personCard, { backgroundColor: theme.surface }]}
               onPress={() => {
                 setSelectedPerson(person);
-                setPersonPhoto(null);
                 setPersonPhotoFailed(false);
                 setShowDetailModal(true);
-                if (person.userId) {
-                  apiService.getProfilePhoto(String(person.userId)).then(setPersonPhoto);
+                if (person.photoUrl) {
+                  // Visitor photo captured by security — no IMS lookup needed.
+                  setPersonPhoto(person.photoUrl);
+                } else {
+                  setPersonPhoto(null);
+                  if (person.userId) {
+                    apiService.getProfilePhoto(String(person.userId)).then(setPersonPhoto);
+                  }
                 }
               }}
             >
               <RequesterAvatar
                 code={person.userId}
                 name={person.name}
+                photoUrl={person.photoUrl}
                 size={48}
                 containerStyle={[styles.personAvatar, { backgroundColor: theme.primary }]}
                 textStyle={styles.personAvatarText}

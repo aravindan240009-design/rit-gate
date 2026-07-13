@@ -202,7 +202,29 @@ public class SecurityController {
     public ResponseEntity<?> scanQrCode(@PathVariable String qrCode) {
         return scanQrCodeInternal(qrCode);
     }
-    
+
+    /**
+     * Attach a photo (taken by security at entry) to a visitor record.
+     * Optional step, called right after a successful entry scan — separate from
+     * scanQrCodeInternal so a slow/declined camera capture never blocks or
+     * complicates the transactional scan itself.
+     */
+    @PostMapping("/visitor/{id}/photo")
+    public ResponseEntity<?> attachVisitorPhoto(@PathVariable Long id, @RequestBody java.util.Map<String, String> request) {
+        String photoUrl = request.get("photoUrl");
+        if (photoUrl == null || photoUrl.isBlank()) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("status", "ERROR", "message", "photoUrl is required"));
+        }
+        Optional<Visitor> visitorOpt = visitorRepository.findById(id);
+        if (visitorOpt.isEmpty()) {
+            return ResponseEntity.status(404).body(java.util.Map.of("status", "ERROR", "message", "Visitor not found"));
+        }
+        Visitor visitor = visitorOpt.get();
+        visitor.setPhotoUrl(photoUrl);
+        visitorRepository.save(visitor);
+        return ResponseEntity.ok(java.util.Map.of("status", "SUCCESS", "message", "Photo saved"));
+    }
+
     // Late Entry Scanning Endpoint - For students/staff arriving late
     @PostMapping("/scan-late-entry")
     public ResponseEntity<?> scanLateEntry(@RequestBody java.util.Map<String, String> request) {
@@ -1039,7 +1061,11 @@ public class SecurityController {
                             detailedInfo.put("scanCount", v.getScanCount());
                             detailedInfo.put("vehicleNumber", v.getVehicleNumber());
                             detailedInfo.put("vehicleType", v.getVehicleType());
-                            
+                            // Visitor DB id + existing photo (if any) — the app uses the id to
+                            // attach a freshly captured photo via POST /security/visitor/{id}/photo
+                            detailedInfo.put("visitorId", v.getId());
+                            detailedInfo.put("photoUrl", v.getPhotoUrl());
+
                             System.out.println("📋 Visitor details: " + personName + " - Purpose: " + v.getPurpose() + " - Meeting: " + v.getPersonToMeet());
                         } else {
                             personName = "Visitor - " + userId;
@@ -1929,6 +1955,16 @@ public class SecurityController {
                 if (userId != null) person.put("userId", userId);
                 person.put("scanId", firstScan.getId()); // ID of the entry ScanLog row
 
+                // Photo captured by security at entry (visitors only)
+                if (userId != null && !"null".equals(userId)) {
+                    try {
+                        Long visitorId = Long.parseLong(userId);
+                        visitorRepository.findById(visitorId).ifPresent(v -> {
+                            if (v.getPhotoUrl() != null) person.put("photoUrl", v.getPhotoUrl());
+                        });
+                    } catch (Exception ignored) {}
+                }
+
                 activePersons.add(person);
             }
 
@@ -2238,13 +2274,14 @@ public class SecurityController {
                 rec.put("purpose",     entryPurpose);
                 rec.put("reason",      "");
                 if (entry.getDepartment() != null) rec.put("department", entry.getDepartment());
-                // Resolve visitor role (VISITOR/VENDOR)
+                // Resolve visitor role (VISITOR/VENDOR) + photo captured by security at entry
                 if ("VISITOR".equals(utype) || "VG".equals(utype)) {
                     if (uid != null && !"null".equals(uid)) {
                         try {
                             Long visitorId = Long.parseLong(uid);
                             visitorRepository.findById(visitorId).ifPresent(v -> {
                                 if (v.getRole() != null) rec.put("role", v.getRole());
+                                if (v.getPhotoUrl() != null) rec.put("photoUrl", v.getPhotoUrl());
                             });
                         } catch (Exception ignored) {}
                     }
@@ -2389,13 +2426,14 @@ public class SecurityController {
                 if (resolvedDept != null) rec.put("department", resolvedDept);
                 if (exitLog.getEmail() != null) rec.put("email", exitLog.getEmail());
                 if (exitLog.getPhone() != null) rec.put("phone", exitLog.getPhone());
-                // Resolve visitor role (VISITOR/VENDOR)
+                // Resolve visitor role (VISITOR/VENDOR) + photo captured by security at entry
                 if ("VISITOR".equals(utype) || "VG".equals(utype)) {
                     if (uid != null && !"null".equals(uid)) {
                         try {
                             Long visitorId = Long.parseLong(uid);
                             visitorRepository.findById(visitorId).ifPresent(v -> {
                                 if (v.getRole() != null) rec.put("role", v.getRole());
+                                if (v.getPhotoUrl() != null) rec.put("photoUrl", v.getPhotoUrl());
                             });
                         } catch (Exception ignored) {}
                     }

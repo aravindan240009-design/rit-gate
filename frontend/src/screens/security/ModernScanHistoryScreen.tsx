@@ -64,6 +64,8 @@ interface ScanRecord {
   regNo?: string;
   userId?: string;
   department?: string;
+  /** Photo captured by security at entry (visitors only) — shown instead of initials. */
+  photoUrl?: string;
 }
 
 // Returns "YYYY-MM-DD" in local (IST) time — avoids UTC offset shifting the date
@@ -666,6 +668,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                   <RequesterAvatar
                     code={scan.userId || scan.regNo || String(scan.id || "")}
                     name={scan.name}
+                    photoUrl={scan.photoUrl}
                     size={48}
                     containerStyle={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}
                     textStyle={[styles.scanAvatarText, { color: theme.primary }]}
@@ -1225,6 +1228,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                         <RequesterAvatar
                           code={selectedScan.userId || selectedScan.regNo || String(selectedScan.id || "")}
                           name={selectedScan.name}
+                          photoUrl={selectedScan.photoUrl}
                           size={48}
                           containerStyle={[styles.fsAvatar, { backgroundColor: statusColor }]}
                           textStyle={styles.fsAvatarText}

@@ -21,10 +21,13 @@ import { apiService } from '../../services/api';
 import SecurityBottomNav from '../../components/SecurityBottomNav';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
+import ConfirmationModal from '../../components/ConfirmationModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import { useTheme } from '../../context/ThemeContext';
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
+import imagePicker from '../../utils/safeImagePicker';
+import { getVisitorPhotoCaptureEnabled, setVisitorPhotoCaptureEnabled } from '../../utils/visitorPhotoSettings';
 
 
 interface ModernQRScannerScreenProps {
@@ -47,6 +50,41 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [modalTitle, setModalTitle] = useState('');
+
+  // Optional visitor-photo capture, toggled per security guard (persisted locally).
+  const [photoCaptureEnabled, setPhotoCaptureEnabled] = useState(true);
+  const [showPhotoPrompt, setShowPhotoPrompt] = useState(false);
+  const [pendingVisitorId, setPendingVisitorId] = useState<number | string | null>(null);
+  const [pendingSuccess, setPendingSuccess] = useState<{ title: string; message: string } | null>(null);
+
+  useEffect(() => {
+    getVisitorPhotoCaptureEnabled(security.securityId).then(setPhotoCaptureEnabled);
+  }, [security.securityId]);
+
+  const togglePhotoCapture = () => {
+    const next = !photoCaptureEnabled;
+    setPhotoCaptureEnabled(next);
+    setVisitorPhotoCaptureEnabled(security.securityId, next);
+  };
+
+  /** Open the camera, upload the photo against visitorId, then show the success modal either way. */
+  const captureVisitorPhoto = async (visitorId: number | string, onDone: () => void) => {
+    try {
+      const perm = await imagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) { onDone(); return; }
+      const result = await imagePicker.launchCameraAsync({ base64: true, quality: 0.6 });
+      if (result.canceled || !result.assets?.length) { onDone(); return; }
+      const asset = result.assets[0];
+      if (asset.base64) {
+        const mimeType = asset.mimeType || 'image/jpeg';
+        await apiService.attachVisitorPhoto(visitorId, `data:${mimeType};base64,${asset.base64}`);
+      }
+    } catch (e) {
+      console.warn('Visitor photo capture failed:', e);
+    } finally {
+      onDone();
+    }
+  };
 
   useEffect(() => {
     const getCameraPermissions = async () => {
@@ -118,9 +156,22 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         const isExit = scanType === 'EXIT' || scanLocation.includes('exit');
         const isLateEntry = !isExit && (isQRFormat === false && is6DigitCode === false);
         const scanLabel = isExit ? 'Exit' : isLateEntry ? 'Late Entry' : 'Entry';
-        setModalTitle(`✅ ${scanLabel} Recorded`);
-        setModalMessage(response.message || `${scanLabel} recorded successfully`);
-        setShowSuccessModal(true);
+        const title = `✅ ${scanLabel} Recorded`;
+        const message = response.message || `${scanLabel} recorded successfully`;
+
+        // Visitor entry (not exit) → offer the optional photo-capture step before
+        // showing success, so the page doesn't jump straight to "Approved".
+        const isVisitor = (data_resp?.type || '').toUpperCase() === 'VISITOR';
+        const visitorId = data_resp?.visitorId;
+        if (isVisitor && !isExit && photoCaptureEnabled && visitorId != null) {
+          setPendingVisitorId(visitorId);
+          setPendingSuccess({ title, message });
+          setShowPhotoPrompt(true);
+        } else {
+          setModalTitle(title);
+          setModalMessage(message);
+          setShowSuccessModal(true);
+        }
       } else {
         setModalTitle('Scan Failed');
         // Map technical messages to user-friendly ones
@@ -191,11 +242,22 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         const scanLocation = (data_resp?.scanLocation || '').toLowerCase();
         const isExit = scanType === 'EXIT' || scanLocation.includes('exit');
         const scanLabel = isExit ? 'Exit' : 'Entry';
-        setModalTitle(`✅ ${scanLabel} Recorded`);
-        setModalMessage(response.message || `${scanLabel} recorded successfully`);
+        const title = `✅ ${scanLabel} Recorded`;
+        const message = response.message || `${scanLabel} recorded successfully`;
         setManualCode('');
         setShowManualModal(false);
-        setShowSuccessModal(true);
+
+        const isVisitor = (data_resp?.type || '').toUpperCase() === 'VISITOR';
+        const visitorId = data_resp?.visitorId;
+        if (isVisitor && !isExit && photoCaptureEnabled && visitorId != null) {
+          setPendingVisitorId(visitorId);
+          setPendingSuccess({ title, message });
+          setShowPhotoPrompt(true);
+        } else {
+          setModalTitle(title);
+          setModalMessage(message);
+          setShowSuccessModal(true);
+        }
       } else {
         setModalTitle('Scan Failed');
         const rawMsg = response.message || '';
@@ -338,7 +400,18 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <View style={styles.headerRight} />
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>QR Scanner</ThemedText>
-        <View style={styles.headerRight} />
+        <TouchableOpacity
+          style={[styles.headerRight, { alignItems: 'center' }]}
+          onPress={togglePhotoCapture}
+          accessibilityRole="button"
+          accessibilityLabel={photoCaptureEnabled ? 'Visitor photo capture on — tap to turn off' : 'Visitor photo capture off — tap to turn on'}
+        >
+          <Ionicons
+            name={photoCaptureEnabled ? 'camera' : 'camera-outline'}
+            size={22}
+            color={photoCaptureEnabled ? theme.primary : theme.textTertiary}
+          />
+        </TouchableOpacity>
       </View>
 
       {!showCamera ? (
@@ -469,6 +542,46 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
 
       {/* Bottom Navigation */}
       {!showManualModal && <SecurityBottomNav activeTab="scanner" onNavigate={onNavigate} />}
+
+      {/* Optional visitor photo capture — shown right after a successful visitor
+          entry scan, before the success modal, so security can attach a photo. */}
+      <ConfirmationModal
+        visible={showPhotoPrompt}
+        title="Take Visitor Photo?"
+        message="Capture a photo of the visitor to attach to their record."
+        confirmText="Take Photo"
+        cancelText="Skip"
+        icon="camera-outline"
+        onConfirm={async () => {
+          setShowPhotoPrompt(false);
+          setIsLoading(true);
+          const visitorId = pendingVisitorId;
+          const success = pendingSuccess;
+          await new Promise<void>(resolve => {
+            if (visitorId != null) captureVisitorPhoto(visitorId, resolve);
+            else resolve();
+          });
+          setIsLoading(false);
+          setPendingVisitorId(null);
+          setPendingSuccess(null);
+          if (success) {
+            setModalTitle(success.title);
+            setModalMessage(success.message);
+            setShowSuccessModal(true);
+          }
+        }}
+        onCancel={() => {
+          setShowPhotoPrompt(false);
+          const success = pendingSuccess;
+          setPendingVisitorId(null);
+          setPendingSuccess(null);
+          if (success) {
+            setModalTitle(success.title);
+            setModalMessage(success.message);
+            setShowSuccessModal(true);
+          }
+        }}
+      />
 
       {/* Success Modal */}
       <SuccessModal

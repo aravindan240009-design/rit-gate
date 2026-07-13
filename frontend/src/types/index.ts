@@ -200,6 +200,8 @@ export interface ActivePerson {
   userId?: string;
   department?: string;
   scanId?: number;
+  /** Photo captured by security at entry (visitors only) — shown instead of initials. */
+  photoUrl?: string;
 }
 
 // Vehicle History

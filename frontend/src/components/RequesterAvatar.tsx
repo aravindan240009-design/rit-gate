@@ -11,11 +11,15 @@ import ThemedText from './ThemedText';
 import { apiService } from '../services/api';
 
 interface Props {
-  code?: string | null;          // regNo or staffCode to look up
+  code?: string | null;          // regNo or staffCode to look up (IMS photo)
   name?: string | null;          // used for initials fallback
   size?: number;
   containerStyle?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  /** Direct photo (e.g. a visitor photo captured by security) — bypasses the IMS
+   *  code lookup entirely. Visitors have no regNo/staffCode/IMS record, so this is
+   *  how their photo (if security took one) gets shown instead of initials. */
+  photoUrl?: string | null;
 }
 
 const getInitials = (name?: string | null) =>
@@ -24,12 +28,15 @@ const getInitials = (name?: string | null) =>
 // Tiny in-memory cache so the same code isn't re-fetched for every card render.
 const photoCache = new Map<string, string | null>();
 
-const RequesterAvatar: React.FC<Props> = ({ code, name, size = 48, containerStyle, textStyle }) => {
-  const [photo, setPhoto] = useState<string | null>(code ? photoCache.get(code) ?? null : null);
+const RequesterAvatar: React.FC<Props> = ({ code, name, size = 48, containerStyle, textStyle, photoUrl }) => {
+  const [photo, setPhoto] = useState<string | null>(photoUrl ?? (code ? photoCache.get(code) ?? null : null));
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     setFailed(false);
+    // An explicit photoUrl (e.g. a visitor's captured photo) always wins over the
+    // IMS code lookup and needs no network round-trip.
+    if (photoUrl) { setPhoto(photoUrl); return; }
     if (!code) { setPhoto(null); return; }
     if (photoCache.has(code)) { setPhoto(photoCache.get(code) ?? null); return; }
     let active = true;
@@ -38,7 +45,7 @@ const RequesterAvatar: React.FC<Props> = ({ code, name, size = 48, containerStyl
       if (active) setPhoto(url);
     });
     return () => { active = false; };
-  }, [code]);
+  }, [code, photoUrl]);
 
   const dim = { width: size, height: size, borderRadius: size / 2 };
 

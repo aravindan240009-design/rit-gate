@@ -819,6 +819,17 @@ class ApiService {
     catch (e: any) { return { success: false, message: e.message || 'Failed to scan late entry' }; }
   }
 
+  /** Attach a photo (base64 data URI) taken by security to a visitor's record. */
+  async attachVisitorPhoto(visitorId: number | string, photoUrl: string): Promise<ApiResponse> {
+    try {
+      const data = await this.makeRequest(`${this.baseURL}/security/visitor/${visitorId}/photo`, {
+        method: 'POST',
+        body: JSON.stringify({ photoUrl }),
+      });
+      return { ...data, success: data.status === 'SUCCESS' };
+    } catch (e: any) { return { success: false, message: e.message || 'Failed to save visitor photo' }; }
+  }
+
   async manualExit(personName: string, scannedBy?: string, userId?: string, scanId?: number, purpose?: string, userType?: string): Promise<ApiResponse> {
     try {
       const data = await this.makeRequest(`${this.baseURL}/security/manual-exit`, {

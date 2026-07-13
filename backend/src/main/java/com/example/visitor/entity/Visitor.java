@@ -45,7 +45,12 @@ public class Visitor {
 
     @Column(nullable = true, name = "vehicle_type", length = 100)
     private String vehicleType;
-    
+
+    // Photo taken by security at entry (optional, base64 data URI). MEDIUMTEXT to
+    // match the attachment_uri precedent on GatePassRequest (supports large images).
+    @Column(nullable = true, name = "photo_url", columnDefinition = "MEDIUMTEXT")
+    private String photoUrl;
+
     @Column(nullable = true, name = "staff_code")
     private String staffCode;
     
@@ -165,7 +170,10 @@ public class Visitor {
 
     public String getVehicleType() { return vehicleType; }
     public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }
-    
+
+    public String getPhotoUrl() { return photoUrl; }
+    public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     
