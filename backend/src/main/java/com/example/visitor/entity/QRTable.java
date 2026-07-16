@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "QR")
+@Table(name = "qr")
 public class QRTable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

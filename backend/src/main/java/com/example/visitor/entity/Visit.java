@@ -8,7 +8,7 @@ import java.util.List;
  * Visit maps to the Visitor table.
  */
 @Entity
-@Table(name = "Visitor")
+@Table(name = "visitors")
 public class Visit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

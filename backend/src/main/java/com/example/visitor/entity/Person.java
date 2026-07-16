@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
  * Person maps to the Visitor table — all visitor/person data lives there.
  */
 @Entity
-@Table(name = "Visitor")
+@Table(name = "visitors")
 public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

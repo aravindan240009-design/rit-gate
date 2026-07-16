@@ -654,7 +654,7 @@ public class SecurityController {
                                         String tag = "VISITOR_" + visitor.getId();
                                         String ownerType = visitor.getRole() != null && !visitor.getRole().isBlank() ? visitor.getRole() : "VISITOR";
                                         jdbcTemplate.update(
-                                            "INSERT INTO Vehicle (license_plate, owner_name, owner_phone, owner_type, vehicle_type, registered_by, created_at, updated_at) VALUES (?,?,?,?,?,?,NOW(),NOW())",
+                                            "INSERT INTO vehicles (license_plate, owner_name, owner_phone, owner_type, vehicle_type, registered_by, created_at, updated_at) VALUES (?,?,?,?,?,?,NOW(),NOW())",
                                             plate, visitor.getName(), visitor.getPhone(), ownerType, vType, tag
                                         );
                                         System.out.println("✅ Vehicle entry registered: " + plate);
@@ -707,7 +707,7 @@ public class SecurityController {
                                     try {
                                         String entryTag = "VISITOR_" + visitor.getId();
                                         jdbcTemplate.update(
-                                            "UPDATE Vehicle SET updated_at = NOW() WHERE registered_by = ?",
+                                            "UPDATE vehicles SET updated_at = NOW() WHERE registered_by = ?",
                                             entryTag
                                         );
                                         System.out.println("✅ Vehicle exit recorded for visitor: " + visitor.getId());
@@ -3482,7 +3482,7 @@ public class SecurityController {
                         if (v.getVehicleNumber() != null && !v.getVehicleNumber().isBlank()) {
                             String entryTag = "VISITOR_" + v.getId();
                             jdbcTemplate.update(
-                                "UPDATE Vehicle SET updated_at = NOW() WHERE registered_by = ?",
+                                "UPDATE vehicles SET updated_at = NOW() WHERE registered_by = ?",
                                 entryTag
                             );
                             System.out.println("✅ Vehicle exit recorded for manual exit: " + v.getVehicleNumber());

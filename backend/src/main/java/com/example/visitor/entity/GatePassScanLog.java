@@ -7,9 +7,9 @@ import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
-// Maps to Exit_logs table (same as RailwayExitLog)
+// Maps to exit_logs table (same as RailwayExitLog)
 @Entity
-@Table(name = "Exits")
+@Table(name = "exit_logs")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
