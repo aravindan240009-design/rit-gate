@@ -86,6 +86,17 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
     }
   };
 
+  /** Close the scan camera and ask whether to photograph the visitor.
+      The scan-camera branch renders no modal tree, so the prompt must be
+      shown from the main branch — closing the camera first also releases
+      it before the photo camera opens. */
+  const startVisitorPhotoFlow = (visitorId: number | string, title: string, message: string) => {
+    setShowCamera(false);
+    setPendingVisitorId(visitorId);
+    setPendingSuccess({ title, message });
+    setShowPhotoPrompt(true);
+  };
+
   useEffect(() => {
     const getCameraPermissions = async () => {
       console.log('🎥 [MODERN] Requesting camera permissions...');
@@ -159,14 +170,12 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         const title = `✅ ${scanLabel} Recorded`;
         const message = response.message || `${scanLabel} recorded successfully`;
 
-        // Visitor entry (not exit) → offer the optional photo-capture step before
-        // showing success, so the page doesn't jump straight to "Approved".
+        // Visitor entry (not exit) → open the photo camera immediately so
+        // security can capture the visitor before the success modal shows.
         const isVisitor = (data_resp?.type || '').toUpperCase() === 'VISITOR';
         const visitorId = data_resp?.visitorId;
         if (isVisitor && !isExit && photoCaptureEnabled && visitorId != null) {
-          setPendingVisitorId(visitorId);
-          setPendingSuccess({ title, message });
-          setShowPhotoPrompt(true);
+          startVisitorPhotoFlow(visitorId, title, message);
         } else {
           setModalTitle(title);
           setModalMessage(message);
@@ -250,9 +259,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         const isVisitor = (data_resp?.type || '').toUpperCase() === 'VISITOR';
         const visitorId = data_resp?.visitorId;
         if (isVisitor && !isExit && photoCaptureEnabled && visitorId != null) {
-          setPendingVisitorId(visitorId);
-          setPendingSuccess({ title, message });
-          setShowPhotoPrompt(true);
+          startVisitorPhotoFlow(visitorId, title, message);
         } else {
           setModalTitle(title);
           setModalMessage(message);
@@ -543,32 +550,32 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
       {/* Bottom Navigation */}
       {!showManualModal && <SecurityBottomNav activeTab="scanner" onNavigate={onNavigate} />}
 
-      {/* Optional visitor photo capture — shown right after a successful visitor
-          entry scan, before the success modal, so security can attach a photo. */}
+      {/* Visitor photo prompt — shown after a successful visitor entry scan
+          (scan camera is already closed). Yes → open the camera and attach the
+          photo to the visitor record (replaces the initials placeholder
+          everywhere). No → keep the initials placeholder. */}
       <ConfirmationModal
         visible={showPhotoPrompt}
         title="Take Visitor Photo?"
         message="Capture a photo of the visitor to attach to their record."
         confirmText="Take Photo"
-        cancelText="Skip"
+        cancelText="No"
         icon="camera-outline"
-        onConfirm={async () => {
+        onConfirm={() => {
           setShowPhotoPrompt(false);
-          setIsLoading(true);
           const visitorId = pendingVisitorId;
           const success = pendingSuccess;
-          await new Promise<void>(resolve => {
-            if (visitorId != null) captureVisitorPhoto(visitorId, resolve);
-            else resolve();
-          });
-          setIsLoading(false);
           setPendingVisitorId(null);
           setPendingSuccess(null);
-          if (success) {
-            setModalTitle(success.title);
-            setModalMessage(success.message);
-            setShowSuccessModal(true);
-          }
+          const finish = () => {
+            if (success) {
+              setModalTitle(success.title);
+              setModalMessage(success.message);
+              setShowSuccessModal(true);
+            }
+          };
+          if (visitorId != null) captureVisitorPhoto(visitorId, finish);
+          else finish();
         }}
         onCancel={() => {
           setShowPhotoPrompt(false);
