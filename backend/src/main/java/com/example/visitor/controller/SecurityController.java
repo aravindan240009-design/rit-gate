@@ -219,10 +219,22 @@ public class SecurityController {
         if (visitorOpt.isEmpty()) {
             return ResponseEntity.status(404).body(java.util.Map.of("status", "ERROR", "message", "Visitor not found"));
         }
-        Visitor visitor = visitorOpt.get();
-        visitor.setPhotoUrl(photoUrl);
-        visitorRepository.save(visitor);
-        return ResponseEntity.ok(java.util.Map.of("status", "SUCCESS", "message", "Photo saved"));
+        try {
+            Visitor visitor = visitorOpt.get();
+            visitor.setPhotoUrl(photoUrl);
+            visitorRepository.save(visitor);
+            return ResponseEntity.ok(java.util.Map.of("status", "SUCCESS", "message", "Photo saved"));
+        } catch (Exception e) {
+            // Surface the real cause (e.g. "Data too long for column 'photo_url'" when
+            // the column is TEXT instead of MEDIUMTEXT) instead of an opaque 500.
+            Throwable root = e;
+            while (root.getCause() != null) root = root.getCause();
+            System.err.println("❌ Failed to save visitor photo (" + photoUrl.length() + " chars): " + root.getMessage());
+            return ResponseEntity.internalServerError().body(java.util.Map.of(
+                "status", "ERROR",
+                "message", "Could not save photo: " + root.getMessage()
+            ));
+        }
     }
 
     // Late Entry Scanning Endpoint - For students/staff arriving late

@@ -70,23 +70,26 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
 
   /** Open the camera and upload the photo against visitorId.
       'saved' = uploaded, 'skipped' = guard cancelled the camera,
-      'failed' = capture/upload error (entry itself is already recorded). */
-  const captureVisitorPhoto = async (visitorId: number | string): Promise<'saved' | 'skipped' | 'failed'> => {
+      'failed' = capture/upload error (entry itself is already recorded;
+      `error` carries the server's reason for display). */
+  const captureVisitorPhoto = async (
+    visitorId: number | string,
+  ): Promise<{ status: 'saved' | 'skipped' | 'failed'; error?: string }> => {
     try {
       const perm = await imagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) return 'skipped';
+      if (!perm.granted) return { status: 'skipped' };
       // maxWidth/maxHeight keep the base64 payload small enough to upload reliably
       const result = await imagePicker.launchCameraAsync({ base64: true, quality: 0.6, maxWidth: 900, maxHeight: 900 });
-      if (result.canceled || !result.assets?.length) return 'skipped';
+      if (result.canceled || !result.assets?.length) return { status: 'skipped' };
       const asset = result.assets[0];
-      if (!asset.base64) return 'failed';
+      if (!asset.base64) return { status: 'failed', error: 'Camera returned no image data' };
       const mimeType = asset.type || asset.mimeType || 'image/jpeg';
       const resp = await apiService.attachVisitorPhoto(visitorId, `data:${mimeType};base64,${asset.base64}`);
       if (!resp.success) console.warn('Visitor photo upload failed:', resp.message);
-      return resp.success ? 'saved' : 'failed';
-    } catch (e) {
+      return resp.success ? { status: 'saved' } : { status: 'failed', error: resp.message };
+    } catch (e: any) {
       console.warn('Visitor photo capture failed:', e);
-      return 'failed';
+      return { status: 'failed', error: e?.message };
     }
   };
 
@@ -571,7 +574,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
           const success = pendingSuccess;
           setPendingVisitorId(null);
           setPendingSuccess(null);
-          let outcome: 'saved' | 'skipped' | 'failed' = 'skipped';
+          let outcome: { status: 'saved' | 'skipped' | 'failed'; error?: string } = { status: 'skipped' };
           if (visitorId != null) {
             setSavingPhoto(true);
             try {
@@ -582,8 +585,8 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
           }
           if (success) {
             setModalTitle(success.title);
-            setModalMessage(outcome === 'failed'
-              ? `${success.message}\n(Photo could not be saved)`
+            setModalMessage(outcome.status === 'failed'
+              ? `${success.message}\n(Photo could not be saved${outcome.error ? `: ${outcome.error}` : ''})`
               : success.message);
             setShowSuccessModal(true);
           }
