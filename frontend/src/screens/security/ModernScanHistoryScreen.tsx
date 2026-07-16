@@ -1008,6 +1008,7 @@ const ModernScanHistoryScreen: React.FC<ModernScanHistoryScreenProps> = ({
                     <RequesterAvatar
                       code={scan.userId || scan.regNo || String(scan.id || "")}
                       name={scan.name}
+                      photoUrl={scan.photoUrl}
                       size={48}
                       containerStyle={[styles.scanAvatar, { backgroundColor: theme.primary + '20' }]}
                       textStyle={[styles.scanAvatarText, { color: theme.primary }]}

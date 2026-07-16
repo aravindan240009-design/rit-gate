@@ -47,6 +47,9 @@ try {
         mediaType: 'photo',
         includeBase64: !!options?.base64,
         quality: options?.quality ?? 0.8,
+        // Resize huge camera photos down (base64 payloads must stay small)
+        maxWidth: options?.maxWidth,
+        maxHeight: options?.maxHeight,
       });
       if (result.didCancel || !result.assets?.length) {
         return { canceled: true, assets: [] };
@@ -58,6 +61,8 @@ try {
         mediaType: 'photo',
         includeBase64: !!options?.base64,
         quality: options?.quality ?? 0.8,
+        maxWidth: options?.maxWidth,
+        maxHeight: options?.maxHeight,
         selectionLimit: 1,
       });
       if (result.didCancel || !result.assets?.length) {

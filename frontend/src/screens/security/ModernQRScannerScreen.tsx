@@ -54,6 +54,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
   // Optional visitor-photo capture, toggled per security guard (persisted locally).
   const [photoCaptureEnabled, setPhotoCaptureEnabled] = useState(true);
   const [showPhotoPrompt, setShowPhotoPrompt] = useState(false);
+  const [savingPhoto, setSavingPhoto] = useState(false);
   const [pendingVisitorId, setPendingVisitorId] = useState<number | string | null>(null);
   const [pendingSuccess, setPendingSuccess] = useState<{ title: string; message: string } | null>(null);
 
@@ -67,22 +68,25 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
     setVisitorPhotoCaptureEnabled(security.securityId, next);
   };
 
-  /** Open the camera, upload the photo against visitorId, then show the success modal either way. */
-  const captureVisitorPhoto = async (visitorId: number | string, onDone: () => void) => {
+  /** Open the camera and upload the photo against visitorId.
+      'saved' = uploaded, 'skipped' = guard cancelled the camera,
+      'failed' = capture/upload error (entry itself is already recorded). */
+  const captureVisitorPhoto = async (visitorId: number | string): Promise<'saved' | 'skipped' | 'failed'> => {
     try {
       const perm = await imagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) { onDone(); return; }
-      const result = await imagePicker.launchCameraAsync({ base64: true, quality: 0.6 });
-      if (result.canceled || !result.assets?.length) { onDone(); return; }
+      if (!perm.granted) return 'skipped';
+      // maxWidth/maxHeight keep the base64 payload small enough to upload reliably
+      const result = await imagePicker.launchCameraAsync({ base64: true, quality: 0.6, maxWidth: 900, maxHeight: 900 });
+      if (result.canceled || !result.assets?.length) return 'skipped';
       const asset = result.assets[0];
-      if (asset.base64) {
-        const mimeType = asset.mimeType || 'image/jpeg';
-        await apiService.attachVisitorPhoto(visitorId, `data:${mimeType};base64,${asset.base64}`);
-      }
+      if (!asset.base64) return 'failed';
+      const mimeType = asset.type || asset.mimeType || 'image/jpeg';
+      const resp = await apiService.attachVisitorPhoto(visitorId, `data:${mimeType};base64,${asset.base64}`);
+      if (!resp.success) console.warn('Visitor photo upload failed:', resp.message);
+      return resp.success ? 'saved' : 'failed';
     } catch (e) {
       console.warn('Visitor photo capture failed:', e);
-    } finally {
-      onDone();
+      return 'failed';
     }
   };
 
@@ -561,21 +565,28 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         confirmText="Take Photo"
         cancelText="No"
         icon="camera-outline"
-        onConfirm={() => {
+        onConfirm={async () => {
           setShowPhotoPrompt(false);
           const visitorId = pendingVisitorId;
           const success = pendingSuccess;
           setPendingVisitorId(null);
           setPendingSuccess(null);
-          const finish = () => {
-            if (success) {
-              setModalTitle(success.title);
-              setModalMessage(success.message);
-              setShowSuccessModal(true);
+          let outcome: 'saved' | 'skipped' | 'failed' = 'skipped';
+          if (visitorId != null) {
+            setSavingPhoto(true);
+            try {
+              outcome = await captureVisitorPhoto(visitorId);
+            } finally {
+              setSavingPhoto(false);
             }
-          };
-          if (visitorId != null) captureVisitorPhoto(visitorId, finish);
-          else finish();
+          }
+          if (success) {
+            setModalTitle(success.title);
+            setModalMessage(outcome === 'failed'
+              ? `${success.message}\n(Photo could not be saved)`
+              : success.message);
+            setShowSuccessModal(true);
+          }
         }}
         onCancel={() => {
           setShowPhotoPrompt(false);
@@ -589,6 +600,15 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
           }
         }}
       />
+
+      {/* Saving-photo overlay — covers the gap between confirming the photo
+          and the entry-recorded success modal (camera + upload in flight) */}
+      <Modal visible={savingPhoto} transparent animationType="fade" statusBarTranslucent>
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#FFF" />
+          <ThemedText style={styles.loadingOverlayText}>Saving visitor photo…</ThemedText>
+        </View>
+      </Modal>
 
       {/* Success Modal */}
       <SuccessModal

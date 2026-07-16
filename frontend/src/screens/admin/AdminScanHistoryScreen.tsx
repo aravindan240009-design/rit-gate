@@ -229,6 +229,7 @@ const AdminScanHistoryScreen: React.FC<AdminScanHistoryScreenProps> = ({ admin, 
                     <RequesterAvatar
                       code={item.userId}
                       name={item.name || item.userId}
+                      photoUrl={item.photoUrl}
                       size={44}
                       containerStyle={[styles.avatar, { backgroundColor: badgeColor + '18' }]}
                       textStyle={[styles.avatarText, { color: badgeColor }]}

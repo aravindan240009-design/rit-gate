@@ -689,6 +689,8 @@ public class HRController {
         map.put("purpose", purpose != null ? purpose : "-");
         map.put("location", e.getLocation() != null ? e.getLocation() : e.getScanLocation());
         map.put("verifiedBy", e.getVerifiedBy());
+        String photo = resolveVisitorPhoto(e.getUserId(), e.getUserType());
+        if (photo != null) map.put("photoUrl", photo);
         return map;
     }
 
@@ -730,6 +732,8 @@ public class HRController {
         map.put("purpose", purpose != null ? purpose : "-");
         map.put("location", e.getScanLocation());
         map.put("verifiedBy", e.getScannedBy());
+        String photo = resolveVisitorPhoto(e.getUserId(), e.getUserType());
+        if (photo != null) map.put("photoUrl", photo);
         return map;
     }
 
@@ -756,6 +760,19 @@ public class HRController {
             }
         } catch (Exception ex) { /* ignore */ }
         return userId;
+    }
+
+    /** Photo captured by security at entry — shown instead of the initials placeholder. */
+    private String resolveVisitorPhoto(String userId, String userType) {
+        if (userId == null || userId.isBlank() || "null".equals(userId)) return null;
+        String utype = userType != null ? userType.toUpperCase() : "";
+        if (!"VISITOR".equals(utype) && !"VG".equals(utype) && !"VENDOR".equals(utype)) return null;
+        try {
+            Long visitorId = Long.parseLong(userId);
+            return visitorRepository.findById(visitorId).map(v -> v.getPhotoUrl()).orElse(null);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     private String resolvePersonDepartment(String userId, String userType) {
