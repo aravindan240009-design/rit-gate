@@ -492,6 +492,7 @@ const NewHRDashboard: React.FC<NewHRDashboardProps> = ({
                     <RequesterAvatar
                       code={request.requestType === 'BULK' ? request.hodCode : (request.requestedByStaffCode || request.regNo)}
                       name={request.requestType === 'BULK' ? (request.hodCode || 'HOD') : request.requestType === 'VISITOR' ? (request.visitorName || 'VR') : (request.requestedByStaffName || request.studentName || 'ST')}
+                      photoUrl={request.requestType === 'VISITOR' ? request.photoUrl : undefined}
                       size={48}
                       containerStyle={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}
                       textStyle={[styles.cardAvatarText, { color: theme.textSecondary }]}

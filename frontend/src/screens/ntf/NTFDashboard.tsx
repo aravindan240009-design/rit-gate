@@ -309,11 +309,13 @@ const NTFDashboard: React.FC<NTFDashboardProps> = ({ ntf, onLogout, onNavigate }
                           textStyle={[styles.requestAvatarText, { color: theme.textSecondary }]}
                         />
                       ) : (
-                        <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                          <ThemedText style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
-                            {getInitials(req.requesterName || req.name || 'VR')}
-                          </ThemedText>
-                        </View>
+                        <RequesterAvatar
+                          name={req.requesterName || req.name || 'VR'}
+                          photoUrl={req.photoUrl}
+                          size={44}
+                          containerStyle={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}
+                          textStyle={[styles.requestAvatarText, { color: theme.textSecondary }]}
+                        />
                       )}
 
                       <View style={styles.headerMainInfo}>

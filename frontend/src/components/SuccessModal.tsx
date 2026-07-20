@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Modal,
   View,
+  Image,
   StyleSheet,
   TouchableOpacity,
   Animated,
@@ -19,6 +20,8 @@ interface SuccessModalProps {
   onClose: () => void;
   autoClose?: boolean;
   autoCloseDelay?: number;
+  /** Shown above the title (e.g. a visitor's photo, for security to verify against). */
+  photoUrl?: string | null;
 }
 
 const SuccessModal: React.FC<SuccessModalProps> = ({
@@ -28,6 +31,7 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
   onClose,
   autoClose = true,
   autoCloseDelay = 2000,
+  photoUrl,
 }) => {
   const { theme } = useTheme();
   const scaleAnim = React.useRef(new Animated.Value(0.9)).current;
@@ -116,6 +120,9 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
           </View>
 
           <View style={styles.content}>
+            {photoUrl ? (
+              <Image source={{ uri: photoUrl }} style={[styles.verifyPhoto, { borderColor: theme.success }]} resizeMode="cover" />
+            ) : null}
             <ThemedText style={[styles.title, { color: theme.text }]}>{title}</ThemedText>
             <ThemedText style={[styles.message, { color: theme.textSecondary }]}>{message}</ThemedText>
           </View>
@@ -173,6 +180,7 @@ const styles = StyleSheet.create({
   heroIconOuter: { width: 82, height: 82, borderRadius: 41, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   heroIconInner: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 28, paddingTop: 18, paddingBottom: 10, alignItems: 'center' },
+  verifyPhoto: { width: 88, height: 88, borderRadius: 44, borderWidth: 3, marginBottom: 14 },
   title: { fontSize: 22, fontWeight: '900', marginBottom: 8, textAlign: 'center', letterSpacing: -0.3 },
   message: { fontSize: 15, textAlign: 'center', lineHeight: 22, fontWeight: '500' },
   actions: { padding: 20, paddingTop: 10 },

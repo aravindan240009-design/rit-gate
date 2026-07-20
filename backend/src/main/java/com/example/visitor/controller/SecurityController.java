@@ -203,40 +203,6 @@ public class SecurityController {
         return scanQrCodeInternal(qrCode);
     }
 
-    /**
-     * Attach a photo (taken by security at entry) to a visitor record.
-     * Optional step, called right after a successful entry scan — separate from
-     * scanQrCodeInternal so a slow/declined camera capture never blocks or
-     * complicates the transactional scan itself.
-     */
-    @PostMapping("/visitor/{id}/photo")
-    public ResponseEntity<?> attachVisitorPhoto(@PathVariable Long id, @RequestBody java.util.Map<String, String> request) {
-        String photoUrl = request.get("photoUrl");
-        if (photoUrl == null || photoUrl.isBlank()) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("status", "ERROR", "message", "photoUrl is required"));
-        }
-        Optional<Visitor> visitorOpt = visitorRepository.findById(id);
-        if (visitorOpt.isEmpty()) {
-            return ResponseEntity.status(404).body(java.util.Map.of("status", "ERROR", "message", "Visitor not found"));
-        }
-        try {
-            Visitor visitor = visitorOpt.get();
-            visitor.setPhotoUrl(photoUrl);
-            visitorRepository.save(visitor);
-            return ResponseEntity.ok(java.util.Map.of("status", "SUCCESS", "message", "Photo saved"));
-        } catch (Exception e) {
-            // Surface the real cause (e.g. "Data too long for column 'photo_url'" when
-            // the column is TEXT instead of MEDIUMTEXT) instead of an opaque 500.
-            Throwable root = e;
-            while (root.getCause() != null) root = root.getCause();
-            System.err.println("❌ Failed to save visitor photo (" + photoUrl.length() + " chars): " + root.getMessage());
-            return ResponseEntity.internalServerError().body(java.util.Map.of(
-                "status", "ERROR",
-                "message", "Could not save photo: " + root.getMessage()
-            ));
-        }
-    }
-
     // Late Entry Scanning Endpoint - For students/staff arriving late
     @PostMapping("/scan-late-entry")
     public ResponseEntity<?> scanLateEntry(@RequestBody java.util.Map<String, String> request) {
@@ -1073,8 +1039,8 @@ public class SecurityController {
                             detailedInfo.put("scanCount", v.getScanCount());
                             detailedInfo.put("vehicleNumber", v.getVehicleNumber());
                             detailedInfo.put("vehicleType", v.getVehicleType());
-                            // Visitor DB id + existing photo (if any) — the app uses the id to
-                            // attach a freshly captured photo via POST /security/visitor/{id}/photo
+                            // Visitor DB id + the photo captured/uploaded at (pre-)registration —
+                            // security verifies the person against this, no new photo is taken.
                             detailedInfo.put("visitorId", v.getId());
                             detailedInfo.put("photoUrl", v.getPhotoUrl());
 
@@ -1967,7 +1933,7 @@ public class SecurityController {
                 if (userId != null) person.put("userId", userId);
                 person.put("scanId", firstScan.getId()); // ID of the entry ScanLog row
 
-                // Photo captured by security at entry (visitors only)
+                // Visitor's photo from (pre-)registration (visitors only)
                 if (userId != null && !"null".equals(userId)) {
                     try {
                         Long visitorId = Long.parseLong(userId);
@@ -2286,7 +2252,7 @@ public class SecurityController {
                 rec.put("purpose",     entryPurpose);
                 rec.put("reason",      "");
                 if (entry.getDepartment() != null) rec.put("department", entry.getDepartment());
-                // Resolve visitor role (VISITOR/VENDOR) + photo captured by security at entry
+                // Resolve visitor role (VISITOR/VENDOR) + photo from (pre-)registration
                 if ("VISITOR".equals(utype) || "VG".equals(utype)) {
                     if (uid != null && !"null".equals(uid)) {
                         try {
@@ -2438,7 +2404,7 @@ public class SecurityController {
                 if (resolvedDept != null) rec.put("department", resolvedDept);
                 if (exitLog.getEmail() != null) rec.put("email", exitLog.getEmail());
                 if (exitLog.getPhone() != null) rec.put("phone", exitLog.getPhone());
-                // Resolve visitor role (VISITOR/VENDOR) + photo captured by security at entry
+                // Resolve visitor role (VISITOR/VENDOR) + photo from (pre-)registration
                 if ("VISITOR".equals(utype) || "VG".equals(utype)) {
                     if (uid != null && !"null".equals(uid)) {
                         try {

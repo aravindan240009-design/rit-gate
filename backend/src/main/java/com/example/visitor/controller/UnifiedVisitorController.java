@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.util.ImageValidation;
 import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.Visitor;
@@ -58,7 +59,8 @@ public class UnifiedVisitorController {
             visitor.setRole(visitorRole);
             visitor.setType(visitorRole);
             visitor.setRegisteredBy(request.getMachineId() != null && !request.getMachineId().isBlank() ? request.getMachineId() : "WEBSITE");
-            
+            visitor.setPhotoUrl(request.getPhotoUrl());
+
             VisitorRegistrationResponse response = new VisitorRegistrationResponse();
             Visitor saved = visitorGatepassService.createRequest(visitor);
             response.setId(saved.getId());
@@ -95,6 +97,13 @@ public class UnifiedVisitorController {
         if (isBlank(request.getPurpose()) && isBlank(request.getReason())) {
             return "Please enter the purpose of your visit.";
         }
+        if (isBlank(request.getPhotoUrl())) {
+            return "Please capture your photo before submitting.";
+        }
+        String photoError = ImageValidation.validate(request.getPhotoUrl());
+        if (photoError != null) {
+            return photoError;
+        }
         return null;
     }
 
@@ -113,6 +122,13 @@ public class UnifiedVisitorController {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", "creatorStaffCode required"));
             }
             Authz.requireSelf(req.getCreatorStaffCode()); // creator must be the authenticated user
+            if (req.getPhotoUrl() == null || req.getPhotoUrl().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Please upload the guest's photo."));
+            }
+            String photoError = ImageValidation.validate(req.getPhotoUrl());
+            if (photoError != null) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "message", photoError));
+            }
             Visitor visitor = new Visitor();
             visitor.setName(req.getName());
             visitor.setEmail(req.getEmail());
@@ -125,6 +141,7 @@ public class UnifiedVisitorController {
             visitor.setVehicleNumber(req.getVehicleNumber());
             visitor.setRole("VISITOR");
             visitor.setType("VISITOR");
+            visitor.setPhotoUrl(req.getPhotoUrl());
 
             Visitor approved = visitorGatepassService.createInstantGuestPass(
                 visitor,
@@ -334,6 +351,7 @@ public class UnifiedVisitorController {
         dto.setApprovedAt(visitor.getApprovedAt());
         dto.setQrCode(visitor.getQrCode());
         dto.setManualCode(visitor.getManualCode());
+        dto.setPhotoUrl(visitor.getPhotoUrl());
         return dto;
     }
     
@@ -349,6 +367,7 @@ public class UnifiedVisitorController {
         private String vehicleNumber;
         private String creatorStaffCode;
         private String creatorRole;
+        private String photoUrl;
 
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
@@ -370,6 +389,8 @@ public class UnifiedVisitorController {
         public void setCreatorStaffCode(String creatorStaffCode) { this.creatorStaffCode = creatorStaffCode; }
         public String getCreatorRole() { return creatorRole; }
         public void setCreatorRole(String creatorRole) { this.creatorRole = creatorRole; }
+        public String getPhotoUrl() { return photoUrl; }
+        public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
     }
 
     public static class VisitorRegistrationRequest {
@@ -386,38 +407,39 @@ public class UnifiedVisitorController {
         private String staffCode;
         private String role;
         private String machineId;
-        
+        private String photoUrl;
+
         // Getters and Setters
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
-        
+
         public String getEmail() { return email; }
         public void setEmail(String email) { this.email = email; }
-        
+
         public String getPhone() { return phone; }
         public void setPhone(String phone) { this.phone = phone; }
-        
+
         public String getDepartment() { return department; }
         public void setDepartment(String department) { this.department = department; }
-        
+
         public String getPurpose() { return purpose; }
         public void setPurpose(String purpose) { this.purpose = purpose; }
-        
+
         public String getReason() { return reason; }
         public void setReason(String reason) { this.reason = reason; }
-        
+
         public Integer getNumberOfPeople() { return numberOfPeople; }
         public void setNumberOfPeople(Integer numberOfPeople) { this.numberOfPeople = numberOfPeople; }
-        
+
         public String getVehicleNumber() { return vehicleNumber; }
         public void setVehicleNumber(String vehicleNumber) { this.vehicleNumber = vehicleNumber; }
 
         public String getVehicleType() { return vehicleType; }
         public void setVehicleType(String vehicleType) { this.vehicleType = vehicleType; }
-        
+
         public String getPersonToMeet() { return personToMeet; }
         public void setPersonToMeet(String personToMeet) { this.personToMeet = personToMeet; }
-        
+
         public String getStaffCode() { return staffCode; }
         public void setStaffCode(String staffCode) { this.staffCode = staffCode; }
 
@@ -426,6 +448,9 @@ public class UnifiedVisitorController {
 
         public String getMachineId() { return machineId; }
         public void setMachineId(String machineId) { this.machineId = machineId; }
+
+        public String getPhotoUrl() { return photoUrl; }
+        public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
     }
     
     public static class SecurityVisitorRegistrationRequest {
@@ -523,51 +548,55 @@ public class UnifiedVisitorController {
         private LocalDateTime approvedAt;
         private String qrCode;
         private String manualCode;
-        
+        private String photoUrl;
+
         // Getters and Setters
         public Long getRequestId() { return requestId; }
         public void setRequestId(Long requestId) { this.requestId = requestId; }
-        
+
         public String getRequestType() { return requestType; }
         public void setRequestType(String requestType) { this.requestType = requestType; }
-        
+
         public String getRequesterName() { return requesterName; }
         public void setRequesterName(String requesterName) { this.requesterName = requesterName; }
-        
+
         public String getVisitorEmail() { return visitorEmail; }
         public void setVisitorEmail(String visitorEmail) { this.visitorEmail = visitorEmail; }
-        
+
         public String getVisitorPhone() { return visitorPhone; }
         public void setVisitorPhone(String visitorPhone) { this.visitorPhone = visitorPhone; }
-        
+
         public String getPurpose() { return purpose; }
         public void setPurpose(String purpose) { this.purpose = purpose; }
-        
+
         public String getDepartment() { return department; }
         public void setDepartment(String department) { this.department = department; }
-        
+
         public String getPersonToMeet() { return personToMeet; }
         public void setPersonToMeet(String personToMeet) { this.personToMeet = personToMeet; }
 
         public String getRole() { return role; }
         public void setRole(String role) { this.role = role; }
-        
+
         public String getStatus() { return status; }
         public void setStatus(String status) { this.status = status; }
-        
+
         public LocalDateTime getCreatedAt() { return createdAt; }
         public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-        
+
         public LocalDateTime getApprovedAt() { return approvedAt; }
         public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }
-        
+
         public String getQrCode() { return qrCode; }
         public void setQrCode(String qrCode) { this.qrCode = qrCode; }
-        
+
         public String getManualCode() { return manualCode; }
         public void setManualCode(String manualCode) { this.manualCode = manualCode; }
+
+        public String getPhotoUrl() { return photoUrl; }
+        public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
     }
-    
+
     public static class VisitorApprovalResponse {
         private Long id;
         private String status;

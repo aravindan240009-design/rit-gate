@@ -57,6 +57,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
   const insets = useSafeAreaInsets();
   const [remark, setRemark] = useState('');
   const [showFullscreen, setShowFullscreen] = useState(false);
+  const [fullscreenSource, setFullscreenSource] = useState<'attachment' | 'photo'>('attachment');
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [showRejectConfirm, setShowRejectConfirm] = useState(false);
   const [showRemarkError, setShowRemarkError] = useState(false);
@@ -65,12 +66,17 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
 
   useEffect(() => { if (visible) setRemark(''); }, [visible, request?.id]);
 
-  // Fetch the requester's profile photo by regNo/staffCode. Falls back to
-  // initials when there's no photo or the load fails.
+  // Visitor requests carry their own captured/uploaded photo — use it directly,
+  // no IMS lookup (visitors have no regNo/staffCode/IMS record). Everyone else
+  // falls back to the profile photo fetched by regNo/staffCode, or initials.
   useEffect(() => {
     setPhotoUrl(null);
     setPhotoFailed(false);
     if (!visible || !request) return;
+    if (request.requestType === 'VISITOR') {
+      if (request.photoUrl) setPhotoUrl(request.photoUrl);
+      return;
+    }
     const code = request.regNo || request.staffCode || request.requestedByStaffCode;
     if (!code) return;
     let active = true;
@@ -78,7 +84,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
       if (active) setPhotoUrl(url);
     });
     return () => { active = false; };
-  }, [visible, request?.regNo, request?.staffCode]);
+  }, [visible, request?.requestType, request?.photoUrl, request?.regNo, request?.staffCode]);
 
   if (!request) return null;
 
@@ -128,6 +134,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
       if (canOpen) await Linking.openURL(attachmentUri);
       return;
     }
+    setFullscreenSource('attachment');
     setShowFullscreen(true);
   };
 
@@ -157,7 +164,12 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           {/* Profile Row */}
           <View style={[styles.profileRow, { backgroundColor: theme.surface }]}>
-            <View style={[styles.avatar, { backgroundColor: statusColor }]}>
+            <TouchableOpacity
+              style={[styles.avatar, { backgroundColor: statusColor }]}
+              activeOpacity={photoUrl && !photoFailed ? 0.85 : 1}
+              disabled={!photoUrl || photoFailed}
+              onPress={() => { setFullscreenSource('photo'); setShowFullscreen(true); }}
+            >
               {photoUrl && !photoFailed ? (
                 <Image
                   source={{ uri: photoUrl }}
@@ -168,7 +180,7 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
               ) : (
                 <ThemedText style={styles.avatarText}>{getInitials(request.studentName || request.staffName || request.regNo || 'ST')}</ThemedText>
               )}
-            </View>
+            </TouchableOpacity>
             <View style={styles.profileInfo}>
               {request.requestType === 'VISITOR' && (
                 <View style={[styles.visitorBadge, { backgroundColor: theme.primary }]}>
@@ -395,7 +407,12 @@ const SinglePassDetailsModal: React.FC<SinglePassDetailsModalProps> = ({
           <TouchableOpacity style={styles.fullscreenCloseBtn} onPress={() => !processing && setShowFullscreen(false)} disabled={processing}>
             <Ionicons name="close" size={28} color="#FFFFFF" />
           </TouchableOpacity>
-          {attachmentUri && !isPdfAttachment && <Image source={{ uri: attachmentUri }} style={styles.fullscreenImage} resizeMode="contain" />}
+          {fullscreenSource === 'photo' && photoUrl && (
+            <Image source={{ uri: photoUrl }} style={styles.fullscreenImage} resizeMode="contain" />
+          )}
+          {fullscreenSource === 'attachment' && attachmentUri && !isPdfAttachment && (
+            <Image source={{ uri: attachmentUri }} style={styles.fullscreenImage} resizeMode="contain" />
+          )}
         </View>
       </Modal>
 

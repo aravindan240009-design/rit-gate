@@ -46,8 +46,9 @@ public class Visitor {
     @Column(nullable = true, name = "vehicle_type", length = 100)
     private String vehicleType;
 
-    // Photo taken by security at entry (optional, base64 data URI). MEDIUMTEXT to
-    // match the attachment_uri precedent on GatePassRequest (supports large images).
+    // Visitor's photo (base64 data URI) — captured live at self-registration or
+    // uploaded by staff at pre-registration. MEDIUMTEXT to match the attachment_uri
+    // precedent on GatePassRequest (supports large images).
     @Column(nullable = true, name = "photo_url", columnDefinition = "MEDIUMTEXT")
     private String photoUrl;
 

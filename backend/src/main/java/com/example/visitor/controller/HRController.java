@@ -762,7 +762,7 @@ public class HRController {
         return userId;
     }
 
-    /** Photo captured by security at entry — shown instead of the initials placeholder. */
+    /** Visitor's photo from (pre-)registration — shown instead of the initials placeholder. */
     private String resolveVisitorPhoto(String userId, String userType) {
         if (userId == null || userId.isBlank() || "null".equals(userId)) return null;
         String utype = userType != null ? userType.toUpperCase() : "";

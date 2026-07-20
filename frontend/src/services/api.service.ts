@@ -740,6 +740,7 @@ class ApiService {
     vehicleNumber?: string;
     creatorStaffCode: string;
     creatorRole: string;
+    photoUrl?: string;
   }): Promise<{ success: boolean; id?: number; qrCode?: string; manualCode?: string; message?: string }> {
     try {
       const data = await this.makeRequest(`${this.baseURL}/unified-visitors/instant-guest`, {
@@ -817,17 +818,6 @@ class ApiService {
   async scanLateEntry(idCode: string, securityId: string): Promise<ApiResponse> {
     try { return await this.makeRequest(`${this.baseURL}/security/scan-late-entry`, { method: 'POST', body: JSON.stringify({ idCode, securityId }) }); }
     catch (e: any) { return { success: false, message: e.message || 'Failed to scan late entry' }; }
-  }
-
-  /** Attach a photo (base64 data URI) taken by security to a visitor's record. */
-  async attachVisitorPhoto(visitorId: number | string, photoUrl: string): Promise<ApiResponse> {
-    try {
-      const data = await this.makeRequest(`${this.baseURL}/security/visitor/${visitorId}/photo`, {
-        method: 'POST',
-        body: JSON.stringify({ photoUrl }),
-      });
-      return { ...data, success: data.status === 'SUCCESS' };
-    } catch (e: any) { return { success: false, message: e.message || 'Failed to save visitor photo' }; }
   }
 
   async manualExit(personName: string, scannedBy?: string, userId?: string, scanId?: number, purpose?: string, userType?: string): Promise<ApiResponse> {

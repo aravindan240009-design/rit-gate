@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { theme } from '../theme';
 import { api } from '../services/api';
 import { useClickOutside } from '../hooks/useClickOutside';
+import CameraCapture from './CameraCapture';
 import {
   Department,
   Staff,
@@ -83,6 +84,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
   const [purpose, setPurpose] = useState('');
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [vehicleType, setVehicleType] = useState('');
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
 
   // Data sources
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -337,6 +339,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
       return false;
     };
     if (visitorNames.some((n) => !n.trim())) return fail('Please enter names for all visitors');
+    if (!capturedPhoto) return fail('Please capture your photo to continue');
     if (!email.trim() || !email.includes('@')) return fail('Please enter a valid email address');
     if (!phone.trim() || phone.replace(/\D/g, '').length < 10)
       return fail('Please enter a valid phone number (minimum 10 digits)');
@@ -366,6 +369,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
         numberOfPeople: numberOfVisitors,
         vehicleNumber: vehicleNumber || undefined,
         vehicleType: vehicleNumber ? vehicleType : undefined,
+        photoUrl: capturedPhoto || undefined,
       });
       setRegisteredVisitor(visitor);
       setApprovalStatus('PENDING');
@@ -393,6 +397,7 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
       setVehicleNumber('');
       setVehicleType('');
       setStaffMembers([]);
+      setCapturedPhoto(null);
     } catch (err: any) {
       setError(err?.message || 'Failed to register. Please try again or contact security.');
     } finally {
@@ -628,6 +633,12 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
                   required
                 />
               ))}
+            </div>
+
+            {/* Photo */}
+            <div style={sectionTitle}>Your photo</div>
+            <div style={{ ...group, textAlign: 'center' }}>
+              <CameraCapture value={capturedPhoto} onChange={setCapturedPhoto} />
             </div>
 
             {/* Contact */}

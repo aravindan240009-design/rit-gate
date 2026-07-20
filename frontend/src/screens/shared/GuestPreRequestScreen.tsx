@@ -22,6 +22,7 @@ import ScreenContentContainer from '../../components/ScreenContentContainer';
 import ErrorModal from '../../components/ErrorModal';
 import GatePassQRModal from '../../components/GatePassQRModal';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import PhotoUploadField from '../../components/PhotoUploadField';
 import { useTheme } from '../../context/ThemeContext';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
@@ -50,6 +51,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
   const [visitorName, setVisitorName] = useState('');
   const [phone, setPhone] = useState('');
   const [numberOfPeople, setNumberOfPeople] = useState('1');
+  const [guestPhoto, setGuestPhoto] = useState<string | null>(null);
 
   const [creatorDepartment, setCreatorDepartment] = useState(creatorDepartmentProp || '');
   const [creatorDisplayName, setCreatorDisplayName] = useState(creatorName || creatorRole);
@@ -64,7 +66,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
   const [showQRModal, setShowQRModal] = useState(false);
 
   // Show discard confirmation if form has data or QR was generated
-  const hasUnsavedData = visitorName.trim() !== '' || phone.trim() !== '' || qrCode !== '';
+  const hasUnsavedData = visitorName.trim() !== '' || phone.trim() !== '' || !!guestPhoto || qrCode !== '';
 
   const handleBack = () => {
     if (hasUnsavedData) {
@@ -181,6 +183,11 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
       setShowErr(true);
       return;
     }
+    if (!guestPhoto) {
+      setErrMsg("Please upload the guest's photo.");
+      setShowErr(true);
+      return;
+    }
     if (!creatorDepartment) {
       setErrMsg('Department is missing. Please try again.');
       setShowErr(true);
@@ -205,6 +212,7 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
         vehicleNumber: undefined,
         creatorStaffCode,
         creatorRole,
+        photoUrl: guestPhoto || undefined,
       });
       if (!res.success) {
         setErrMsg(res.message || 'Could not create guest pass');
@@ -297,6 +305,9 @@ const GuestPreRequestScreen: React.FC<GuestPreRequestScreenProps> = ({
                 maxLength={13}
                 onSubmitEditing={() => Keyboard.dismiss()}
               />
+
+              <ThemedText style={[styles.label, { color: theme.textSecondary }]}>Guest photo *</ThemedText>
+              <PhotoUploadField value={guestPhoto} onChange={setGuestPhoto} />
             </>
           )}
 

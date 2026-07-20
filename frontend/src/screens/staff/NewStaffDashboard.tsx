@@ -558,6 +558,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
                 <RequesterAvatar
                   code={request.regNo || request.requestedByStaffCode}
                   name={request.studentName || 'ST'}
+                  photoUrl={request.requestType === 'VISITOR' ? request.photoUrl : undefined}
                   size={48}
                   containerStyle={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}
                   textStyle={[styles.requestAvatarText, { color: theme.textSecondary }]}

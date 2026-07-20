@@ -24,6 +24,7 @@ import { getNavTabs } from '../../components/navTabs';
 import { VerticalFlatList } from '../../components/navigation/VerticalScrollViews';
 import { SkeletonList, StatsSkeleton } from '../../components/SkeletonCard';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
+import RequesterAvatar from '../../components/RequesterAvatar';
 
 interface NCIDashboardProps {
   nci: NonTeachingFaculty;
@@ -252,11 +253,13 @@ const NCIDashboard: React.FC<NCIDashboardProps> = ({ nci, onLogout, onNavigate }
                     onPress={() => { setSelectedVisitor(req); setShowDetailModal(true); }}
                   >
                     <View style={styles.cardTopRow}>
-                      <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                        <ThemedText style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
-                          {getInitials(req.requesterName || req.name || 'VR')}
-                        </ThemedText>
-                      </View>
+                      <RequesterAvatar
+                        name={req.requesterName || req.name || 'VR'}
+                        photoUrl={req.photoUrl}
+                        size={48}
+                        containerStyle={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}
+                        textStyle={[styles.requestAvatarText, { color: theme.textSecondary }]}
+                      />
 
                       <View style={styles.headerMainInfo}>
                         <View style={styles.nameRow}>

@@ -441,6 +441,7 @@ public class VisitorController {
         dto.setQrCode(visitor.getQrCode());
         dto.setManualCode(visitor.getManualCode());
         dto.setRegisteredBy(visitor.getRegisteredBy());
+        dto.setPhotoUrl(visitor.getPhotoUrl());
         return dto;
     }
     
@@ -549,58 +550,62 @@ public class VisitorController {
         private String qrCode;
         private String manualCode;
         private String registeredBy;
-        
+        private String photoUrl;
+
         // Getters and Setters
         public Long getRequestId() { return requestId; }
         public void setRequestId(Long requestId) { this.requestId = requestId; }
-        
+
         public String getRequestType() { return requestType; }
         public void setRequestType(String requestType) { this.requestType = requestType; }
-        
+
         public String getRequesterName() { return requesterName; }
         public void setRequesterName(String requesterName) { this.requesterName = requesterName; }
-        
+
         public String getVisitorEmail() { return visitorEmail; }
         public void setVisitorEmail(String visitorEmail) { this.visitorEmail = visitorEmail; }
-        
+
         public String getVisitorPhone() { return visitorPhone; }
         public void setVisitorPhone(String visitorPhone) { this.visitorPhone = visitorPhone; }
-        
+
         public String getPurpose() { return purpose; }
         public void setPurpose(String purpose) { this.purpose = purpose; }
-        
+
         public String getDepartment() { return department; }
         public void setDepartment(String department) { this.department = department; }
-        
+
         public String getPersonToMeet() { return personToMeet; }
         public void setPersonToMeet(String personToMeet) { this.personToMeet = personToMeet; }
 
         public String getRole() { return role; }
         public void setRole(String role) { this.role = role; }
-        
+
         public String getStatus() { return status; }
         public void setStatus(String status) { this.status = status; }
-        
+
         public String getVisitDate() { return visitDate; }
         public void setVisitDate(String visitDate) { this.visitDate = visitDate; }
-        
+
         public String getVisitTime() { return visitTime; }
         public void setVisitTime(String visitTime) { this.visitTime = visitTime; }
-        
+
         public LocalDateTime getCreatedAt() { return createdAt; }
         public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-        
+
         public LocalDateTime getApprovedAt() { return approvedAt; }
         public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }
-        
+
         public String getQrCode() { return qrCode; }
         public void setQrCode(String qrCode) { this.qrCode = qrCode; }
-        
+
         public String getManualCode() { return manualCode; }
         public void setManualCode(String manualCode) { this.manualCode = manualCode; }
 
         public String getRegisteredBy() { return registeredBy; }
         public void setRegisteredBy(String registeredBy) { this.registeredBy = registeredBy; }
+
+        public String getPhotoUrl() { return photoUrl; }
+        public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
     }
     
     // Response for approval

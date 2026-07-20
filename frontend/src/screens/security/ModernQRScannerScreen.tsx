@@ -21,13 +21,10 @@ import { apiService } from '../../services/api';
 import SecurityBottomNav from '../../components/SecurityBottomNav';
 import SuccessModal from '../../components/SuccessModal';
 import ErrorModal from '../../components/ErrorModal';
-import ConfirmationModal from '../../components/ConfirmationModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import { useTheme } from '../../context/ThemeContext';
 import { useBottomSheetSwipe } from '../../hooks/useBottomSheetSwipe';
-import imagePicker from '../../utils/safeImagePicker';
-import { getVisitorPhotoCaptureEnabled, setVisitorPhotoCaptureEnabled } from '../../utils/visitorPhotoSettings';
 
 
 interface ModernQRScannerScreenProps {
@@ -50,59 +47,9 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [modalTitle, setModalTitle] = useState('');
-
-  // Optional visitor-photo capture, toggled per security guard (persisted locally).
-  const [photoCaptureEnabled, setPhotoCaptureEnabled] = useState(true);
-  const [showPhotoPrompt, setShowPhotoPrompt] = useState(false);
-  const [savingPhoto, setSavingPhoto] = useState(false);
-  const [pendingVisitorId, setPendingVisitorId] = useState<number | string | null>(null);
-  const [pendingSuccess, setPendingSuccess] = useState<{ title: string; message: string } | null>(null);
-
-  useEffect(() => {
-    getVisitorPhotoCaptureEnabled(security.securityId).then(setPhotoCaptureEnabled);
-  }, [security.securityId]);
-
-  const togglePhotoCapture = () => {
-    const next = !photoCaptureEnabled;
-    setPhotoCaptureEnabled(next);
-    setVisitorPhotoCaptureEnabled(security.securityId, next);
-  };
-
-  /** Open the camera and upload the photo against visitorId.
-      'saved' = uploaded, 'skipped' = guard cancelled the camera,
-      'failed' = capture/upload error (entry itself is already recorded;
-      `error` carries the server's reason for display). */
-  const captureVisitorPhoto = async (
-    visitorId: number | string,
-  ): Promise<{ status: 'saved' | 'skipped' | 'failed'; error?: string }> => {
-    try {
-      const perm = await imagePicker.requestCameraPermissionsAsync();
-      if (!perm.granted) return { status: 'skipped' };
-      // maxWidth/maxHeight keep the base64 payload small enough to upload reliably
-      const result = await imagePicker.launchCameraAsync({ base64: true, quality: 0.6, maxWidth: 900, maxHeight: 900 });
-      if (result.canceled || !result.assets?.length) return { status: 'skipped' };
-      const asset = result.assets[0];
-      if (!asset.base64) return { status: 'failed', error: 'Camera returned no image data' };
-      const mimeType = asset.type || asset.mimeType || 'image/jpeg';
-      const resp = await apiService.attachVisitorPhoto(visitorId, `data:${mimeType};base64,${asset.base64}`);
-      if (!resp.success) console.warn('Visitor photo upload failed:', resp.message);
-      return resp.success ? { status: 'saved' } : { status: 'failed', error: resp.message };
-    } catch (e: any) {
-      console.warn('Visitor photo capture failed:', e);
-      return { status: 'failed', error: e?.message };
-    }
-  };
-
-  /** Close the scan camera and ask whether to photograph the visitor.
-      The scan-camera branch renders no modal tree, so the prompt must be
-      shown from the main branch — closing the camera first also releases
-      it before the photo camera opens. */
-  const startVisitorPhotoFlow = (visitorId: number | string, title: string, message: string) => {
-    setShowCamera(false);
-    setPendingVisitorId(visitorId);
-    setPendingSuccess({ title, message });
-    setShowPhotoPrompt(true);
-  };
+  // Visitor's stored photo (captured/uploaded at registration) — shown on the
+  // success modal so the guard can verify the person against it. No new photo taken.
+  const [modalPhotoUrl, setModalPhotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const getCameraPermissions = async () => {
@@ -176,18 +123,12 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         const scanLabel = isExit ? 'Exit' : isLateEntry ? 'Late Entry' : 'Entry';
         const title = `✅ ${scanLabel} Recorded`;
         const message = response.message || `${scanLabel} recorded successfully`;
-
-        // Visitor entry (not exit) → open the photo camera immediately so
-        // security can capture the visitor before the success modal shows.
         const isVisitor = (data_resp?.type || '').toUpperCase() === 'VISITOR';
-        const visitorId = data_resp?.visitorId;
-        if (isVisitor && !isExit && photoCaptureEnabled && visitorId != null) {
-          startVisitorPhotoFlow(visitorId, title, message);
-        } else {
-          setModalTitle(title);
-          setModalMessage(message);
-          setShowSuccessModal(true);
-        }
+
+        setModalTitle(title);
+        setModalMessage(message);
+        setModalPhotoUrl(isVisitor && !isExit ? (data_resp?.photoUrl || null) : null);
+        setShowSuccessModal(true);
       } else {
         setModalTitle('Scan Failed');
         // Map technical messages to user-friendly ones
@@ -260,18 +201,14 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
         const scanLabel = isExit ? 'Exit' : 'Entry';
         const title = `✅ ${scanLabel} Recorded`;
         const message = response.message || `${scanLabel} recorded successfully`;
+        const isVisitor = (data_resp?.type || '').toUpperCase() === 'VISITOR';
         setManualCode('');
         setShowManualModal(false);
 
-        const isVisitor = (data_resp?.type || '').toUpperCase() === 'VISITOR';
-        const visitorId = data_resp?.visitorId;
-        if (isVisitor && !isExit && photoCaptureEnabled && visitorId != null) {
-          startVisitorPhotoFlow(visitorId, title, message);
-        } else {
-          setModalTitle(title);
-          setModalMessage(message);
-          setShowSuccessModal(true);
-        }
+        setModalTitle(title);
+        setModalMessage(message);
+        setModalPhotoUrl(isVisitor && !isExit ? (data_resp?.photoUrl || null) : null);
+        setShowSuccessModal(true);
       } else {
         setModalTitle('Scan Failed');
         const rawMsg = response.message || '';
@@ -391,6 +328,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
           visible={showSuccessModal}
           title={modalTitle}
           message={modalMessage}
+          photoUrl={modalPhotoUrl}
           onClose={() => { setShowSuccessModal(false); resetScanner(); }}
           autoClose={true}
           autoCloseDelay={2500}
@@ -414,18 +352,7 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
       <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
         <View style={styles.headerRight} />
         <ThemedText style={[styles.headerTitle, { color: theme.text }]}>QR Scanner</ThemedText>
-        <TouchableOpacity
-          style={[styles.headerRight, { alignItems: 'center' }]}
-          onPress={togglePhotoCapture}
-          accessibilityRole="button"
-          accessibilityLabel={photoCaptureEnabled ? 'Visitor photo capture on — tap to turn off' : 'Visitor photo capture off — tap to turn on'}
-        >
-          <Ionicons
-            name={photoCaptureEnabled ? 'camera' : 'camera-outline'}
-            size={22}
-            color={photoCaptureEnabled ? theme.primary : theme.textTertiary}
-          />
-        </TouchableOpacity>
+        <View style={styles.headerRight} />
       </View>
 
       {!showCamera ? (
@@ -557,67 +484,12 @@ const ModernQRScannerScreen: React.FC<ModernQRScannerScreenProps> = ({ security,
       {/* Bottom Navigation */}
       {!showManualModal && <SecurityBottomNav activeTab="scanner" onNavigate={onNavigate} />}
 
-      {/* Visitor photo prompt — shown after a successful visitor entry scan
-          (scan camera is already closed). Yes → open the camera and attach the
-          photo to the visitor record (replaces the initials placeholder
-          everywhere). No → keep the initials placeholder. */}
-      <ConfirmationModal
-        visible={showPhotoPrompt}
-        title="Take Visitor Photo?"
-        message="Capture a photo of the visitor to attach to their record."
-        confirmText="Take Photo"
-        cancelText="No"
-        icon="camera-outline"
-        onConfirm={async () => {
-          setShowPhotoPrompt(false);
-          const visitorId = pendingVisitorId;
-          const success = pendingSuccess;
-          setPendingVisitorId(null);
-          setPendingSuccess(null);
-          let outcome: { status: 'saved' | 'skipped' | 'failed'; error?: string } = { status: 'skipped' };
-          if (visitorId != null) {
-            setSavingPhoto(true);
-            try {
-              outcome = await captureVisitorPhoto(visitorId);
-            } finally {
-              setSavingPhoto(false);
-            }
-          }
-          if (success) {
-            setModalTitle(success.title);
-            setModalMessage(outcome.status === 'failed'
-              ? `${success.message}\n(Photo could not be saved${outcome.error ? `: ${outcome.error}` : ''})`
-              : success.message);
-            setShowSuccessModal(true);
-          }
-        }}
-        onCancel={() => {
-          setShowPhotoPrompt(false);
-          const success = pendingSuccess;
-          setPendingVisitorId(null);
-          setPendingSuccess(null);
-          if (success) {
-            setModalTitle(success.title);
-            setModalMessage(success.message);
-            setShowSuccessModal(true);
-          }
-        }}
-      />
-
-      {/* Saving-photo overlay — covers the gap between confirming the photo
-          and the entry-recorded success modal (camera + upload in flight) */}
-      <Modal visible={savingPhoto} transparent animationType="fade" statusBarTranslucent>
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#FFF" />
-          <ThemedText style={styles.loadingOverlayText}>Saving visitor photo…</ThemedText>
-        </View>
-      </Modal>
-
       {/* Success Modal */}
       <SuccessModal
         visible={showSuccessModal}
         title={modalTitle}
         message={modalMessage}
+        photoUrl={modalPhotoUrl}
         onClose={() => {
           setShowSuccessModal(false);
           resetScanner();

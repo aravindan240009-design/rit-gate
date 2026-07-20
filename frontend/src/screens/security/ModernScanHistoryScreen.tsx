@@ -64,7 +64,7 @@ interface ScanRecord {
   regNo?: string;
   userId?: string;
   department?: string;
-  /** Photo captured by security at entry (visitors only) — shown instead of initials. */
+  /** Visitor's photo from (pre-)registration (visitors only) — shown instead of initials. */
   photoUrl?: string;
 }
 

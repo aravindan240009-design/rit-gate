@@ -442,6 +442,7 @@ const NewHODDashboard: React.FC<NewHODDashboardProps> = ({
                 <RequesterAvatar
                   code={request.passType === 'BULK' ? request.requestedByStaffCode : request.regNo}
                   name={request.passType === 'BULK' ? (request.requestedByStaffName || 'BR') : request.passType === 'VISITOR' ? (request.visitorName || request.studentName || 'VR') : (request.studentName || 'ST')}
+                  photoUrl={request.passType === 'VISITOR' ? request.photoUrl : undefined}
                   size={48}
                   containerStyle={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}
                   textStyle={[styles.requestAvatarText, { color: theme.textSecondary }]}

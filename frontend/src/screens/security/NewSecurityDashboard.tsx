@@ -501,7 +501,7 @@ const NewSecurityDashboard: React.FC<NewSecurityDashboardProps> = ({
                 setPersonPhotoFailed(false);
                 setShowDetailModal(true);
                 if (person.photoUrl) {
-                  // Visitor photo captured by security — no IMS lookup needed.
+                  // Visitor's photo from (pre-)registration — no IMS lookup needed.
                   setPersonPhoto(person.photoUrl);
                 } else {
                   setPersonPhoto(null);

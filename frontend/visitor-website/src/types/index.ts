@@ -32,6 +32,7 @@ export interface VisitorRegistration {
   numberOfPeople?: number;
   vehicleNumber?: string;
   vehicleType?: string;
+  photoUrl?: string;
 }
 
 export interface VisitorResponse {

@@ -22,6 +22,7 @@ import { VerticalFlatList } from '../../components/navigation/VerticalScrollView
 import { SkeletonList } from '../../components/SkeletonCard';
 import SinglePassDetailsModal from '../../components/SinglePassDetailsModal';
 import BottomNavBar from '../../components/BottomNavBar';
+import RequesterAvatar from '../../components/RequesterAvatar';
 
 const ADMIN_TABS = [
   { key: 'HOME', label: 'Home', icon: 'home-outline', iconActive: 'home' },
@@ -186,11 +187,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ admin, onLogout, onNavi
                   onPress={() => { setSelectedVisitor(req); setShowDetailModal(true); }}
                 >
                   <View style={styles.cardTopRow}>
-                    <View style={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}>
-                      <ThemedText style={[styles.requestAvatarText, { color: theme.textSecondary }]}>
-                        {getInitials(req.requesterName || req.name || 'VR')}
-                      </ThemedText>
-                    </View>
+                    <RequesterAvatar
+                      name={req.requesterName || req.name || 'VR'}
+                      photoUrl={req.photoUrl}
+                      size={44}
+                      containerStyle={[styles.avatarContainer, { backgroundColor: theme.surfaceHighlight }]}
+                      textStyle={[styles.requestAvatarText, { color: theme.textSecondary }]}
+                    />
                     <View style={styles.headerMainInfo}>
                       <ThemedText style={[styles.requestStudentName, { color: theme.text }]} numberOfLines={1}>
                         {req.requesterName || req.name || 'Visitor'}

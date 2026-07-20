@@ -16,9 +16,9 @@ interface Props {
   size?: number;
   containerStyle?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
-  /** Direct photo (e.g. a visitor photo captured by security) — bypasses the IMS
-   *  code lookup entirely. Visitors have no regNo/staffCode/IMS record, so this is
-   *  how their photo (if security took one) gets shown instead of initials. */
+  /** Direct photo (e.g. a visitor's photo from registration/pre-registration) —
+   *  bypasses the IMS code lookup entirely. Visitors have no regNo/staffCode/IMS
+   *  record, so this is how their photo gets shown instead of initials. */
   photoUrl?: string | null;
 }
 
