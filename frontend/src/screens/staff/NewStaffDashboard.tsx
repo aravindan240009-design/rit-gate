@@ -218,6 +218,7 @@ const NewStaffDashboard: React.FC<NewStaffDashboardProps> = ({
           requestDate: req.createdAt,
           originalId: req.requestId,
           role: req.role || 'VISITOR',
+          photoUrl: req.photoUrl,
         }));
         allRequests = [...allRequests, ...visitorReqs];
       }

@@ -226,6 +226,7 @@ public class HODController {
                 map.put("status", v.getStatus());
                 map.put("requestDate", v.getCreatedAt());
                 map.put("staffCode", v.getStaffCode());
+                map.put("photoUrl", v.getPhotoUrl());
                 return map;
             }).collect(Collectors.toList());
             log.info("Fetched {} visitor requests for HOD {}", result.size(), hodCode);

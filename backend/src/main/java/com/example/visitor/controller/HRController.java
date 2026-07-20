@@ -352,6 +352,7 @@ public class HRController {
                 map.put("hrApproval", v.getStatus()); // map status → hrApproval for tab filtering
                 map.put("requestDate", v.getCreatedAt());
                 map.put("staffCode", v.getStaffCode());
+                map.put("photoUrl", v.getPhotoUrl());
                 return map;
             }).collect(Collectors.toList());
             log.info("Fetched {} visitor requests for HR {}", result.size(), hrCode);
