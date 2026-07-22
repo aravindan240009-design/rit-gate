@@ -18,6 +18,7 @@ import ErrorModal from '../../components/ErrorModal';
 import ThemedText from '../../components/ThemedText';
 import { VerticalScrollView } from '../../components/navigation/VerticalScrollViews';
 import SearchableDropdown from '../../components/SearchableDropdown';
+import PhotoUploadField from '../../components/PhotoUploadField';
 import { useTheme } from '../../context/ThemeContext';
 
 
@@ -46,6 +47,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
   const [selectedStaff, setSelectedStaff] = useState('');
   const [purpose, setPurpose] = useState('');
   const [role, setRole] = useState<'VISITOR' | 'VENDOR'>('VISITOR');
+  const [visitorPhoto, setVisitorPhoto] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -133,6 +135,11 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
       setShowErrorModal(true);
       return;
     }
+    if (!visitorPhoto) {
+      setErrorMessage("Please upload the visitor's photo");
+      setShowErrorModal(true);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -149,6 +156,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
         vehicleNumber: vehicleNumber || undefined,
         vehicleType: vehicleNumber ? vehicleType : undefined,
         securityId: resolvedSecurityId,
+        photoUrl: visitorPhoto || undefined,
       });
 
       if (response.success) {
@@ -178,6 +186,7 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
     setSelectedStaff('');
     setPurpose('');
     setRole('VISITOR');
+    setVisitorPhoto(null);
   };
 
   const updateVisitorName = (index: number, value: string) => {
@@ -270,6 +279,11 @@ const ModernVisitorRegistrationScreen: React.FC<ModernVisitorRegistrationScreenP
                 keyboardType="phone-pad"
               />
             </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <ThemedText style={[styles.inputLabel, { color: theme.textSecondary }]}>Visitor Photo *</ThemedText>
+            <PhotoUploadField value={visitorPhoto} onChange={setVisitorPhoto} />
           </View>
 
           <View style={styles.inputGroup}>

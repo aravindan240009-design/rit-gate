@@ -1,6 +1,7 @@
 package com.example.visitor.controller;
 
 import com.example.visitor.util.ErrorMessages;
+import com.example.visitor.util.ImageValidation;
 import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.Person;
@@ -3884,9 +3885,10 @@ public class SecurityController {
             String purpose = (String) request.get("purpose");
             String vehicleNumber = (String) request.get("vehicleNumber");
             String vehicleType = (String) request.get("vehicleType");
+            String photoUrl = (String) request.get("photoUrl");
             String visitorRole = request.get("role") != null && !request.get("role").toString().isBlank()
                 ? request.get("role").toString().toUpperCase() : "VISITOR";
-            Integer numberOfPeople = request.get("numberOfPeople") != null ? 
+            Integer numberOfPeople = request.get("numberOfPeople") != null ?
                 Integer.parseInt(request.get("numberOfPeople").toString()) : 1;
             
             System.out.println("  securityId=" + securityId + " name=" + visitorName + 
@@ -3910,7 +3912,17 @@ public class SecurityController {
                     "message", "Missing required fields: " + missing.trim()
                 ));
             }
-            
+
+            if (!isBlank(photoUrl)) {
+                String photoError = ImageValidation.validate(photoUrl);
+                if (photoError != null) {
+                    return ResponseEntity.badRequest().body(java.util.Map.of(
+                        "success", false,
+                        "message", photoError
+                    ));
+                }
+            }
+
             // Persist visitor requests in Visitor table (not Gatepass).
             Optional<Staff> staffOpt = staffRepository.findByStaffCode(staffCode);
             if (staffOpt.isEmpty()) {
@@ -3936,6 +3948,7 @@ public class SecurityController {
             visitor.setRegisteredBy(securityId);
             visitor.setRole(visitorRole);
             visitor.setStatus("PENDING");
+            visitor.setPhotoUrl(photoUrl);
 
             Visitor savedVisitor = visitorRepository.save(visitor);
             visitorRepository.flush();

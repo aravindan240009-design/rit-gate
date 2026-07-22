@@ -170,7 +170,14 @@ public class UnifiedVisitorController {
             @RequestBody SecurityVisitorRegistrationRequest request) {
         try {
             System.out.println("🔐 Security registering visitor: " + request.getName());
-            
+
+            if (!isBlank(request.getPhotoUrl())) {
+                String photoError = ImageValidation.validate(request.getPhotoUrl());
+                if (photoError != null) {
+                    return ResponseEntity.badRequest().body(null);
+                }
+            }
+
             Visitor visitor = new Visitor();
             visitor.setName(request.getName());
             visitor.setEmail(request.getEmail());
@@ -186,7 +193,8 @@ public class UnifiedVisitorController {
             visitor.setRole(visitorRole);
             visitor.setType(visitorRole);
             visitor.setRegisteredBy(request.getSecurityId());
-            
+            visitor.setPhotoUrl(request.getPhotoUrl());
+
             VisitorRegistrationResponse response = new VisitorRegistrationResponse();
             Visitor saved = visitorGatepassService.createRequest(visitor);
             response.setId(saved.getId());
@@ -465,7 +473,8 @@ public class UnifiedVisitorController {
         private String vehicleNumber;
         private String vehicleType;
         private String role;
-        
+        private String photoUrl;
+
         // Getters and Setters
         public String getSecurityId() { return securityId; }
         public void setSecurityId(String securityId) { this.securityId = securityId; }
@@ -499,8 +508,11 @@ public class UnifiedVisitorController {
 
         public String getRole() { return role; }
         public void setRole(String role) { this.role = role; }
+
+        public String getPhotoUrl() { return photoUrl; }
+        public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
     }
-    
+
     public static class VisitorRegistrationResponse {
         private Long id;
         private String name;
