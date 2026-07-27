@@ -19,6 +19,9 @@ backend/*.log
 # Backend - Maven (not used but just in case)
 backend/target/
 
+# Stray compiled classes (e.g. from javac'ing a scratch file in the repo root)
+*.class
+
 # Node modules — anywhere in the tree. Reinstall with `npm ci`
 # (package.json + package-lock.json are committed).
 node_modules/
