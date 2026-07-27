@@ -29,6 +29,12 @@ node_modules/
 # Frontend - Expo & build output
 frontend/.expo/
 frontend/dist/
+
+# Generated JS bundle — the RN Gradle plugin rebuilds this on every release
+# build. A committed copy goes stale and ships UI that no longer exists in src/.
+# (The res/drawable-* folders are deliberately NOT ignored: they mix generated
+# images with real app assets like notification_icon and splashscreen_logo.)
+frontend/android/app/src/main/assets/index.android.bundle
 frontend/.env
 frontend/.env.local
 frontend/visitor-website/dist/
