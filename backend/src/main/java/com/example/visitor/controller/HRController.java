@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/hr")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class HRController {
@@ -41,8 +40,27 @@ public class HRController {
     private final com.example.visitor.repository.GatePassRequestRepository gatePassRequestRepository;
     private final com.example.visitor.repository.RailwayEntryRepository railwayEntryRepository;
     
+    /**
+     * The HR code to record as the actor for an approval/rejection.
+     *
+     * Takes the identity from the caller's JWT, NOT from the request body. The body
+     * value was previously trusted verbatim, so any authenticated HR could approve a
+     * pass and attribute it to a different HR — forging the audit trail and creating a
+     * repudiation gap on the final gate-pass authorisation.
+     *
+     * ADMIN may still act on another user's behalf (matching Authz.requireSelf), so a
+     * supplied code is honoured only for admins.
+     */
+    private String actingHrCode(Map<String, String> body) {
+        String supplied = body != null ? body.get("hrCode") : null;
+        if (Authz.isAdmin() && supplied != null && !supplied.isBlank()) {
+            return supplied.trim();
+        }
+        return Authz.selfId();
+    }
+
     // ==================== HR APPROVAL ENDPOINTS ====================
-    
+
     // Get requests pending HR approval
     @GetMapping("/gate-pass/pending")
     public ResponseEntity<?> getPendingRequests(@RequestParam String hrCode) {
@@ -93,16 +111,10 @@ public class HRController {
     @PostMapping("/gate-pass/{id}/approve")
     public ResponseEntity<?> approveRequest(@PathVariable Long id, @RequestBody Map<String, String> data) {
         try {
-            String hrCode = data.get("hrCode");
+            // Actor comes from the token, not the body (see actingHrCode).
+            String hrCode = actingHrCode(data);
             String remark = data.get("remark");
-            
-            if (hrCode == null) {
-                return ResponseEntity.badRequest().body(Map.of(
-                    "status", "ERROR",
-                    "message", "HR code is required"
-                ));
-            }
-            
+
             GatePassRequest request = gatePassRequestService.approveByHR(id, hrCode, remark);
             
             log.info("✅ Request {} approved by HR {}", id, hrCode);
@@ -126,16 +138,16 @@ public class HRController {
     @PostMapping("/gate-pass/{id}/reject")
     public ResponseEntity<?> rejectRequest(@PathVariable Long id, @RequestBody Map<String, String> data) {
         try {
-            String hrCode = data.get("hrCode");
+            String hrCode = actingHrCode(data);
             String reason = data.get("reason");
-            
-            if (hrCode == null || reason == null) {
+
+            if (reason == null) {
                 return ResponseEntity.badRequest().body(Map.of(
                     "status", "ERROR",
-                    "message", "HR code and reason are required"
+                    "message", "Rejection reason is required"
                 ));
             }
-            
+
             GatePassRequest request = gatePassRequestService.rejectByHR(id, hrCode, reason);
             
             log.info("✅ Request {} rejected by HR {}", id, hrCode);
@@ -238,14 +250,8 @@ public class HRController {
             @PathVariable Long requestId,
             @RequestBody Map<String, String> requestData) {
         try {
-            String hrCode = requestData.get("hrCode");
-            if (hrCode == null) {
-                return ResponseEntity.badRequest().body(Map.of(
-                    "success", false,
-                    "message", "HR code is required"
-                ));
-            }
-            
+            String hrCode = actingHrCode(requestData);
+
             // Use standard GatePassRequestService for approval (unified approach)
             GatePassRequest request = gatePassRequestService.approveByHR(requestId, hrCode);
             
@@ -275,16 +281,16 @@ public class HRController {
             @PathVariable Long requestId,
             @RequestBody Map<String, String> requestData) {
         try {
-            String hrCode = requestData.get("hrCode");
+            String hrCode = actingHrCode(requestData);
             String reason = requestData.get("reason");
-            
-            if (hrCode == null || reason == null) {
+
+            if (reason == null) {
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "HR code and rejection reason are required"
+                    "message", "Rejection reason is required"
                 ));
             }
-            
+
             // Use standard GatePassRequestService for rejection (unified approach)
             GatePassRequest request = gatePassRequestService.rejectByHR(requestId, hrCode, reason);
             
@@ -367,7 +373,7 @@ public class HRController {
     @PostMapping("/visitor-requests/{id}/approve")
     public ResponseEntity<?> approveVisitorRequest(@PathVariable Long id, @RequestBody Map<String, String> data) {
         try {
-            String hrCode = data.get("hrCode");
+            String hrCode = actingHrCode(data);
             visitorRequestService.approveVisitorRequest(id, hrCode);
             return ResponseEntity.ok(Map.of("success", true, "message", "Visitor request approved"));
         } catch (Exception e) {

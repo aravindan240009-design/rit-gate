@@ -12,6 +12,21 @@ interface PhotoUploadFieldProps {
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
+/**
+ * Upload cap. Must stay in sync with the backend's
+ * ImageValidation.MAX_DECODED_BYTES (5MB decoded) — the server rejects anything
+ * larger, so we check here to fail fast with a clear message instead of after
+ * a wasted upload.
+ */
+const MAX_PHOTO_MB = 5;
+const MAX_PHOTO_BYTES = MAX_PHOTO_MB * 1024 * 1024;
+
+/** Decoded byte length of a base64 payload, without materialising the buffer. */
+const base64Bytes = (base64: string): number => {
+  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+  return Math.floor((base64.length * 3) / 4) - padding;
+};
+
 /** Guest-photo uploader for staff pre-registration — gallery/file picker only, no camera. */
 const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({ value, onChange }) => {
   const { theme } = useTheme();
@@ -43,6 +58,12 @@ const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({ value, onChange }) 
       setError('Could not read the selected photo. Please try another.');
       return;
     }
+    const sizeBytes = base64Bytes(asset.base64);
+    if (sizeBytes > MAX_PHOTO_BYTES) {
+      const actualMb = (sizeBytes / (1024 * 1024)).toFixed(1);
+      setError(`Photo is too large (${actualMb}MB). Maximum size is ${MAX_PHOTO_MB}MB.`);
+      return;
+    }
     setFailed(false);
     onChange(`data:${mimeType};base64,${asset.base64}`);
   };
@@ -66,6 +87,9 @@ const PhotoUploadField: React.FC<PhotoUploadFieldProps> = ({ value, onChange }) 
         >
           <Ionicons name="camera-outline" size={28} color={theme.textTertiary} />
           <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>Upload guest photo</ThemedText>
+          <ThemedText style={[styles.hintText, { color: theme.textTertiary }]}>
+            JPEG, PNG or WEBP · max {MAX_PHOTO_MB}MB
+          </ThemedText>
         </TouchableOpacity>
       ) : (
         <View style={styles.previewRow}>
@@ -102,6 +126,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   emptyText: { fontSize: 13, fontWeight: '600' },
+  hintText: { fontSize: 11, fontWeight: '500' },
   previewRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   thumb: { width: 64, height: 64, borderRadius: 12, borderWidth: 1 },
   thumbFallback: { alignItems: 'center', justifyContent: 'center' },

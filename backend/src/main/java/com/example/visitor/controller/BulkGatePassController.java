@@ -16,7 +16,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bulk-pass")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class BulkGatePassController {

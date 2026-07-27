@@ -6,6 +6,7 @@ import com.example.visitor.security.Authz;
 
 import com.example.visitor.entity.Visitor;
 import com.example.visitor.service.NotificationService;
+import com.example.visitor.service.OtpService;
 import com.example.visitor.service.VisitorGatepassService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/unified-visitors")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class UnifiedVisitorController {
     
     @Autowired
@@ -28,15 +28,59 @@ public class UnifiedVisitorController {
 
     @Autowired
     private NotificationService notificationService;
-    
+
+    // Reuses the durable throttle store that backs OTP rate limiting.
+    @Autowired
+    private com.example.visitor.service.OtpService otpService;
+
+    // Public visitor registration limits: a genuine visitor registers once, so this is
+    // generous for humans while bounding automated abuse from a single source.
+    private static final int REGISTER_COOLDOWN_SECONDS = 20;
+    private static final int REGISTER_MAX_PER_WINDOW = 10;
+    private static final int REGISTER_WINDOW_MINUTES = 10;
+
+    /**
+     * Best-effort client IP. Render/most proxies set X-Forwarded-For; the first entry
+     * is the originating client. Falls back to the socket address.
+     *
+     * X-Forwarded-For is client-controllable when no proxy overwrites it, so this is a
+     * spam-throttling key only — never an authentication or authorisation input.
+     */
+    private String clientIp(jakarta.servlet.http.HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            String first = forwarded.split(",")[0].trim();
+            if (!first.isEmpty()) {
+                // Bound the length — this becomes a primary-key value in otp_codes.
+                return first.length() > 100 ? first.substring(0, 100) : first;
+            }
+        }
+        String remote = request.getRemoteAddr();
+        return remote != null ? remote : "unknown";
+    }
+
     /**
      * Register visitor from website
      * POST /api/unified-visitors/register
      */
     @PostMapping("/register")
     public ResponseEntity<?> registerVisitor(
-            @RequestBody VisitorRegistrationRequest request) {
+            @RequestBody VisitorRegistrationRequest request,
+            jakarta.servlet.http.HttpServletRequest httpRequest) {
         try {
+            // This endpoint is public (visitors have no accounts) and each call writes a
+            // row, notifies staff and accepts a multi-MB photo — so it needs a throttle
+            // of its own, keyed by client IP.
+            OtpService.RateLimitResult limit = otpService.checkRateLimit(
+                "visreg:" + clientIp(httpRequest),
+                REGISTER_COOLDOWN_SECONDS, REGISTER_MAX_PER_WINDOW, REGISTER_WINDOW_MINUTES);
+            if (!limit.allowed()) {
+                return ResponseEntity.status(429).body(Map.of(
+                    "success", false,
+                    "message", "Too many registration attempts. Please try again in "
+                        + Math.max(1, limit.waitSeconds() / 60) + " minute(s)."));
+            }
+
             String validationError = validateRegistration(request);
             if (validationError != null) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "message", validationError));

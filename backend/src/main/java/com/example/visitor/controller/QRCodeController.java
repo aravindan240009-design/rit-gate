@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/qr-codes")
-@CrossOrigin(origins = "*")
 public class QRCodeController {
 
     @Autowired

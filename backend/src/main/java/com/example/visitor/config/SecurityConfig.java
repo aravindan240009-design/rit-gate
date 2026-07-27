@@ -35,16 +35,40 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
+            // CSRF is not applicable: the API is stateless and authenticated by a
+            // Bearer token read from a header, which a cross-site form cannot set.
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .headers(headers -> headers
+                // JSON API — deny framing outright.
+                .frameOptions(frame -> frame.deny())
+                .contentTypeOptions(withDefaults -> {})
+                .httpStrictTransportSecurity(hsts -> hsts
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000))
+                .referrerPolicy(rp -> rp.policy(
+                    org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter
+                        .ReferrerPolicy.NO_REFERRER))
+                // API responses are never rendered as a document; a locked-down CSP
+                // neutralises any HTML that might be reflected in an error body.
+                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                    "default-src 'none'; frame-ancestors 'none'; sandbox"))
+            )
             .authorizeHttpRequests(auth -> auth
                 // ---- Public: login / OTP, version gate, health ----
                 .requestMatchers("/api/auth/**", "/api/app/version", "/api/health").permitAll()
                 // ---- Public: visitor self-registration + email-link approve/reject ----
+                // The visitor website registers via /api/unified-visitors/register, which
+                // validates input, enforces the photo rules and is IP rate-limited.
+                // The legacy POST /api/visitors is NOT public: it performed no photo
+                // validation and no throttling, and no client calls it.
                 .requestMatchers(HttpMethod.POST, "/api/visitor/request",
-                    "/api/unified-visitors/register", "/api/visitors").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/visitors/*/approve",
-                    "/api/visitors/*/reject", "/api/unified-visitors/status/**").permitAll()
+                    "/api/unified-visitors/register").permitAll()
+                // NOTE: /api/visitors/*/approve and /*/reject are deliberately NOT here.
+                // Those unauthenticated GET email-links let anyone approve any visitor by
+                // walking sequential ids; the endpoints were removed from VisitorController.
+                // Approval now happens in-app over the authenticated POST routes.
+                .requestMatchers(HttpMethod.GET, "/api/unified-visitors/status/**").permitAll()
                 // ---- Public: static CSV template download (opened in browser, no token) ----
                 .requestMatchers(HttpMethod.GET, "/api/events/csv-template").permitAll()
                 // CORS preflight

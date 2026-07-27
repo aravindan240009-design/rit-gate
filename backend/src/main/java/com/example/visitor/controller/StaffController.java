@@ -21,7 +21,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/staff")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class StaffController {
     
     @Autowired

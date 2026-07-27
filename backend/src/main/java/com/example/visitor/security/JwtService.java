@@ -27,14 +27,33 @@ public class JwtService {
     @Value("${jwt.expiration-days:30}")
     private long expirationDays;
 
+    /**
+     * When true (the default), the app refuses to start with the built-in dev
+     * secret. Set app.allow-insecure-jwt-secret=true only for local development.
+     */
+    @Value("${app.allow-insecure-jwt-secret:false}")
+    private boolean allowInsecureSecret;
+
+    static final String DEV_SECRET =
+        "dev-only-insecure-secret-change-me-in-production-0123456789abcdef";
+
     private SecretKey key;
 
     @PostConstruct
     void init() {
-        // HS256 requires a >= 256-bit key. Pad short dev secrets so startup never fails,
-        // but a real JWT_SECRET should be a long random string.
+        // Fail fast rather than silently signing tokens with a publicly-known key:
+        // anyone with this repo could otherwise mint a valid ADMIN token.
+        boolean usingDevSecret = DEV_SECRET.equals(secret) || secret == null || secret.isBlank();
+        if (usingDevSecret && !allowInsecureSecret) {
+            throw new IllegalStateException(
+                "JWT_SECRET is not set. Refusing to start with the built-in development secret — "
+                + "set the JWT_SECRET environment variable to a long random string. "
+                + "(For local development only, set app.allow-insecure-jwt-secret=true.)");
+        }
+
         byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
         if (bytes.length < 32) {
+            // HS256 needs a >= 256-bit key. Only reachable in explicitly-allowed dev mode.
             byte[] padded = new byte[32];
             System.arraycopy(bytes, 0, padded, 0, bytes.length);
             bytes = padded;

@@ -18,7 +18,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/entry-exit")
-@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class EntryExitController {

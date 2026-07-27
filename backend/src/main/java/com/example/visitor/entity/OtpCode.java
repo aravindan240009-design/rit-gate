@@ -41,4 +41,22 @@ public class OtpCode {
     // Used for OTP-resend rate limiting (independent of expiry)
     @Column(name = "last_request_at")
     private LocalDateTime lastRequestAt;
+
+    /**
+     * Number of OTP sends inside the current burst window. Reset whenever
+     * window_started_at falls outside the window (see OtpService.checkRateLimit).
+     */
+    @Column(name = "request_count")
+    private Integer requestCount = 0;
+
+    /** Start of the current burst window (first send of the window). */
+    @Column(name = "window_started_at")
+    private LocalDateTime windowStartedAt;
+
+    /**
+     * Set when the user exhausts the failed-verify attempt cap. Until this
+     * instant passes, both verification and resend are refused.
+     */
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
 }

@@ -18,7 +18,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/profile-photo")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ProfilePhotoController {
 
     /** Base URL where IMS serves the uploaded images. */

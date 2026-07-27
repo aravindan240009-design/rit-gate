@@ -241,6 +241,21 @@ class ApiService {
     }
   }
 
+  // Resend the OTP for any role. The backend re-detects the role and issues a
+  // fresh code (which invalidates the previous one), applying the same send
+  // throttle as the initial request — a 429 here carries a human-readable
+  // "please wait…" message that callers should surface as-is.
+  async resendOTP(userId: string): Promise<{ success: boolean; message: string; role?: string; maskedEmail?: string; email?: string }> {
+    try {
+      return await this.makeRequest(`${this.baseURL}/auth/resend-otp`, {
+        method: 'POST',
+        body: JSON.stringify({ userId }),
+      });
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Failed to resend OTP' };
+    }
+  }
+
   // Detect actual role from backend (handles HOD/HR/STAFF who all have same ID pattern)
   async detectRole(staffCode: string): Promise<UserRole> {
     try {

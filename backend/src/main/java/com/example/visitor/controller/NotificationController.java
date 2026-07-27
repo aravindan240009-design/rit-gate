@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/notifications")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class NotificationController {
     
     @Autowired

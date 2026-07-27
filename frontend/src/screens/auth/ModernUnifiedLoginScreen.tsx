@@ -20,7 +20,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { apiService } from '../../services/api.service';
 import { detectUserRole } from '../../utils/roleDetection';
 import { UserRole } from '../../types';
-import { THEME } from '../../config/api.config';
+import { THEME, OTP_CONFIG } from '../../config/api.config';
 import QRLoginScanner from './QRLoginScanner';
 import ErrorModal from '../../components/ErrorModal';
 import SuccessModal from '../../components/SuccessModal';
@@ -36,6 +36,13 @@ interface ModernUnifiedLoginScreenProps {
   onLoginSuccess: (user: any, role: UserRole) => void;
   onBack?: () => void;
 }
+
+/**
+ * Client-side resend cooldown. Mirrors the backend's auth.rate.limit.seconds —
+ * if this were shorter, the button would enable while the server still rejects
+ * with 429; if longer, users wait needlessly.
+ */
+const RESEND_COOLDOWN_SECONDS = OTP_CONFIG.RESEND_DELAY_SECONDS;
 
 const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onLoginSuccess, onBack }) => {
   const { theme } = useTheme();
@@ -184,7 +191,7 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
           setMaskedEmail(response.maskedEmail || response.email || 'm***@institution.edu');
           setDetectedRole(confirmedRole);
           resolvedRoleRef.current = confirmedRole;
-          setOtpTimer(120);
+          setOtpTimer(RESEND_COOLDOWN_SECONDS);
           setShowOTPSuccessModal(true);
           console.log(`✅ OTP sent for ${effectiveUserId} as ${confirmedRole} (unified)`);
         } else {
@@ -201,7 +208,7 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
         setMaskedEmail(response.maskedEmail || response.email || 'm***@institution.edu');
         setDetectedRole(role);
         resolvedRoleRef.current = role;
-        setOtpTimer(120);
+        setOtpTimer(RESEND_COOLDOWN_SECONDS);
         setShowOTPSuccessModal(true);
         console.log(`✅ OTP sent for ${effectiveUserId} as ${role}`);
       } else {
@@ -240,13 +247,37 @@ const ModernUnifiedLoginScreen: React.FC<ModernUnifiedLoginScreenProps> = ({ onL
     }
   };
 
-  const handleResendOTP = () => {
+  const handleResendOTP = async () => {
     if (otpTimer > 0) {
       showError(new AppError('general', `You can resend OTP in ${otpTimer} seconds`, 'Please Wait'));
       return;
     }
     resetOtp();
-    handleSendOTP();
+    setLoading(true);
+    setLoadingMessage('Resending OTP...');
+    try {
+      // Dedicated resend route: the backend issues a new code (invalidating the
+      // old one) and applies its own send throttle. On a 429 it returns the exact
+      // wait time, which we show verbatim rather than guessing at the client.
+      const response = await apiService.resendOTP(userId.trim());
+      if (response.success) {
+        const confirmedRole = ((response as any).role as UserRole) || resolvedRoleRef.current || detectedRole;
+        if (confirmedRole) {
+          setDetectedRole(confirmedRole);
+          resolvedRoleRef.current = confirmedRole;
+        }
+        if (response.maskedEmail || response.email) {
+          setMaskedEmail(response.maskedEmail || response.email!);
+        }
+        setOtpTimer(RESEND_COOLDOWN_SECONDS);
+      } else {
+        showError(new AppError('api', response.message || 'Failed to resend OTP', 'Resend Failed'));
+      }
+    } catch (error: any) {
+      showError(error, handleResendOTP);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleQRScanSuccess = async (qrData: string) => {

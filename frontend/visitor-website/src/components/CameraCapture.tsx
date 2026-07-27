@@ -11,6 +11,21 @@ type Stage = 'idle' | 'opening' | 'live' | 'preview';
 const MAX_DIMENSION = 800;
 const JPEG_QUALITY = 0.7;
 
+/**
+ * Upload cap, mirroring the backend's ImageValidation.MAX_DECODED_BYTES (5MB).
+ * Downscaling to MAX_DIMENSION keeps captures far below this, so the check below
+ * is a backstop for unusually large sensors rather than an expected path.
+ */
+const MAX_PHOTO_MB = 5;
+const MAX_PHOTO_BYTES = MAX_PHOTO_MB * 1024 * 1024;
+
+/** Decoded byte length of a base64 data URI payload. */
+function dataUriBytes(dataUri: string): number {
+  const base64 = dataUri.slice(dataUri.indexOf(',') + 1);
+  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+  return Math.floor((base64.length * 3) / 4) - padding;
+}
+
 /** Downscale + JPEG-compress a captured frame so the upload payload stays small. */
 function captureFrameToDataUri(video: HTMLVideoElement): string {
   const { videoWidth, videoHeight } = video;
@@ -70,6 +85,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ value, onChange }) => {
       setError('Could not capture the photo. Please try again.');
       return;
     }
+    if (dataUriBytes(dataUri) > MAX_PHOTO_BYTES) {
+      setError(`Captured photo exceeds the ${MAX_PHOTO_MB}MB limit. Please try again.`);
+      return;
+    }
     stopStream();
     onChange(dataUri);
     setStage('preview');
@@ -118,11 +137,16 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ value, onChange }) => {
       )}
 
       {stage === 'idle' && (
-        <div style={{ ...frame, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <button type="button" onClick={openCamera} style={btn(true)}>
-            Open Camera
-          </button>
-        </div>
+        <>
+          <div style={{ ...frame, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button type="button" onClick={openCamera} style={btn(true)}>
+              Open Camera
+            </button>
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: c.muted }}>
+            JPEG · max {MAX_PHOTO_MB}MB
+          </div>
+        </>
       )}
 
       {stage === 'opening' && (

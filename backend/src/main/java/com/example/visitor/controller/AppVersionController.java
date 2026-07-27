@@ -17,7 +17,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/app")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AppVersionController {
 
     @Value("${app.min-version-code:1}")

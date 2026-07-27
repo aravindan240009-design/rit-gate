@@ -49,7 +49,6 @@ import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/security")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class SecurityController {
 
     // Cryptographically strong RNG for gate codes / tokens — java.util.Random is

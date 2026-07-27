@@ -31,7 +31,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @Slf4j
 public class AuthController {
     
@@ -62,11 +61,22 @@ public class AuthController {
     @Value("${auth.otp.expiry.minutes:5}")
     private int otpExpiryMinutes;
     
-    @Value("${auth.otp.max.attempts:3}")
+    @Value("${auth.otp.max.attempts:5}")
     private int maxOTPAttempts;
-    
+
     @Value("${auth.rate.limit.seconds:60}")
     private int rateLimitSeconds;
+
+    // Burst cap: at most this many OTP sends per rolling window.
+    @Value("${auth.otp.max.per.window:5}")
+    private int maxOtpPerWindow;
+
+    @Value("${auth.otp.window.minutes:10}")
+    private int otpWindowMinutes;
+
+    // How long an account is locked after exhausting maxOTPAttempts.
+    @Value("${auth.otp.lock.minutes:15}")
+    private int otpLockMinutes;
 
     // Print OTPs to logs only when explicitly enabled (dev). Off in production.
     @Value("${app.debug-otp:false}")
@@ -104,25 +114,41 @@ public class AuthController {
     }
     
     /**
-     * Check rate limiting for OTP requests
+     * Throttle OTP sends for a user.
+     *
+     * MUST be keyed on the same email that storeOtp()/verifyOtp() use. It was
+     * previously keyed on "rate:" + userId, which wrote the counters to a row
+     * nothing else read — so the cooldown never actually applied and resend was
+     * effectively unlimited. Callers therefore resolve the account first and
+     * pass its email here.
+     *
+     * Returns null when the send may proceed, or the 429 response to return.
      */
-    private ResponseEntity<?> checkRateLimit(String userId, String userType) {
-        // Rate-limit keyed off the user id, persisted in the durable OTP store.
-        OtpService.RateLimitResult result = otpService.checkRateLimit("rate:" + userId, rateLimitSeconds);
-        if (!result.allowed()) {
-            long waitTime = result.waitSeconds();
-            logAuthEvent(userId, userType, "OTP_SENT", "RATE_LIMITED", "Wait " + waitTime + " seconds");
-            return ResponseEntity.status(429)
-                .body(createErrorResponse("Please wait " + waitTime + " seconds before requesting another OTP"));
+    private ResponseEntity<?> checkRateLimit(String email, String userId, String userType) {
+        OtpService.RateLimitResult result = otpService.checkRateLimit(
+            email, rateLimitSeconds, maxOtpPerWindow, otpWindowMinutes);
+        if (result.allowed()) {
+            return null;
         }
-        return null;
+
+        long waitTime = result.waitSeconds();
+        String message = switch (result.reason()) {
+            case LOCKED -> "Too many failed attempts. Try again in "
+                + Math.max(1, waitTime / 60) + " minute(s)";
+            case BURST  -> "Too many OTP requests. Please try again in "
+                + Math.max(1, waitTime / 60) + " minute(s)";
+            default     -> "Please wait " + waitTime + " seconds before requesting another OTP";
+        };
+        logAuthEvent(userId, userType, "OTP_SENT", "RATE_LIMITED",
+            result.reason() + " — wait " + waitTime + "s");
+        return ResponseEntity.status(429).body(createErrorResponse(message));
     }
     
     /**
      * Verify OTP with attempt limiting
      */
     private ResponseEntity<?> verifyOTPWithAttempts(String email, String otp, String userId, String userType) {
-        OtpService.VerifyResult result = otpService.verifyOtp(email, otp, maxOTPAttempts);
+        OtpService.VerifyResult result = otpService.verifyOtp(email, otp, maxOTPAttempts, otpLockMinutes);
         switch (result.outcome()) {
             case NO_OTP:
                 logAuthEvent(userId, userType, "LOGIN", "FAILED", "No OTP found");
@@ -131,23 +157,63 @@ public class AuthController {
                 logAuthEvent(userId, userType, "LOGIN", "FAILED", "OTP expired");
                 return ResponseEntity.status(400).body(createErrorResponse("OTP expired. Please request a new one"));
             case MAX_ATTEMPTS:
-                logAuthEvent(userId, userType, "LOGIN", "BLOCKED", "Max attempts reached");
-                System.out.println("⚠️  Max attempts reached for: " + email);
-                return ResponseEntity.status(429)
-                    .body(createErrorResponse("Too many failed attempts. Please request a new OTP"));
+                logAuthEvent(userId, userType, "LOGIN", "BLOCKED",
+                    "Max attempts reached — locked for " + otpLockMinutes + " min");
+                return ResponseEntity.status(429).body(createErrorResponse(
+                    "Too many failed attempts. Your account is locked for "
+                        + otpLockMinutes + " minutes"));
+            case LOCKED:
+                logAuthEvent(userId, userType, "LOGIN", "BLOCKED", "Attempt during active lock");
+                return ResponseEntity.status(429).body(createErrorResponse(
+                    "Too many failed attempts. Try again in "
+                        + Math.max(1, result.lockSeconds() / 60) + " minute(s)"));
             case INVALID:
                 logAuthEvent(userId, userType, "LOGIN", "FAILED", "Invalid OTP");
-                System.out.println("❌ Invalid OTP for: " + email);
                 return ResponseEntity.status(400)
                     .body(createErrorResponse("Invalid OTP. " + result.remainingAttempts() + " attempt(s) remaining"));
             case SUCCESS:
             default:
                 logAuthEvent(userId, userType, "LOGIN", "SUCCESS", "OTP verified successfully");
-                System.out.println("✅ OTP verified successfully for: " + email);
                 return null; // null means success
         }
     }
     
+    /**
+     * The designation (in non_teaching_staffs_rit.designation) that actually confers
+     * HR authority. The table holds EVERY non-teaching employee — clerks, wardens,
+     * technicians — so presence in it must never by itself imply HR.
+     */
+    /**
+     * A syntactically valid BCrypt hash matching no useful password. Compared against
+     * when a username is unknown so the failure path costs the same as a real check
+     * (prevents username enumeration by response timing).
+     */
+    private static final String BCRYPT_DUMMY_HASH =
+        "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
+
+    private static final String HR_DESIGNATION = "Senior Manager - HR";
+
+    /** The designation that confers ADMIN authority. */
+    private static final String ADMIN_OFFICER_DESIGNATION = "Administrative Officer";
+
+    /**
+     * Whether a non-teaching record may hold ROLE_HR.
+     *
+     * This is the single authority for that decision. /detect-role used to be the only
+     * place the designation was checked, but it is advisory and client-driven — the
+     * client chose which verify endpoint to call, so any non-teaching employee could
+     * call /hr/verify-otp directly and be handed ROLE_HR (final gate-pass approval,
+     * /api/hr/**). The check now lives where the token is minted.
+     */
+    private boolean isHrDesignation(String designation) {
+        return designation != null && HR_DESIGNATION.equalsIgnoreCase(designation.trim());
+    }
+
+    /** Whether a staff/non-teaching designation confers ADMIN authority. */
+    private boolean isAdminOfficerDesignation(String designation) {
+        return designation != null && ADMIN_OFFICER_DESIGNATION.equalsIgnoreCase(designation.trim());
+    }
+
     /**
      * Log authentication events for security monitoring
      */
@@ -176,12 +242,6 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(createErrorResponse("Security ID is required"));
             }
 
-            // Check rate limiting
-            ResponseEntity<?> rateLimitResponse = checkRateLimit(securityId, "SECURITY");
-            if (rateLimitResponse != null) {
-                return rateLimitResponse;
-            }
-
             Optional<SecurityPersonnel> securityOpt = securityPersonnelRepository.findBySecurityIdIgnoreCase(securityId);
 
             if (securityOpt.isEmpty()) {
@@ -194,6 +254,13 @@ public class AuthController {
             if (!security.getIsActive()) {
                 logAuthEvent(securityId, "SECURITY", "OTP_SENT", "FAILED", "Account inactive");
                 return ResponseEntity.status(403).body(createErrorResponse("Account is inactive"));
+            }
+
+            // Throttle AFTER resolving the account so the limit is keyed on the
+            // same email the OTP is stored under.
+            ResponseEntity<?> rateLimitResponse = checkRateLimit(security.getEmail(), securityId, "SECURITY");
+            if (rateLimitResponse != null) {
+                return rateLimitResponse;
             }
 
             // Generate and store OTP (hashed + persisted by OtpService)
@@ -406,21 +473,22 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(createErrorResponse("Registration number is required"));
             }
             
-            // Check rate limiting
-            ResponseEntity<?> rateLimitResponse = checkRateLimit(regNo, "STUDENT");
-            if (rateLimitResponse != null) {
-                return rateLimitResponse;
-            }
-            
             Optional<Student> studentOpt = studentRepository.findByRegNo(regNo);
-            
+
             if (studentOpt.isEmpty()) {
                 logAuthEvent(regNo, "STUDENT", "OTP_SENT", "FAILED", "Student not found");
                 return ResponseEntity.status(404).body(createErrorResponse("Student not found"));
             }
-            
+
             Student student = studentOpt.get();
-            
+
+            // Throttle AFTER resolving the account so the limit is keyed on the
+            // same email the OTP is stored under.
+            ResponseEntity<?> rateLimitResponse = checkRateLimit(student.getEmail(), regNo, "STUDENT");
+            if (rateLimitResponse != null) {
+                return rateLimitResponse;
+            }
+
             // Generate and store OTP (hashed + persisted by OtpService)
             String otp = generateOTP();
             otpService.storeOtp(student.getEmail(), otp, otpExpiryMinutes);
@@ -530,9 +598,6 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(createErrorResponse("Staff code is required"));
             }
             
-            ResponseEntity<?> rateLimitResponse = checkRateLimit(staffCode, "STAFF");
-            if (rateLimitResponse != null) return rateLimitResponse;
-            
             // Check teaching_staffs first, then non_teaching_staffs
             String staffName, email, department, role;
             Optional<Staff> staffOpt = staffRepository.findByStaffCode(staffCode);
@@ -550,7 +615,12 @@ public class AuthController {
                 staffName = ntf.getHrName(); email = ntf.getEmail();
                 department = ntf.getDepartment(); role = ntf.getRole();
             }
-            
+
+            // Throttle AFTER resolving the account so the limit is keyed on the
+            // same email the OTP is stored under.
+            ResponseEntity<?> rateLimitResponse = checkRateLimit(email, staffCode, "STAFF");
+            if (rateLimitResponse != null) return rateLimitResponse;
+
             String otp = generateOTP();
             otpService.storeOtp(email, otp, otpExpiryMinutes);
             sendOTPEmail(email, otp, staffName);
@@ -610,8 +680,12 @@ public class AuthController {
             
             // Administrative Officer gets ADMIN authority; all other staff (class incharge,
             // NTF, NCI) get STAFF. Designation lives in `role` here.
-            String authRole = (role != null && role.toUpperCase().contains("ADMINISTRATIVE OFFICER"))
-                ? "ADMIN" : "STAFF";
+            //
+            // EXACT match, not contains(): ADMIN is the highest privilege in the system
+            // (it bypasses Authz.requireSelf entirely), and a substring test would also
+            // promote titles that merely mention the words — e.g. "Assistant to the
+            // Administrative Officer" or "Administrative Officer - Trainee".
+            String authRole = isAdminOfficerDesignation(role) ? "ADMIN" : "STAFF";
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -637,12 +711,6 @@ public class AuthController {
             
             if (hodCode == null || hodCode.isEmpty()) {
                 return ResponseEntity.badRequest().body(createErrorResponse("HOD code is required"));
-            }
-            
-            // Check rate limiting
-            ResponseEntity<?> rateLimitResponse = checkRateLimit(hodCode, "HOD");
-            if (rateLimitResponse != null) {
-                return rateLimitResponse;
             }
             
             Optional<HOD> hodOpt = hodRepository.findFirstByHodCode(hodCode);
@@ -671,7 +739,14 @@ public class AuthController {
                 logAuthEvent(hodCode, "HOD", "OTP_SENT", "FAILED", "No email on file");
                 return ResponseEntity.status(404).body(createErrorResponse("No email found for this HOD"));
             }
-            
+
+            // Throttle AFTER resolving the email (which may come from the staff
+            // fallback above) so the limit is keyed on the OTP's storage key.
+            ResponseEntity<?> rateLimitResponse = checkRateLimit(hodEmail, hodCode, "HOD");
+            if (rateLimitResponse != null) {
+                return rateLimitResponse;
+            }
+
             // Generate and store OTP (hashed + persisted by OtpService)
             String otp = generateOTP();
             otpService.storeOtp(hod.getEmail(), otp, otpExpiryMinutes);
@@ -790,21 +865,30 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(createErrorResponse("HR code is required"));
             }
             
-            // Check rate limiting
-            ResponseEntity<?> rateLimitResponse = checkRateLimit(hrCode, "HR");
-            if (rateLimitResponse != null) {
-                return rateLimitResponse;
-            }
-            
             Optional<HR> hrOpt = hrRepository.findByHrCode(hrCode);
-            
+
             if (hrOpt.isEmpty()) {
                 logAuthEvent(hrCode, "HR", "OTP_SENT", "FAILED", "HR not found");
                 return ResponseEntity.status(404).body(createErrorResponse("HR not found"));
             }
-            
+
             HR hr = hrOpt.get();
-            
+
+            // Refuse at send time too, so a non-HR account never gets an HR-path OTP.
+            // (The binding check is on verify-otp — this is defence in depth.)
+            if (!isHrDesignation(hr.getRole())) {
+                logAuthEvent(hrCode, "HR", "OTP_SENT", "DENIED", "Not an HR designation");
+                return ResponseEntity.status(403)
+                    .body(createErrorResponse("This account is not authorized for HR access"));
+            }
+
+            // Throttle AFTER resolving the account so the limit is keyed on the
+            // same email the OTP is stored under.
+            ResponseEntity<?> rateLimitResponse = checkRateLimit(hr.getEmail(), hrCode, "HR");
+            if (rateLimitResponse != null) {
+                return rateLimitResponse;
+            }
+
             // Generate and store OTP (hashed + persisted by OtpService)
             String otp = generateOTP();
             otpService.storeOtp(hr.getEmail(), otp, otpExpiryMinutes);
@@ -859,14 +943,26 @@ public class AuthController {
             }
             
             HR hr = hrOpt.get();
+
+            // AUTHORIZATION GATE — non_teaching_staffs_rit holds every non-teaching
+            // employee, so merely being found above does NOT make this caller HR.
+            // Without this, any non-teaching employee could POST here and receive a
+            // ROLE_HR token (final gate-pass approval + all of /api/hr/**).
+            if (!isHrDesignation(hr.getRole())) {
+                logAuthEvent(hrCode, "HR", "LOGIN", "DENIED",
+                    "Not an HR designation — refused ROLE_HR");
+                return ResponseEntity.status(403)
+                    .body(createErrorResponse("This account is not authorized for HR access"));
+            }
+
             String email = hr.getEmail();
-            
+
             // Use unified verification with attempt limiting
             ResponseEntity<?> verificationError = verifyOTPWithAttempts(email, otp, hrCode, "HR");
             if (verificationError != null) {
                 return verificationError;
             }
-            
+
             // OTP verified successfully - use DTO
             UserResponseDTO userDTO = new UserResponseDTO(
                 null,
@@ -910,12 +1006,6 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(createErrorResponse("Security code is required"));
             }
 
-            // Check rate limiting
-            ResponseEntity<?> rateLimitError = checkRateLimit(securityCode, "SECURITY");
-            if (rateLimitError != null) {
-                return rateLimitError;
-            }
-
             Optional<SecurityPersonnel> securityOpt = securityPersonnelRepository.findBySecurityIdIgnoreCase(securityCode);
 
             if (securityOpt.isEmpty()) {
@@ -929,6 +1019,13 @@ public class AuthController {
             if (email == null || email.trim().isEmpty()) {
                 logAuthEvent(securityCode, "SECURITY", "OTP_REQUEST", "FAILED", "No email configured");
                 return ResponseEntity.badRequest().body(createErrorResponse("No email configured for this security personnel"));
+            }
+
+            // Throttle AFTER resolving the account so the limit is keyed on the
+            // same email the OTP is stored under.
+            ResponseEntity<?> rateLimitError = checkRateLimit(email, securityCode, "SECURITY");
+            if (rateLimitError != null) {
+                return rateLimitError;
             }
 
             String otp = generateOTP();
@@ -1283,14 +1380,41 @@ public class AuthController {
     // ============================================
 
     /**
-     * Demo accounts for the Event Controller portal.
-     * In production replace with a proper DB table or env-var secrets.
+     * Event Controller portal accounts, supplied via the EVENT_CONTROLLER_ACCOUNTS
+     * env var as:  username:bcryptHash:Display Name:email  (semicolon-separated).
+     *
+     * Passwords were previously hardcoded here in PLAINTEXT and committed to the
+     * repo — anyone with read access to the source had working portal credentials,
+     * and rotating them required a code change and redeploy. Hashes now live
+     * outside the codebase; generate one with BCrypt (cost 10+).
+     *
+     * Empty (the default) disables the portal login entirely — deliberately
+     * fail-closed, so a missing env var cannot silently fall back to known creds.
      */
-    private static final Map<String, String[]> EVENT_CONTROLLER_ACCOUNTS = Map.of(
-        "eventadmin",  new String[]{"Event$2026", "Event Administrator", "eventadmin@ritchennai.edu.in"},
-        "controller1", new String[]{"RITevents@1", "Controller One",     "controller1@ritchennai.edu.in"},
-        "evtmgr",      new String[]{"Mgr#2026",   "Event Manager",       "evtmgr@ritchennai.edu.in"}
-    );
+    @Value("${event.controller.accounts:}")
+    private String eventControllerAccountsRaw;
+
+    /** username → {bcryptHash, displayName, email}. Parsed once at startup. */
+    private final Map<String, String[]> eventControllerAccounts = new HashMap<>();
+
+    @jakarta.annotation.PostConstruct
+    void loadEventControllerAccounts() {
+        if (eventControllerAccountsRaw == null || eventControllerAccountsRaw.isBlank()) {
+            log.warn("EVENT_CONTROLLER_ACCOUNTS not configured — event controller login is disabled");
+            return;
+        }
+        for (String entry : eventControllerAccountsRaw.split(";")) {
+            String[] parts = entry.trim().split(":", 4);
+            if (parts.length < 4) {
+                log.warn("Skipping malformed EVENT_CONTROLLER_ACCOUNTS entry");
+                continue;
+            }
+            eventControllerAccounts.put(
+                parts[0].trim().toLowerCase(),
+                new String[]{parts[1].trim(), parts[2].trim(), parts[3].trim()});
+        }
+        log.info("Loaded {} event controller account(s)", eventControllerAccounts.size());
+    }
 
     @PostMapping("/event-controller/login")
     public ResponseEntity<?> eventControllerLogin(@RequestBody Map<String, String> request) {
@@ -1302,8 +1426,26 @@ public class AuthController {
                 return ResponseEntity.badRequest().body(createErrorResponse("Username and password are required"));
             }
 
-            String[] account = EVENT_CONTROLLER_ACCOUNTS.get(username.trim().toLowerCase());
-            if (account == null || !account[0].equals(password)) {
+            String loginName = username.trim().toLowerCase();
+
+            // Throttle this endpoint: it is password-based (no OTP second factor), so
+            // without a limit it is directly brute-forceable. Keyed on the username.
+            OtpService.RateLimitResult limit = otpService.checkRateLimit(
+                "evtctl:" + loginName, rateLimitSeconds, maxOtpPerWindow, otpWindowMinutes);
+            if (!limit.allowed()) {
+                logAuthEvent(username, "EVENT_CONTROLLER", "LOGIN", "RATE_LIMITED", limit.reason().toString());
+                return ResponseEntity.status(429).body(createErrorResponse(
+                    "Too many login attempts. Please try again in "
+                        + Math.max(1, limit.waitSeconds() / 60) + " minute(s)"));
+            }
+
+            String[] account = eventControllerAccounts.get(loginName);
+            // Always run a BCrypt comparison, even for an unknown username, so the
+            // response time does not reveal whether the account exists.
+            String storedHash = (account != null) ? account[0] : BCRYPT_DUMMY_HASH;
+            boolean passwordOk = passwordEncoder.matches(password, storedHash);
+
+            if (account == null || !passwordOk) {
                 logAuthEvent(username, "EVENT_CONTROLLER", "LOGIN", "FAILED", "Invalid credentials");
                 return ResponseEntity.status(401).body(createErrorResponse("Invalid username or password"));
             }
@@ -1421,8 +1563,8 @@ public class AuthController {
                     switch (baseRole) {
                         case "HOD":  detectedRole = "HOD"; break;
                         case "NTF":
-                            if ("Senior Manager - HR".equalsIgnoreCase(designation)) detectedRole = "HR";
-                            else if ("Administrative Officer".equalsIgnoreCase(designation)) detectedRole = "ADMIN_OFFICER";
+                            if (isHrDesignation(designation)) detectedRole = "HR";
+                            else if (isAdminOfficerDesignation(designation)) detectedRole = "ADMIN_OFFICER";
                             else detectedRole = "NON_TEACHING";
                             break;
                         case "STAFF":
@@ -1461,6 +1603,24 @@ public class AuthController {
             log.error("Error in unifiedSendOTP: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(createErrorResponse("Failed to send OTP"));
         }
+    }
+
+    /**
+     * Explicit resend endpoint. Delegates to the same path as the initial send so
+     * a resent code is generated, hashed and throttled identically — issuing the
+     * new OTP invalidates the previous one (see OtpService.storeOtp).
+     *
+     * Exists as its own route so the client has a clear, self-documenting call and
+     * so resends are distinguishable in the auth log.
+     */
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOTP(@RequestBody Map<String, String> request) {
+        String userId = sanitizeInput(request.get("userId"));
+        if (userId == null || userId.isEmpty()) {
+            return ResponseEntity.badRequest().body(createErrorResponse("User ID is required"));
+        }
+        logAuthEvent(userId, "UNKNOWN", "OTP_RESEND", "REQUESTED", "Resend requested");
+        return unifiedSendOTP(request);
     }
 
     /**
@@ -1528,10 +1688,10 @@ public class AuthController {
                 case "HOD":
                     return ResponseEntity.ok(Map.of("success", true, "role", "HOD"));
                 case "NTF":
-                    if (designation.equalsIgnoreCase("Senior Manager - HR")) {
+                    if (isHrDesignation(designation)) {
                         return ResponseEntity.ok(Map.of("success", true, "role", "HR"));
                     }
-                    if (designation.equalsIgnoreCase("Administrative Officer")) {
+                    if (isAdminOfficerDesignation(designation)) {
                         return ResponseEntity.ok(Map.of("success", true, "role", "ADMIN_OFFICER"));
                     }
                     return ResponseEntity.ok(Map.of("success", true, "role", "NON_TEACHING"));

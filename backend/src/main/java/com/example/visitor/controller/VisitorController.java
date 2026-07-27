@@ -22,7 +22,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/visitors")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class VisitorController {
     
     @Autowired
@@ -166,75 +165,19 @@ public class VisitorController {
         }
     }
     
-    // Approve visitor request (via email link)
-    @GetMapping("/{id}/approve")
-    public ResponseEntity<String> approveVisitor(@PathVariable Long id) {
-        try {
-            Visitor visitor = visitorRequestService.approveVisitorRequest(id, "STAFF_EMAIL_LINK");
-            
-            // Send QR code email to visitor
-            try {
-                emailService.sendVisitorPassEmail(
-                    visitor.getEmail(),
-                    visitor.getName(),
-                    visitor.getQrCode(),
-                    visitor.getManualCode(),
-                    visitor.getPersonToMeet(),
-                    visitor.getDepartment(),
-                    visitor.getVisitDate() != null ? visitor.getVisitDate().toString() : "N/A",
-                    visitor.getVisitTime() != null ? visitor.getVisitTime().toString() : "N/A"
-                );
-            } catch (Exception emailError) {
-                System.err.println("⚠️ Email sending failed: " + emailError.getMessage());
-            }
-            
-            System.out.println("Visitor approved via email link: " + visitor.getName());
-            
-            return ResponseEntity.ok(
-                "<html><body style='font-family: Arial; text-align: center; padding: 50px;'>" +
-                "<h1 style='color: #10b981;'>✓ Visitor Approved</h1>" +
-                "<p>The visitor <strong>" + visitor.getName() + "</strong> has been approved.</p>" +
-                "<p>QR code has been sent to their email: " + visitor.getEmail() + "</p>" +
-                "</body></html>"
-            );
-        } catch (Exception e) {
-            System.err.println("Error approving visitor: " + e.getMessage());
-            return ResponseEntity.internalServerError().body("Error approving visitor: " + ErrorMessages.userFriendly(e));
-        }
-    }
-    
-    // Reject visitor request (via email link)
-    @GetMapping("/{id}/reject")
-    public ResponseEntity<String> rejectVisitor(@PathVariable Long id) {
-        try {
-            Visitor visitor = visitorRequestService.rejectVisitorRequest(id, "Rejected by staff");
-            
-            // Send rejection email to visitor
-            try {
-                emailService.sendRejectionEmail(
-                    visitor.getEmail(),
-                    visitor.getName(),
-                    visitor.getPersonToMeet()
-                );
-            } catch (Exception emailError) {
-                System.err.println("⚠️ Rejection email failed: " + emailError.getMessage());
-            }
-            
-            System.out.println("Visitor rejected via email link: " + visitor.getName());
-            
-            return ResponseEntity.ok(
-                "<html><body style='font-family: Arial; text-align: center; padding: 50px;'>" +
-                "<h1 style='color: #ef4444;'>✗ Visitor Rejected</h1>" +
-                "<p>The visit request from <strong>" + visitor.getName() + "</strong> has been declined.</p>" +
-                "<p>A notification email has been sent to: " + visitor.getEmail() + "</p>" +
-                "</body></html>"
-            );
-        } catch (Exception e) {
-            System.err.println("Error rejecting visitor: " + e.getMessage());
-            return ResponseEntity.internalServerError().body("Error rejecting visitor: " + ErrorMessages.userFriendly(e));
-        }
-    }
-    
+    // REMOVED: GET /{id}/approve and GET /{id}/reject (the old "email link" flow).
+    //
+    // They were permitAll, took a sequential Long id, and required no token, so anyone
+    // could walk /api/visitors/1/approve, /2/approve … and approve or reject every
+    // visitor request in the system. Being GET, they were also triggerable by any
+    // prefetching link-scanner or a cross-site <img> tag. They additionally reflected
+    // visitor name/email into raw HTML (XSS).
+    //
+    // EmailService stopped emitting these links (it is notify-only now) and both the
+    // mobile app and portals use the authenticated POST routes below, so nothing calls
+    // these. Approval/rejection happens in-app, where the approver is identified by
+    // their token.
+
     // Get all visitors
     @GetMapping
     public ResponseEntity<List<Visitor>> getAllVisitors() {

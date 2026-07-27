@@ -117,7 +117,17 @@ const ProfessionalVisitorForm: React.FC<ProfessionalVisitorFormProps> = ({ onBac
   const [machineId] = useState<string>(() => {
     const existing = localStorage.getItem(MACHINE_ID_KEY);
     if (existing) return existing;
-    const created = `WEB-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    // The backend treats machineId as the capability that authorises reading this
+    // request's status (name + QR code), so it must not be guessable. The previous
+    // `Date.now()` + Math.random() form was both predictable and low-entropy;
+    // crypto gives a CSPRNG value.
+    const created = `WEB-${
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Array.from(crypto.getRandomValues(new Uint8Array(16)))
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('')
+    }`;
     localStorage.setItem(MACHINE_ID_KEY, created);
     return created;
   });

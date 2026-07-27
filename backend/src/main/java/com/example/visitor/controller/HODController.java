@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/hod")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class HODController {

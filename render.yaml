@@ -26,3 +26,15 @@ services:
         sync: false
       - key: BREVO_SENDER_EMAIL
         sync: false
+      # Signing key for all auth tokens. generateValue makes Render mint a strong
+      # random value once and keep it. The app refuses to boot without this —
+      # the built-in dev secret is public in this repo, so it must never be used.
+      # NOTE: changing this value invalidates every issued token (forces re-login).
+      - key: JWT_SECRET
+        generateValue: true
+      # Event Controller portal logins. Format (';' separated):
+      #   username:bcryptHash:Display Name:email
+      # BCrypt hashes only — these were previously plaintext in the source.
+      # Unset = portal login disabled (fail-closed).
+      - key: EVENT_CONTROLLER_ACCOUNTS
+        sync: false
