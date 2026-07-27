@@ -19,12 +19,17 @@ backend/*.log
 # Backend - Maven (not used but just in case)
 backend/target/
 
-# Frontend - Node modules & Expo
-frontend/node_modules/
+# Node modules — anywhere in the tree. Reinstall with `npm ci`
+# (package.json + package-lock.json are committed).
+node_modules/
+
+# Frontend - Expo & build output
 frontend/.expo/
 frontend/dist/
 frontend/.env
 frontend/.env.local
+frontend/visitor-website/dist/
+frontend/event-manager-portal/dist/
 
 # IDE
 .vscode/
